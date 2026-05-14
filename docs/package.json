@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "dev": "wrangler d1 execute dbsync --file=schema.sql --local && astro dev",
-    "build": "wrangler d1 execute dbsync --file=schema.sql --remote && astro build && cp dist/server/entry.mjs dist/client/_worker.mjs && cp dist/server/virtual_astro_middleware.mjs dist/client/ && cp -r dist/server/chunks dist/client/",
+    "build": "wrangler d1 execute dbsync --file=schema.sql --remote && astro build",
     "preview": "wrangler pages dev ./dist",
     "deploy": "astro build && wrangler pages deploy ./dist --project-name cardano-db-sync-docs",
     "db:apply": "wrangler d1 execute dbsync --file=schema.sql --remote",
