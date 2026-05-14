@@ -1,0 +1,11 @@
+name = "cardano-db-sync-docs"
+compatibility_date = "2026-05-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+IP_HASH_SALT = "dev-salt-replace-in-production"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "dbsync"
+database_id = "d62d8765-5f55-4360-b67e-80bc6e66b6a7"

@@ -1,0 +1,402 @@
+---
+export const prerender = true;
+import BaseLayout from '../../layouts/BaseLayout.astro';
+---
+
+<BaseLayout title="Usage Survey" description="Help us understand how teams use cardano-db-sync.">
+  <div class="survey-wrap">
+    <div id="survey-shell">
+      <div class="progress-bar-outer">
+        <div class="progress-bar-inner" id="progress-bar" style="width: 12.5%"></div>
+      </div>
+
+      <!-- Step 1: Role -->
+      <section class="step active" data-step="1">
+        <h2 class="step-title">What is your primary role?</h2>
+        <p class="step-sub">Select the one that best describes you.</p>
+        <div class="card-grid">
+          <div class="choice-card" data-field="role" data-value="developer">
+            <div class="icon">💻</div>
+            <div class="label">Developer</div>
+          </div>
+          <div class="choice-card" data-field="role" data-value="devops">
+            <div class="icon">⚙️</div>
+            <div class="label">DevOps / SRE</div>
+          </div>
+          <div class="choice-card" data-field="role" data-value="lead">
+            <div class="icon">🧭</div>
+            <div class="label">Tech Lead</div>
+          </div>
+          <div class="choice-card" data-field="role" data-value="exec">
+            <div class="icon">📊</div>
+            <div class="label">Executive</div>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-primary" id="next-1">Next →</button>
+        </div>
+      </section>
+
+      <!-- Step 2: Use case -->
+      <section class="step" data-step="2">
+        <h2 class="step-title">How do you use DB Sync?</h2>
+        <p class="step-sub">Select all that apply.</p>
+        <div class="card-grid">
+          <div class="choice-card multi" data-field="use_case" data-value="explorer">
+            <div class="icon">🔍</div>
+            <div class="label">Block Explorer</div>
+          </div>
+          <div class="choice-card multi" data-field="use_case" data-value="wallet">
+            <div class="icon">👛</div>
+            <div class="label">Wallet Backend</div>
+          </div>
+          <div class="choice-card multi" data-field="use_case" data-value="analytics">
+            <div class="icon">📈</div>
+            <div class="label">Analytics</div>
+          </div>
+          <div class="choice-card multi" data-field="use_case" data-value="defi">
+            <div class="icon">🏦</div>
+            <div class="label">DeFi / dApps</div>
+          </div>
+          <div class="choice-card multi" data-field="use_case" data-value="staking">
+            <div class="icon">🥩</div>
+            <div class="label">Staking Tools</div>
+          </div>
+          <div class="choice-card multi" data-field="use_case" data-value="other_uc">
+            <div class="icon">🔧</div>
+            <div class="label">Other</div>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-ghost" id="back-2">← Back</button>
+          <button class="btn btn-primary" id="next-2">Next →</button>
+        </div>
+      </section>
+
+      <!-- Step 3: Team size -->
+      <section class="step" data-step="3">
+        <h2 class="step-title">How large is your team?</h2>
+        <p class="step-sub">People who work with DB Sync directly.</p>
+        <div class="card-grid">
+          <div class="choice-card" data-field="team_size" data-value="Just me">
+            <div class="icon">🙋</div>
+            <div class="label">Just me</div>
+          </div>
+          <div class="choice-card" data-field="team_size" data-value="2-5">
+            <div class="icon">👥</div>
+            <div class="label">2 – 5</div>
+          </div>
+          <div class="choice-card" data-field="team_size" data-value="6-15">
+            <div class="icon">🏢</div>
+            <div class="label">6 – 15</div>
+          </div>
+          <div class="choice-card" data-field="team_size" data-value="16+">
+            <div class="icon">🏗️</div>
+            <div class="label">16+</div>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-ghost" id="back-3">← Back</button>
+          <button class="btn btn-primary" id="next-3">Next →</button>
+        </div>
+      </section>
+
+      <!-- Step 4: Frequency -->
+      <section class="step" data-step="4">
+        <h2 class="step-title">How often do you interact with DB Sync?</h2>
+        <p class="step-sub">Drag the slider to your typical frequency.</p>
+        <div class="slider-wrap">
+          <input type="range" id="freq-slider" min="0" max="4" step="1" value="2" />
+          <div class="slider-labels">
+            <span>Rarely</span>
+            <span>Weekly</span>
+            <span>Daily</span>
+            <span>Hourly</span>
+            <span>Constantly</span>
+          </div>
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-ghost" id="back-4">← Back</button>
+          <button class="btn btn-primary" id="next-4">Next →</button>
+        </div>
+      </section>
+
+      <!-- Step 5: Pain points -->
+      <section class="step" data-step="5">
+        <h2 class="step-title">Rank your biggest pain points</h2>
+        <p class="step-sub">Drag to reorder — most painful first.</p>
+        <ul class="pain-list" id="pain-list">
+          <li class="pain-item" draggable="true" data-pain="sync_time">
+            <span class="pain-rank">1</span>
+            <span class="pain-handle">⠿</span>
+            <span>Slow initial sync time</span>
+          </li>
+          <li class="pain-item" draggable="true" data-pain="disk">
+            <span class="pain-rank">2</span>
+            <span class="pain-handle">⠿</span>
+            <span>Disk usage / storage</span>
+          </li>
+          <li class="pain-item" draggable="true" data-pain="queries">
+            <span class="pain-rank">3</span>
+            <span class="pain-handle">⠿</span>
+            <span>Query performance</span>
+          </li>
+          <li class="pain-item" draggable="true" data-pain="upgrades">
+            <span class="pain-rank">4</span>
+            <span class="pain-handle">⠿</span>
+            <span>Painful upgrades / migrations</span>
+          </li>
+          <li class="pain-item" draggable="true" data-pain="docs">
+            <span class="pain-rank">5</span>
+            <span class="pain-handle">⠿</span>
+            <span>Lack of documentation</span>
+          </li>
+        </ul>
+        <div class="nav-btns">
+          <button class="btn btn-ghost" id="back-5">← Back</button>
+          <button class="btn btn-primary" id="next-5">Next →</button>
+        </div>
+      </section>
+
+      <!-- Step 6: Satisfaction -->
+      <section class="step" data-step="6">
+        <h2 class="step-title">How satisfied are you with DB Sync?</h2>
+        <p class="step-sub">1 = very unsatisfied, 10 = very satisfied</p>
+        <div class="sat-tiles" id="sat-tiles">
+          {Array.from({length: 10}, (_, i) => (
+            <div class="sat-tile" data-val={i + 1}>{i + 1}</div>
+          ))}
+        </div>
+        <div class="nav-btns">
+          <button class="btn btn-ghost" id="back-6">← Back</button>
+          <button class="btn btn-primary" id="next-6">Next →</button>
+        </div>
+      </section>
+
+      <!-- Step 7: NPS why -->
+      <section class="step" data-step="7">
+        <h2 class="step-title">What would most improve DB Sync?</h2>
+        <p class="step-sub">Optional — feel free to be specific.</p>
+        <textarea class="nps-input" id="nps-why" placeholder="e.g. faster sync, better docs, smaller footprint…"></textarea>
+        <div class="nav-btns">
+          <button class="btn btn-ghost" id="back-7">← Back</button>
+          <button class="btn btn-primary" id="next-7">Next →</button>
+        </div>
+      </section>
+
+      <!-- Step 8: Review & submit -->
+      <section class="step" data-step="8">
+        <h2 class="step-title">Review your answers</h2>
+        <p class="step-sub">Everything looks good? Hit Submit.</p>
+        <table class="review-table" id="review-table">
+          <tbody></tbody>
+        </table>
+        <div class="nav-btns">
+          <button class="btn btn-ghost" id="back-8">← Back</button>
+          <button class="btn btn-primary" id="submit-btn">Submit</button>
+        </div>
+        <p id="submit-error" style="color: red; margin-top: 0.75rem; display: none;"></p>
+      </section>
+    </div>
+
+    <!-- Thank you screen -->
+    <div id="thankyou" class="thankyou" style="display: none;">
+      <div class="big-icon">🎉</div>
+      <h2 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 0.75rem;">Thanks for your feedback!</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">Your response helps the team prioritise what matters most.</p>
+      <a href="/survey/results" class="btn btn-primary" style="text-decoration: none; display: inline-block;">View the Dashboard →</a>
+    </div>
+  </div>
+</BaseLayout>
+
+<script>
+  const TOTAL_STEPS = 8;
+  let currentStep = 1;
+
+  const state: {
+    role: string;
+    use_case: string[];
+    team_size: string;
+    frequency: number;
+    pain_points: string[];
+    satisfaction: number | null;
+    nps_why: string;
+  } = {
+    role: '',
+    use_case: [],
+    team_size: '',
+    frequency: 2,
+    pain_points: ['sync_time', 'disk', 'queries', 'upgrades', 'docs'],
+    satisfaction: null,
+    nps_why: '',
+  };
+
+  function showStep(n: number) {
+    document.querySelectorAll('.step').forEach(s => s.classList.remove('active'));
+    const el = document.querySelector<HTMLElement>(`[data-step="${n}"]`);
+    if (el) el.classList.add('active');
+    currentStep = n;
+    const pct = (n / TOTAL_STEPS) * 100;
+    const bar = document.getElementById('progress-bar');
+    if (bar) bar.style.width = `${pct}%`;
+  }
+
+  // Single-select cards
+  document.querySelectorAll('.choice-card:not(.multi)').forEach(card => {
+    card.addEventListener('click', () => {
+      const field = (card as HTMLElement).dataset.field!;
+      document.querySelectorAll(`.choice-card[data-field="${field}"]`).forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      (state as any)[field] = (card as HTMLElement).dataset.value!;
+    });
+  });
+
+  // Multi-select cards
+  document.querySelectorAll('.choice-card.multi').forEach(card => {
+    card.addEventListener('click', () => {
+      card.classList.toggle('selected');
+      const val = (card as HTMLElement).dataset.value!;
+      if (card.classList.contains('selected')) {
+        if (!state.use_case.includes(val)) state.use_case.push(val);
+      } else {
+        state.use_case = state.use_case.filter(v => v !== val);
+      }
+    });
+  });
+
+  // Frequency slider
+  const freqSlider = document.getElementById('freq-slider') as HTMLInputElement;
+  freqSlider?.addEventListener('input', () => {
+    state.frequency = Number(freqSlider.value);
+  });
+
+  // Satisfaction tiles
+  document.querySelectorAll('.sat-tile').forEach(tile => {
+    tile.addEventListener('click', () => {
+      document.querySelectorAll('.sat-tile').forEach(t => t.classList.remove('selected'));
+      tile.classList.add('selected');
+      state.satisfaction = Number((tile as HTMLElement).dataset.val);
+    });
+  });
+
+  // NPS textarea
+  document.getElementById('nps-why')?.addEventListener('input', (e) => {
+    state.nps_why = (e.target as HTMLTextAreaElement).value;
+  });
+
+  // Pain point drag-to-rank
+  const painList = document.getElementById('pain-list')!;
+  let dragSrc: HTMLElement | null = null;
+
+  function updateRanks() {
+    painList.querySelectorAll('.pain-item').forEach((item, i) => {
+      const rank = item.querySelector('.pain-rank');
+      if (rank) rank.textContent = String(i + 1);
+    });
+    state.pain_points = Array.from(painList.querySelectorAll('.pain-item')).map(
+      el => (el as HTMLElement).dataset.pain!
+    );
+  }
+
+  painList.addEventListener('dragstart', (e) => {
+    dragSrc = (e.target as HTMLElement).closest('.pain-item');
+    if (dragSrc) dragSrc.classList.add('dragging');
+  });
+
+  painList.addEventListener('dragend', () => {
+    if (dragSrc) dragSrc.classList.remove('dragging');
+    dragSrc = null;
+    updateRanks();
+  });
+
+  painList.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    const target = (e.target as HTMLElement).closest<HTMLElement>('.pain-item');
+    if (target && dragSrc && target !== dragSrc) {
+      const rect = target.getBoundingClientRect();
+      const midY = rect.top + rect.height / 2;
+      if ((e as MouseEvent).clientY < midY) {
+        painList.insertBefore(dragSrc, target);
+      } else {
+        painList.insertBefore(dragSrc, target.nextSibling);
+      }
+    }
+  });
+
+  // Navigation
+  function nav(fromStep: number, toStep: number) {
+    showStep(toStep);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  document.getElementById('next-1')?.addEventListener('click', () => {
+    if (!state.role) return alert('Please select a role.');
+    nav(1, 2);
+  });
+  document.getElementById('back-2')?.addEventListener('click', () => nav(2, 1));
+  document.getElementById('next-2')?.addEventListener('click', () => nav(2, 3));
+  document.getElementById('back-3')?.addEventListener('click', () => nav(3, 2));
+  document.getElementById('next-3')?.addEventListener('click', () => {
+    if (!state.team_size) return alert('Please select a team size.');
+    nav(3, 4);
+  });
+  document.getElementById('back-4')?.addEventListener('click', () => nav(4, 3));
+  document.getElementById('next-4')?.addEventListener('click', () => nav(4, 5));
+  document.getElementById('back-5')?.addEventListener('click', () => nav(5, 4));
+  document.getElementById('next-5')?.addEventListener('click', () => nav(5, 6));
+  document.getElementById('back-6')?.addEventListener('click', () => nav(6, 5));
+  document.getElementById('next-6')?.addEventListener('click', () => {
+    if (state.satisfaction === null) return alert('Please select a satisfaction score.');
+    buildReview();
+    nav(6, 7);
+  });
+  document.getElementById('back-7')?.addEventListener('click', () => nav(7, 6));
+  document.getElementById('next-7')?.addEventListener('click', () => {
+    buildReview();
+    nav(7, 8);
+  });
+  document.getElementById('back-8')?.addEventListener('click', () => nav(8, 7));
+
+  const FREQ_LABELS = ['Rarely', 'Weekly', 'Daily', 'Hourly', 'Constantly'];
+  const ROLE_LABELS: Record<string, string> = { developer: 'Developer', devops: 'DevOps / SRE', lead: 'Tech Lead', exec: 'Executive' };
+  const UC_LABELS: Record<string, string> = { explorer: 'Block Explorer', wallet: 'Wallet Backend', analytics: 'Analytics', defi: 'DeFi / dApps', staking: 'Staking Tools', other_uc: 'Other' };
+  const PAIN_LABELS: Record<string, string> = { sync_time: 'Slow sync', disk: 'Disk usage', queries: 'Query perf', upgrades: 'Upgrades', docs: 'Docs' };
+
+  function buildReview() {
+    updateRanks();
+    const tbody = document.querySelector('#review-table tbody')!;
+    tbody.innerHTML = `
+      <tr><th>Role</th><td>${ROLE_LABELS[state.role] ?? state.role}</td></tr>
+      <tr><th>Use cases</th><td>${state.use_case.map(u => UC_LABELS[u] ?? u).join(', ') || '—'}</td></tr>
+      <tr><th>Team size</th><td>${state.team_size}</td></tr>
+      <tr><th>Frequency</th><td>${FREQ_LABELS[state.frequency]}</td></tr>
+      <tr><th>Pain points (ranked)</th><td>${state.pain_points.map((p, i) => `${i + 1}. ${PAIN_LABELS[p] ?? p}`).join('<br>')}</td></tr>
+      <tr><th>Satisfaction</th><td>${state.satisfaction} / 10</td></tr>
+      <tr><th>Improvement wish</th><td>${state.nps_why || '—'}</td></tr>
+    `;
+  }
+
+  document.getElementById('submit-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('submit-btn') as HTMLButtonElement;
+    const errEl = document.getElementById('submit-error')!;
+    btn.disabled = true;
+    btn.textContent = 'Submitting…';
+    errEl.style.display = 'none';
+    try {
+      const res = await fetch('/api/submit', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(state),
+      });
+      const data = await res.json() as { ok: boolean; error?: string };
+      if (!data.ok) throw new Error(data.error ?? 'Unknown error');
+      document.getElementById('survey-shell')!.style.display = 'none';
+      document.getElementById('thankyou')!.style.display = 'block';
+    } catch (err: any) {
+      errEl.textContent = 'Submission failed: ' + err.message;
+      errEl.style.display = 'block';
+      btn.disabled = false;
+      btn.textContent = 'Submit';
+    }
+  });
+</script>
