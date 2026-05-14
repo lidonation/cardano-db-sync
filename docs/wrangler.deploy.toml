@@ -11,6 +11,7 @@ globs = ["**/*.mjs", "**/*.js"]
 [assets]
 directory = "./dist/client"
 binding = "ASSETS"
+html_handling = "drop-trailing-slash"
 
 [[d1_databases]]
 binding = "DB"
