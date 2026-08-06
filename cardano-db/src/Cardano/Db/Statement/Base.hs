@@ -12,9 +12,9 @@
 
 module Cardano.Db.Statement.Base where
 
-import Cardano.BM.Data.Trace (Trace)
-import Cardano.BM.Trace (logInfo, logWarning, nullTracer)
+import Cardano.Db.Log (LogMessage, logInfo, logWarning)
 import Cardano.Ledger.BaseTypes (SlotNo (..))
+import Cardano.Logging.Types (Trace)
 import Cardano.Prelude (ByteString, HasCallStack, Int64, MonadIO (..), Proxy (..), Word64, for, textShow, void)
 import Data.Functor.Contravariant ((>$<))
 import Data.List (partition)
@@ -36,6 +36,7 @@ import qualified Cardano.Db.Schema.Ids as Id
 import Cardano.Db.Schema.MinIds (MinIds (..), MinIdsWrapper (..), textToMinIds)
 import Cardano.Db.Schema.Types (utcTimeAsTimestampDecoder)
 import Cardano.Db.Schema.Variants (TxOutVariantType)
+import Cardano.Db.Statement.EpochAndProtocol (deleteEpochFinalizedFromEpoch)
 import Cardano.Db.Statement.Function.Core (ResultType (..), ResultTypeBulk (..), runSession, runSessionEntity)
 import Cardano.Db.Statement.Function.Delete (deleteWhereCount)
 import Cardano.Db.Statement.Function.Insert (insert, insertCheckUnique)
@@ -684,7 +685,7 @@ queryPreviousSlotNo slotNo =
 -----------------------------------------------------------------------------------
 
 deleteBlocksBlockId ::
-  Trace IO Text.Text ->
+  Trace IO LogMessage ->
   TxOutVariantType ->
   Id.BlockId ->
   Word64 ->
@@ -724,6 +725,9 @@ deleteBlocksBlockId trce txOutVariantType blockId epochN isConsumedTxOut = do
     -- Step 2: Delete epoch-related data
     liftIO $ updateProgress (Just trce) progressRef 2 (rb <> "Deleting epoch data...")
     deleteEpochLogsE <- deleteUsingEpochNo trce epochN
+    -- Drop the surviving epoch's now-stale finalised row; no-op when the view is disabled.
+    epochFinalizedDeleted <- deleteEpochFinalizedFromEpoch epochN
+    let epochFinalizedLogs = [("epoch_finalized", epochFinalizedDeleted)]
 
     -- Step 3: Delete block-related data
     liftIO $ updateProgress (Just trce) progressRef 3 (rb <> "Deleting block data...")
@@ -738,7 +742,7 @@ deleteBlocksBlockId trce txOutVariantType blockId epochN isConsumedTxOut = do
 
     -- Step 5: Generate summary
     liftIO $ updateProgress (Just trce) progressRef 5 (rb <> "Generating summary...")
-    let summary = mkRollbackSummary (deleteEpochLogsE <> blockDeleteLogs) setNullLogs
+    let summary = mkRollbackSummary (deleteEpochLogsE <> epochFinalizedLogs <> blockDeleteLogs) setNullLogs
 
     -- Step 6: Complete
     liftIO $ updateProgress (Just trce) progressRef 6 (rb <> "Complete!")
@@ -786,49 +790,43 @@ mkRollbackSummary logs setNullLogs =
 
 ---------------------------------------------------------------------------------
 
-deleteUsingEpochNo :: Trace IO Text.Text -> Word64 -> DbM [(Text.Text, Int64)]
+deleteUsingEpochNo :: Trace IO LogMessage -> Word64 -> DbM [(Text.Text, Int64)]
 deleteUsingEpochNo trce epochN = do
   let epochEncoder = fromIntegral >$< HsqlE.param (HsqlE.nonNullable HsqlE.int8)
       epochInt64 = fromIntegral epochN
 
-  -- Log which epoch is being used for deletion (this comes from previous block's epoch for boundary rollbacks)
   liftIO $ logInfo trce $ "Rollback - Using epoch " <> textShow epochN <> " for deletion (DrepDistr: epoch_no > " <> textShow epochN <> ")"
 
-  -- First, count what we're about to delete for progress tracking
   totalCounts <- withProgress (Just trce) 5 "Counting epoch records..." $ \progressRef -> do
-    liftIO $ updateProgress (Just trce) progressRef 0 "Counting Epoch, DrepDistr, RewardRest, and PoolStat records..."
+    liftIO $ updateProgress (Just trce) progressRef 0 "Counting DrepDistr, RewardRest, and PoolStat records..."
 
-    (ec, dc, rrc, psc) <- runSession mkDbCallStack $
+    (dc, rrc, psc) <- runSession mkDbCallStack $
       HsqlSes.pipeline $ do
-        ec <- HsqlP.statement epochN (parameterisedCountWhere @SC.Epoch "no" ">= $1" epochEncoder)
         dc <- HsqlP.statement epochN (parameterisedCountWhere @SC.DrepDistr "epoch_no" "> $1" epochEncoder)
         rrc <- HsqlP.statement epochN (parameterisedCountWhere @SC.RewardRest "spendable_epoch" "> $1" epochEncoder)
         psc <- HsqlP.statement epochN (parameterisedCountWhere @SC.PoolStat "epoch_no" "> $1" epochEncoder)
-        pure (ec, dc, rrc, psc)
+        pure (dc, rrc, psc)
 
     liftIO $ logInfo trce $ "Rollback - Found " <> textShow dc <> " DrepDistr records to delete for epochs > " <> textShow epochN
     liftIO $ updateProgress (Just trce) progressRef 4 "Count completed"
-    pure (ec, dc, rrc, psc)
+    pure (dc, rrc, psc)
 
-  let (epochCount, drepCount, rewardRestCount, poolStatCount) = totalCounts
-      totalRecords = epochCount + drepCount + rewardRestCount + poolStatCount
-  liftIO $ logInfo trce $ "Deleting " <> textShow totalRecords <> " records across 5 tables..."
+  let (drepCount, rewardRestCount, poolStatCount) = totalCounts
+      totalRecords = drepCount + rewardRestCount + poolStatCount
+  liftIO $ logInfo trce $ "Deleting " <> textShow totalRecords <> " records across 4 tables..."
 
-  -- Execute deletes with progress logging
-  (epochDeletedCount, drepDeletedCount, rewardRestDeletedCount, poolStatDeletedCount) <-
+  (drepDeletedCount, rewardRestDeletedCount, poolStatDeletedCount) <-
     withProgress (Just trce) 5 "Deleting epoch records..." $ \progressRef -> do
-      liftIO $ updateProgress (Just trce) progressRef 1 $ "Deleting " <> textShow totalRecords <> " records from Epoch, DrepDistr, RewardRest, and PoolStat..."
+      liftIO $ updateProgress (Just trce) progressRef 1 $ "Deleting " <> textShow totalRecords <> " records from DrepDistr, RewardRest, and PoolStat..."
 
       runSession mkDbCallStack $
         HsqlSes.pipeline $ do
-          epochDeletedCount <- HsqlP.statement epochN (deleteWhereCount @SC.Epoch "no" "=" epochEncoder)
           drepDeletedCount <- HsqlP.statement epochN (deleteWhereCount @SC.DrepDistr "epoch_no" ">" epochEncoder)
           rewardRestDeletedCount <- HsqlP.statement epochN (deleteWhereCount @SC.RewardRest "spendable_epoch" ">" epochEncoder)
           poolStatDeletedCount <- HsqlP.statement epochN (deleteWhereCount @SC.PoolStat "epoch_no" ">" epochEncoder)
-          pure (epochDeletedCount, drepDeletedCount, rewardRestDeletedCount, poolStatDeletedCount)
+          pure (drepDeletedCount, rewardRestDeletedCount, poolStatDeletedCount)
 
   liftIO $ logInfo trce "Setting null values for governance actions..."
-  -- Null operations
   (n1, n2, n3, n4) <- runSession mkDbCallStack $
     HsqlSes.pipeline $ do
       n1 <- HsqlP.statement epochInt64 setNullEnactedStmt
@@ -839,19 +837,18 @@ deleteUsingEpochNo trce epochN = do
 
   let nullTotal = n1 + n2 + n3 + n4
       countLogs =
-        [ ("Epoch", epochDeletedCount)
-        , ("DrepDistr", drepDeletedCount)
+        [ ("DrepDistr", drepDeletedCount)
         , ("RewardRest", rewardRestDeletedCount)
         , ("PoolStat", poolStatDeletedCount)
         ]
       nullLogs = [("GovActionProposal Nulled", nullTotal)]
 
-  liftIO $ logInfo trce $ "Rollback epoch deletion completed - actual deleted: " <> textShow (epochDeletedCount + drepDeletedCount + rewardRestDeletedCount + poolStatDeletedCount)
+  liftIO $ logInfo trce $ "Rollback epoch deletion completed - actual deleted: " <> textShow (drepDeletedCount + rewardRestDeletedCount + poolStatDeletedCount)
   pure $ countLogs <> nullLogs
 
 --------------------------------------------------------------------------------
 deleteBlocksSlotNo ::
-  Trace IO Text.Text ->
+  Trace IO LogMessage ->
   TxOutVariantType ->
   SlotNo ->
   Bool ->
@@ -895,12 +892,12 @@ deleteBlocksSlotNo trce txOutVariantType (SlotNo slotNo) isConsumedTxOut = do
 
 --------------------------------------------------------------------------------
 deleteBlocksSlotNoNoTrace :: TxOutVariantType -> SlotNo -> DbM Bool
-deleteBlocksSlotNoNoTrace txOutVariantType slotNo = deleteBlocksSlotNo nullTracer txOutVariantType slotNo True
+deleteBlocksSlotNoNoTrace txOutVariantType slotNo = deleteBlocksSlotNo mempty txOutVariantType slotNo True
 
 --------------------------------------------------------------------------------
 deleteBlocksForTests :: HasCallStack => TxOutVariantType -> Id.BlockId -> Word64 -> DbM (Either DbLookupError ())
 deleteBlocksForTests txOutVariantType blockId epochN = do
-  resCount <- deleteBlocksBlockId nullTracer txOutVariantType blockId epochN False
+  resCount <- deleteBlocksBlockId mempty txOutVariantType blockId epochN False
   if resCount > 0
     then pure $ Right ()
     else pure $ Left $ mkDbLookupError "No blocks deleted"
@@ -915,7 +912,7 @@ deleteBlock txOutVariantType block = do
   case mBlockId of
     Nothing -> pure False
     Just (blockId, epochN) -> do
-      void $ deleteBlocksBlockId nullTracer txOutVariantType blockId epochN False
+      void $ deleteBlocksBlockId mempty txOutVariantType blockId epochN False
       pure True
 
 --------------------------------------------------------------------------------

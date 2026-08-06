@@ -1,7 +1,7 @@
 cabal-version:          3.6
 
 name:                   cardano-smash-server
-version:                13.7.0.5
+version:                13.7.2.1
 synopsis:               The Cardano smash server
 description:            Please see the README on GitHub at
                         <https://github.com/IntersectMBO/cardano-db-sync/cardano-smash-server/#readme>
@@ -52,6 +52,7 @@ library
                         Cardano.SMASH.Server.Impl
                         Cardano.SMASH.Server.PoolDataLayer
                         Cardano.SMASH.Server.Run
+                        Cardano.SMASH.Server.Tracing
                         Cardano.SMASH.Server.Types
 
   other-modules:        Paths_cardano_smash_server
@@ -68,7 +69,6 @@ library
                       , hasql
                       , http-client
                       , http-conduit
-                      , iohk-monitoring
                       , ip
                       , network
                       , network-uri
@@ -79,6 +79,7 @@ library
                       , swagger2
                       , text
                       , time
+                      , trace-dispatcher
                       , transformers-except
                       , wai
                       , warp

@@ -8,6 +8,8 @@ module Cardano.DbSync.OffChain.Http (
   parseAndValidateVoteData,
   parseOffChainUrl,
   newRestrictedManager,
+  -- Exported for testing.
+  isPrivateAddr,
 ) where
 
 import qualified Cardano.Crypto.Hash.Blake2b as Crypto
@@ -81,32 +83,34 @@ httpGetOffChainPoolData manager request purl expectedMetaHash = do
     url = OffChainPoolUrl purl
 
 httpGetOffChainVoteData ::
+  Bool ->
   [Text] ->
   VoteUrl ->
   Maybe VoteMetaHash ->
   DB.AnchorType ->
   ExceptT OffChainFetchError IO SimplifiedOffChainVoteData
-httpGetOffChainVoteData gateways vurl metaHash anchorType = do
+httpGetOffChainVoteData allowPrivate gateways vurl metaHash anchorType = do
   case useIpfsGatewayMaybe vurl gateways of
-    Nothing -> httpGetOffChainVoteDataSingle vurl metaHash anchorType
+    Nothing -> httpGetOffChainVoteDataSingle allowPrivate vurl metaHash anchorType
     Just [] -> left $ OCFErrNoIpfsGateway (OffChainVoteUrl vurl)
     Just urls -> tryAllGatewaysRec urls []
   where
     tryAllGatewaysRec [] acc = left $ OCFErrIpfsGatewayFailures (OffChainVoteUrl vurl) (reverse acc)
     tryAllGatewaysRec (url : rest) acc = do
-      msocd <- liftIO $ runExceptT $ httpGetOffChainVoteDataSingle url metaHash anchorType
+      msocd <- liftIO $ runExceptT $ httpGetOffChainVoteDataSingle allowPrivate url metaHash anchorType
       case msocd of
         Right socd -> pure socd
         Left err -> tryAllGatewaysRec rest (err : acc)
 
 httpGetOffChainVoteDataSingle ::
+  Bool ->
   VoteUrl ->
   Maybe VoteMetaHash ->
   DB.AnchorType ->
   ExceptT OffChainFetchError IO SimplifiedOffChainVoteData
-httpGetOffChainVoteDataSingle vurl metaHash anchorType = do
-  manager <- liftIO newRestrictedManager
-  request <- parseOffChainUrl url
+httpGetOffChainVoteDataSingle allowPrivate vurl metaHash anchorType = do
+  manager <- liftIO (newRestrictedManager allowPrivate)
+  request <- parseOffChainUrl allowPrivate url
   let req = httpGetBytes manager request 3000000 3000000 url
   httpRes <- handleExceptT (convertHttpException url) req
   (respBS, respLBS, mContentType) <- hoistEither httpRes
@@ -217,8 +221,8 @@ isPossiblyJsonObject bs =
 -------------------------------------------------------------------------------------
 -- Url
 -------------------------------------------------------------------------------------
-parseOffChainUrl :: OffChainUrlType -> ExceptT OffChainFetchError IO Http.Request
-parseOffChainUrl url = do
+parseOffChainUrl :: Bool -> OffChainUrlType -> ExceptT OffChainFetchError IO Http.Request
+parseOffChainUrl allowPrivate url = do
   let urlText = Text.pack $ showUrl url
   unless (Text.isPrefixOf "https://" urlText || Text.isPrefixOf "http://" urlText) $
     left $
@@ -228,7 +232,7 @@ parseOffChainUrl url = do
     left $
       OCFErrUrlParseFail url "Only GET requests are allowed"
   let hostBS = Http.host request
-  when (isLocalhostHost hostBS) $
+  when (not allowPrivate && isLocalhostHost hostBS) $
     left $
       OCFErrUrlParseFail url "Access to localhost is not allowed"
   pure $ applyContentType request
@@ -283,13 +287,17 @@ useIpfsGatewayMaybe vu gateways =
 -- Restricted Manager
 -------------------------------------------------------------------------------------
 
--- | Create a restricted 'Http.ManagerSettings' that blocks connections to
--- private, loopback, and link-local IP addresses. The restriction is
--- checked at connect time on the resolved IP, so it applies to redirects
--- and prevents DNS rebinding attacks.
-newRestrictedManager :: IO Http.Manager
-newRestrictedManager = do
-  (settings, _mProxyRestricted) <- mkRestrictedManagerSettings offchainRestriction Nothing Nothing
+-- | Create the off-chain HTTP manager. When 'allowPrivate' is 'False' (the
+-- default), connections to private, loopback, and link-local IP addresses are
+-- blocked at connect time via 'offchainRestriction'. The restriction is checked
+-- on the resolved IP, so it applies to redirects and prevents DNS rebinding
+-- attacks. When 'allowPrivate' is 'True' the restriction is replaced with a
+-- no-op that allows every address — this is intended for local-cluster testing
+-- only and is wired in from the @--allow-private-offchain-urls@ CLI flag.
+newRestrictedManager :: Bool -> IO Http.Manager
+newRestrictedManager allowPrivate = do
+  let restriction = if allowPrivate then permissiveRestriction else offchainRestriction
+  (settings, _mProxyRestricted) <- mkRestrictedManagerSettings restriction Nothing Nothing
   Http.newManager settings
 
 offchainRestriction :: Restriction
@@ -297,6 +305,11 @@ offchainRestriction = addressRestriction $ \addr ->
   if isPrivateAddr (Socket.addrAddress addr)
     then Just $ connectionRestricted ("Access to private, loopback, or link-local IP address is not allowed: " ++) addr
     else Nothing
+
+-- | A 'Restriction' that allows every resolved address. Selected by
+-- 'newRestrictedManager' when @--allow-private-offchain-urls@ is set.
+permissiveRestriction :: Restriction
+permissiveRestriction = addressRestriction $ const Nothing
 
 isPrivateAddr :: Socket.SockAddr -> Bool
 isPrivateAddr (Socket.SockAddrInet _ hostAddr) =
@@ -311,9 +324,19 @@ isPrivateAddr (Socket.SockAddrInet _ hostAddr) =
         || (a == 198 && b >= 18 && b <= 19) -- 198.18.0.0/15 (benchmarking)
         || a >= 224 -- 224.0.0.0+ (multicast + reserved + broadcast)
 isPrivateAddr (Socket.SockAddrInet6 _ _ hostAddr6 _) =
-  let addr@(w1, _, _, _, _, _, _, _) = Socket.hostAddress6ToTuple hostAddr6
+  let addr@(w1, w2, w3, w4, w5, w6, w7, w8) = Socket.hostAddress6ToTuple hostAddr6
+      ipv4Mapped = (w1, w2, w3, w4, w5, w6) == (0, 0, 0, 0, 0, 0xFFFF)
+      mappedIPv4Addr =
+        Socket.SockAddrInet 0 $
+          Socket.tupleToHostAddress
+            ( fromIntegral (w7 `shiftR` 8)
+            , fromIntegral (w7 .&. 0xFF)
+            , fromIntegral (w8 `shiftR` 8)
+            , fromIntegral (w8 .&. 0xFF)
+            )
    in addr == (0, 0, 0, 0, 0, 0, 0, 0) -- ::
         || addr == (0, 0, 0, 0, 0, 0, 0, 1) -- ::1
         || (w1 .&. 0xFE00) == 0xFC00 -- fc00::/7 (ULA)
         || (w1 .&. 0xFFC0) == 0xFE80 -- fe80::/10 (link-local)
+        || (ipv4Mapped && isPrivateAddr mappedIPv4Addr) -- ::ffff:0:0/96 (IPv4-mapped)
 isPrivateAddr _ = False

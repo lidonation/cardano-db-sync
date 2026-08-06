@@ -96,14 +96,15 @@ pRunDbSyncNode = do
   SyncNodeParams
     <$> pConfigFile
     <*> pSocketPath
+    <*> optional pTracerSocketPath
     <*> optional pLedgerStateDir
     <*> pMigrationDir
     <*> pPGPassSource
-    <*> pEpochDisabled
     <*> pHasCache
     <*> pForceIndexes
     <*> pHasInOut
     <*> optional pRollbackSlotNo
+    <*> pAllowPrivateOffChainUrls
 
 pConfigFile :: Parser ConfigFile
 pConfigFile =
@@ -145,15 +146,6 @@ pPGPassSource =
         <> Opt.metavar "ENV"
     )
 
-pEpochDisabled :: Parser Bool
-pEpochDisabled =
-  Opt.flag
-    False
-    True
-    ( Opt.long "disable-epoch"
-        <> Opt.help "Makes epoch table remain empty"
-    )
-
 pForceIndexes :: Parser Bool
 pForceIndexes =
   Opt.flag
@@ -172,6 +164,19 @@ pHasCache =
         <> Opt.help "Disables the db-sync caches. Reduces memory usage but it takes longer to sync."
     )
 
+pAllowPrivateOffChainUrls :: Parser Bool
+pAllowPrivateOffChainUrls =
+  Opt.flag
+    False
+    True
+    ( Opt.long "allow-private-offchain-urls"
+        <> Opt.help
+          ( "Allow the off-chain pool and vote metadata fetchers to connect to "
+              <> "URLs whose host or resolved IP is in a private, loopback, or "
+              <> "link-local range. Intended for local-cluster testing; off by default."
+          )
+    )
+
 pSocketPath :: Parser SocketPath
 pSocketPath =
   SocketPath
@@ -181,6 +186,15 @@ pSocketPath =
           <> Opt.completer (Opt.bashCompleter "file")
           <> Opt.metavar "FILEPATH"
       )
+
+pTracerSocketPath :: Parser FilePath
+pTracerSocketPath =
+  Opt.strOption
+    ( Opt.long "tracer-socket-path-connect"
+        <> Opt.help "Connect to a cardano-tracer on this socket to forward logs and metrics."
+        <> Opt.completer (Opt.bashCompleter "file")
+        <> Opt.metavar "FILEPATH"
+    )
 
 pRollbackSlotNo :: Parser SlotNo
 pRollbackSlotNo =

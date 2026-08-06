@@ -14,15 +14,16 @@ where
 
 import Data.Either.Extra (eitherToMaybe)
 
-import Cardano.BM.Trace (Trace, logDebug, logInfo)
+import Cardano.Db.Log (LogMessage, logDebug, logInfo)
 import Cardano.Ledger.BaseTypes
 import qualified Cardano.Ledger.BaseTypes as Ledger
 import Cardano.Ledger.Keys
+import Cardano.Logging (Trace)
 import Cardano.Prelude
 
 import qualified Cardano.Db as DB
 import Cardano.DbSync.Api
-import Cardano.DbSync.Api.Types (InsertOptions (..), SyncEnv (..), SyncOptions (..))
+import Cardano.DbSync.Api.Types (InsertOptions (..), SyncEnv (..))
 import Cardano.DbSync.Cache (
   cleanCachesForTip,
   insertBlockAndCache,
@@ -30,8 +31,7 @@ import Cardano.DbSync.Cache (
   queryPoolKeyWithCache,
   queryPrevBlockWithCache,
  )
-import Cardano.DbSync.Cache.Epoch (writeEpochBlockDiffToCache)
-import Cardano.DbSync.Cache.Types (CacheAction (..), CacheStatus (..), EpochBlockDiff (..))
+import Cardano.DbSync.Cache.Types (CacheAction (..), CacheStatus (..))
 import Cardano.DbSync.DbEvent (liftDbLookup)
 import qualified Cardano.DbSync.Era.Shelley.Generic as Generic
 import Cardano.DbSync.Era.Universal.Epoch
@@ -101,21 +101,6 @@ insertBlockUniversal syncEnv shouldLog withinTwoMins withinHalfHour blk details 
 
     minIds <- insertBlockGroupedData syncEnv blockGroupedData
 
-    -- now that we've inserted the Block and all it's txs lets cache what we'll need
-    -- when we later update the epoch values.
-    -- if have --dissable-epoch && --dissable-cache then no need to cache data.
-    when (soptEpochAndCacheEnabled $ envOptions syncEnv) $
-      writeEpochBlockDiffToCache
-        cache
-        EpochBlockDiff
-          { ebdBlockId = blkId
-          , ebdTime = sdSlotTime details
-          , ebdFees = groupedTxFees blockGroupedData
-          , ebdEpochNo = unEpochNo (sdEpochNo details)
-          , ebdOutSum = fromIntegral $ groupedTxOutSum blockGroupedData
-          , ebdTxCount = fromIntegral $ length (Generic.blkTxs blk)
-          }
-
     when withinHalfHour $
       insertReverseIndex blkId minIds
 
@@ -163,7 +148,7 @@ insertBlockUniversal syncEnv shouldLog withinTwoMins withinHalfHour blk details 
   where
     iopts = getInsertOptions syncEnv
 
-    logger :: Trace IO a -> a -> IO ()
+    logger :: Trace IO LogMessage -> Text -> IO ()
     logger
       | shouldLog = logInfo
       | withinTwoMins = logInfo
@@ -180,7 +165,7 @@ insertBlockUniversal syncEnv shouldLog withinTwoMins withinHalfHour blk details 
         Generic.Shelley -> "insertBlockForEra"
         other -> mconcat ["insertBlockForEra(", textShow other, ")"]
 
-    tracer :: Trace IO Text
+    tracer :: Trace IO LogMessage
     tracer = getTrace syncEnv
 
     cache :: CacheStatus

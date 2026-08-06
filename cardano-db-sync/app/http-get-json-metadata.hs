@@ -90,9 +90,15 @@ usageExit = do
   mapM_
     putStrLn
     [ "\nUsage:"
-    , "    " ++ name ++ "<metadata url>"
-    , "    " ++ name ++ "<metadata url> <metadata hash in hex>"
-    , "with options [vote], [pool], [ga]"
+    , "  Pool metadata:"
+    , "    " ++ name ++ " <url> [<metadata hash in hex>]"
+    , "  Governance metadata (fetch over the network):"
+    , "    " ++ name ++ " url <type> <url> [<metadata hash in hex>]"
+    , "  Governance metadata (read from a local file):"
+    , "    " ++ name ++ " <type> <file> [<metadata hash in hex>]"
+    , ""
+    , "  <type> is one of: drep | ga | vote | committee_dereg | const | other"
+    , ""
     , "A debug/test program to debug the offchain metadata fetch mechanism.\n"
     ]
   exitFailure
@@ -105,8 +111,8 @@ runHttpGetPool poolUrl mHash =
   where
     httpGet :: ExceptT OffChainFetchError IO SimplifiedOffChainPoolData
     httpGet = do
-      request <- parseOffChainUrl $ OffChainPoolUrl poolUrl
-      manager <- liftIO newRestrictedManager
+      request <- parseOffChainUrl False $ OffChainPoolUrl poolUrl
+      manager <- liftIO (newRestrictedManager False)
       httpGetOffChainPoolData manager request poolUrl mHash
 
     reportSuccess :: SimplifiedOffChainPoolData -> IO ()
@@ -124,7 +130,7 @@ runHttpGetVote voteUrl mHash vtype =
   reportSuccess =<< runOrThrowIO (runExceptT httpGet)
   where
     httpGet :: ExceptT OffChainFetchError IO SimplifiedOffChainVoteData
-    httpGet = httpGetOffChainVoteData [] voteUrl mHash vtype
+    httpGet = httpGetOffChainVoteData False [] voteUrl mHash vtype
 
     reportSuccess :: SimplifiedOffChainVoteData -> IO ()
     reportSuccess spod = do

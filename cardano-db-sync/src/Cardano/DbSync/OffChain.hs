@@ -21,15 +21,16 @@ module Cardano.DbSync.OffChain (
   fetchOffChainVoteData,
 ) where
 
-import Cardano.BM.Trace (Trace, logInfo)
 import qualified Cardano.Db as DB
+import Cardano.Db.Log (LogMessage, logInfo)
 import Cardano.DbSync.Api (determineIsolationLevel, getInsertOptions, getTrace)
-import Cardano.DbSync.Api.Types (InsertOptions (..), SyncEnv (..))
+import Cardano.DbSync.Api.Types (InsertOptions (..), SyncEnv (..), SyncOptions (..))
 import Cardano.DbSync.Config.Types
 import Cardano.DbSync.OffChain.Http
 import Cardano.DbSync.OffChain.Query
 import qualified Cardano.DbSync.OffChain.Vote.Types as Vote
 import Cardano.DbSync.Types
+import Cardano.Logging (Trace)
 import Cardano.Prelude
 import Control.Concurrent.Class.MonadSTM.Strict (
   StrictTBQueue (..),
@@ -37,7 +38,7 @@ import Control.Concurrent.Class.MonadSTM.Strict (
   isEmptyTBQueue,
   writeTBQueue,
  )
-import Data.List (nubBy)
+import qualified Data.Map.Strict as Map
 import Data.Time.Clock.POSIX (POSIXTime)
 import qualified Data.Time.Clock.POSIX as Time
 import GHC.IO.Exception (userError)
@@ -56,7 +57,7 @@ data LoadOffChainWorkQueue a m = LoadOffChainWorkQueue
   }
 
 loadOffChainPoolWorkQueue ::
-  Trace IO Text ->
+  Trace IO LogMessage ->
   StrictTBQueue IO OffChainPoolWorkQueue ->
   DB.DbM ()
 loadOffChainPoolWorkQueue trce workQueue =
@@ -69,7 +70,7 @@ loadOffChainPoolWorkQueue trce workQueue =
       }
 
 loadOffChainVoteWorkQueue ::
-  Trace IO Text ->
+  Trace IO LogMessage ->
   StrictTBQueue IO OffChainVoteWorkQueue ->
   DB.DbM ()
 loadOffChainVoteWorkQueue trce workQueue =
@@ -83,7 +84,7 @@ loadOffChainVoteWorkQueue trce workQueue =
 
 loadOffChainWorkQueue ::
   MonadIO m =>
-  Trace IO Text ->
+  Trace IO LogMessage ->
   LoadOffChainWorkQueue a m ->
   DB.DbM ()
 loadOffChainWorkQueue _trce offChainWorkQueue = do
@@ -99,7 +100,7 @@ loadOffChainWorkQueue _trce offChainWorkQueue = do
 -- Insert OffChain
 ---------------------------------------------------------------------------------------------------------------------------------
 insertOffChainPoolResults ::
-  Trace IO Text ->
+  Trace IO LogMessage ->
   StrictTBQueue IO OffChainPoolResult ->
   DB.DbM ()
 insertOffChainPoolResults trce resultQueue = do
@@ -123,7 +124,7 @@ insertOffChainPoolResults trce resultQueue = do
       OffChainPoolResultError {} -> True
 
 insertOffChainVoteResults ::
-  Trace IO Text ->
+  Trace IO LogMessage ->
   StrictTBQueue IO OffChainVoteResult ->
   DB.DbM ()
 insertOffChainVoteResults trce resultQueue = do
@@ -152,14 +153,13 @@ insertOffChainVoteResults trce resultQueue = do
         insertBulkOffChainVoteFetchErrors errors
       -- Process metadata in a pipeline if any
       unless (null metadataWithAccessors) $ do
-        -- First insert all metadata and collect the IDs
-        metadataIds <- insertMetadataWithIds metadataWithAccessors
-        -- Now prepare all the related data for bulk inserts
-        let allGovActions = catMaybes [offChainVoteGovAction acc id | (_, acc, id) <- metadataIds]
-            allDrepData = catMaybes [offChainVoteDrep acc id | (_, acc, id) <- metadataIds]
-            allAuthors = concatMap (\(_, acc, id) -> offChainVoteAuthors acc id) metadataIds
-            allReferences = concatMap (\(_, acc, id) -> offChainVoteReferences acc id) metadataIds
-            allExternalUpdates = concatMap (\(_, acc, id) -> offChainVoteExternalUpdates acc id) metadataIds
+        -- Only newly-inserted parents are returned, so we never re-insert their children (#1966).
+        newMetadata <- insertMetadataWithIds metadataWithAccessors
+        let allGovActions = catMaybes [offChainVoteGovAction acc ocvdId | (acc, ocvdId) <- newMetadata]
+            allDrepData = catMaybes [offChainVoteDrep acc ocvdId | (acc, ocvdId) <- newMetadata]
+            allAuthors = concatMap (uncurry offChainVoteAuthors) newMetadata
+            allReferences = concatMap (uncurry offChainVoteReferences) newMetadata
+            allExternalUpdates = concatMap (uncurry offChainVoteExternalUpdates) newMetadata
         -- Execute all bulk inserts in a pipeline
         DB.runSession DB.mkDbCallStack $
           HsqlSes.pipeline $
@@ -182,27 +182,24 @@ insertOffChainVoteResults trce resultQueue = do
                   HsqlP.statement allExternalUpdates DB.insertBulkOffChainVoteExternalUpdatesStmt
               pure ()
 
-    -- Helper function to insert metadata and get back IDs
+    -- Dedup the batch by (voting_anchor_id, hash) and return accessors only for newly-inserted parents.
     insertMetadataWithIds ::
       [(DB.OffChainVoteData, OffChainVoteAccessors)] ->
-      DB.DbM [(DB.OffChainVoteData, OffChainVoteAccessors, DB.OffChainVoteDataId)]
+      DB.DbM [(OffChainVoteAccessors, DB.OffChainVoteDataId)]
     insertMetadataWithIds metadataWithAccessors = do
-      -- Extract just the metadata for insert and deduplicate by unique key
-      let metadata = map fst metadataWithAccessors
-          deduplicatedMetadata =
-            nubBy
-              ( \a b ->
-                  DB.offChainVoteDataVotingAnchorId a
-                    == DB.offChainVoteDataVotingAnchorId b
-                    && DB.offChainVoteDataHash a
-                      == DB.offChainVoteDataHash b
-              )
-              metadata
-      -- Insert and get IDs
-      ids <- DB.insertBulkOffChainVoteData deduplicatedMetadata
-
-      -- Return original data with IDs (note: length mismatch possible if duplicates were removed)
-      pure $ zipWith (\(md, acc) id -> (md, acc, id)) metadataWithAccessors ids
+      let byKey =
+            Map.fromListWith
+              (\_new old -> old)
+              [ ((DB.offChainVoteDataVotingAnchorId md, DB.offChainVoteDataHash md), (md, acc))
+              | (md, acc) <- metadataWithAccessors
+              ]
+          dedupedMetadata = map fst (Map.elems byKey)
+      newRows <- DB.insertBulkOffChainVoteDataReturningNew dedupedMetadata
+      pure
+        [ (acc, ocvdId)
+        | (anchorId, hash, ocvdId) <- newRows
+        , Just (_, acc) <- [Map.lookup (anchorId, hash) byKey]
+        ]
 
     -- Bulk insert for errors (you'll need to create this statement)
     insertBulkOffChainVoteFetchErrors :: [DB.OffChainVoteFetchError] -> DB.DbM ()
@@ -253,13 +250,14 @@ runFetchOffChainPoolThread syncEnv = do
               DB.runDbTransLogged trce dbEnv mIsolationLevel $
                 loadOffChainPoolWorkQueue trce (envOffChainPoolWorkQueue threadSyncEnv)
             poolq <- atomically $ flushTBQueue (envOffChainPoolWorkQueue threadSyncEnv)
-            manager <- newRestrictedManager
+            manager <- newRestrictedManager allowPrivate
             now <- liftIO Time.getPOSIXTime
-            mapM_ (queuePoolInsert <=< fetchOffChainPoolData trce manager now) poolq
+            mapM_ (queuePoolInsert <=< fetchOffChainPoolData trce allowPrivate manager now) poolq
       )
   where
     trce = getTrace syncEnv
     iopts = getInsertOptions syncEnv
+    allowPrivate = soptAllowPrivateOffChainUrls (envOptions syncEnv)
 
     queuePoolInsert :: OffChainPoolResult -> IO ()
     queuePoolInsert = atomically . writeTBQueue (envOffChainPoolResultQueue syncEnv)
@@ -291,12 +289,13 @@ runFetchOffChainVoteThread syncEnv = do
                 loadOffChainVoteWorkQueue trce (envOffChainVoteWorkQueue threadSyncEnv)
             voteq <- atomically $ flushTBQueue (envOffChainVoteWorkQueue threadSyncEnv)
             now <- liftIO Time.getPOSIXTime
-            mapM_ (queueVoteInsert <=< fetchOffChainVoteData gateways now) voteq
+            mapM_ (queueVoteInsert <=< fetchOffChainVoteData allowPrivate gateways now) voteq
       )
   where
     trce = getTrace syncEnv
     iopts = getInsertOptions syncEnv
     gateways = dncIpfsGateway $ envSyncNodeConfig syncEnv
+    allowPrivate = soptAllowPrivateOffChainUrls (envOptions syncEnv)
 
     queueVoteInsert :: OffChainVoteResult -> IO ()
     queueVoteInsert = atomically . writeTBQueue (envOffChainVoteResultQueue syncEnv)
@@ -308,12 +307,12 @@ tDelay = threadDelay 300_000_000
 ---------------------------------------------------------------------------------------------------------------------------------
 -- Fetch OffChain data
 ---------------------------------------------------------------------------------------------------------------------------------
-fetchOffChainPoolData :: Trace IO Text -> Http.Manager -> Time.POSIXTime -> OffChainPoolWorkQueue -> IO OffChainPoolResult
-fetchOffChainPoolData _tracer manager time oPoolWorkQ =
+fetchOffChainPoolData :: Trace IO LogMessage -> Bool -> Http.Manager -> Time.POSIXTime -> OffChainPoolWorkQueue -> IO OffChainPoolResult
+fetchOffChainPoolData _tracer allowPrivate manager time oPoolWorkQ =
   convert <<$>> runExceptT $ do
     let url = oPoolWqUrl oPoolWorkQ
         metaHash = oPoolWqMetaHash oPoolWorkQ
-    request <- parseOffChainUrl $ OffChainPoolUrl url
+    request <- parseOffChainUrl allowPrivate $ OffChainPoolUrl url
     httpGetOffChainPoolData manager request url (Just metaHash)
   where
     convert :: Either OffChainFetchError SimplifiedOffChainPoolData -> OffChainPoolResult
@@ -339,12 +338,12 @@ fetchOffChainPoolData _tracer manager time oPoolWorkQ =
               , DB.offChainPoolFetchErrorRetryCount = retryCount (oPoolWqRetry oPoolWorkQ)
               }
 
-fetchOffChainVoteData :: [Text] -> Time.POSIXTime -> OffChainVoteWorkQueue -> IO OffChainVoteResult
-fetchOffChainVoteData gateways time oVoteWorkQ =
+fetchOffChainVoteData :: Bool -> [Text] -> Time.POSIXTime -> OffChainVoteWorkQueue -> IO OffChainVoteResult
+fetchOffChainVoteData allowPrivate gateways time oVoteWorkQ =
   convert <<$>> runExceptT $ do
     let url = oVoteWqUrl oVoteWorkQ
         metaHash = oVoteWqMetaHash oVoteWorkQ
-    httpGetOffChainVoteData gateways url (Just metaHash) (oVoteWqType oVoteWorkQ)
+    httpGetOffChainVoteData allowPrivate gateways url (Just metaHash) (oVoteWqType oVoteWorkQ)
   where
     convert :: Either OffChainFetchError SimplifiedOffChainVoteData -> OffChainVoteResult
     convert eres =

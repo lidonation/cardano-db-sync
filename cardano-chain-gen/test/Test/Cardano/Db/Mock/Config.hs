@@ -40,6 +40,8 @@ module Test.Cardano.Db.Mock.Config (
   configMetadataDisable,
   configMetadataKeys,
   configPoolStats,
+  configEpochEnable,
+  configEpochDisable,
   mkFingerPrint,
   mkMutableDir,
   mkDBSyncEnv,
@@ -108,6 +110,7 @@ import Cardano.DbSync.Config
 import Cardano.DbSync.Config.Cardano
 import Cardano.DbSync.Config.Types
 import Cardano.DbSync.Error (runOrThrowIO)
+import Cardano.DbSync.Tracing.Setup (stdoutOnlyTracers)
 import Cardano.DbSync.Types (CardanoBlock, MetricSetters (..))
 import Cardano.Mock.ChainSync.Server
 import Cardano.Mock.Forging.Interpreter
@@ -122,6 +125,7 @@ data Config = Config
   , protocolInfoForging :: Consensus.ProtocolInfo CardanoBlock
   , protocolInfoForger :: [BlockForging IO CardanoBlock]
   , syncNodeParams :: SyncNodeParams
+  , genesisConfig :: GenesisConfig
   }
 
 data DBSyncEnv = DBSyncEnv
@@ -133,7 +137,6 @@ data DBSyncEnv = DBSyncEnv
 
 data CommandLineArgs = CommandLineArgs
   { claConfigFilename :: FilePath
-  , claEpochDisabled :: Bool
   , claHasCache :: Bool
   , claHasLedger :: Bool
   , claForceIndexes :: Bool
@@ -255,7 +258,7 @@ getPoolLayer env = do
   pool <- DB.createHasqlConnectionPool [connSetting] 1 -- Pool size of 1 for tests
   pure $
     postgresqlPoolDataLayer
-      nullTracer
+      mempty
       pool
 
 withConfig :: FilePath -> FilePath -> CommandLineArgs -> SyncNodeConfig -> (Config -> IO a) -> IO a
@@ -271,7 +274,7 @@ withConfig staticDir mutableDir cmdLineArgs config action = do
     (mapM finalize)
     ( \forgings -> do
         syncPars <- mkSyncNodeParams staticDir mutableDir cmdLineArgs
-        let cfg = Config (Consensus.pInfoConfig pInfoDbSync) pInfoDbSync pInfoForger forgings syncPars
+        let cfg = Config (Consensus.pInfoConfig pInfoDbSync) pInfoDbSync pInfoForger forgings syncPars genCfg
         action cfg
     )
   where
@@ -317,14 +320,15 @@ mkSyncNodeParams staticDir mutableDir CommandLineArgs {..} = do
     SyncNodeParams
       { enpConfigFile = mkConfigFile staticDir claConfigFilename
       , enpSocketPath = SocketPath $ mutableDir </> ".socket"
+      , enpTracerSocket = Nothing
       , enpMaybeLedgerStateDir = Just $ LedgerStateDir $ mutableDir </> "ledger-states"
       , enpMigrationDir = MigrationDir "../schema"
       , enpPGPassSource = DB.PGPassCached pgconfig
-      , enpEpochDisabled = claEpochDisabled
       , enpHasCache = claHasCache
       , enpForceIndexes = claForceIndexes
       , enpHasInOut = True
       , enpMaybeRollback = Nothing
+      , enpAllowPrivateOffChainUrls = False
       }
 
 ------------------------------------------------------------------------------
@@ -390,11 +394,18 @@ configPoolStats :: SyncNodeConfig -> SyncNodeConfig
 configPoolStats cfg = do
   cfg {dncInsertOptions = (dncInsertOptions cfg) {sioPoolStats = PoolStatsConfig True}}
 
+configEpochEnable :: SyncNodeConfig -> SyncNodeConfig
+configEpochEnable cfg =
+  cfg {dncInsertOptions = (dncInsertOptions cfg) {sioEpoch = EpochConfig False}}
+
+configEpochDisable :: SyncNodeConfig -> SyncNodeConfig
+configEpochDisable cfg =
+  cfg {dncInsertOptions = (dncInsertOptions cfg) {sioEpoch = EpochConfig True}}
+
 initCommandLineArgs :: CommandLineArgs
 initCommandLineArgs =
   CommandLineArgs
     { claConfigFilename = "test-db-sync-config.json"
-    , claEpochDisabled = True
     , claHasCache = True
     , claHasLedger = True
     , claForceIndexes = False
@@ -636,9 +647,10 @@ withFullConfig' WithConfigArgs {..} cmdLineArgs mSyncNodeConfig configFilePath t
     trce <-
       if shouldLog || isJust envLog
         then configureLogging syncNodeConfig "db-sync-node"
-        else pure nullTracer
+        else pure mempty
     -- runDbSync is partially applied so we can pass in syncNodeParams at call site / within tests
-    let partialDbSyncRun params cfg' = runDbSync emptyMetricsSetters iom trce params cfg' True
+    let tracers = stdoutOnlyTracers trce
+        partialDbSyncRun params cfg' = runDbSync emptyMetricsSetters iom tracers params cfg' True (genesisConfig cfg)
         initSt = Consensus.pInfoInitLedger $ protocolInfo cfg
 
     withInterpreter (protocolInfoForging cfg) (protocolInfoForger cfg) nullTracer fingerFile $ \interpreter -> do
