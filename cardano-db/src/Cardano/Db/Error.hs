@@ -18,7 +18,7 @@ module Cardano.Db.Error (
 import Cardano.Db.Log (LogMessage, logError)
 import Cardano.Logging.Types (Trace)
 import Cardano.Prelude (HasCallStack, MonadIO, SrcLoc (..), callStack, getCallStack, textShow, throwIO)
-import Control.Exception (Exception)
+import Control.Exception (Exception (..))
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Hasql.Session as HsqlSes
@@ -30,7 +30,8 @@ data DbLookupError = DbLookupError
   }
   deriving (Show, Eq)
 
-instance Exception DbLookupError
+instance Exception DbLookupError where
+  displayException = Text.unpack . dbLookupErrMsg
 
 -- | System errors for unexpected infrastructure failures (e.g., connection and query errors)
 data DbSessionError = DbSessionError
@@ -39,7 +40,9 @@ data DbSessionError = DbSessionError
   }
   deriving (Show, Eq)
 
-instance Exception DbSessionError
+instance Exception DbSessionError where
+  displayException e =
+    Text.unpack (dbSessionErrMsg e <> formatDbCallStack (dbSessionErrCallStack e))
 
 data DbCallStack = DbCallStack
   { dbCsFncName :: !String
