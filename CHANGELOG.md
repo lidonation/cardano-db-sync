@@ -3,6 +3,11 @@
 ## Unreleased
 - Update Docker configuration to allow PostgreSQL connection details to be provided via Docker secrets or a `.pgpass` file using the `PGPASSFILE` environment variable.
 - Add static binaries and docker images for aarch64-linux
+- Fix duplicate off-chain vote metadata child rows re-inserted when an anchor's metadata was re-processed; insertion is now idempotent (#1966).
+- Document the `http-get-json-metadata` and `test-http-get-json-metadata` tools and fix the former's usage output [#1729](https://github.com/IntersectMBO/cardano-db-sync/issues/1729).
+- Add `scripts/test-value-domains.sql` to the schema-check suite (`scripts/run-schema-checks.sh`): value-range, non-negativity, recomputed-total, and duplicate/missing-row checks over a populated database ([#2135](https://github.com/IntersectMBO/cardano-db-sync/issues/2135), [#2118](https://github.com/IntersectMBO/cardano-db-sync/issues/2118), [#2155](https://github.com/IntersectMBO/cardano-db-sync/issues/2155)).
+- Fix duplicate `epoch_state` rows left by a rollback across an epoch boundary; a startup migration removes duplicates, adds a `UNIQUE (epoch_no)` constraint, and the insert now upserts [#2155](https://github.com/IntersectMBO/cardano-db-sync/issues/2155).
+- `cardano-db-tool` fixes: `utxo-set`/`validate` no longer crash on enterprise-address outputs; `validate` runs every check and exits non-zero on failure with clean error messages [#2163](https://github.com/IntersectMBO/cardano-db-sync/issues/2163); `report` aligns columns and formats timestamps [#2164](https://github.com/IntersectMBO/cardano-db-sync/issues/2164); and two `validate` check bugs are fixed [#2170](https://github.com/IntersectMBO/cardano-db-sync/issues/2170).
 
 ## 13.7.2.1
 - The `epoch` table is redesigned and replaced by a view; the in-memory cache that caused [#2118](https://github.com/IntersectMBO/cardano-db-sync/issues/2118) is removed. Reads are unchanged.
