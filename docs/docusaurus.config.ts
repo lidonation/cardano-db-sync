@@ -21,8 +21,8 @@ const config: Config = {
   url: profile.url,
   baseUrl: profile.baseUrl,
 
-  organizationName: 'IntersectMBO',
-  projectName: 'cardano-db-sync',
+  organizationName: profile.organizationName,
+  projectName: profile.projectName,
 
   onBrokenLinks: 'throw',
   onBrokenAnchors: 'throw',

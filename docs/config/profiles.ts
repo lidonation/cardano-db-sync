@@ -28,6 +28,10 @@ export interface BuildProfile {
   readonly baseUrl: string;
   /** Cardano network this build talks to. */
   readonly network: CardanoNetwork;
+  /** GitHub owner of the repository this build is published from. */
+  readonly organizationName: string;
+  /** GitHub repository name. */
+  readonly projectName: string;
   /**
    * Repository this build's content is edited in. The developer profile points at the fork and
    * production at upstream, so an "edit this page" link never sends a reader to the wrong repo.
@@ -48,6 +52,8 @@ export const PROFILES: Readonly<Record<ProfileName, BuildProfile>> = Object.free
     url: 'https://lidonation.github.io',
     baseUrl: '/cardano-db-sync/',
     network: 'preview',
+    organizationName: 'lidonation',
+    projectName: 'cardano-db-sync',
     repoUrl: 'https://github.com/lidonation/cardano-db-sync',
     cname: null,
     indexable: false,
@@ -57,6 +63,8 @@ export const PROFILES: Readonly<Record<ProfileName, BuildProfile>> = Object.free
     url: 'https://dbsync.cardano.intersect.org',
     baseUrl: '/',
     network: 'mainnet',
+    organizationName: 'IntersectMBO',
+    projectName: 'cardano-db-sync',
     repoUrl: 'https://github.com/IntersectMBO/cardano-db-sync',
     cname: 'dbsync.cardano.intersect.org',
     indexable: true,

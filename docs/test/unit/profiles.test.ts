@@ -32,6 +32,13 @@ describe('build profiles (ENV-1, ENV-6)', () => {
     expect(PROFILES.prod.cname).toBe('dbsync.cardano.intersect.org');
   });
 
+  it('names the GitHub owner and repository each build is published from', () => {
+    expect(PROFILES.dev.organizationName).toBe('lidonation');
+    expect(PROFILES.prod.organizationName).toBe('IntersectMBO');
+    expect(PROFILES.dev.projectName).toBe('cardano-db-sync');
+    expect(PROFILES.prod.projectName).toBe('cardano-db-sync');
+  });
+
   it('points each profile at the repository its content is edited in', () => {
     expect(PROFILES.dev.repoUrl).toBe('https://github.com/lidonation/cardano-db-sync');
     expect(PROFILES.prod.repoUrl).toBe('https://github.com/IntersectMBO/cardano-db-sync');

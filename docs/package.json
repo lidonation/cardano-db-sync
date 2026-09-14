@@ -4,7 +4,7 @@
   "private": true,
   "description": "Documentation and community site for cardano-db-sync",
   "engines": {
-    "node": ">=20.0"
+    "node": ">=20.11"
   },
   "scripts": {
     "docusaurus": "docusaurus",

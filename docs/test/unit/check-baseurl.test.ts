@@ -44,6 +44,15 @@ describe('check:baseurl gate (ENV-1)', () => {
     expect(violations.map((v) => v.rule)).toContain('prod-host');
   });
 
+  it('flags a hardcoded developer host', async () => {
+    await fs.writeFile(
+      path.join(root, 'src', 'origin.ts'),
+      "export const origin = 'https://lidonation.github.io';\n",
+    );
+    const violations = await findViolations(root);
+    expect(violations.map((v) => v.rule)).toContain('dev-host');
+  });
+
   it('flags baseUrl assigned a string literal', async () => {
     await fs.writeFile(path.join(root, 'src', 'other.ts'), "const c = {baseUrl: '/somewhere/'};\n");
     const violations = await findViolations(root);

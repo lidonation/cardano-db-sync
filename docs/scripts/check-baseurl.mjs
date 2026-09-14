@@ -67,6 +67,11 @@ const RULES = [
     message: 'hardcoded production host',
   },
   {
+    id: 'dev-host',
+    pattern: /lidonation\.github\.io/,
+    message: 'hardcoded developer host',
+  },
+  {
     id: 'baseurl-literal',
     pattern: /\bbaseUrl\s*[:=]\s*['"`]/,
     message: 'baseUrl assigned a string literal',

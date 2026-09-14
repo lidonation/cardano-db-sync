@@ -47,6 +47,15 @@ describe('docusaurus.config (ENV-1)', () => {
     expect(config.baseUrl).toBe(PROFILES.prod.baseUrl);
   });
 
+  it('takes the GitHub owner and repository from the profile', async () => {
+    const dev = await loadConfig('dev');
+    expect(dev.organizationName).toBe(PROFILES.dev.organizationName);
+    expect(dev.projectName).toBe(PROFILES.dev.projectName);
+
+    const prod = await loadConfig('prod');
+    expect(prod.organizationName).toBe(PROFILES.prod.organizationName);
+  });
+
   it('publishes the resolved profile to pages through customFields', async () => {
     const config = await loadConfig('dev');
     expect(config.customFields?.profile).toEqual(PROFILES.dev);
