@@ -1,23 +1,62 @@
 {
   "name": "cardano-db-sync-docs",
-  "type": "module",
-  "version": "0.1.0",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Documentation and community site for cardano-db-sync",
+  "engines": {
+    "node": ">=20.0"
+  },
   "scripts": {
-    "dev": "wrangler d1 execute dbsync --file=schema.sql --local && astro dev",
-    "build": "wrangler d1 execute dbsync --file=schema.sql --remote && astro build",
-    "preview": "wrangler pages dev ./dist",
-    "deploy": "astro build && wrangler pages deploy ./dist --project-name cardano-db-sync-docs",
-    "db:apply": "wrangler d1 execute dbsync --file=schema.sql --remote",
-    "db:apply:local": "wrangler d1 execute dbsync --file=schema.sql --local"
+    "docusaurus": "docusaurus",
+    "start": "cross-env DOCS_PROFILE=dev docusaurus start",
+    "build:dev": "cross-env DOCS_PROFILE=dev docusaurus build --out-dir build/dev",
+    "build:prod": "cross-env DOCS_PROFILE=prod docusaurus build --out-dir build/prod",
+    "build": "npm run build:dev && npm run build:prod",
+    "serve:dev": "cross-env DOCS_PROFILE=dev docusaurus serve --dir build/dev",
+    "clear": "docusaurus clear",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check:baseurl": "node scripts/check-baseurl.mjs",
+    "test": "vitest run --coverage",
+    "test:build": "vitest run --config vitest.build.config.ts",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run test && npm run test:build"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.5.1",
-    "@astrojs/mdx": "^5.0.5",
-    "astro": "^6.0.0"
+    "@docusaurus/core": "3.10.2",
+    "@docusaurus/preset-classic": "3.10.2",
+    "@mdx-js/react": "^3.0.0",
+    "clsx": "^2.1.1",
+    "prism-react-renderer": "^2.4.1",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "^4.20260511.1",
-    "typescript": "^5.4.0",
-    "wrangler": "^4.83.0"
+    "@docusaurus/module-type-aliases": "3.10.2",
+    "@docusaurus/tsconfig": "3.10.2",
+    "@docusaurus/types": "3.10.2",
+    "@eslint/js": "^9.15.0",
+    "@types/node": "^22.10.0",
+    "@types/react": "^19.0.0",
+    "@vitest/coverage-v8": "^2.1.8",
+    "cross-env": "^7.0.3",
+    "eslint": "^9.15.0",
+    "prettier": "^3.4.0",
+    "typescript": "~5.6.0",
+    "typescript-eslint": "^8.16.0",
+    "vitest": "^2.1.8"
+  },
+  "browserslist": {
+    "production": [
+      ">0.5%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 3 chrome version",
+      "last 3 firefox version",
+      "last 5 safari version"
+    ]
   }
 }

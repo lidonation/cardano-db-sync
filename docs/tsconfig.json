@@ -1,7 +1,14 @@
 {
-  "extends": "astro/tsconfigs/strict",
-  "include": ["src/**/*", "src/env.d.ts"],
+  "extends": "@docusaurus/tsconfig",
   "compilerOptions": {
-    "types": ["@astrojs/cloudflare", "@cloudflare/workers-types"]
-  }
+    "baseUrl": ".",
+    "types": ["node", "vitest/globals"],
+    "noEmit": true,
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitOverride": true,
+    "noFallthroughCasesInSwitch": true
+  },
+  "exclude": ["build", ".docusaurus", "node_modules"]
 }
