@@ -134,9 +134,23 @@ export async function findViolations(root = ROOT) {
 }
 
 /**
- * Run the gate and report. Returns the process exit code: 0 clean, 1 on any violation.
+ * A reporter. Node's `console` satisfies it; tests pass a recorder.
+ *
+ * The parameter is annotated rather than left to inference from the `console` default: inference
+ * picks up whichever `Console` type the lib set resolves to, which differed between this machine
+ * and CI and produced a type error only in CI.
+ *
+ * @typedef {{log: (message: string) => void, error: (message: string) => void}} Reporter
  */
-export async function main(root = ROOT, out = console) {
+
+/**
+ * Run the gate and report. Returns the process exit code: 0 clean, 1 on any violation.
+ *
+ * @param {string} [root] Directory to scan. Defaults to the docs root.
+ * @param {Reporter} [out] Where the report goes.
+ * @returns {Promise<number>}
+ */
+export async function main(root = ROOT, out = /** @type {Reporter} */ (console)) {
   const violations = await findViolations(root);
 
   if (violations.length === 0) {
