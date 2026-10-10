@@ -15,6 +15,9 @@ on:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
 
+permissions:
+  contents: read
+
 concurrency:
   group: docs-site-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -29,12 +32,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/docs-setup
       - name: Prettier (BLD-1)
         run: npm run format:check
 
@@ -43,12 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/docs-setup
       - name: ESLint
         run: npm run lint
       - name: Types
@@ -63,12 +56,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/docs-setup
       - name: Unit tests with coverage thresholds
         run: npm test
 
@@ -77,12 +65,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-      - run: npm ci
+      - uses: ./.github/actions/docs-setup
       # B01 DoD: both profiles build clean from one working tree, the developer output carries no
       # CNAME, the production output does, and a broken Markdown file fails the build.
       - name: Build and profile assertions
@@ -100,6 +83,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+        with:
+          install: "false"
       - uses: actions/download-artifact@v4
         with:
           name: docs-build
@@ -113,12 +99,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+        with:
+          install: "false"
       - uses: actions/download-artifact@v4
         with:
           name: docs-build
           path: docs/build/
       - name: Gzip byte budget per profile (PERF-1)
-        run: node scripts/check-asset-budget.mjs | tee -a "$GITHUB_STEP_SUMMARY"
+        # An explicit `shell: bash` runs with `-o pipefail`. The default shell does not, so without
+        # it `tee` would hide the gate's exit code and an over-budget build would pass.
+        shell: bash
+        run: node scripts/check-asset-budget.mjs 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
   gate:
     name: Docs CI gate
