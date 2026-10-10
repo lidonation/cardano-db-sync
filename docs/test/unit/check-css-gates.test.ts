@@ -157,3 +157,37 @@ describe('check:css CLI reporting', () => {
     expect(report).toContain('outline: none');
   });
 });
+
+describe('gaps closed in review', () => {
+  it.each(['outline-style: none', 'outline-width: 0', 'outline-width: 0px !important'])(
+    'flags `%s` as FLOOR-4',
+    (decl) => {
+      expect(rules(`a:focus { ${decl}; }`)).toEqual(['FLOOR-4']);
+    },
+  );
+
+  it('allows a visible outline-style and width', () => {
+    expect(rules('a:focus-visible { outline-style: solid; outline-width: 2px; }')).toEqual([]);
+  });
+
+  it('flags a vendor-prefixed transition of a layout property', () => {
+    expect(rules('a { -webkit-transition: height 1s; }')).toEqual(['PERF-3']);
+  });
+
+  it('flags will-change when only part of a selector list is in an interaction state', () => {
+    expect(rules('.a, .b:hover { will-change: transform; }')).toEqual(['PERF-5']);
+    expect(rules('.a:hover, .b:focus-visible { will-change: transform; }')).toEqual([]);
+  });
+
+  it('looks through an at-rule nested inside the interaction-state rule', () => {
+    expect(rules('.a:hover { @media (min-width: 1px) { will-change: transform; } }')).toEqual([]);
+  });
+
+  it('skips only the top-level test directory', async () => {
+    await fs.mkdir(path.join(root, 'test'), {recursive: true});
+    await fs.mkdir(path.join(root, 'src', 'test'), {recursive: true});
+    await fs.writeFile(path.join(root, 'test', 'fixture.css'), 'a { outline: none; }');
+    await fs.writeFile(path.join(root, 'src', 'test', 'real.css'), 'a { outline: none; }');
+    expect((await findViolations(root)).map((v) => v.file)).toEqual(['src/test/real.css']);
+  });
+});

@@ -10,16 +10,21 @@
  *          Set it only in an interaction state (`:hover`, `:focus-*`, `:active`) or not at all.
  *
  * Run by `npm run check:css` and by CI. Scans every `.css` and `.scss` file outside build output,
- * dependencies and `test/` (whose fixtures break the rules on purpose).
+ * dependencies and the top-level `test/` directory (whose fixtures break the rules on purpose).
  */
-import {readFile, readdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
+import {lineIndex, walk} from './lib/build-output.mjs';
+
 const ROOT = path.resolve(import.meta.dirname, '..');
 
-/** Directories never scanned. */
-const SKIP_DIRS = new Set(['node_modules', 'build', '.docusaurus', 'coverage', '.git', 'test']);
+/** Directories never scanned, wherever they sit. */
+const SKIP_DIRS = new Set(['node_modules', 'build', '.docusaurus', 'coverage', '.git']);
+
+/** Directories skipped only at the scan root: `test/` holds fixtures that break the rules. */
+const SKIP_ROOT_DIRS = new Set(['test']);
 
 /** Files that hold CSS. */
 const SCAN_EXTENSIONS = new Set(['.css', '.scss']);
@@ -67,17 +72,6 @@ function stripComments(css) {
   return css.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '));
 }
 
-/** Line number (1-based) of a character offset. */
-function lineAt(css, offset) {
-  let line = 1;
-  for (let i = 0; i < offset; i += 1) {
-    if (css[i] === '\n') {
-      line += 1;
-    }
-  }
-  return line;
-}
-
 /**
  * Walk the stylesheet as nested blocks and yield each declaration with the selector chain it sits
  * under. This is a tolerant scanner, not a parser: it understands braces, `;` and `:`, which is
@@ -112,6 +106,28 @@ function* declarations(css) {
   }
 }
 
+/**
+ * True when every selector in the innermost style rule is in an interaction state. At-rules
+ * (`@media`, `@supports`) nested inside the rule are looked through, and a selector list only
+ * passes when each of its selectors carries the state: `.a, .b:hover` leaves `.a` at rest.
+ */
+function inInteractionState(selectors) {
+  const rule = [...selectors].reverse().find((s) => !s.startsWith('@')) ?? '';
+  const parts = rule.split(',').map((s) => s.trim());
+  return parts.length > 0 && parts.every((s) => INTERACTION_STATE.test(s));
+}
+
+/** Outline declarations that remove the focus indicator (FLOOR-4). */
+function removesOutline(property, value) {
+  const zero = /^0(px|em|rem)?(\s|!|$)/;
+  const none = /^none(\s|!|$)/;
+  return (
+    (property === 'outline' && (none.test(value) || zero.test(value))) ||
+    (property === 'outline-style' && none.test(value)) ||
+    (property === 'outline-width' && zero.test(value))
+  );
+}
+
 function transitionNamesLayout(value) {
   return value.split(',').some((part) => LAYOUT_IN_LIST.test(part.trim().split(/\s+/)[0] ?? ''));
 }
@@ -119,20 +135,23 @@ function transitionNamesLayout(value) {
 /** Check one stylesheet's text. Returns violations without a file name. */
 export function checkCss(source) {
   const css = stripComments(source);
+  const lineAt = lineIndex(css);
   const violations = [];
   const push = (decl, rule, message) =>
     violations.push({
-      line: lineAt(css, decl.offset),
+      line: lineAt(decl.offset),
       rule,
       message,
       text: `${decl.property}: ${decl.value}`,
     });
 
   for (const decl of declarations(css)) {
-    const {property, value, selectors} = decl;
+    const {value, selectors} = decl;
+    // Vendor prefixes (-webkit-transition) obey the same rules as the standard property.
+    const property = decl.property.replace(/^-[a-z]+-/, '');
     const inKeyframes = selectors.some((s) => /^@(-\w+-)?keyframes\b/.test(s));
 
-    if (property === 'outline' && /^(none|0(px|em|rem)?)(\s|!|$)/.test(value)) {
+    if (removesOutline(property, value)) {
       push(decl, 'FLOOR-4', 'outline removed - restyle focus instead of removing it');
     }
 
@@ -148,8 +167,7 @@ export function checkCss(source) {
     }
 
     if (property === 'will-change' && value !== 'auto') {
-      const rule = selectors[selectors.length - 1] ?? '';
-      if (!INTERACTION_STATE.test(rule)) {
+      if (!inInteractionState(selectors)) {
         push(decl, 'PERF-5', 'resting will-change - set it only in an interaction state');
       }
     }
@@ -158,23 +176,13 @@ export function checkCss(source) {
   return violations;
 }
 
-async function* walk(dir) {
-  const entries = await readdir(dir, {withFileTypes: true});
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      if (!SKIP_DIRS.has(entry.name)) {
-        yield* walk(full);
-      }
-    } else if (entry.isFile()) {
-      yield full;
-    }
-  }
-}
-
 export async function findViolations(root = ROOT) {
+  root = path.resolve(root);
   const violations = [];
-  for await (const full of walk(root)) {
+  const skip = (dir) =>
+    SKIP_DIRS.has(path.basename(dir)) ||
+    (path.dirname(dir) === root && SKIP_ROOT_DIRS.has(path.basename(dir)));
+  for await (const full of walk(root, skip)) {
     if (!SCAN_EXTENSIONS.has(path.extname(full))) {
       continue;
     }
@@ -186,9 +194,7 @@ export async function findViolations(root = ROOT) {
   return violations;
 }
 
-/**
- * @typedef {{log: (message: string) => void, error: (message: string) => void}} Reporter
- */
+/** @typedef {import('./lib/build-output.mjs').Reporter} Reporter */
 
 /**
  * Run the gates and report. Returns the process exit code: 0 clean, 1 on any violation.
