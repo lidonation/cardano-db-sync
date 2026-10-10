@@ -34,5 +34,5 @@ result*
 .DS_Store
 .gitnexus
 
-# Local planning documents and agent state — never commit
+# local specs and planning docs
 /plan/
