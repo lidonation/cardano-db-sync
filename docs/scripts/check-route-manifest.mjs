@@ -52,6 +52,26 @@ export async function routesAt(ref, root = ROOT) {
 }
 
 /**
+ * The working-tree manifest's routes. A deleted manifest is every entry removed, so it reads as
+ * empty and the gate lists them all, rather than reporting that it cannot run.
+ *
+ * @param {string} root
+ * @returns {Promise<Record<string, unknown>>}
+ */
+export async function currentRoutes(root = ROOT) {
+  let raw;
+  try {
+    raw = await readFile(path.join(root, MANIFEST), 'utf8');
+  } catch (error) {
+    if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') {
+      return {};
+    }
+    throw error;
+  }
+  return JSON.parse(raw).routes ?? {};
+}
+
+/**
  * Routes listed at the base and missing now, sorted.
  *
  * @param {Record<string, unknown>} base
@@ -91,7 +111,7 @@ export async function main({
   let current;
   try {
     base = await routesAt(ref, root);
-    current = JSON.parse(await readFile(path.join(root, MANIFEST), 'utf8')).routes ?? {};
+    current = await currentRoutes(root);
   } catch (error) {
     out.error(`check:manifest - cannot run: ${error instanceof Error ? error.message : error}`);
     return 2;

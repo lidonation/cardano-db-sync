@@ -68,6 +68,16 @@ describe('check:manifest gate (VER-5 append-only)', () => {
     expect(lines).toContain('  /docs/b');
   });
 
+  it('lists every base route when the manifest file itself was deleted', async () => {
+    await writeRoutes({'/': live, '/docs/a': live});
+    await commit('base');
+    await fs.rm(path.join(root, 'config', 'route-manifest.json'));
+    const {lines, out} = recorder();
+    expect(await main({root, env: {}, out})).toBe(1);
+    expect(lines).toContain('  /');
+    expect(lines).toContain('  /docs/a');
+  });
+
   it('compares against MANIFEST_BASE_REF when set', async () => {
     await writeRoutes({'/': live, '/old': live});
     await commit('base');
