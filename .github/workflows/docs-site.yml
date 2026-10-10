@@ -4,12 +4,12 @@ on:
   push:
     branches: [master, docs-rebuild-spec]
     paths:
-      - 'docs/**'
-      - '.github/workflows/docs-site.yml'
+      - "docs/**"
+      - ".github/workflows/docs-site.yml"
   pull_request:
     paths:
-      - 'docs/**'
-      - '.github/workflows/docs-site.yml'
+      - "docs/**"
+      - ".github/workflows/docs-site.yml"
 
 defaults:
   run:
@@ -21,9 +21,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          # The route-manifest gate compares against the base commit, so it needs history.
-          fetch-depth: 0
 
       - uses: actions/setup-node@v4
         with:
@@ -46,8 +43,13 @@ jobs:
         run: npm run check:baseurl
 
       # VER-5: the route manifest is append-only. Base is the PR base, or the commit a push replaced.
+      # The checkout is shallow, so fetch just the base commit rather than the repo's full history.
       - name: Route manifest is append-only (VER-5)
-        run: npm run check:manifest
+        run: |
+          if [ -n "$MANIFEST_BASE_REF" ] && ! printf '%s' "$MANIFEST_BASE_REF" | grep -Eq '^0+$'; then
+            git fetch --no-tags --depth=1 origin "$MANIFEST_BASE_REF"
+          fi
+          npm run check:manifest
         env:
           MANIFEST_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
 
