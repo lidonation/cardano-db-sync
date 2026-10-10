@@ -4,23 +4,23 @@ The mark is a **pointy-top hexagon outline with a center dot** ("block / node" g
 
 ## Colours
 
-| Token | Hex | Use |
-|---|---|---|
-| DB Sync Blue | `#0F73FF` | primary mark, badge background |
-| Near-black | `#0F1117` | monochrome mark on light backgrounds |
-| White | `#FFFFFF` | knockout mark on dark backgrounds |
-| Intersect Navy | `#011555` | supporting |
+| Token          | Hex       | Use                                  |
+| -------------- | --------- | ------------------------------------ |
+| DB Sync Blue   | `#0F73FF` | primary mark, badge background       |
+| Near-black     | `#0F1117` | monochrome mark on light backgrounds |
+| White          | `#FFFFFF` | knockout mark on dark backgrounds    |
+| Intersect Navy | `#011555` | supporting                           |
 
 ## Files
 
 ### Mark (glyph only)
 
-| SVG | Description | Best on |
-|---|---|---|
-| `svg/mark-badge.svg` | white glyph on a blue rounded square | app icon, favicon, avatar |
-| `svg/mark-blue.svg` | blue glyph, transparent | light backgrounds |
-| `svg/mark-dark.svg` | near-black glyph, transparent | light backgrounds, monochrome |
-| `svg/mark-white.svg` | white glyph, transparent | dark backgrounds (knockout) |
+| SVG                  | Description                          | Best on                       |
+| -------------------- | ------------------------------------ | ----------------------------- |
+| `svg/mark-badge.svg` | white glyph on a blue rounded square | app icon, favicon, avatar     |
+| `svg/mark-blue.svg`  | blue glyph, transparent              | light backgrounds             |
+| `svg/mark-dark.svg`  | near-black glyph, transparent        | light backgrounds, monochrome |
+| `svg/mark-white.svg` | white glyph, transparent             | dark backgrounds (knockout)   |
 
 Each mark is also rasterised to transparent PNG:
 
@@ -34,11 +34,11 @@ size    = 16 32 48 64 128 180 192 256 512 1024
 
 ### Lockup (glyph + wordmark)
 
-| SVG | Description |
-|---|---|
+| SVG                    | Description                                  |
+| ---------------------- | -------------------------------------------- |
 | `svg/lockup-color.svg` | blue glyph + "Cardano DB Sync" in near-black |
-| `svg/lockup-dark.svg` | all near-black (monochrome, light bg) |
-| `svg/lockup-white.svg` | all white (dark bg) |
+| `svg/lockup-dark.svg`  | all near-black (monochrome, light bg)        |
+| `svg/lockup-white.svg` | all white (dark bg)                          |
 
 Wordmark is **Space Grotesk** — "Cardano" Light (300), "DB Sync" Bold (700). The SVGs embed a Google Fonts `@import`, so they render the true wordmark in any browser with network; in tools without Space Grotesk they fall back to a system sans.
 
