@@ -11,9 +11,9 @@
     "db:apply:local": "wrangler d1 execute dbsync --file=schema.sql --local"
   },
   "dependencies": {
-    "@astrojs/cloudflare": "^13.5.1",
-    "@astrojs/mdx": "^5.0.5",
-    "astro": "^6.0.0"
+    "@astrojs/cloudflare": "^13.7.0",
+    "@astrojs/mdx": "^6.0.3",
+    "astro": "^6.4.6"
   },
   "devDependencies": {
     "@cloudflare/workers-types": "^4.20260511.1",
