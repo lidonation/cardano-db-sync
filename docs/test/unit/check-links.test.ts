@@ -142,3 +142,32 @@ describe('check:links CLI reporting', () => {
     expect(report).toContain('index.html:1  /nowhere');
   });
 });
+
+describe('check:links gaps closed in review', () => {
+  it('reports bad percent-encoding as a violation instead of crashing', async () => {
+    await site('/', {'index.html': page('<a href="/docs/%E0%A4%A">x</a><a href="/#%ZZ">y</a>')});
+    const messages = (await findBrokenLinks(root)).map((v) => v.message);
+    expect(messages).toEqual(['malformed percent-encoding', 'malformed percent-encoding']);
+  });
+
+  it('accepts <a name> as a fragment target but not <meta name>', async () => {
+    await site('/', {
+      'index.html': page(
+        '<meta name="description" content="x"><a name="legacy"></a>' +
+          '<a href="#legacy">ok</a><a href="#description">bad</a>',
+      ),
+    });
+    expect((await findBrokenLinks(root)).map((v) => v.url)).toEqual(['#description']);
+  });
+
+  it('fails a profile output that has no sitemap instead of skipping it', async () => {
+    const out = {lines: [] as string[], log: () => {}, error: (m: string) => out.lines.push(m)};
+    expect(await main([root], out)).toBe(1);
+    expect(out.lines.join('\n')).toContain('has no sitemap.xml');
+  });
+
+  it('counts lines in a multi-line page', async () => {
+    await site('/', {'index.html': page('\n\n\n<a href="/a">x</a>\n<a href="/b">y</a>')});
+    expect((await findBrokenLinks(root)).map((v) => v.line)).toEqual([4, 5]);
+  });
+});

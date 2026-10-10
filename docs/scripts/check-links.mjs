@@ -14,10 +14,12 @@
  * Run by `npm run check:links` after a build, and by CI. With no arguments it checks every profile
  * output under `build/`; pass build directories to check only those.
  */
-import {readFile, readdir, stat} from 'node:fs/promises';
+import {readFile, stat} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import {URL} from 'node:url';
+
+import {lineIndex, profileOutputs, walk} from './lib/build-output.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const BUILD = path.join(ROOT, 'build');
@@ -25,8 +27,11 @@ const BUILD = path.join(ROOT, 'build');
 /** Attributes that carry a URL the browser will request or navigate to. */
 const URL_ATTRIBUTE = /\s(?:href|src)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
 
-/** Every element id, plus `name` on anchors, both valid fragment targets. */
-const ID_ATTRIBUTE = /\s(?:id|name)\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+/** Every element id is a valid fragment target. */
+const ID_ATTRIBUTE = /\sid\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
+
+/** `name` is a fragment target only on anchors (`<meta name>` and form fields are not). */
+const ANCHOR_NAME = /<a\b[^>]*?\sname\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
 
 /** Schemes that are not documents in this build. */
 const IGNORED_SCHEME = /^(?:mailto|tel|javascript|data|blob):/i;
@@ -38,7 +43,12 @@ const IGNORED_SCHEME = /^(?:mailto|tel|javascript|data|blob):/i;
  * @returns {Promise<{origin: string, base: string}>}
  */
 export async function siteRoot(dir) {
-  const xml = await readFile(path.join(dir, 'sitemap.xml'), 'utf8');
+  let xml;
+  try {
+    xml = await readFile(path.join(dir, 'sitemap.xml'), 'utf8');
+  } catch {
+    throw new Error(`${dir} has no sitemap.xml, so its origin and base path are unknown`);
+  }
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]));
   if (locs.length === 0) {
     throw new Error(`${dir}/sitemap.xml lists no pages`);
@@ -46,18 +56,6 @@ export async function siteRoot(dir) {
   const home = locs.reduce((a, b) => (b.pathname.length < a.pathname.length ? b : a));
   const base = home.pathname.endsWith('/') ? home.pathname : `${home.pathname}/`;
   return {origin: home.origin, base};
-}
-
-async function* walk(dir) {
-  const entries = await readdir(dir, {withFileTypes: true});
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      yield* walk(full);
-    } else if (entry.isFile()) {
-      yield full;
-    }
-  }
 }
 
 async function isFile(target) {
@@ -87,14 +85,13 @@ async function resolveFile(dir, sitePath) {
   return null;
 }
 
-function lineAt(text, offset) {
-  let line = 1;
-  for (let i = 0; i < offset; i += 1) {
-    if (text[i] === '\n') {
-      line += 1;
-    }
+/** `decodeURIComponent` that returns null instead of throwing on a bad percent-escape. */
+function safeDecode(value) {
+  try {
+    return decodeURIComponent(value);
+  } catch {
+    return null;
   }
-  return line;
 }
 
 function decodeEntities(value) {
@@ -122,7 +119,7 @@ export async function findBrokenLinks(dir) {
     if (!idCache.has(file)) {
       const html = await readFile(file, 'utf8');
       const ids = new Set();
-      for (const m of html.matchAll(ID_ATTRIBUTE)) {
+      for (const m of [...html.matchAll(ID_ATTRIBUTE), ...html.matchAll(ANCHOR_NAME)]) {
         ids.add(decodeEntities(m[1] ?? m[2]));
       }
       idCache.set(file, ids);
@@ -135,6 +132,7 @@ export async function findBrokenLinks(dir) {
       continue;
     }
     const html = await readFile(full, 'utf8');
+    const lineAt = lineIndex(html);
     const rel = path.relative(dir, full).split(path.sep).join('/');
     // The URL this page is served at, so relative links resolve the way a browser resolves them.
     const pageUrl = new URL(
@@ -152,7 +150,7 @@ export async function findBrokenLinks(dir) {
       try {
         url = new URL(raw, pageUrl);
       } catch {
-        violations.push({file: rel, line: lineAt(html, m.index), url: raw, message: 'malformed'});
+        violations.push({file: rel, line: lineAt(m.index), url: raw, message: 'malformed'});
         continue;
       }
       if (url.origin !== origin) {
@@ -160,9 +158,14 @@ export async function findBrokenLinks(dir) {
       }
 
       const report = (message) =>
-        violations.push({file: rel, line: lineAt(html, m.index), url: raw, message});
+        violations.push({file: rel, line: lineAt(m.index), url: raw, message});
 
-      const pathname = decodeURIComponent(url.pathname);
+      const pathname = safeDecode(url.pathname);
+      const fragment = safeDecode(url.hash.slice(1));
+      if (pathname === null || fragment === null) {
+        report('malformed percent-encoding');
+        continue;
+      }
       if (!`${pathname}/`.startsWith(base)) {
         report(`outside the site base path ${base}`);
         continue;
@@ -174,7 +177,6 @@ export async function findBrokenLinks(dir) {
         continue;
       }
 
-      const fragment = decodeURIComponent(url.hash.slice(1));
       if (fragment !== '' && target.endsWith('.html') && !(await idsOf(target)).has(fragment)) {
         report(`no element with id "${fragment}" on the target page`);
       }
@@ -184,26 +186,11 @@ export async function findBrokenLinks(dir) {
   return violations;
 }
 
-/** Profile outputs under `build/`: each subdirectory that holds a sitemap. */
-async function profileOutputs(buildDir) {
-  const entries = await readdir(buildDir, {withFileTypes: true});
-  const dirs = [];
-  for (const entry of entries) {
-    const dir = path.join(buildDir, entry.name);
-    if (entry.isDirectory() && (await isFile(path.join(dir, 'sitemap.xml')))) {
-      dirs.push(dir);
-    }
-  }
-  return dirs.sort();
-}
+/** @typedef {import('./lib/build-output.mjs').Reporter} Reporter */
 
 /**
- * @typedef {{log: (message: string) => void, error: (message: string) => void}} Reporter
- */
-
-/**
- * Run the gate and report. Returns the process exit code: 0 clean, 1 on any broken link or when
- * there is no build to check.
+ * Run the gate and report. Returns the process exit code: 0 clean, 1 on any broken link, when
+ * there is no build to check, or when a profile output cannot be read (for example no sitemap).
  *
  * @param {string[]} [dirs] Build output directories. Defaults to every profile under `build/`.
  * @param {Reporter} [out] Where the report goes.
@@ -212,7 +199,7 @@ async function profileOutputs(buildDir) {
 export async function main(dirs = [], out = /** @type {Reporter} */ (console)) {
   let targets = dirs;
   if (targets.length === 0) {
-    targets = await profileOutputs(BUILD).catch(() => []);
+    targets = await profileOutputs(BUILD);
   }
   if (targets.length === 0) {
     out.error('check:links - no build output found. Run `npm run build` first.');
@@ -222,7 +209,14 @@ export async function main(dirs = [], out = /** @type {Reporter} */ (console)) {
   let failed = 0;
   for (const dir of targets) {
     const name = path.relative(ROOT, dir) || dir;
-    const violations = await findBrokenLinks(dir);
+    let violations;
+    try {
+      violations = await findBrokenLinks(dir);
+    } catch (error) {
+      failed += 1;
+      out.error(`check:links - ${name}: ${error instanceof Error ? error.message : error}`);
+      continue;
+    }
     if (violations.length === 0) {
       out.log(`check:links - ${name} clean. Every internal link resolves.`);
       continue;
