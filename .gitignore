@@ -33,3 +33,6 @@ result*
 # MacOS
 .DS_Store
 .gitnexus
+
+# Local planning documents and agent state — never commit
+/plan/
