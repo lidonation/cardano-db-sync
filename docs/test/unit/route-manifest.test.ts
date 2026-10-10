@@ -7,7 +7,9 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {PROFILES} from '../../config/profiles';
 import routeManifestPlugin, {
   MANIFEST_FILE,
+  isManifestPath,
   nearestLiveAncestor,
+  parseManifest,
   readManifest,
   reconcile,
   redirectPage,
@@ -134,6 +136,45 @@ describe('reconcile (VER-5)', () => {
     const second = reconcile(first.manifest, ['/', '/docs/a', '/docs/b']);
     expect(serializeManifest(second.manifest)).toBe(serializeManifest(first.manifest));
     expect([second.added, second.retired, second.revived, second.retargeted].flat()).toEqual([]);
+  });
+});
+
+describe('reconcile when the site root is not published', () => {
+  it('fails instead of redirecting into a 404 or a refresh loop', () => {
+    expect(() =>
+      reconcile({routes: {'/': {status: 'live'}, '/a': {status: 'live'}}}, ['/b']),
+    ).toThrow(/site root "\/" is not published.*\/, \/a/);
+  });
+});
+
+describe('manifest validation', () => {
+  it('accepts build-shaped paths and rejects traversal or malformed ones', () => {
+    expect(isManifestPath('/')).toBe(true);
+    expect(isManifestPath('/docs/intro')).toBe(true);
+    for (const bad of ['', 'docs', '/docs/', '//evil.com', '/../x', '/docs/./x', '/a b', 7]) {
+      expect(isManifestPath(bad)).toBe(false);
+    }
+  });
+
+  it('rejects an entry whose route could escape outDir', () => {
+    const raw = JSON.stringify({routes: {'/': {status: 'live'}, '/../../x': {status: 'live'}}});
+    expect(() => parseManifest('m.json', raw)).toThrow(/"\/..\/..\/x" is not a valid route path/);
+  });
+
+  it('rejects unknown statuses and retired entries without a valid redirect', () => {
+    for (const entry of [
+      {status: 'gone'},
+      {status: 'retired'},
+      {status: 'retired', redirect: '//x'},
+    ]) {
+      const raw = JSON.stringify({routes: {'/a': entry}});
+      expect(() => parseManifest('m.json', raw)).toThrow(/entry for "\/a" must be/);
+    }
+  });
+
+  it('drops unknown keys from valid entries', () => {
+    const raw = JSON.stringify({routes: {'/': {status: 'live', note: 'x'}}});
+    expect(parseManifest('m.json', raw).routes).toEqual({'/': {status: 'live'}});
   });
 });
 

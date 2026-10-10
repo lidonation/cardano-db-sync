@@ -131,6 +131,19 @@ export function reconcile(manifest: RouteManifest, published: Iterable<string>):
     }
   }
 
+  // nearestLiveAncestor falls back to `/`. If the root is not published, a retired route would
+  // redirect to a 404 (or, for `/` itself, to itself in a refresh loop), and the redirect would be
+  // "retargeted" on every build, so a CI check could never pass.
+  const dangling = Object.entries(routes).filter(
+    ([, entry]) => entry.status === 'retired' && !live.has(entry.redirect),
+  );
+  if (dangling.length > 0) {
+    throw new Error(
+      'The site root "/" is not published, so these retired routes have nowhere to redirect: ' +
+        dangling.map(([route]) => route).join(', '),
+    );
+  }
+
   const sorted = Object.fromEntries(
     Object.keys(routes)
       .sort()
@@ -150,21 +163,70 @@ export function serializeManifest(manifest: RouteManifest): string {
   return `${JSON.stringify({$comment: COMMENT, routes: manifest.routes}, null, 2)}\n`;
 }
 
-export async function readManifest(file: string): Promise<RouteManifest> {
-  let raw: string;
+/**
+ * A manifest path: `/` or `/`-separated segments, none of them empty, `.` or `..`. Anything else
+ * could not have come from a build, and a `..` segment would write a redirect outside `outDir`.
+ */
+const SEGMENT = /^[A-Za-z0-9._~%@!$&'()*+,;=:-]+$/;
+
+export function isManifestPath(value: unknown): value is string {
+  if (typeof value !== 'string' || !value.startsWith('/')) {
+    return false;
+  }
+  if (value === '/') {
+    return true;
+  }
+  return value
+    .slice(1)
+    .split('/')
+    .every((segment) => SEGMENT.test(segment) && segment !== '.' && segment !== '..');
+}
+
+function validateEntry(file: string, route: string, entry: unknown): RouteEntry {
+  if (!isManifestPath(route)) {
+    throw new Error(`${file}: "${route}" is not a valid route path.`);
+  }
+  const candidate = entry as {status?: unknown; redirect?: unknown} | null;
+  if (candidate?.status === 'live') {
+    return {status: 'live'};
+  }
+  if (candidate?.status === 'retired' && isManifestPath(candidate.redirect)) {
+    return {status: 'retired', redirect: candidate.redirect};
+  }
+  throw new Error(
+    `${file}: entry for "${route}" must be {"status":"live"} or ` +
+      '{"status":"retired","redirect":"/<path>"}.',
+  );
+}
+
+/** Parses and validates manifest text. Exported for the tests. */
+export function parseManifest(file: string, raw: string): RouteManifest {
+  const parsed = JSON.parse(raw) as {routes?: unknown};
+  if (typeof parsed.routes !== 'object' || parsed.routes === null || Array.isArray(parsed.routes)) {
+    throw new Error(`${file} has no "routes" object.`);
+  }
+  const routes: Record<string, RouteEntry> = {};
+  for (const [route, entry] of Object.entries(parsed.routes)) {
+    routes[route] = validateEntry(file, route, entry);
+  }
+  return {routes};
+}
+
+/** The manifest text on disk, or null when there is none yet. */
+async function readManifestText(file: string): Promise<string | null> {
   try {
-    raw = await fs.readFile(file, 'utf8');
+    return await fs.readFile(file, 'utf8');
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return {routes: {}};
+      return null;
     }
     throw error;
   }
-  const parsed = JSON.parse(raw) as Partial<RouteManifest>;
-  if (typeof parsed.routes !== 'object' || parsed.routes === null) {
-    throw new Error(`${file} has no "routes" object.`);
-  }
-  return {routes: parsed.routes};
+}
+
+export async function readManifest(file: string): Promise<RouteManifest> {
+  const raw = await readManifestText(file);
+  return raw === null ? {routes: {}} : parseManifest(file, raw);
 }
 
 /** The report a CI build fails with when the committed manifest is out of date. */
@@ -236,20 +298,15 @@ export async function emitRedirects(
       continue;
     }
     const file = path.join(outDir, ...route.split('/').filter(Boolean), 'index.html');
+    await fs.mkdir(path.dirname(file), {recursive: true});
     try {
+      // `wx` fails if the file exists, so a redirect never replaces a published page.
       await fs.writeFile(file, redirectPage(entry.redirect, profile), {
         encoding: 'utf8',
         flag: 'wx',
       });
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        throw new Error(`Cannot write the redirect for retired route ${route}: ${String(error)}`);
-      }
-      await fs.mkdir(path.dirname(file), {recursive: true});
-      await fs.writeFile(file, redirectPage(entry.redirect, profile), {
-        encoding: 'utf8',
-        flag: 'wx',
-      });
+      throw new Error(`Cannot write the redirect for retired route ${route}: ${String(error)}`);
     }
     written.push(route);
   }
@@ -267,7 +324,8 @@ export interface ManifestRunOptions {
 /** Reconcile, then write (local) or verify (CI) the manifest, then emit redirects. */
 export async function runManifest(options: ManifestRunOptions): Promise<Reconciliation> {
   const file = path.join(options.siteDir, MANIFEST_FILE);
-  const current = await readManifest(file);
+  const previous = await readManifestText(file);
+  const current = previous === null ? {routes: {}} : parseManifest(file, previous);
   const published = options.routesPaths
     .map((route) => toManifestPath(route, options.profile.baseUrl))
     .filter((route): route is string => route !== null);
@@ -280,7 +338,6 @@ export async function runManifest(options: ManifestRunOptions): Promise<Reconcil
     }
   } else {
     const next = serializeManifest(result.manifest);
-    const previous = await fs.readFile(file, 'utf8').catch(() => null);
     if (next !== previous) {
       await fs.mkdir(path.dirname(file), {recursive: true});
       await fs.writeFile(file, next, 'utf8');
