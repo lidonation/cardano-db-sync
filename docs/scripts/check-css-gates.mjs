@@ -9,7 +9,8 @@
  * PERF-5   A resting `will-change` keeps a compositor layer alive for the element's whole life.
  *          Set it only in an interaction state (`:hover`, `:focus-*`, `:active`) or not at all.
  *
- * Run by `npm run check:css` and by CI. Scans stylesheets and the style blocks of source files.
+ * Run by `npm run check:css` and by CI. Scans every `.css` and `.scss` file outside build output,
+ * dependencies and `test/` (whose fixtures break the rules on purpose).
  */
 import {readFile, readdir} from 'node:fs/promises';
 import path from 'node:path';
@@ -131,7 +132,7 @@ export function checkCss(source) {
     const {property, value, selectors} = decl;
     const inKeyframes = selectors.some((s) => /^@(-\w+-)?keyframes\b/.test(s));
 
-    if (property === 'outline' && /^(none|0)\b/.test(value)) {
+    if (property === 'outline' && /^(none|0(px|em|rem)?)(\s|!|$)/.test(value)) {
       push(decl, 'FLOOR-4', 'outline removed - restyle focus instead of removing it');
     }
 
