@@ -1,0 +1,7 @@
+build
+.docusaurus
+node_modules
+coverage
+SPECIFICATION.md
+DESIGN.md
+test/fixtures

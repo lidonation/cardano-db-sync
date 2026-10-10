@@ -1,0 +1,7 @@
+/*
+ * Placeholder stylesheet.
+ *
+ * The design system lands in B42 (typography tokens) and B47 (§20 design deliverables). Until the
+ * token pipeline exists, this file carries no colour, type size, radius or spacing value: KICKOFF
+ * §3 forbids inventing one, and `tokens.css` is generated, never hand-written.
+ */

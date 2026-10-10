@@ -1,0 +1,65 @@
+name: Documentation site
+
+on:
+  push:
+    branches: [master, docs-rebuild-spec]
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs-site.yml'
+  pull_request:
+    paths:
+      - 'docs/**'
+      - '.github/workflows/docs-site.yml'
+
+defaults:
+  run:
+    working-directory: docs
+
+jobs:
+  verify:
+    name: Format, lint, types, tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - run: npm ci
+
+      - name: Formatting
+        run: npm run format:check
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Types
+        run: npm run typecheck
+
+      - name: No hardcoded environment values (ENV-1)
+        run: npm run check:baseurl
+
+      - name: Unit tests
+        run: npm test
+
+  build:
+    name: Both build profiles
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: docs/package-lock.json
+
+      - run: npm ci
+
+      # B01 DoD: both profiles build clean from one working tree, the developer output carries no
+      # CNAME, the production output does, and a broken Markdown file fails the build.
+      - name: Build and profile assertions
+        run: npm run test:build
