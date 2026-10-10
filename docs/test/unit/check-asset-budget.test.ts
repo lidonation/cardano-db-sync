@@ -4,7 +4,15 @@ import path from 'node:path';
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import {gzipSize, kindOf, main, measure, overBudget} from '../../scripts/check-asset-budget.mjs';
+import {
+  gzipSize,
+  initialAssets,
+  kindOf,
+  main,
+  measure,
+  overBudget,
+  parseBudget,
+} from '../../scripts/check-asset-budget.mjs';
 
 let root: string;
 
@@ -127,5 +135,41 @@ describe('check:budget CLI reporting', () => {
     const report = out.lines.join('\n');
     expect(report).toContain('over budget: total js');
     expect(report).toContain('config/asset-budget.json');
+  });
+});
+
+describe('initialAssets', () => {
+  it('reads stylesheet links and script sources whatever the attribute order', () => {
+    const html =
+      '<link href="/a.css" rel="stylesheet"><link rel=stylesheet href=/b.css>' +
+      '<link rel="preload stylesheet" href="/c.css"><link rel="preload" href="/d.js">' +
+      '<script defer src="/e.js"></script><script>inline()</script>';
+    expect(initialAssets(html)).toEqual(['/a.css', '/b.css', '/c.css', '/e.js']);
+  });
+});
+
+describe('parseBudget', () => {
+  it('accepts the budget the repo ships', async () => {
+    const shipped = JSON.parse(
+      await fs.readFile(path.join(import.meta.dirname, '../../config/asset-budget.json'), 'utf8'),
+    );
+    expect(parseBudget(shipped)).toEqual(shipped);
+  });
+
+  it.each([
+    [{totals: {javascript: 1}}, 'totals.javascript is not a kind'],
+    [{totals: {js: '190000'}}, 'totals.js must be a positive number'],
+    [{page: {initial: 0}}, 'page.initial must be a positive number'],
+    [{page: {first: 1}}, 'page.first is not a page limit'],
+    [{total: {js: 1}}, 'unknown key "total"'],
+  ])('rejects %j', (budget, message) => {
+    expect(() => parseBudget(budget)).toThrow(message);
+  });
+
+  it('makes the CLI fail on a misspelt kind instead of limiting nothing', async () => {
+    await write('index.html', '<p>x</p>');
+    await expect(
+      main([root], {log: () => {}, error: () => {}}, {totals: {jss: 1}}),
+    ).rejects.toThrow('not a kind');
   });
 });

@@ -13,10 +13,12 @@
  * arguments it checks every profile output under `build/`; pass build directories to check only
  * those.
  */
-import {readFile, readdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import {gzipSync} from 'node:zlib';
+
+import {profileOutputs, walk} from './lib/build-output.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const BUILD = path.join(ROOT, 'build');
@@ -41,9 +43,42 @@ const KINDS = /** @type {const} */ ({
   '.otf': 'font',
 });
 
-/** Stylesheets and scripts a page asks for before it can render. */
-const INITIAL_ASSET =
-  /<(?:link[^>]*\srel=["']?stylesheet["']?[^>]*\shref|script[^>]*\ssrc)=["']([^"']+)["']/gi;
+/** `<link>` and `<script>` opening tags. Their attributes are read separately, in any order. */
+const ASSET_TAG = /<(link|script)\b([^>]*)>/gi;
+
+/** @param {string} attributes  @param {string} name */
+function attribute(attributes, name) {
+  const m = new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)'|([^\\s"'>]+))`, 'i').exec(
+    attributes,
+  );
+  return m ? (m[1] ?? m[2] ?? m[3]) : null;
+}
+
+/**
+ * The stylesheets and scripts a page asks for before it can render: `<link rel="stylesheet">`
+ * hrefs and `<script src>`, whatever order their attributes are written in.
+ *
+ * @param {string} html
+ * @returns {string[]}
+ */
+export function initialAssets(html) {
+  const urls = [];
+  for (const [, tag, attributes] of html.matchAll(ASSET_TAG)) {
+    if (tag.toLowerCase() === 'script') {
+      const src = attribute(attributes, 'src');
+      if (src) {
+        urls.push(src);
+      }
+      continue;
+    }
+    const rel = (attribute(attributes, 'rel') ?? '').toLowerCase().split(/\s+/);
+    const href = attribute(attributes, 'href');
+    if (rel.includes('stylesheet') && href) {
+      urls.push(href);
+    }
+  }
+  return urls;
+}
 
 /** @param {string} file */
 export function kindOf(file) {
@@ -53,18 +88,6 @@ export function kindOf(file) {
 /** @param {Buffer} bytes */
 export function gzipSize(bytes) {
   return gzipSync(bytes, {level: 9}).length;
-}
-
-async function* walk(dir) {
-  const entries = await readdir(dir, {withFileTypes: true});
-  for (const entry of entries) {
-    const full = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      yield* walk(full);
-    } else if (entry.isFile()) {
-      yield full;
-    }
-  }
 }
 
 /**
@@ -96,8 +119,8 @@ export async function measure(dir) {
     const html = await readFile(path.join(dir, rel), 'utf8');
     const seen = new Set();
     let bytes = sizes.get(rel) ?? 0;
-    for (const m of html.matchAll(INITIAL_ASSET)) {
-      const asset = assetPath(m[1], sizes);
+    for (const url of initialAssets(html)) {
+      const asset = assetPath(url, sizes);
       if (asset !== null && !seen.has(asset)) {
         seen.add(asset);
         bytes += sizes.get(asset) ?? 0;
@@ -133,6 +156,47 @@ function assetPath(url, sizes) {
  *   Limits in gzip bytes.
  */
 
+/** Keys the budget file may use; anything else is a typo that would silently limit nothing. */
+const BUDGET_KINDS = new Set([...Object.values(KINDS), 'other']);
+
+/**
+ * Check the budget file's shape, so a misspelt kind or a string limit fails loudly instead of
+ * switching a limit off.
+ *
+ * @param {unknown} raw Parsed `config/asset-budget.json`.
+ * @returns {Budget}
+ */
+export function parseBudget(raw) {
+  const problems = [];
+  const limit = (where, value) => {
+    if (typeof value !== 'number' || !Number.isFinite(value) || value <= 0) {
+      problems.push(`${where} must be a positive number of bytes`);
+    }
+  };
+  const budget = /** @type {Record<string, any>} */ (raw ?? {});
+  for (const key of Object.keys(budget)) {
+    if (!['$comment', 'totals', 'page'].includes(key)) {
+      problems.push(`unknown key "${key}"`);
+    }
+  }
+  for (const [kind, value] of Object.entries(budget.totals ?? {})) {
+    if (!BUDGET_KINDS.has(kind)) {
+      problems.push(`totals.${kind} is not a kind (${[...BUDGET_KINDS].join(', ')})`);
+    }
+    limit(`totals.${kind}`, value);
+  }
+  for (const [key, value] of Object.entries(budget.page ?? {})) {
+    if (key !== 'initial') {
+      problems.push(`page.${key} is not a page limit (initial)`);
+    }
+    limit(`page.${key}`, value);
+  }
+  if (problems.length > 0) {
+    throw new Error(`asset budget is invalid: ${problems.join('; ')}`);
+  }
+  return budget;
+}
+
 /**
  * Compare a measurement against a budget.
  *
@@ -161,17 +225,7 @@ export function overBudget(measured, budget) {
 
 const kb = (bytes) => `${(bytes / 1024).toFixed(1)} KiB`;
 
-async function profileOutputs(buildDir) {
-  const entries = await readdir(buildDir, {withFileTypes: true});
-  return entries
-    .filter((e) => e.isDirectory())
-    .map((e) => path.join(buildDir, e.name))
-    .sort();
-}
-
-/**
- * @typedef {{log: (message: string) => void, error: (message: string) => void}} Reporter
- */
+/** @typedef {import('./lib/build-output.mjs').Reporter} Reporter */
 
 /**
  * Run the gate and report. Returns the process exit code: 0 within budget, 1 over budget or when
@@ -183,10 +237,10 @@ async function profileOutputs(buildDir) {
  * @returns {Promise<number>}
  */
 export async function main(dirs = [], out = /** @type {Reporter} */ (console), budget) {
-  const limits = budget ?? JSON.parse(await readFile(BUDGET_FILE, 'utf8'));
+  const limits = parseBudget(budget ?? JSON.parse(await readFile(BUDGET_FILE, 'utf8')));
   let targets = dirs;
   if (targets.length === 0) {
-    targets = await profileOutputs(BUILD).catch(() => []);
+    targets = await profileOutputs(BUILD);
   }
   if (targets.length === 0) {
     out.error('check:budget - no build output found. Run `npm run build` first.');
