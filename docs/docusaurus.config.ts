@@ -3,6 +3,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 
 import {resolveProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
+import routeManifestPlugin from './plugins/route-manifest';
 
 const profile = resolveProfile();
 
@@ -60,7 +61,8 @@ const config: Config = {
     ],
   ],
 
-  plugins: [cnamePlugin],
+  // VER-5: records every published route and redirects retired ones (B04).
+  plugins: [cnamePlugin, routeManifestPlugin],
 
   themeConfig: {
     navbar: {

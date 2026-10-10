@@ -1,0 +1,11 @@
+{
+  "$comment": "Written by the docs build (plugins/route-manifest), never by hand. Append-only (VER-5): every route ever published stays listed; retired routes redirect.",
+  "routes": {
+    "/": {
+      "status": "live"
+    },
+    "/docs/intro": {
+      "status": "live"
+    }
+  }
+}
