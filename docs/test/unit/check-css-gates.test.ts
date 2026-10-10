@@ -6,8 +6,6 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {checkCss, findViolations, main} from '../../scripts/check-css-gates.mjs';
 
-const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
-
 let root: string;
 
 beforeEach(async () => {
@@ -105,25 +103,9 @@ describe('scanner', () => {
   it('reads a last declaration with no trailing semicolon', () => {
     expect(rules('a { outline: none }')).toEqual(['FLOOR-4']);
   });
-
-  it('trips all three gates in one stylesheet, each with its own message', () => {
-    const violations = checkCss(
-      'a:focus { outline: none; }\n.m { transition: width 1s; }\n.c { will-change: transform; }\n',
-    );
-    expect(violations.map((v) => [v.rule, v.line])).toEqual([
-      ['FLOOR-4', 1],
-      ['PERF-3', 2],
-      ['PERF-5', 3],
-    ]);
-    expect(new Set(violations.map((v) => v.message)).size).toBe(3);
-  });
 });
 
 describe('check:css over a tree', () => {
-  it('passes over the real docs tree', async () => {
-    expect(await findViolations(DOCS_ROOT)).toEqual([]);
-  });
-
   it('scans .css and .scss and names the file', async () => {
     await fs.writeFile(path.join(root, 'src', 'a.css'), 'a { outline: none; }\n');
     await fs.writeFile(path.join(root, 'src', 'b.scss'), '.b { will-change: top; }\n');

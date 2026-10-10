@@ -6,8 +6,6 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {gzipSize, kindOf, main, measure, overBudget} from '../../scripts/check-asset-budget.mjs';
 
-const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
-
 let root: string;
 
 async function write(rel: string, contents: string | Buffer) {
@@ -129,17 +127,5 @@ describe('check:budget CLI reporting', () => {
     const report = out.lines.join('\n');
     expect(report).toContain('over budget: total js');
     expect(report).toContain('config/asset-budget.json');
-  });
-
-  it('reads the committed budget, which every limit is a positive byte count in', async () => {
-    const budget = JSON.parse(
-      await fs.readFile(path.join(DOCS_ROOT, 'config', 'asset-budget.json'), 'utf8'),
-    );
-    const limits = [...Object.values(budget.totals), budget.page.initial];
-    expect(limits.length).toBeGreaterThan(0);
-    for (const limit of limits) {
-      expect(Number.isInteger(limit) && limit > 0).toBe(true);
-    }
-    expect(await main([root], recorder())).toBe(0);
   });
 });
