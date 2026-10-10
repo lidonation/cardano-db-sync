@@ -138,16 +138,21 @@ describe('reconcile (VER-5)', () => {
 });
 
 describe('redirectPage', () => {
-  it('points at the target under the profile baseUrl and is not indexed', () => {
+  it('is an instant meta refresh with a canonical to the target, under the profile baseUrl', () => {
     const html = redirectPage('/docs', dev);
-    expect(html).toContain('content="0; url=/cardano-db-sync/docs"');
-    expect(html).toContain('href="https://lidonation.github.io/cardano-db-sync/docs"');
-    expect(html).toContain('location.replace("/cardano-db-sync/docs" + location.hash)');
-    expect(html).toContain('<meta name="robots" content="noindex">');
+    expect(html).toContain('<meta http-equiv="refresh" content="0; url=/cardano-db-sync/docs">');
+    expect(html).toContain(
+      '<link rel="canonical" href="https://lidonation.github.io/cardano-db-sync/docs">',
+    );
     expect(redirectPage('/', prod)).toContain('url=/"');
   });
 
-  it('escapes the target in markup and script', () => {
+  it('carries no JavaScript redirect and no noindex (VER-4)', () => {
+    const html = redirectPage('/docs', prod);
+    expect(html).not.toMatch(/<script|location\.|noindex/);
+  });
+
+  it('escapes the target', () => {
     const html = redirectPage('/a"<b>&', prod);
     expect(html).toContain('url=/a&quot;&lt;b&gt;&amp;"');
     expect(html).not.toContain('<b>');

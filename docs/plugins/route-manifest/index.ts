@@ -197,7 +197,12 @@ function escapeHtml(value: string): string {
     .replaceAll('>', '&gt;');
 }
 
-/** A static redirect page. GitHub Pages has no server-side redirects. */
+/**
+ * A redirect stub (VER-4): served with HTTP 200, an instant `meta refresh` (which search engines
+ * read as a permanent redirect) and `rel="canonical"` to the target. No JavaScript redirect — the
+ * spec rules it out, which is also why this is not `@docusaurus/plugin-client-redirects`: its
+ * stubs always carry a `window.location` script. GitHub Pages has no server-side redirects.
+ */
 export function redirectPage(target: string, profile: BuildProfile): string {
   const href = `${profile.baseUrl}${target.slice(1)}`;
   const attr = escapeHtml(href);
@@ -208,10 +213,8 @@ export function redirectPage(target: string, profile: BuildProfile): string {
     '<head>',
     '<meta charset="utf-8">',
     '<title>Page moved</title>',
-    '<meta name="robots" content="noindex">',
-    `<link rel="canonical" href="${canonical}">`,
     `<meta http-equiv="refresh" content="0; url=${attr}">`,
-    `<script>location.replace(${JSON.stringify(href).replaceAll('<', '\\u003c')} + location.hash)</script>`,
+    `<link rel="canonical" href="${canonical}">`,
     '</head>',
     '<body>',
     `<p>This page has moved to <a href="${attr}">${escapeHtml(target)}</a>.</p>`,
