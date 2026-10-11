@@ -1,0 +1,211 @@
+/* cardano-db-sync docs — design tokens
+   GENERATED from the Penpot file "Cardano dbsync" token library.
+   Do not hand-edit: change design/tokens.source.json and re-run
+   design/tools/tokens-to-css.py. */
+
+:root {
+  --dbs-surface-base: #ffffff;
+  --dbs-surface-sunken: #f0f2f5;
+  --dbs-surface-accent-subtle: #eaf2ff;
+  --dbs-surface-warm: #f5f3eb;
+  --dbs-surface-inverse-selected: #10233f;
+  --dbs-surface-selected: #17c3a5;
+  --dbs-surface-inverse-tip: #0e2a25;
+  --dbs-surface-navy-raised: #0b1b45;
+  --dbs-border-default: #e1e4e8;
+  --dbs-border-strong: #d0d7de;
+  --dbs-border-warm: #e4dfd2;
+  --dbs-border-warm-strong: #d6cfbc;
+  --dbs-border-selected: #0b7c68;
+  --dbs-border-interactive: #7e8893;
+  --dbs-border-inverse: #30363d;
+  --dbs-text-primary: #1a1a2e;
+  --dbs-text-secondary: #57606a;
+  --dbs-text-tertiary: #686f77;
+  --dbs-text-placeholder: #6e7781;
+  --dbs-text-on-navy: #8fa3d9;
+  --dbs-text-warm-tertiary: #6e6656;
+  --dbs-text-on-selected: #1a1a2e;
+  --dbs-text-disabled: #9aa4b2;
+  --dbs-accent-primary: #0e6ff7;
+  --dbs-accent-primary-hover: #0b57c4;
+  --dbs-accent-primary-active: #0a4ba8;
+  --dbs-accent-primary-text: #0b57c4;
+  --dbs-accent-primary-mid: #7fa8ff;
+  --dbs-accent-primary-tint: #c8d5fd;
+  --dbs-accent-secondary: #17c3a5;
+  --dbs-accent-secondary-tint: #b7e4d8;
+  --dbs-accent-secondary-deep: #06584a;
+  --dbs-accent-primary-inverse: #4493f8;
+  --dbs-accent-primary-inverse-hover: #79b8ff;
+  --dbs-accent-navy-primary: #5b82ff;
+  --dbs-accent-navy-primary-hover: #85a3ff;
+  --dbs-accent-secondary-inverse: #2dd4b5;
+  --dbs-brand-cardano-blue: #0033ad;
+  --dbs-brand-intersect-navy: #011555;
+  --dbs-brand-electric-blue: #2353ff;
+  --dbs-status-warning: #e5a100;
+  --dbs-status-warning-subtle: #fff6de;
+  --dbs-status-warning-text: #8a6100;
+  --dbs-status-danger: #fd551f;
+  --dbs-status-danger-subtle: #ffe3d9;
+  --dbs-status-danger-text: #a83208;
+  --dbs-space-4: 4px;
+  --dbs-space-8: 8px;
+  --dbs-space-12: 12px;
+  --dbs-space-16: 16px;
+  --dbs-space-24: 24px;
+  --dbs-space-32: 32px;
+  --dbs-space-48: 48px;
+  --dbs-space-64: 64px;
+  --dbs-space-96: 96px;
+  --dbs-radius-sm: 6px;
+  --dbs-radius-md: 8px;
+  --dbs-radius-lg: 10px;
+  --dbs-radius-xl: 12px;
+  --dbs-radius-xxl: 16px;
+  --dbs-radius-pill: 999px;
+  --dbs-code-surface: #0f1117;
+  --dbs-code-surface-raised: #161b22;
+  --dbs-code-border: #30363d;
+  --dbs-code-text: #e6edf3;
+  --dbs-code-text-muted: #8b949e;
+  --dbs-code-prompt: #79b8ff;
+  --dbs-code-accent: #2dd4b5;
+
+  /* type families and the 13-style scale — held as Penpot typography assets,
+     not tokens, because Penpot tokens cannot carry a composite text style. */
+  --dbs-font-heading: "Space Grotesk", system-ui, sans-serif;
+  --dbs-font-ui: Inter, system-ui, sans-serif;
+  --dbs-font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+
+  --dbs-font-display-hero: 700 58px/1.1 var(--dbs-font-heading);
+  --dbs-font-heading-lg: 700 38px/1.2 var(--dbs-font-heading);
+  --dbs-font-heading-md: 700 26px/1.25 var(--dbs-font-heading);
+  --dbs-font-title: 600 20px/1.3 var(--dbs-font-heading);
+  --dbs-font-wordmark: 300 19px/1.2 var(--dbs-font-heading);
+  --dbs-font-body: 400 15px/1.65 var(--dbs-font-ui);
+  --dbs-font-body-sm: 400 13px/1.6 var(--dbs-font-ui);
+  --dbs-font-label: 600 14px/1.2 var(--dbs-font-ui);
+  --dbs-font-label-sm: 700 12px/1.2 var(--dbs-font-ui);
+  --dbs-font-caption: 400 12px/1.4 var(--dbs-font-ui);
+  --dbs-font-mono: 400 13px/1.5 var(--dbs-font-code);
+  --dbs-font-mono-sm: 400 11.5px/1.5 var(--dbs-font-code);
+  --dbs-font-eyebrow: 600 13px/1.2 var(--dbs-font-code);
+
+  --dbs-focus-ring: 2px solid var(--dbs-accent-primary);
+  --dbs-focus-offset: 2px;
+}
+
+[data-theme="dark"] {
+  --dbs-surface-base: #0f1117;
+  --dbs-surface-sunken: #161b22;
+  --dbs-surface-accent-subtle: #10233f;
+  --dbs-surface-warm: #0e2a25;
+  --dbs-surface-selected: #2dd4b5;
+  --dbs-border-default: #30363d;
+  --dbs-border-strong: #30363d;
+  --dbs-border-warm: #30363d;
+  --dbs-border-interactive: #6e7781;
+  --dbs-border-selected: #2dd4b5;
+  --dbs-text-primary: #e6edf3;
+  --dbs-text-secondary: #9aa4b2;
+  --dbs-text-tertiary: #8b949e;
+  --dbs-text-placeholder: #8b949e;
+  --dbs-text-on-selected: #0f1117;
+  --dbs-text-warm-tertiary: #8b949e;
+  --dbs-text-disabled: #59616a;
+  --dbs-accent-primary: #4493f8;
+  --dbs-accent-primary-hover: #79b8ff;
+  --dbs-accent-primary-active: #79b8ff;
+  --dbs-accent-primary-text: #4493f8;
+  --dbs-accent-secondary: #2dd4b5;
+  --dbs-accent-secondary-deep: #2dd4b5;
+  --dbs-accent-primary-tint: #10233f;
+  --dbs-accent-secondary-tint: #0e2a25;
+  --dbs-status-danger: #ff8a65;
+  --dbs-status-danger-text: #ff8a65;
+  --dbs-status-warning-text: #e5a100;
+  --dbs-status-warning-subtle: #2e2410;
+  --dbs-status-danger-subtle: #331410;
+  --dbs-brand-cardano-blue: #6685ce;
+  --dbs-code-text-muted: #9aa4b2;
+}
+
+[data-theme="cream"] {
+  --dbs-surface-base: #fcfbf5;
+  --dbs-surface-sunken: #eae6d8;
+  --dbs-border-default: #e4dfd2;
+  --dbs-border-strong: #d6cfbc;
+  --dbs-border-interactive: #857e6a;
+  --dbs-text-primary: #2a2419;
+  --dbs-text-secondary: #6e6656;
+  --dbs-text-tertiary: #6e6656;
+  --dbs-text-placeholder: #6e6656;
+  --dbs-text-on-selected: #2a2419;
+  --dbs-text-disabled: #9e9482;
+}
+
+[data-theme="navy"] {
+  --dbs-surface-base: #011555;
+  --dbs-surface-sunken: #0b1b45;
+  --dbs-surface-accent-subtle: #0e2a6b;
+  --dbs-surface-warm: #010e33;
+  --dbs-surface-selected: #2dd4b5;
+  --dbs-border-default: #21356e;
+  --dbs-border-strong: #2e4589;
+  --dbs-border-warm: #21356e;
+  --dbs-border-interactive: #8fa3d9;
+  --dbs-border-selected: #2dd4b5;
+  --dbs-text-primary: #e6edf3;
+  --dbs-text-secondary: #8fa3d9;
+  --dbs-text-tertiary: #748dd0;
+  --dbs-text-placeholder: #748dd0;
+  --dbs-text-on-selected: #0f1117;
+  --dbs-text-warm-tertiary: #8fa3d9;
+  --dbs-text-disabled: #4364bf;
+  --dbs-accent-primary: #4493f8;
+  --dbs-accent-primary-hover: #79b8ff;
+  --dbs-accent-primary-active: #79b8ff;
+  --dbs-accent-primary-text: #79b8ff;
+  --dbs-accent-secondary: #2dd4b5;
+  --dbs-accent-secondary-deep: #2dd4b5;
+  --dbs-accent-primary-tint: #0e2a6b;
+  --dbs-accent-secondary-tint: #010e33;
+  --dbs-brand-cardano-blue: #6685ce;
+  --dbs-status-danger: #ff8a65;
+  --dbs-status-danger-text: #ff8a65;
+  --dbs-status-danger-subtle: #331410;
+  --dbs-status-warning-text: #e5a100;
+  --dbs-status-warning-subtle: #2e2410;
+  --dbs-code-text-muted: #8fa3d9;
+}
+
+
+/* ---- Infima bridge — the ONLY place --ifm-* is assigned ---- */
+:root {
+  --ifm-color-primary: var(--dbs-accent-primary);
+  --ifm-link-color: var(--dbs-accent-primary-text);
+  --ifm-background-color: var(--dbs-surface-base);
+  --ifm-background-surface-color: var(--dbs-surface-sunken);
+  --ifm-font-color-base: var(--dbs-text-primary);
+  --ifm-font-color-secondary: var(--dbs-text-secondary);
+  --ifm-font-family-base: var(--dbs-font-ui);
+  --ifm-heading-font-family: var(--dbs-font-heading);
+  --ifm-font-family-monospace: var(--dbs-font-code);
+  --ifm-font-size-base: 15px;
+  --ifm-line-height-base: 1.65;
+  --ifm-code-font-size: 13px;
+  --ifm-global-radius: var(--dbs-radius-md);
+  --ifm-toc-border-color: var(--dbs-border-default);
+  --ifm-navbar-height: 72px;
+  --ifm-navbar-background-color: var(--dbs-surface-base);
+  --ifm-footer-background-color: var(--dbs-brand-intersect-navy);
+  --ifm-footer-link-color: var(--dbs-text-on-navy);
+  --ifm-spacing-horizontal: var(--dbs-space-24);
+  /* the design has no shadows — neutralise Infima's */
+  --ifm-global-shadow-lw: none;
+  --ifm-global-shadow-md: none;
+  --ifm-global-shadow-tl: none;
+}
+
