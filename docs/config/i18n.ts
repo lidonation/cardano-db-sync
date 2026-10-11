@@ -1,4 +1,4 @@
-import type {I18nLocaleConfig} from '@docusaurus/types';
+import type {I18nLocaleConfig, LoadContext} from '@docusaurus/types';
 
 /**
  * The launch locales (SPECIFICATION §2, settled 2026-08-21): English plus the four the Cardano
@@ -31,3 +31,17 @@ export const I18N = {
   locales: [...LOCALES],
   localeConfigs: {...LOCALE_CONFIGS},
 };
+
+/**
+ * Docusaurus builds each locale into its own directory under the site root. Files that belong at
+ * the root itself (`robots.txt`, `CNAME`) come from the default locale's build only.
+ */
+export function isRootBuild(context: Pick<LoadContext, 'i18n'>): boolean {
+  return context.i18n.currentLocale === context.i18n.defaultLocale;
+}
+
+/** The site's locales, default first. */
+export function localesDefaultFirst(context: Pick<LoadContext, 'i18n'>): string[] {
+  const {defaultLocale, locales} = context.i18n;
+  return [defaultLocale, ...locales.filter((l) => l !== defaultLocale)];
+}
