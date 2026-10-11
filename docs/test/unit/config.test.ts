@@ -99,8 +99,10 @@ describe('build hygiene', () => {
     expect(config.markdown?.hooks?.onBrokenMarkdownLinks).toBe('throw');
   });
 
-  it('registers the CNAME plugin', async () => {
+  it('registers the CNAME and route-manifest plugins', async () => {
     const config = await loadConfig('prod');
-    expect(config.plugins).toHaveLength(1);
+    const {default: cnamePlugin} = await import('../../plugins/cname');
+    const {default: routeManifestPlugin} = await import('../../plugins/route-manifest');
+    expect(config.plugins).toEqual([cnamePlugin, routeManifestPlugin]);
   });
 });

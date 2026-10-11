@@ -51,6 +51,17 @@ jobs:
       - name: Style gates (FLOOR-4, PERF-3, PERF-5)
         run: npm run check:css
 
+      # VER-5: the route manifest is append-only. Base is the PR base, or the commit a push replaced.
+      # The checkout is shallow, so fetch just the base commit rather than the repo's full history.
+      - name: Route manifest is append-only (VER-5)
+        run: |
+          if [ -n "$MANIFEST_BASE_REF" ] && ! printf '%s' "$MANIFEST_BASE_REF" | grep -Eq '^0+$'; then
+            git fetch --no-tags --depth=1 origin "$MANIFEST_BASE_REF"
+          fi
+          npm run check:manifest
+        env:
+          MANIFEST_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+
   unit-tests:
     name: Unit tests
     runs-on: ubuntu-latest
@@ -68,6 +79,8 @@ jobs:
       - uses: ./.github/actions/docs-setup
       # B01 DoD: both profiles build clean from one working tree, the developer output carries no
       # CNAME, the production output does, and a broken Markdown file fails the build.
+      # Under CI the build checks the route manifest instead of writing it, and fails listing any
+      # published route the committed manifest does not account for (VER-5).
       - name: Build and profile assertions
         run: npm run test:build
       - uses: actions/upload-artifact@v4
