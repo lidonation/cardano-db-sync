@@ -1,7 +1,6 @@
 /* cardano-db-sync docs — design tokens
-   GENERATED from the Penpot file "Cardano dbsync" token library.
-   Do not hand-edit: change design/tokens.source.json and run
-   `npm run tokens` (design/tools/tokens-to-css.py). */
+   GENERATED from design/tokens.source.json by design/tools/tokens-to-css.py.
+   Do not hand-edit: change the source and run `npm run tokens`. */
 
 :root {
   --dbs-surface-base: #ffffff;

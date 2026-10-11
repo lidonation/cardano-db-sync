@@ -48,7 +48,7 @@ def flatten(node, prefix=()):
 def varname(dotted):
     return "--dbs-" + re.sub(r"[^a-z0-9]+", "-", dotted.lower()).strip("-")
 
-def resolve(value, table):
+def resolve(value):
     """Turn {colors.accent-primary} references into var(...)."""
     if not isinstance(value, str):
         return value
@@ -58,6 +58,32 @@ def resolve(value, table):
     return value
 
 TYPE_STYLE_KEYS = ("family", "size", "weight", "leading", "tracking")
+
+# A CSS letter-spacing the scale may use: 0, or a signed length in em, rem or px.
+TRACKING = re.compile(r"0|-?(\d+(\.\d+)?|\.\d+)(em|rem|px)")
+
+
+def is_number(value):
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+
+def check_style(name, style, families):
+    """Fail on any metric that would emit invalid or silently-dropped CSS."""
+    missing = [k for k in TYPE_STYLE_KEYS if k not in style]
+    if missing:
+        raise SystemExit(f"typography style {name!r} is missing {', '.join(missing)}")
+    if style["family"] not in families:
+        raise SystemExit(f"typography style {name!r} uses unknown family {style['family']!r}")
+    for key in ("size", "leading"):
+        if not is_number(style[key]) or style[key] <= 0:
+            raise SystemExit(f"typography style {name!r}: {key} must be a positive number")
+    weight = style["weight"]
+    if not is_number(weight) or not float(weight).is_integer() or not 1 <= weight <= 1000:
+        raise SystemExit(f"typography style {name!r}: weight must be a whole number 1-1000")
+    if not isinstance(style["tracking"], str) or not TRACKING.fullmatch(style["tracking"]):
+        raise SystemExit(
+            f"typography style {name!r}: tracking must be 0 or a length in em, rem or px"
+        )
 
 
 def number(value):
@@ -84,14 +110,10 @@ def emit_typography(typography):
         lines.append(f"  --dbs-font-{name}: {stack};")
     lines.append("")
     for name, style in styles.items():
-        missing = [k for k in TYPE_STYLE_KEYS if k not in style]
-        if missing:
-            raise SystemExit(f"typography style {name!r} is missing {', '.join(missing)}")
-        if style["family"] not in families:
-            raise SystemExit(f"typography style {name!r} uses unknown family {style['family']!r}")
+        check_style(name, style, families)
         size, leading = number(style["size"]), number(style["leading"])
         lines.append(
-            f"  --dbs-font-{name}: {style['weight']} {size}px/{leading} var(--dbs-font-{style['family']});"
+            f"  --dbs-font-{name}: {number(style['weight'])} {size}px/{leading} var(--dbs-font-{style['family']});"
         )
     lines.append("")
     for name, style in styles.items():
@@ -136,37 +158,39 @@ INFIMA_BRIDGE = """
 """
 
 def main(path):
-    data = json.load(open(path))
+    with open(path, encoding="utf-8") as source:
+        data = json.load(source)
     out = ['/* cardano-db-sync docs — design tokens',
-           '   GENERATED from the Penpot file "Cardano dbsync" token library.',
-           '   Do not hand-edit: change design/tokens.source.json and run',
-           '   `npm run tokens` (design/tools/tokens-to-css.py). */', '']
-    emitted_static = False
+           '   GENERATED from design/tokens.source.json by design/tools/tokens-to-css.py.',
+           '   Do not hand-edit: change the source and run `npm run tokens`. */', '']
+    emitted_typography = False
     for setname, tree in data.items():
-        if setname.startswith("_"):
-            continue
-        if setname.startswith("$"):
+        if setname.startswith(("_", "$")):
             continue
         sel = THEME_SELECTOR.get(setname.lower().replace(" ", "-"))
         if sel is None:
-            continue
+            raise SystemExit(
+                f"set {setname!r} maps to no theme selector; known sets: {', '.join(THEME_SELECTOR)}"
+            )
         tree = dict(tree)
         typography = tree.pop("typography", None)
-        if typography is not None and sel != ":root":
+        if typography is not None and setname != "base":
             raise SystemExit(f"set {setname!r}: typography belongs to the base set only")
         lines = [f"{sel} {{"]
         for dotted, value in flatten(tree):
-            lines.append(f"  {varname(dotted)}: {resolve(value, data)};")
-        if sel == ":root" and not emitted_static:
-            if typography is None:
-                raise SystemExit("tokens.source.json: the base set has no typography group")
+            lines.append(f"  {varname(dotted)}: {resolve(value)};")
+        if typography is not None:
             lines.extend(emit_typography(typography))
             lines.append(FOCUS_BLOCK.rstrip())
-            emitted_static = True
+            emitted_typography = True
         lines.append("}")
         out.append("\n".join(lines))
         out.append("")
+    if not emitted_typography:
+        raise SystemExit("tokens.source.json: the base set has no typography group")
     out.append(INFIMA_BRIDGE)
+    # Byte-identical output on every platform: UTF-8 and LF whatever the locale says.
+    sys.stdout.reconfigure(encoding="utf-8", newline="\n")
     print("\n".join(out))
 
 if __name__ == "__main__":

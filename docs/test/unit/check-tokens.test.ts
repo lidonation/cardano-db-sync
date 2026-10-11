@@ -101,11 +101,46 @@ describe('tokens-to-css typography (DF-1)', () => {
       /unknown family 'serif'/,
     ],
     ['a typography group with no styles', {style: {}}, /needs `family` and `style`/],
+    [
+      'a size that is not a number',
+      {style: {body: {...style('ui', 15, 400, 1.65, '0'), size: '15px'}}},
+      /size must be a positive number/,
+    ],
+    [
+      'a zero leading',
+      {style: {body: style('ui', 15, 400, 0, '0')}},
+      /leading must be a positive number/,
+    ],
+    [
+      'a weight outside 1-1000',
+      {style: {body: style('ui', 15, 1200, 1.65, '0')}},
+      /weight must be a whole number/,
+    ],
+    [
+      'a unitless tracking, which a browser drops',
+      {style: {body: {...style('ui', 15, 400, 1.65, '0'), tracking: -0.02}}},
+      /tracking must be 0 or a length/,
+    ],
+    [
+      'a tracking in an unsupported unit',
+      {style: {body: style('ui', 15, 400, 1.65, '2%')}},
+      /tracking must be 0 or a length/,
+    ],
   ])('fails on %s', async (_label, typography, message) => {
     await tree({
       base: {typography: {family: {ui: 'Inter'}, ...typography}},
     });
     await expect(generate()).rejects.toThrow(message);
+  });
+
+  it('fails on a set that maps to no theme, instead of dropping it', async () => {
+    await tree({...SOURCE_FIXTURE, 'high-contrast': {surface: {base: '#000000'}}});
+    await expect(generate()).rejects.toThrow(/'high-contrast' maps to no theme selector/);
+  });
+
+  it('names the token source, not Penpot, as the origin in the header', async () => {
+    await tree(SOURCE_FIXTURE);
+    expect(await generate()).toMatch(/GENERATED from design\/tokens\.source\.json/);
   });
 
   it('fails when the base set has no typography, or a theme set carries one', async () => {
@@ -123,6 +158,7 @@ describe('firstDifferences', () => {
       {line: 4, committed: '<end of file>', generated: 'd'},
     ]);
     expect(firstDifferences('1\n2\n3', 'x\ny\nz', 2)).toHaveLength(2);
+    expect(firstDifferences('1\n2\n3', 'x\ny\nz')).toHaveLength(3);
   });
 });
 
@@ -143,6 +179,22 @@ describe('check:tokens gate', () => {
     expect(await main({root, out})).toBe(1);
     expect(lines.join('\n')).toMatch(/committed: {3}--dbs-font-body: 400 16px\/1\.65/);
     expect(lines.join('\n')).toMatch(/generated: {3}--dbs-font-body: 400 15px\/1\.65/);
+  });
+
+  it('summarises the differing lines beyond the first five', async () => {
+    await tree(SOURCE_FIXTURE);
+    await fs.writeFile(path.join(root, OUTPUT), 'x\n'.repeat(8));
+    const {lines, out} = recorder();
+    expect(await main({root, out})).toBe(1);
+    expect(lines.filter((l) => /^ {2}line \d+$/.test(l))).toHaveLength(5);
+    expect(lines.join('\n')).toMatch(/\.\.\.and \d+ more differing line\(s\)/);
+  });
+
+  it('says tokens.css is missing rather than that the generator cannot run', async () => {
+    await tree(SOURCE_FIXTURE);
+    const {lines, out} = recorder();
+    expect(await main({root, out})).toBe(1);
+    expect(lines.join('\n')).toMatch(/src\/css\/tokens\.css is missing/);
   });
 
   it('cannot run, rather than passing, when the generator is unavailable', async () => {
