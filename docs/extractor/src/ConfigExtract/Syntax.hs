@@ -79,7 +79,8 @@ data Pat
   | POther
   deriving (Eq, Show)
 
--- | A case alternative: its pattern and its (first, unguarded) body.
+-- | A case alternative: its pattern and its body, retaining unsupported
+-- guards and local bindings so the interpreter can reject them.
 data Alt = Alt Pat Ex
   deriving (Eq, Show)
 
@@ -220,25 +221,30 @@ conInfo con = case con of
 lowerBind :: LHsBind GhcPs -> Maybe Bind
 lowerBind (L loc bind) = case bind of
   FunBind {fun_id, fun_matches} -> case matchesOf fun_matches of
-    (pats, body, wh) : _ -> Just (Bind (rdr (unLoc fun_id)) pats body wh (startLine (locA loc)))
+    [(pats, body, wh)] -> Just (Bind (rdr (unLoc fun_id)) pats body wh (startLine (locA loc)))
+    _ : _ -> Just (Bind (rdr (unLoc fun_id)) [] EOther [] (startLine (locA loc)))
     [] -> Nothing
   _ -> Nothing
 
--- | Every match of a match group: patterns, the first right-hand side, and
+-- | Every match of a match group: patterns, the right-hand side, and
 -- the match's @where@ bindings.
 matchesOf :: MatchGroup GhcPs (LHsExpr GhcPs) -> [([Pat], Ex, [Bind])]
 matchesOf MG {mg_alts = L _ ms} =
   [ (map lowerPat m_pats, rhs, localBinds (grhssLocalBinds m_grhss))
   | L _ Match {m_pats, m_grhss} <- ms
-  , rhs <- take 1 [guarded guards (lowerExpr body) | L _ (GRHS _ guards body) <- grhssGRHSs m_grhss]
+  , let rhs = case [guarded guards (lowerExpr body) | L _ (GRHS _ guards body) <- grhssGRHSs m_grhss] of
+          [body] -> body
+          bodies -> EIf EOther (EList bodies) EOther
   ]
   where
     -- A guarded right-hand side keeps its boolean guards as the condition of
     -- an 'EIf', so rules that look inside conditions (the trace-dispatcher
     -- key list sits in a guard) can see them.
-    guarded guards body = case [lowerExpr g | L _ (BodyStmt _ g _ _) <- guards] of
-      [] -> body
-      conds -> EIf (foldr1 (EOp "&&") conds) body EOther
+    guarded [] body = body
+    guarded guards body =
+      let condition (L _ (BodyStmt _ g _ _)) = lowerExpr g
+          condition _ = EOther
+       in EIf (foldr1 (EOp "&&") (map condition guards)) body EOther
 
 localBinds :: HsLocalBinds GhcPs -> [Bind]
 localBinds binds = case binds of
@@ -246,7 +252,7 @@ localBinds binds = case binds of
   _ -> []
 
 alts :: MatchGroup GhcPs (LHsExpr GhcPs) -> [Alt]
-alts mg = [Alt p body | (p : _, body, _) <- matchesOf mg]
+alts mg = [Alt p (if null locals then body else ELet locals body) | (p : _, body, locals) <- matchesOf mg]
 
 -- Expressions ------------------------------------------------------------------
 
