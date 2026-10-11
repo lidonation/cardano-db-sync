@@ -19,6 +19,11 @@ rule is enforced by a gate in CI; this page says why, so nobody undoes one as a 
 - Only the survey route may ever relax the policy, and only by adding `chrome-extension:` or
   `moz-extension:` to `script-src`, if SEC-7's per-wallet check shows a wallet needs it
   (`SURVEY_SCRIPT_RELAXATION` in `plugins/security`). No other route can be loosened.
+- **Before granting that relaxation:** a meta policy belongs to the page a visit starts on, and
+  Docusaurus moves between pages client-side. A visitor who reaches the survey by a link keeps the
+  strict policy, so the wallet stays blocked; one who lands on the survey and then follows a link
+  keeps the relaxed policy on every page after it. The survey must therefore be entered and left by
+  full page loads (links into and out of it marked as such) in the same change that grants it.
 - `npm run check:csp` checks the built pages: one policy per page ahead of any script or style, the
   policy unloosened, every inline script hashed, no inline style, and no external origin in any
   resource a page or stylesheet loads. Links people follow are not loads and are not checked.

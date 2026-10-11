@@ -82,6 +82,13 @@ describe('per-route scoping (SEC-8)', () => {
 });
 
 describe('inline scripts (SEC-3)', () => {
+  it('treats legacy JavaScript MIME types and import maps as inline script (SEC-3)', () => {
+    const html = page(
+      '<script type="text/ecmascript">a()</script><script type="importmap">{}</script>',
+    );
+    expect(inlineScripts(html)).toEqual(['a()', '{}']);
+  });
+
   it('finds executable inline scripts, not external scripts or data blocks', () => {
     const html = page(
       '<script src="/a.js"></script><script type="application/ld+json">{}</script>' +
@@ -124,7 +131,7 @@ describe('applyPolicy', () => {
 
   it('drops the icon sprite inline style, which the policy would refuse', () => {
     const html = applyPolicy(page('', '<svg style="display: none;"><defs></defs></svg>'), '/', 'x');
-    expect(html).toContain('<svg aria-hidden="true"><defs>');
+    expect(html).toContain('<svg aria-hidden="true" data-dbs-icon-sprite=""><defs>');
     expect(html).not.toContain('style=');
   });
 
@@ -184,13 +191,27 @@ describe('applyPolicies and the plugin', () => {
     }
   });
 
+  it('uses the locale base path Docusaurus builds each locale under (i18n)', async () => {
+    const plugin = securityPlugin({} as LoadContext);
+    await plugin.postBuild?.({
+      outDir,
+      baseUrl: '/fr/',
+      routesPaths: ['/fr/', '/fr/docs/intro'],
+    } as Parameters<NonNullable<typeof plugin.postBuild>>[0]);
+    for (const file of ['index.html', 'docs/intro/index.html']) {
+      expect(await fs.readFile(path.join(outDir, file), 'utf8'), file).toMatch(
+        /Content-Security-Policy/,
+      );
+    }
+  });
+
   it('runs from postBuild with the profile base path', async () => {
     const previous = process.env.DOCS_PROFILE;
     process.env.DOCS_PROFILE = 'prod';
     try {
       const plugin = securityPlugin({} as LoadContext);
       expect(plugin.name).toBe('dbsync-security');
-      await plugin.postBuild?.({outDir, routesPaths: ['/']} as Parameters<
+      await plugin.postBuild?.({outDir, baseUrl: '/', routesPaths: ['/']} as Parameters<
         NonNullable<typeof plugin.postBuild>
       >[0]);
       expect(await fs.readFile(path.join(outDir, 'index.html'), 'utf8')).toMatch(
