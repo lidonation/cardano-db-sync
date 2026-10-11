@@ -51,4 +51,14 @@ describe('ENV-2: wallet network guard', () => {
     const broken = {getNetworkId: () => Promise.reject(new Error('wallet locked'))};
     await expect(assertWalletNetwork(broken, 'preview')).rejects.toThrow('wallet locked');
   });
+
+  it.each([['1'], [undefined], [1.5], [Number.NaN]])(
+    'rejects a wallet that returns %s instead of a CIP-30 network id, without naming a network',
+    async (bad) => {
+      const liar = {getNetworkId: async () => bad as unknown as number};
+      const error = await assertWalletNetwork(liar, 'preview').catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(WalletNetworkMismatchError);
+      expect((error as Error).message).toMatch(/connected to a network it could not identify/);
+    },
+  );
 });
