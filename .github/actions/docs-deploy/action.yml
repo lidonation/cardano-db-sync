@@ -1,0 +1,54 @@
+name: Docs site deploy
+description: >-
+  Build one profile, assert BLD-1 (published tree under the 1 GB Pages limit before upload, the
+  deploy under the 10-minute Pages timeout after it) and publish it to GitHub Pages. Both
+  measurements land in the job summary. The calling job owns the environment, the permissions
+  (pages: write, id-token: write) and the checkout.
+
+inputs:
+  profile:
+    description: The build profile to publish, `dev` or `prod` (ENV-6).
+    required: true
+
+outputs:
+  page_url:
+    description: The published site's URL.
+    value: ${{ steps.deployment.outputs.page_url }}
+
+runs:
+  using: composite
+  steps:
+    - name: Start the deploy clock (BLD-1)
+      shell: bash
+      run: echo "DEPLOY_STARTED=$(date +%s)" >> "$GITHUB_ENV"
+
+    - uses: ./.github/actions/docs-setup
+
+    - name: Build the ${{ inputs.profile }} profile
+      shell: bash
+      working-directory: docs
+      run: npm run "build:$PROFILE"
+      env:
+        PROFILE: ${{ inputs.profile }}
+
+    # `shell: bash` runs with `-o pipefail`, so `tee` cannot hide the gate's exit code.
+    - name: Published tree fits Pages (BLD-1)
+      shell: bash
+      working-directory: docs
+      run: node scripts/check-publish.mjs size "build/$PROFILE" 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+      env:
+        PROFILE: ${{ inputs.profile }}
+
+    - uses: actions/configure-pages@v5
+
+    - uses: actions/upload-pages-artifact@v3
+      with:
+        path: docs/build/${{ inputs.profile }}
+
+    - id: deployment
+      uses: actions/deploy-pages@v4
+
+    - name: Deploy finished inside the Pages timeout (BLD-1)
+      shell: bash
+      working-directory: docs
+      run: node scripts/check-publish.mjs elapsed "$DEPLOY_STARTED" 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
