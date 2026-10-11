@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
-"""Generate design/tokens.css from a Penpot token export (tokens.json).
+"""Generate src/css/tokens.css from design/tokens.source.json.
 
-Usage:  python3 design/tools/tokens-to-css.py design/tokens.source.json > design/tokens.css
+Usage (from docs/):
+    python3 design/tools/tokens-to-css.py design/tokens.source.json > src/css/tokens.css
 
-Reads design/tokens.source.json (the single origin; also handles the W3C export
-shape Penpot writes: one top-level object per set,
-tokens carrying {"$value": ..., "$type": ...}. Set names map to themes:
+`npm run tokens` runs exactly that, and `npm run check:tokens` fails CI when the committed
+tokens.css differs from a fresh run. Reads design/tokens.source.json (the single origin; also
+handles the W3C export shape Penpot writes: one top-level object per set, tokens carrying
+{"$value": ..., "$type": ...}). Set names map to themes:
 
     base      -> :root
     dark      -> [data-theme="dark"]
     cream     -> [data-theme="cream"]
     navy      -> [data-theme="navy"]
 
-Everything else in tokens.css (type scale, Infima bridge) is emitted from the
-static blocks below, because Penpot tokens do not carry composite typography.
+The base set's `typography` group is not a flat token tree: Penpot tokens cannot carry a composite
+text style. It is emitted as the 13-style scale (DF-1) by emit_typography(). Only the Infima bridge
+is still a static block below.
 """
 import json, sys, re
 
@@ -54,27 +57,51 @@ def resolve(value, table):
         return f"var({varname(m.group(1))})"
     return value
 
-STATIC_TYPE_BLOCK = """
-  /* type families and the 13-style scale — held as Penpot typography assets,
-     not tokens, because Penpot tokens cannot carry a composite text style. */
-  --dbs-font-heading: "Space Grotesk", system-ui, sans-serif;
-  --dbs-font-ui: Inter, system-ui, sans-serif;
-  --dbs-font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+TYPE_STYLE_KEYS = ("family", "size", "weight", "leading", "tracking")
 
-  --dbs-font-display-hero: 700 58px/1.1 var(--dbs-font-heading);
-  --dbs-font-heading-lg: 700 38px/1.2 var(--dbs-font-heading);
-  --dbs-font-heading-md: 700 26px/1.25 var(--dbs-font-heading);
-  --dbs-font-title: 600 20px/1.3 var(--dbs-font-heading);
-  --dbs-font-wordmark: 300 19px/1.2 var(--dbs-font-heading);
-  --dbs-font-body: 400 15px/1.65 var(--dbs-font-ui);
-  --dbs-font-body-sm: 400 13px/1.6 var(--dbs-font-ui);
-  --dbs-font-label: 600 14px/1.2 var(--dbs-font-ui);
-  --dbs-font-label-sm: 700 12px/1.2 var(--dbs-font-ui);
-  --dbs-font-caption: 400 12px/1.4 var(--dbs-font-ui);
-  --dbs-font-mono: 400 13px/1.5 var(--dbs-font-code);
-  --dbs-font-mono-sm: 400 11.5px/1.5 var(--dbs-font-code);
-  --dbs-font-eyebrow: 600 13px/1.2 var(--dbs-font-code);
 
+def number(value):
+    """CSS number text: 58 -> "58", 11.5 -> "11.5"."""
+    return str(int(value)) if float(value).is_integer() else repr(float(value))
+
+
+def emit_typography(typography):
+    """The type families and the 13-style scale (DF-1), as lines of a :root block.
+
+    Each style emits a `font` shorthand plus its parts, because letter-spacing cannot ride in the
+    shorthand and the type-scale lint needs a size token to point components at:
+      --dbs-font-<style>            weight size/leading family
+      --dbs-font-<style>-size       px
+      --dbs-font-<style>-leading    unitless line-height
+      --dbs-font-<style>-tracking   letter-spacing
+    """
+    families = typography.get("family") or {}
+    styles = typography.get("style") or {}
+    if not families or not styles:
+        raise SystemExit("tokens.source.json: base.typography needs `family` and `style`")
+    lines = ["", "  /* type families and the 13-style scale (DF-1) */"]
+    for name, stack in families.items():
+        lines.append(f"  --dbs-font-{name}: {stack};")
+    lines.append("")
+    for name, style in styles.items():
+        missing = [k for k in TYPE_STYLE_KEYS if k not in style]
+        if missing:
+            raise SystemExit(f"typography style {name!r} is missing {', '.join(missing)}")
+        if style["family"] not in families:
+            raise SystemExit(f"typography style {name!r} uses unknown family {style['family']!r}")
+        size, leading = number(style["size"]), number(style["leading"])
+        lines.append(
+            f"  --dbs-font-{name}: {style['weight']} {size}px/{leading} var(--dbs-font-{style['family']});"
+        )
+    lines.append("")
+    for name, style in styles.items():
+        lines.append(f"  --dbs-font-{name}-size: {number(style['size'])}px;")
+        lines.append(f"  --dbs-font-{name}-leading: {number(style['leading'])};")
+        lines.append(f"  --dbs-font-{name}-tracking: {style['tracking']};")
+    return lines
+
+
+FOCUS_BLOCK = """
   --dbs-focus-ring: 2px solid var(--dbs-accent-primary);
   --dbs-focus-offset: 2px;
 """
@@ -91,9 +118,9 @@ INFIMA_BRIDGE = """
   --ifm-font-family-base: var(--dbs-font-ui);
   --ifm-heading-font-family: var(--dbs-font-heading);
   --ifm-font-family-monospace: var(--dbs-font-code);
-  --ifm-font-size-base: 15px;
-  --ifm-line-height-base: 1.65;
-  --ifm-code-font-size: 13px;
+  --ifm-font-size-base: var(--dbs-font-body-size);
+  --ifm-line-height-base: var(--dbs-font-body-leading);
+  --ifm-code-font-size: var(--dbs-font-mono-size);
   --ifm-global-radius: var(--dbs-radius-md);
   --ifm-toc-border-color: var(--dbs-border-default);
   --ifm-navbar-height: 72px;
@@ -112,8 +139,8 @@ def main(path):
     data = json.load(open(path))
     out = ['/* cardano-db-sync docs — design tokens',
            '   GENERATED from the Penpot file "Cardano dbsync" token library.',
-           '   Do not hand-edit: change design/tokens.source.json and re-run',
-           '   design/tools/tokens-to-css.py. */', '']
+           '   Do not hand-edit: change design/tokens.source.json and run',
+           '   `npm run tokens` (design/tools/tokens-to-css.py). */', '']
     emitted_static = False
     for setname, tree in data.items():
         if setname.startswith("_"):
@@ -123,11 +150,18 @@ def main(path):
         sel = THEME_SELECTOR.get(setname.lower().replace(" ", "-"))
         if sel is None:
             continue
+        tree = dict(tree)
+        typography = tree.pop("typography", None)
+        if typography is not None and sel != ":root":
+            raise SystemExit(f"set {setname!r}: typography belongs to the base set only")
         lines = [f"{sel} {{"]
         for dotted, value in flatten(tree):
             lines.append(f"  {varname(dotted)}: {resolve(value, data)};")
         if sel == ":root" and not emitted_static:
-            lines.append(STATIC_TYPE_BLOCK.rstrip())
+            if typography is None:
+                raise SystemExit("tokens.source.json: the base set has no typography group")
+            lines.extend(emit_typography(typography))
+            lines.append(FOCUS_BLOCK.rstrip())
             emitted_static = True
         lines.append("}")
         out.append("\n".join(lines))

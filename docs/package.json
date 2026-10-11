@@ -20,11 +20,13 @@
     "format:check": "prettier --check .",
     "check:baseurl": "node scripts/check-baseurl.mjs",
     "check:css": "node scripts/check-css-gates.mjs",
+    "check:tokens": "node scripts/check-tokens.mjs",
+    "tokens": "python3 design/tools/tokens-to-css.py design/tokens.source.json > src/css/tokens.css",
     "check:links": "node scripts/check-links.mjs",
     "check:budget": "node scripts/check-asset-budget.mjs",
     "test": "vitest run --coverage",
     "test:build": "vitest run --config vitest.build.config.ts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run test && npm run test:build && npm run check:links && npm run check:budget"
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:tokens && npm run test && npm run test:build && npm run check:links && npm run check:budget"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

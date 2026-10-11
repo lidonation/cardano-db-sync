@@ -1,7 +1,7 @@
 /* cardano-db-sync docs — design tokens
    GENERATED from the Penpot file "Cardano dbsync" token library.
-   Do not hand-edit: change design/tokens.source.json and re-run
-   design/tools/tokens-to-css.py. */
+   Do not hand-edit: change design/tokens.source.json and run
+   `npm run tokens` (design/tools/tokens-to-css.py). */
 
 :root {
   --dbs-surface-base: #ffffff;
@@ -73,8 +73,7 @@
   --dbs-code-prompt: #79b8ff;
   --dbs-code-accent: #2dd4b5;
 
-  /* type families and the 13-style scale — held as Penpot typography assets,
-     not tokens, because Penpot tokens cannot carry a composite text style. */
+  /* type families and the 13-style scale (DF-1) */
   --dbs-font-heading: "Space Grotesk", system-ui, sans-serif;
   --dbs-font-ui: Inter, system-ui, sans-serif;
   --dbs-font-code: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
@@ -92,6 +91,46 @@
   --dbs-font-mono: 400 13px/1.5 var(--dbs-font-code);
   --dbs-font-mono-sm: 400 11.5px/1.5 var(--dbs-font-code);
   --dbs-font-eyebrow: 600 13px/1.2 var(--dbs-font-code);
+
+  --dbs-font-display-hero-size: 58px;
+  --dbs-font-display-hero-leading: 1.1;
+  --dbs-font-display-hero-tracking: -0.02em;
+  --dbs-font-heading-lg-size: 38px;
+  --dbs-font-heading-lg-leading: 1.2;
+  --dbs-font-heading-lg-tracking: -0.02em;
+  --dbs-font-heading-md-size: 26px;
+  --dbs-font-heading-md-leading: 1.25;
+  --dbs-font-heading-md-tracking: -0.01em;
+  --dbs-font-title-size: 20px;
+  --dbs-font-title-leading: 1.3;
+  --dbs-font-title-tracking: 0;
+  --dbs-font-wordmark-size: 19px;
+  --dbs-font-wordmark-leading: 1.2;
+  --dbs-font-wordmark-tracking: 0;
+  --dbs-font-body-size: 15px;
+  --dbs-font-body-leading: 1.65;
+  --dbs-font-body-tracking: 0;
+  --dbs-font-body-sm-size: 13px;
+  --dbs-font-body-sm-leading: 1.6;
+  --dbs-font-body-sm-tracking: 0;
+  --dbs-font-label-size: 14px;
+  --dbs-font-label-leading: 1.2;
+  --dbs-font-label-tracking: 0;
+  --dbs-font-label-sm-size: 12px;
+  --dbs-font-label-sm-leading: 1.2;
+  --dbs-font-label-sm-tracking: 0.04em;
+  --dbs-font-caption-size: 12px;
+  --dbs-font-caption-leading: 1.4;
+  --dbs-font-caption-tracking: 0;
+  --dbs-font-mono-size: 13px;
+  --dbs-font-mono-leading: 1.5;
+  --dbs-font-mono-tracking: 0;
+  --dbs-font-mono-sm-size: 11.5px;
+  --dbs-font-mono-sm-leading: 1.5;
+  --dbs-font-mono-sm-tracking: 0;
+  --dbs-font-eyebrow-size: 13px;
+  --dbs-font-eyebrow-leading: 1.2;
+  --dbs-font-eyebrow-tracking: 0;
 
   --dbs-focus-ring: 2px solid var(--dbs-accent-primary);
   --dbs-focus-offset: 2px;
@@ -193,9 +232,9 @@
   --ifm-font-family-base: var(--dbs-font-ui);
   --ifm-heading-font-family: var(--dbs-font-heading);
   --ifm-font-family-monospace: var(--dbs-font-code);
-  --ifm-font-size-base: 15px;
-  --ifm-line-height-base: 1.65;
-  --ifm-code-font-size: 13px;
+  --ifm-font-size-base: var(--dbs-font-body-size);
+  --ifm-line-height-base: var(--dbs-font-body-leading);
+  --ifm-code-font-size: var(--dbs-font-mono-size);
   --ifm-global-radius: var(--dbs-radius-md);
   --ifm-toc-border-color: var(--dbs-border-default);
   --ifm-navbar-height: 72px;

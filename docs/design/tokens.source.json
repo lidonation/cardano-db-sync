@@ -88,6 +88,107 @@
       "text-muted": "#8b949e",
       "prompt": "#79b8ff",
       "accent": "#2dd4b5"
+    },
+    "typography": {
+      "_comment": "DF-1: the 13-style scale. Sizes in px; leading is a unitless line-height; tracking is a CSS letter-spacing. No type size outside these styles (lint DF-1).",
+      "family": {
+        "heading": "\"Space Grotesk\", system-ui, sans-serif",
+        "ui": "Inter, system-ui, sans-serif",
+        "code": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, monospace"
+      },
+      "style": {
+        "display-hero": {
+          "family": "heading",
+          "size": 58,
+          "weight": 700,
+          "leading": 1.1,
+          "tracking": "-0.02em"
+        },
+        "heading-lg": {
+          "family": "heading",
+          "size": 38,
+          "weight": 700,
+          "leading": 1.2,
+          "tracking": "-0.02em"
+        },
+        "heading-md": {
+          "family": "heading",
+          "size": 26,
+          "weight": 700,
+          "leading": 1.25,
+          "tracking": "-0.01em"
+        },
+        "title": {
+          "family": "heading",
+          "size": 20,
+          "weight": 600,
+          "leading": 1.3,
+          "tracking": "0"
+        },
+        "wordmark": {
+          "family": "heading",
+          "size": 19,
+          "weight": 300,
+          "leading": 1.2,
+          "tracking": "0"
+        },
+        "body": {
+          "family": "ui",
+          "size": 15,
+          "weight": 400,
+          "leading": 1.65,
+          "tracking": "0"
+        },
+        "body-sm": {
+          "family": "ui",
+          "size": 13,
+          "weight": 400,
+          "leading": 1.6,
+          "tracking": "0"
+        },
+        "label": {
+          "family": "ui",
+          "size": 14,
+          "weight": 600,
+          "leading": 1.2,
+          "tracking": "0"
+        },
+        "label-sm": {
+          "family": "ui",
+          "size": 12,
+          "weight": 700,
+          "leading": 1.2,
+          "tracking": "0.04em"
+        },
+        "caption": {
+          "family": "ui",
+          "size": 12,
+          "weight": 400,
+          "leading": 1.4,
+          "tracking": "0"
+        },
+        "mono": {
+          "family": "code",
+          "size": 13,
+          "weight": 400,
+          "leading": 1.5,
+          "tracking": "0"
+        },
+        "mono-sm": {
+          "family": "code",
+          "size": 11.5,
+          "weight": 400,
+          "leading": 1.5,
+          "tracking": "0"
+        },
+        "eyebrow": {
+          "family": "code",
+          "size": 13,
+          "weight": 600,
+          "leading": 1.2,
+          "tracking": "0"
+        }
+      }
     }
   },
   "dark": {

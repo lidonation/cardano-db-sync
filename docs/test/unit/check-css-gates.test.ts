@@ -4,7 +4,13 @@ import path from 'node:path';
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import {checkCss, findViolations, main} from '../../scripts/check-css-gates.mjs';
+import {
+  TOKEN_SOURCE,
+  checkCss,
+  findViolations,
+  loadTypeStyles,
+  main,
+} from '../../scripts/check-css-gates.mjs';
 
 let root: string;
 
@@ -105,6 +111,44 @@ describe('scanner', () => {
   });
 });
 
+describe('DF-1: no type size outside the 13-style scale', () => {
+  const scale = new Set(['body', 'label']);
+  const df1 = (css: string) => checkCss(css, scale).map((v) => v.rule);
+
+  it.each(['15px', '1rem', '0.9em', 'larger', 'calc(1rem + 2px)', 'var(--other-size)'])(
+    'flags `font-size: %s`',
+    (value) => {
+      expect(df1(`p { font-size: ${value}; }`)).toEqual(['DF-1']);
+    },
+  );
+
+  it('allows a scale size token, with or without !important', () => {
+    expect(df1('p { font-size: var(--dbs-font-body-size); }')).toEqual([]);
+    expect(df1('p { font-size: var(--dbs-font-label-size) !important; }')).toEqual([]);
+  });
+
+  it('flags a size token for a style the scale does not have', () => {
+    expect(df1('p { font-size: var(--dbs-font-huge-size); }')).toEqual(['DF-1']);
+  });
+
+  it.each(['inherit', 'initial', 'unset', 'revert', 'revert-layer'])(
+    'allows `font-size: %s`, which defers to the cascade',
+    (value) => {
+      expect(df1(`p { font-size: ${value}; }`)).toEqual([]);
+    },
+  );
+
+  it('requires the font shorthand to be a style token, not a literal or a family', () => {
+    expect(df1('p { font: 600 14px/1.2 Inter, sans-serif; }')).toEqual(['DF-1']);
+    expect(df1('p { font: var(--dbs-font-ui); }')).toEqual(['DF-1']);
+    expect(df1('p { font: var(--dbs-font-label); line-height: 44px; }')).toEqual([]);
+  });
+
+  it('leaves custom property definitions alone', () => {
+    expect(df1(':root { --dbs-font-body-size: 15px; --ifm-font-size-base: 15px; }')).toEqual([]);
+  });
+});
+
 describe('check:css over a tree', () => {
   it('scans .css and .scss and names the file', async () => {
     await fs.writeFile(path.join(root, 'src', 'a.css'), 'a { outline: none; }\n');
@@ -114,6 +158,28 @@ describe('check:css over a tree', () => {
       'src/a.css:FLOOR-4',
       'src/b.scss:PERF-5',
     ]);
+  });
+
+  it('reads the type scale from the token source', async () => {
+    await fs.mkdir(path.join(root, 'design'));
+    await fs.writeFile(
+      path.join(root, TOKEN_SOURCE),
+      JSON.stringify({base: {typography: {style: {body: {}}}}}),
+    );
+    expect(await loadTypeStyles(root)).toEqual(new Set(['body']));
+    await fs.writeFile(
+      path.join(root, 'src', 'a.css'),
+      'p { font-size: var(--dbs-font-body-size); } q { font-size: var(--dbs-font-label-size); }',
+    );
+    expect((await findViolations(root)).map((v) => v.text)).toEqual([
+      'font-size: var(--dbs-font-label-size)',
+    ]);
+  });
+
+  it('fails when the token source has no type scale', async () => {
+    await fs.mkdir(path.join(root, 'design'));
+    await fs.writeFile(path.join(root, TOKEN_SOURCE), JSON.stringify({base: {}}));
+    await expect(loadTypeStyles(root)).rejects.toThrow(/no base.typography.style/);
   });
 
   it('skips build output, dependencies, tests and non-style files', async () => {
