@@ -25,6 +25,9 @@ export const NOINDEX_META: HtmlTagObject = {
   attributes: {name: 'robots', content: 'noindex'},
 };
 
+/** {@link NOINDEX_META} as markup, for pages the build writes by hand (B04 redirect stubs). */
+export const NOINDEX_HTML = '<meta name="robots" content="noindex">';
+
 /** Head tags for every page: `noindex` when the profile may not be indexed, otherwise none. */
 export function environmentHeadTags(profile: BuildProfile): HtmlTagObject[] {
   return profile.indexable ? [] : [NOINDEX_META];

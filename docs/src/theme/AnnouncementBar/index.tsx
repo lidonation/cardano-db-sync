@@ -3,10 +3,9 @@ import React from 'react';
 import AnnouncementBar from '@theme-original/AnnouncementBar';
 import type AnnouncementBarType from '@theme/AnnouncementBar';
 import type {WrapperProps} from '@docusaurus/types';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 import EnvironmentBanner from '../../components/EnvironmentBanner';
-import type {BuildProfile} from '../../../config/profiles';
+import useBuildEnvironment from '../../lib/useBuildEnvironment';
 
 type Props = WrapperProps<typeof AnnouncementBarType>;
 
@@ -16,9 +15,7 @@ type Props = WrapperProps<typeof AnnouncementBarType>;
  * so the skip link stays the first tab stop.
  */
 export default function AnnouncementBarWrapper(props: Props): React.JSX.Element {
-  const {siteConfig} = useDocusaurusContext();
-  const profile = siteConfig.customFields?.profile as BuildProfile;
-  const productionUrl = siteConfig.customFields?.productionUrl as string;
+  const {profile, productionUrl} = useBuildEnvironment();
 
   return (
     <>

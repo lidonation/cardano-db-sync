@@ -6,6 +6,7 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {PROFILES} from '../../config/profiles';
 import environmentPlugin, {
+  NOINDEX_HTML,
   NOINDEX_META,
   ROBOTS_FILE,
   emitRobots,
@@ -31,6 +32,11 @@ describe('ENV-3: noindex with crawling allowed', () => {
     expect(environmentHeadTags(PROFILES.dev)).toEqual([
       {tagName: 'meta', attributes: {name: 'robots', content: 'noindex'}},
     ]);
+  });
+
+  it('writes the same directive as markup for hand-built pages', () => {
+    const {name, content} = NOINDEX_META.attributes as Record<string, string>;
+    expect(NOINDEX_HTML).toBe(`<meta name="${name}" content="${content}">`);
   });
 
   it('adds no robots meta to production', () => {

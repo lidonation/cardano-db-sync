@@ -4,6 +4,7 @@ import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
+import {NOINDEX_HTML} from '../environment';
 
 /**
  * VER-5 — every route this site has ever published keeps resolving.
@@ -298,7 +299,7 @@ export function redirectPage(target: string, profile: BuildProfile): string {
     `<script src="${script}" data-target="${attr}"></script>`,
     `<meta http-equiv="refresh" content="0; url=${attr}">`,
     `<link rel="canonical" href="${canonical}">`,
-    ...(profile.indexable ? [] : ['<meta name="robots" content="noindex">']),
+    ...(profile.indexable ? [] : [NOINDEX_HTML]),
     '</head>',
     '<body>',
     `<p>This page has moved to <a href="${attr}">${escapeHtml(target)}</a>.</p>`,
