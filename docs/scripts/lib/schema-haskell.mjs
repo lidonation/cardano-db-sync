@@ -194,6 +194,55 @@ export function readRecords(source, file) {
 }
 
 /**
+ * The source with comments (`--`, nested `{- -}`) and string and character literals blanked out,
+ * offsets and newlines preserved, so declaration text inside them is never mistaken for code.
+ */
+export function maskHaskell(source) {
+  const out = source.split('');
+  const blank = (from, to) => {
+    for (let k = from; k < to; k++) if (out[k] !== '\n') out[k] = ' ';
+  };
+  let i = 0;
+  while (i < source.length) {
+    if (source.startsWith('{-', i)) {
+      let depth = 0;
+      let j = i;
+      while (j < source.length) {
+        if (source.startsWith('{-', j)) {
+          depth++;
+          j += 2;
+        } else if (source.startsWith('-}', j)) {
+          depth--;
+          j += 2;
+          if (depth === 0) break;
+        } else {
+          j++;
+        }
+      }
+      blank(i, j);
+      i = j;
+    } else if (/^--+(?![!#$%&*+./<=>?@\\^|~:])/.test(source.slice(i, i + 80))) {
+      const end = source.indexOf('\n', i);
+      const j = end < 0 ? source.length : end;
+      blank(i, j);
+      i = j;
+    } else if (source[i] === '"') {
+      const literal = /^"(?:[^"\\\n]|\\.)*"?/.exec(source.slice(i));
+      blank(i, i + literal[0].length);
+      i += literal[0].length;
+    } else if (source[i] === "'" && !/[A-Za-z0-9_']/.test(source[i - 1] ?? '')) {
+      const literal = /^'(?:[^'\\\n]|\\.)'/.exec(source.slice(i));
+      const length = literal ? literal[0].length : 1;
+      blank(i, i + length);
+      i += length;
+    } else {
+      i++;
+    }
+  }
+  return out.join('');
+}
+
+/**
  * `instance DbInfo X where` blocks with their `tableName` / `columnNames` overrides. Every line that
  * declares a DbInfo instance must be readable: one the reader cannot parse fails the run instead of
  * dropping a table out of the cross-check.
@@ -203,7 +252,7 @@ export function readDbInfoInstances(source, file) {
   // Every instance head that names DbInfo, even one split across lines or with a context. A head
   // never crosses `where`, a plain `=` (as in `type instance Key X = XId`) or a blank line.
   const declared = [
-    ...source.matchAll(
+    ...maskHaskell(source).matchAll(
       /\binstance\b(?:(?!\bwhere\b|\binstance\b|=(?!>)|\n[ \t]*\n)[\s\S])*?\bDbInfo\b/g,
     ),
   ].map((m) => m.index);

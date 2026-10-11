@@ -7,6 +7,7 @@ import {describe, expect, it} from 'vitest';
 import {
   camelToSnake,
   fieldToColumn,
+  maskHaskell,
   parseStringList,
   readAddressVariantDdl,
   readDbInfoInstances,
@@ -102,6 +103,26 @@ describe('readDbInfoInstances', () => {
   it('does not mistake a type instance on the line above for a DbInfo head', () => {
     const source = 'type instance Key X = XId\ninstance DbInfo X where\n  tableName _ = "x"\n';
     expect(readDbInfoInstances(source, 'K.hs').map((i) => i.type)).toEqual(['X']);
+  });
+
+  it('ignores instance text inside comments and literals (third-pass finding)', () => {
+    const source = [
+      '-- instance DbInfo X is derived below',
+      '{- instance DbInfo Y, {- nested -} instance DbInfo Z -}',
+      'note = "instance DbInfo Q"',
+      "quote = '\"'",
+      'instance DbInfo X where',
+      '  tableName _ = "x"',
+      '',
+    ].join('\n');
+    expect(readDbInfoInstances(source, 'C.hs').map((i) => i.type)).toEqual(['X']);
+  });
+
+  it('maskHaskell keeps offsets and newlines, and leaves operators alone', () => {
+    const source = "a --> b -- c\n{- d\n-} \"e\" x' 'f'";
+    const masked = maskHaskell(source);
+    expect(masked).toHaveLength(source.length);
+    expect(masked).toBe("a --> b     \n    \n       x'    ");
   });
 
   it('fails when columnNames is not a list', () => {
