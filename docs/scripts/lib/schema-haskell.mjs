@@ -221,7 +221,7 @@ export function maskHaskell(source) {
       }
       blank(i, j);
       i = j;
-    } else if (/^--+(?![!#$%&*+./<=>?@\\^|~:])/.test(source.slice(i, i + 80))) {
+    } else if (/^-{2,}(?![-!#$%&*+./<=>?@\\^|~:])/.test(source.slice(i, i + 80))) {
       const end = source.indexOf('\n', i);
       const j = end < 0 ? source.length : end;
       blank(i, j);
@@ -251,15 +251,18 @@ export function readDbInfoInstances(source, file) {
   const instances = [];
   // Every instance head that names DbInfo, even one split across lines or with a context. A head
   // never crosses `where`, a plain `=` (as in `type instance Key X = XId`) or a blank line.
+  const masked = maskHaskell(source);
   const declared = [
-    ...maskHaskell(source).matchAll(
+    ...masked.matchAll(
       /\binstance\b(?:(?!\bwhere\b|\binstance\b|=(?!>)|\n[ \t]*\n)[\s\S])*?\bDbInfo\b/g,
     ),
   ].map((m) => m.index);
   const parsed = new Set();
   const pattern = /^instance DbInfo ([A-Z][A-Za-z0-9_']*)(?:\s+where)?\s*(?:--.*)?$/gm;
   let match;
-  while ((match = pattern.exec(source)) !== null) {
+  // Heads are matched on the masked source (never inside a comment); bodies are read from the
+  // original, at the same offsets, so string literals keep their text.
+  while ((match = pattern.exec(masked)) !== null) {
     parsed.add(match.index);
     const start = match.index + match[0].length;
     const next = source.slice(start).search(/^\S/m);

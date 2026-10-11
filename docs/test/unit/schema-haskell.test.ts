@@ -110,6 +110,9 @@ describe('readDbInfoInstances', () => {
       '-- instance DbInfo X is derived below',
       '{- instance DbInfo Y, {- nested -} instance DbInfo Z -}',
       'note = "instance DbInfo Q"',
+      '{-',
+      'instance DbInfo Ghost',
+      '-}',
       "quote = '\"'",
       'instance DbInfo X where',
       '  tableName _ = "x"',
@@ -123,6 +126,7 @@ describe('readDbInfoInstances', () => {
     const masked = maskHaskell(source);
     expect(masked).toHaveLength(source.length);
     expect(masked).toBe("a --> b     \n    \n       x'    ");
+    expect(maskHaskell('a ---> b ---- c')).toBe('a ---> b       ');
   });
 
   it('fails when columnNames is not a list', () => {
