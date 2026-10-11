@@ -2,7 +2,7 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it} from 'vitest';
 
 import {
   camelToSnake,
@@ -231,8 +231,14 @@ describe('the real schema modules', () => {
 });
 
 describe('readHaskellTables failure modes', () => {
+  const roots: string[] = [];
+  afterEach(() => {
+    for (const root of roots.splice(0)) fs.rmSync(root, {recursive: true, force: true});
+  });
+
   function tree(files: Record<string, string>) {
     const root = fs.mkdtempSync(path.join(os.tmpdir(), 'b08-hs-'));
+    roots.push(root);
     const write = (rel: string, text: string) => {
       fs.mkdirSync(path.dirname(path.join(root, rel)), {recursive: true});
       fs.writeFileSync(path.join(root, rel), text);
