@@ -61,6 +61,13 @@ describe('docusaurus.config (ENV-1)', () => {
     expect(config.customFields?.profile).toEqual(PROFILES.dev);
   });
 
+  it('gives every profile the production address for the environment banner (ENV-4)', async () => {
+    for (const name of ['dev', 'prod']) {
+      const config = await loadConfig(name);
+      expect(config.customFields?.productionUrl).toBe('https://dbsync.cardano.intersect.org/');
+    }
+  });
+
   it('fails to load at all when no profile is selected', async () => {
     await expect(loadConfig(undefined)).rejects.toThrow(/is not set/);
   });
@@ -109,10 +116,11 @@ describe('build hygiene', () => {
     expect(config.markdown?.hooks?.onBrokenMarkdownLinks).toBe('throw');
   });
 
-  it('registers the CNAME and route-manifest plugins', async () => {
+  it('registers the CNAME, route-manifest and environment plugins', async () => {
     const config = await loadConfig('prod');
     const {default: cnamePlugin} = await import('../../plugins/cname');
     const {default: routeManifestPlugin} = await import('../../plugins/route-manifest');
-    expect(config.plugins).toEqual([cnamePlugin, routeManifestPlugin]);
+    const {default: environmentPlugin} = await import('../../plugins/environment');
+    expect(config.plugins).toEqual([cnamePlugin, routeManifestPlugin, environmentPlugin]);
   });
 });

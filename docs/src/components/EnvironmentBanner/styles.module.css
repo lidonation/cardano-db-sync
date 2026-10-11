@@ -1,0 +1,36 @@
+/* ENV-4: the non-production environment banner. Status-warning roles, so it re-themes with the
+   site and never reads as part of the content. */
+.banner {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--dbs-space-8) var(--dbs-space-16);
+  padding: var(--dbs-space-8) var(--dbs-space-16);
+  border-bottom: 1px solid var(--dbs-status-warning);
+  background: var(--dbs-status-warning-subtle);
+  color: var(--dbs-status-warning-text);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+
+.label {
+  font: var(--dbs-font-label-sm);
+  letter-spacing: var(--dbs-font-label-sm-tracking);
+  text-transform: uppercase;
+}
+
+.link {
+  color: var(--dbs-status-warning-text);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.link:hover {
+  color: var(--dbs-status-warning-text);
+  text-decoration-thickness: 2px;
+}
+
+.link:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}

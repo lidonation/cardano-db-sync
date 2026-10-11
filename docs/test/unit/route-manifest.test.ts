@@ -191,14 +191,18 @@ describe('redirectPage', () => {
     expect(redirectPage('/', prod)).toContain('url=/"');
   });
 
-  it('loads only the same-origin forwarding script, ahead of the refresh, and no noindex', () => {
+  it('loads only the same-origin forwarding script, ahead of the refresh', () => {
     const html = redirectPage('/docs', dev);
     const script =
       '<script src="/cardano-db-sync/redirect.js" data-target="/cardano-db-sync/docs">';
     expect(html).toContain(`${script}</script>`);
     expect(html.indexOf(script)).toBeLessThan(html.indexOf('http-equiv="refresh"'));
     expect(html.match(/<script/g)).toHaveLength(1);
-    expect(html).not.toMatch(/noindex/);
+  });
+
+  it('carries noindex on the preview build only (ENV-3)', () => {
+    expect(redirectPage('/docs', dev)).toContain('<meta name="robots" content="noindex">');
+    expect(redirectPage('/docs', prod)).not.toMatch(/noindex/);
   });
 
   it('escapes the target', () => {
