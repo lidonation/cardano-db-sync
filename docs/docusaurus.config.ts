@@ -55,7 +55,8 @@ const config: Config = {
         },
         blog: false,
         theme: {
-          customCss: './src/css/custom.css',
+          // TOK-1: the generated tokens are imported once, here, ahead of everything that uses them.
+          customCss: ['./src/css/tokens.css', './src/css/custom.css'],
         },
       } satisfies Preset.Options,
     ],

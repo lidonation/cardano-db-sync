@@ -135,7 +135,7 @@
   --dbs-focus-offset: 2px;
 }
 
-[data-theme="dark"] {
+:root[data-theme="dark"] {
   --dbs-surface-base: #0f1117;
   --dbs-surface-sunken: #161b22;
   --dbs-surface-accent-subtle: #10233f;
@@ -170,7 +170,7 @@
   --dbs-code-text-muted: #9aa4b2;
 }
 
-[data-theme="cream"] {
+:root[data-theme="cream"] {
   --dbs-surface-base: #fcfbf5;
   --dbs-surface-sunken: #eae6d8;
   --dbs-border-default: #e4dfd2;
@@ -184,7 +184,7 @@
   --dbs-text-disabled: #9e9482;
 }
 
-[data-theme="navy"] {
+:root[data-theme="navy"] {
   --dbs-surface-base: #011555;
   --dbs-surface-sunken: #0b1b45;
   --dbs-surface-accent-subtle: #0e2a6b;

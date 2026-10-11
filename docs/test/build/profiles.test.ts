@@ -89,3 +89,23 @@ describe('the build carries no secrets and needs none (ENV-5)', () => {
     expect(stdout).toContain('Generated static files');
   }, 900_000);
 });
+
+describe('theme tokens reach the built CSS with their precedence intact (TOK-1)', () => {
+  /**
+   * The minifier reorders and merges rules, so a theme block that only beat `:root` by coming
+   * later can land above it and lose. Every theme rule must out-rank `:root` on specificity.
+   */
+  it('scopes every themed token rule as :root[data-theme=...]', async () => {
+    const dir = path.join(OUT.prod, 'assets', 'css');
+    const css = (await Promise.all((await fs.readdir(dir)).map((f) => fs.readFile(path.join(dir, f), 'utf8')))).join('');
+    const themed = [...css.matchAll(/([^{}]*data-theme[^{}]*)\{([^{}]*)\}/g)]
+      .filter(([, , body]) => body.includes('--dbs-'))
+      .map(([, selector]) => selector.trim());
+    expect(themed.length).toBeGreaterThanOrEqual(3);
+    for (const selector of themed) {
+      for (const part of selector.split(',')) {
+        expect(part, selector).toMatch(/^:root\[data-theme=/);
+      }
+    }
+  });
+});

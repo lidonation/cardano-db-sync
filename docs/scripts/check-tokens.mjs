@@ -12,10 +12,12 @@ import path from 'node:path';
 import process from 'node:process';
 import {promisify} from 'node:util';
 
+import {TOKENS_CSS} from './lib/build-output.mjs';
+
 const ROOT = path.resolve(import.meta.dirname, '..');
 export const SOURCE = 'design/tokens.source.json';
 export const GENERATOR = 'design/tools/tokens-to-css.py';
-export const OUTPUT = 'src/css/tokens.css';
+export const OUTPUT = TOKENS_CSS;
 
 /** Differing lines: the first `limit` mismatches (all by default) as {line, committed, generated}. */
 export function firstDifferences(committed, generated, limit = Infinity) {
