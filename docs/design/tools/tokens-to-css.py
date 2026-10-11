@@ -123,6 +123,24 @@ def emit_typography(typography):
     return lines
 
 
+def emit_type_classes(typography):
+    """One utility class per style, carrying the font AND its tracking.
+
+    The `font` shorthand cannot carry letter-spacing, so `font: var(--dbs-font-<style>)` alone
+    drops the tracking of the tracked styles. The class is the easy way to get both; check:css
+    (DF-1) fails any other rule that sets the shorthand without the matching tracking token.
+    """
+    out = ["/* ---- type classes (DF-1): each style's font and tracking together ---- */"]
+    for name in typography["style"]:
+        out += [
+            f".dbs-type-{name} {{",
+            f"  font: var(--dbs-font-{name});",
+            f"  letter-spacing: var(--dbs-font-{name}-tracking);",
+            "}",
+        ]
+    return "\n".join(out)
+
+
 FOCUS_BLOCK = """
   --dbs-focus-ring: 2px solid var(--dbs-accent-primary);
   --dbs-focus-offset: 2px;
@@ -163,7 +181,7 @@ def main(path):
     out = ['/* cardano-db-sync docs — design tokens',
            '   GENERATED from design/tokens.source.json by design/tools/tokens-to-css.py.',
            '   Do not hand-edit: change the source and run `npm run tokens`. */', '']
-    emitted_typography = False
+    type_scale = None
     for setname, tree in data.items():
         if setname.startswith(("_", "$")):
             continue
@@ -182,12 +200,13 @@ def main(path):
         if typography is not None:
             lines.extend(emit_typography(typography))
             lines.append(FOCUS_BLOCK.rstrip())
-            emitted_typography = True
+            type_scale = typography
         lines.append("}")
         out.append("\n".join(lines))
         out.append("")
-    if not emitted_typography:
+    if type_scale is None:
         raise SystemExit("tokens.source.json: the base set has no typography group")
+    out.append(emit_type_classes(type_scale))
     out.append(INFIMA_BRIDGE)
     # Byte-identical output on every platform: UTF-8 and LF whatever the locale says.
     sys.stdout.reconfigure(encoding="utf-8", newline="\n")

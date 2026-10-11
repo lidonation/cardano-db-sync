@@ -219,6 +219,59 @@
   --dbs-code-text-muted: #8fa3d9;
 }
 
+/* ---- type classes (DF-1): each style's font and tracking together ---- */
+.dbs-type-display-hero {
+  font: var(--dbs-font-display-hero);
+  letter-spacing: var(--dbs-font-display-hero-tracking);
+}
+.dbs-type-heading-lg {
+  font: var(--dbs-font-heading-lg);
+  letter-spacing: var(--dbs-font-heading-lg-tracking);
+}
+.dbs-type-heading-md {
+  font: var(--dbs-font-heading-md);
+  letter-spacing: var(--dbs-font-heading-md-tracking);
+}
+.dbs-type-title {
+  font: var(--dbs-font-title);
+  letter-spacing: var(--dbs-font-title-tracking);
+}
+.dbs-type-wordmark {
+  font: var(--dbs-font-wordmark);
+  letter-spacing: var(--dbs-font-wordmark-tracking);
+}
+.dbs-type-body {
+  font: var(--dbs-font-body);
+  letter-spacing: var(--dbs-font-body-tracking);
+}
+.dbs-type-body-sm {
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+.dbs-type-label {
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+.dbs-type-label-sm {
+  font: var(--dbs-font-label-sm);
+  letter-spacing: var(--dbs-font-label-sm-tracking);
+}
+.dbs-type-caption {
+  font: var(--dbs-font-caption);
+  letter-spacing: var(--dbs-font-caption-tracking);
+}
+.dbs-type-mono {
+  font: var(--dbs-font-mono);
+  letter-spacing: var(--dbs-font-mono-tracking);
+}
+.dbs-type-mono-sm {
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+.dbs-type-eyebrow {
+  font: var(--dbs-font-eyebrow);
+  letter-spacing: var(--dbs-font-eyebrow-tracking);
+}
 
 /* ---- Infima bridge — the ONLY place --ifm-* is assigned ---- */
 :root {

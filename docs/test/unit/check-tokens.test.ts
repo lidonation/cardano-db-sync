@@ -81,6 +81,19 @@ describe('tokens-to-css typography (DF-1)', () => {
     expect(css).not.toMatch(/--dbs-typography/);
   });
 
+  it('emits one class per style that sets the font and its tracking together', async () => {
+    await tree(SOURCE_FIXTURE);
+    const css = await generate();
+    expect(css.match(/^\.dbs-type-[a-z-]+ \{$/gm)).toEqual([
+      '.dbs-type-body {',
+      '.dbs-type-label-sm {',
+      '.dbs-type-mono-sm {',
+    ]);
+    expect(css).toContain(
+      '.dbs-type-label-sm {\n  font: var(--dbs-font-label-sm);\n  letter-spacing: var(--dbs-font-label-sm-tracking);\n}',
+    );
+  });
+
   it('points Infima at the body and mono tokens instead of literal sizes', async () => {
     await tree(SOURCE_FIXTURE);
     const css = await generate();

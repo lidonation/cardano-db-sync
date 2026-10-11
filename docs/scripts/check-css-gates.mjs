@@ -10,7 +10,10 @@
  *          Set it only in an interaction state (`:hover`, `:focus-*`, `:active`) or not at all.
  * DF-1     No type size outside the 13-style scale. `font-size` must be a
  *          `var(--dbs-font-<style>-size)` token and the `font` shorthand a `var(--dbs-font-<style>)`
- *          token, where <style> is one of the styles in `design/tokens.source.json`.
+ *          token, where <style> is one of the styles in `design/tokens.source.json`. A rule that
+ *          sets the shorthand must also set `letter-spacing: var(--dbs-font-<style>-tracking)`,
+ *          because the shorthand cannot carry tracking; the generated `.dbs-type-<style>` classes
+ *          do both.
  *
  * Run by `npm run check:css` and by CI. Scans every `.css` and `.scss` file outside build output,
  * dependencies and the top-level `test/` directory (whose fixtures break the rules on purpose).
@@ -85,12 +88,14 @@ function stripComments(css) {
  */
 function* declarations(css) {
   const stack = [];
+  const opens = [];
   let start = 0;
 
   for (let i = 0; i < css.length; i += 1) {
     const ch = css[i];
     if (ch === '{') {
       stack.push(css.slice(start, i).trim());
+      opens.push(i);
       start = i + 1;
     } else if (ch === '}' || ch === ';') {
       const text = css.slice(start, i);
@@ -101,11 +106,13 @@ function* declarations(css) {
           property: text.slice(0, colon).trim().toLowerCase(),
           value: text.slice(colon + 1).trim(),
           selectors: [...stack],
+          block: opens.at(-1) ?? -1,
           offset,
         };
       }
       if (ch === '}') {
         stack.pop();
+        opens.pop();
       }
       start = i + 1;
     }
@@ -133,6 +140,17 @@ function removesOutline(property, value) {
     (property === 'outline-width' && zero.test(value))
   );
 }
+
+/**
+ * Files exempt from DF-1's font/tracking pairing, with the reason. Everything else in DF-1 applies.
+ */
+export const TRACKING_EXEMPT = new Map([
+  [
+    'src/styles/components-dark-parity.css',
+    'legacy #61 parity sheet, imported nowhere: its uppercase button tracking (0.5px) has no style ' +
+      'in the scale; it goes when the buttons are rebuilt on the tokens (DF-11)',
+  ],
+]);
 
 /** Values that defer to the cascade rather than set a size, so they never break the scale. */
 const CASCADE_KEYWORD = /^(inherit|initial|unset|revert|revert-layer)$/;
@@ -179,8 +197,9 @@ function transitionNamesLayout(value) {
  *
  * @param {string} source
  * @param {Set<string>} [typeStyles]
+ * @param {{pairTracking?: boolean}} [options] `pairTracking: false` skips the font/tracking pairing.
  */
-export function checkCss(source, typeStyles) {
+export function checkCss(source, typeStyles, {pairTracking = true} = {}) {
   const css = stripComments(source);
   const lineAt = lineIndex(css);
   const violations = [];
@@ -191,6 +210,13 @@ export function checkCss(source, typeStyles) {
       message,
       text: `${decl.property}: ${decl.value}`,
     });
+
+  /** Per rule block: the style its `font` shorthand names, and the style its tracking names. */
+  const blocks = new Map();
+  const blockOf = (decl) => {
+    if (!blocks.has(decl.block)) blocks.set(decl.block, {});
+    return blocks.get(decl.block);
+  };
 
   for (const decl of declarations(css)) {
     const {value, selectors} = decl;
@@ -222,8 +248,17 @@ export function checkCss(source, typeStyles) {
       push(decl, 'DF-1', 'type size outside the scale - use var(--dbs-font-<style>-size)');
     }
 
-    if (property === 'font' && !CASCADE_KEYWORD.test(plain) && !typeToken(plain, '', typeStyles)) {
-      push(decl, 'DF-1', 'font shorthand outside the scale - use var(--dbs-font-<style>)');
+    if (property === 'font' && !CASCADE_KEYWORD.test(plain)) {
+      const style = typeToken(plain, '', typeStyles);
+      if (style) {
+        blockOf(decl).font = {decl, style};
+      } else {
+        push(decl, 'DF-1', 'font shorthand outside the scale - use var(--dbs-font-<style>)');
+      }
+    }
+
+    if (property === 'letter-spacing') {
+      blockOf(decl).tracking = typeToken(plain, '-tracking', typeStyles);
     }
 
     if (property === 'will-change' && value !== 'auto') {
@@ -233,6 +268,20 @@ export function checkCss(source, typeStyles) {
     }
   }
 
+  if (pairTracking) {
+    for (const {font, tracking} of blocks.values()) {
+      if (font && tracking !== font.style) {
+        push(
+          font.decl,
+          'DF-1',
+          `font shorthand without its tracking - add letter-spacing: ` +
+            `var(--dbs-font-${font.style}-tracking), or use .dbs-type-${font.style}`,
+        );
+      }
+    }
+  }
+
+  violations.sort((a, b) => a.line - b.line);
   return violations;
 }
 
@@ -248,7 +297,8 @@ export async function findViolations(root = ROOT) {
       continue;
     }
     const file = path.relative(root, full).split(path.sep).join('/');
-    for (const v of checkCss(await readFile(full, 'utf8'), typeStyles)) {
+    const pairTracking = !TRACKING_EXEMPT.has(file);
+    for (const v of checkCss(await readFile(full, 'utf8'), typeStyles, {pairTracking})) {
       violations.push({file, ...v});
     }
   }
