@@ -6,31 +6,43 @@
 
 :root {
   /* Dark surface system — canonical */
-  --db-dark-bg: #0F1117;
-  --db-dark-raised: #161B22;
-  --db-dark-border: #30363D;
-  --db-dark-accent: #4493F8;
-  --db-dark-hover: #79B8FF;
-  --db-dark-text: #E6EDF3;
-  --db-dark-muted: #8B949E;
-  --db-dark-tint: #10233F;
-  --db-dark-on-accent: #0F1117;
+  --db-dark-bg: #0f1117;
+  --db-dark-raised: #161b22;
+  --db-dark-border: #30363d;
+  --db-dark-accent: #4493f8;
+  --db-dark-hover: #79b8ff;
+  --db-dark-text: #e6edf3;
+  --db-dark-muted: #8b949e;
+  --db-dark-tint: #10233f;
+  --db-dark-on-accent: #0f1117;
 }
 
 /* Penpot geometry — hexagon button 44px high, 12px end-cuts, miter joins */
 .btn-dark {
   height: 44px;
   padding: 0 24px;
-  font: 600 14px/44px Inter, sans-serif;
+  font:
+    600 14px/44px Inter,
+    sans-serif;
   letter-spacing: 0.5px;
   text-transform: uppercase;
-  clip-path: polygon(12px 0%, calc(100% - 12px) 0%, 100% 50%, calc(100% - 12px) 100%, 12px 100%, 0% 50%);
+  clip-path: polygon(
+    12px 0%,
+    calc(100% - 12px) 0%,
+    100% 50%,
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0% 50%
+  );
   border-radius: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition: background 100ms ease-out, border-color 100ms ease-out, color 100ms;
+  transition:
+    background 100ms ease-out,
+    border-color 100ms ease-out,
+    color 100ms;
 }
 
 /* Primary — Dark */
@@ -39,7 +51,9 @@
   color: var(--db-dark-on-accent);
   border: none;
 }
-.btn-dark--primary:hover { background: var(--db-dark-hover); }
+.btn-dark--primary:hover {
+  background: var(--db-dark-hover);
+}
 
 /* Secondary — Dark */
 .btn-dark--secondary {
@@ -58,7 +72,9 @@
   color: var(--db-dark-text);
   border: 1px solid var(--db-dark-border);
 }
-.btn-dark--ghost:hover { background: var(--db-dark-tint); }
+.btn-dark--ghost:hover {
+  background: var(--db-dark-tint);
+}
 
 /* Disabled — Dark */
 .btn-dark--disabled {
@@ -71,11 +87,13 @@
 
 /* Danger — Dark */
 .btn-dark--danger {
-  background: #FD551F;
+  background: #fd551f;
   color: var(--db-dark-text);
   border: none;
 }
-.btn-dark--danger:hover { background: #D63F1E; }
+.btn-dark--danger:hover {
+  background: #d63f1e;
+}
 
 /* Dark card/chip/code parity — surface-driven, same structure as light */
 .card-dark {

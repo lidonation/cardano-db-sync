@@ -1,0 +1,10 @@
+{
+  "$comment": "PERF-1 asset budget, gzip bytes, checked by scripts/check-asset-budget.mjs. B02 baseline (Docusaurus scaffold): js 165.0 KiB, css 13.7 KiB, heaviest page initial payload 162.2 KiB. Limits sit ~10-15% above it; B38 replaces them with the SPECIFICATION budget.",
+  "totals": {
+    "js": 194560,
+    "css": 16384
+  },
+  "page": {
+    "initial": 184320
+  }
+}

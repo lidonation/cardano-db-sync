@@ -1,75 +1,142 @@
 name: Documentation site
 
+# B02 — the CI spine for the docs site. Five stages (SPECIFICATION §12): formatting, static
+# analysis, unit tests, link checking and the asset budget. Later items add checks to these stages
+# rather than new workflows. `Docs CI gate` is the single check to require on protected branches.
+
 on:
   push:
     branches: [master, release/community-site, docs-rebuild-spec]
     paths:
-      - 'docs/**'
-      - '.github/workflows/docs-site.yml'
+      - "docs/**"
+      - ".github/workflows/docs-site.yml"
   pull_request:
     paths:
-      - 'docs/**'
-      - '.github/workflows/docs-site.yml'
+      - "docs/**"
+      - ".github/workflows/docs-site.yml"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-site-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 defaults:
   run:
     working-directory: docs
 
 jobs:
-  verify:
-    name: Format, lint, types, tests
+  format:
+    name: Format
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-
-      - run: npm ci
-
-      - name: Formatting
+      - uses: ./.github/actions/docs-setup
+      - name: Prettier (BLD-1)
         run: npm run format:check
 
-      - name: Lint
+  static-analysis:
+    name: Static analysis
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+      - name: ESLint
         run: npm run lint
-
       - name: Types
         run: npm run typecheck
-
       - name: No hardcoded environment values (ENV-1)
         run: npm run check:baseurl
+      - name: Style gates (FLOOR-4, PERF-3, PERF-5)
+        run: npm run check:css
 
-      - name: Unit tests
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+      - name: Unit tests with coverage thresholds
         run: npm test
 
   build:
-    name: Both build profiles
+    name: Build both profiles
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-
-      - run: npm ci
-
+      - uses: ./.github/actions/docs-setup
       # B01 DoD: both profiles build clean from one working tree, the developer output carries no
       # CNAME, the production output does, and a broken Markdown file fails the build.
       - name: Build and profile assertions
         run: npm run test:build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: docs-build
+          path: docs/build/
+          include-hidden-files: true
+          retention-days: 7
+
+  links:
+    name: Link check
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+        with:
+          install: "false"
+      - uses: actions/download-artifact@v4
+        with:
+          name: docs-build
+          path: docs/build/
+      - name: Internal links resolve in every profile (BLD-3)
+        run: node scripts/check-links.mjs
+
+  asset-budget:
+    name: Asset budget
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+        with:
+          install: "false"
+      - uses: actions/download-artifact@v4
+        with:
+          name: docs-build
+          path: docs/build/
+      - name: Gzip byte budget per profile (PERF-1)
+        # An explicit `shell: bash` runs with `-o pipefail`. The default shell does not, so without
+        # it `tee` would hide the gate's exit code and an over-budget build would pass.
+        shell: bash
+        run: node scripts/check-asset-budget.mjs 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+
+  gate:
+    name: Docs CI gate
+    if: always()
+    needs: [format, static-analysis, unit-tests, build, links, asset-budget]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every stage passed
+        working-directory: .
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Stage results: $RESULTS"
+          for result in $RESULTS; do
+            if [ "$result" != "success" ]; then
+              echo "::error::A docs CI stage did not pass ($result)."
+              exit 1
+            fi
+          done
 
   # B41: publishes the developer profile to lidonation.github.io/cardano-db-sync. Deploys run only
-  # from release/community-site (the fork's ENV-6 deploy branch), after both gates pass. The
+  # from release/community-site (the fork's ENV-6 deploy branch), after the Docs CI gate passes. The
   # github-pages environment must allow this branch under Settings -> Environments.
   deploy:
     name: Deploy developer site to Pages
-    needs: [verify, build]
+    needs: gate
     if: github.event_name == 'push' && github.ref == 'refs/heads/release/community-site'
     runs-on: ubuntu-latest
     permissions:
@@ -85,13 +152,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: 22
-          cache: npm
-          cache-dependency-path: docs/package-lock.json
-
-      - run: npm ci
+      - uses: ./.github/actions/docs-setup
 
       - name: Build developer profile
         run: npm run build:dev
