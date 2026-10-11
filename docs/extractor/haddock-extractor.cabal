@@ -1,10 +1,11 @@
 cabal-version:      3.6
 name:               haddock-extractor
 version:            0.1.0
-synopsis:           Extract Haddock annotations from Haskell sources with ghc-lib-parser
-description:        The B07 extractor: parses cardano-db Haskell sources (never compiles
-                    them) and writes the Haddock annotations into the committed JSON
-                    artifact that the docs site consumes. See docs/extractor/README.md.
+synopsis:           Extract Haddock annotations and the config schema from Haskell sources with ghc-lib-parser
+description:        The B07 and B10 extractors: parse db-sync Haskell sources (never
+                    compile them) and write the Haddock annotations and the config schema
+                    into committed JSON artifacts the docs site consumes. See
+                    docs/extractor/README.md.
 homepage:           https://github.com/lidonation/cardano-db-sync
 bug-reports:        https://github.com/lidonation/cardano-db-sync/issues
 license:            Apache-2.0
@@ -13,6 +14,7 @@ maintainer:         darlington@lidonation.com
 category:           Development
 build-type:         Simple
 extra-source-files: test/fixtures/*.hs
+                    test/config-fixtures/*.hs
                     test/golden/*.json
 
 common warnings
@@ -30,6 +32,9 @@ library
   import:           warnings
   hs-source-dirs:   src
   exposed-modules:
+    ConfigExtract
+    ConfigExtract.Interp
+    ConfigExtract.Syntax
     HaddockExtract
     HaddockExtract.Model
     HaddockExtract.Parse
@@ -45,12 +50,25 @@ library
     , ghc-lib-parser        >=9.6  && <9.7
     , scientific            >=0.3  && <0.4
     , text                  >=1.2  && <2.2
+    , transformers          >=0.5  && <0.7
     , vector                >=0.12 && <0.14
 
 executable extract-haddock
   import:           warnings
   hs-source-dirs:   app
   main-is:          Main.hs
+  build-depends:
+      base                  >=4.18 && <5
+    , bytestring            >=0.11 && <0.13
+    , directory             >=1.3  && <1.4
+    , filepath              >=1.4  && <1.6
+    , haddock-extractor
+    , text                  >=1.2  && <2.2
+
+executable extract-config
+  import:           warnings
+  hs-source-dirs:   app
+  main-is:          ExtractConfig.hs
   build-depends:
       base                  >=4.18 && <5
     , bytestring            >=0.11 && <0.13
@@ -82,5 +100,16 @@ test-suite regression-test
       base                  >=4.18 && <5
     , aeson                 >=2.1  && <2.3
     , ghc-lib-parser        >=9.6  && <9.7
+    , haddock-extractor
+    , text                  >=1.2  && <2.2
+
+test-suite config-golden-test
+  import:           warnings
+  type:             exitcode-stdio-1.0
+  hs-source-dirs:   test
+  main-is:          ConfigGolden.hs
+  build-depends:
+      base                  >=4.18 && <5
+    , bytestring            >=0.11 && <0.13
     , haddock-extractor
     , text                  >=1.2  && <2.2

@@ -18,6 +18,7 @@ module HaddockExtract.Model (
   schemaVersion,
   artifactFile,
   encodeArtifact,
+  encodeJson,
 )
 where
 
@@ -191,12 +192,18 @@ instance ToJSON Artifact where
 -- what @prettier@ emits for JSON, so the committed artifact passes
 -- @prettier --check@ and regeneration is byte-identical (CON-2).
 encodeArtifact :: Artifact -> ByteString
-encodeArtifact art =
-  BL.toStrict (toLazyByteString (render 0 (toJSON art) <> byteString "\n"))
+encodeArtifact = encodeJson . toJSON
+
+-- | The same deterministic, prettier-shaped encoding for any JSON document
+-- (the config schema artifact uses it too).
+encodeJson :: Value -> ByteString
+encodeJson v =
+  BL.toStrict (toLazyByteString (render 0 v <> byteString "\n"))
 
 -- | Render a JSON value the way prettier's JSON printer does: two-space
--- indentation, no line is ever wrapped or broken across lines, and empty
--- objects and arrays stay on one line.
+-- indentation, objects always broken one key per line, arrays of scalars on
+-- one line when they fit the print width (see 'renderFitting'), and empty
+-- objects and arrays on one line.
 render :: Int -> Value -> Builder
 render indent value = case value of
   Object pairs -> renderObject indent pairs
@@ -212,7 +219,7 @@ renderObject indent pairs
   | otherwise =
       mconcat
         [ "{\n"
-        , sepBy ",\n" (map (renderPair indent) entries)
+        , sepBy ",\n" (zipWith (renderPair indent) (lastFlags entries) entries)
         , "\n"
         , pad indent
         , "}"
@@ -222,9 +229,43 @@ renderObject indent pairs
     -- here: the artifact must regenerate byte-identically.
     entries = sortOn fst (KM.toList pairs)
 
-renderPair :: Int -> (Key.Key, Value) -> Builder
-renderPair indent (k, v) =
-  pad (indent + 1) <> renderString (Key.toText k) <> ": " <> render (indent + 1) v
+renderPair :: Int -> Bool -> (Key.Key, Value) -> Builder
+renderPair indent isLast (k, v) =
+  pad (indent + 1) <> key <> ": " <> renderFitting (indent + 1) width v
+  where
+    key = renderString (Key.toText k)
+    -- what precedes the value on its line, plus the comma that follows it
+    width = 2 * (indent + 1) + builderLength key + 2 + (if isLast then 0 else 1)
+
+-- | Prettier prints an array of scalars on one line when the whole line —
+-- indentation, key, the array and a following comma — fits in the print
+-- width; otherwise one item per line. Arrays holding objects or arrays always
+-- break (objects keep their line breaks in prettier's JSON output).
+renderFitting :: Int -> Int -> Value -> Builder
+renderFitting indent used value = case value of
+  Array items
+    | not (V.null items)
+    , all isScalar items
+    , used + builderLength inline <= printWidth ->
+        inline
+    where
+      inline = "[" <> sepBy ", " (map (render indent) (V.toList items)) <> "]"
+  _ -> render indent value
+  where
+    isScalar v = case v of
+      Object _ -> False
+      Array _ -> False
+      _ -> True
+
+-- | The docs package's prettier @printWidth@.
+printWidth :: Int
+printWidth = 100
+
+builderLength :: Builder -> Int
+builderLength = T.length . TE.decodeUtf8 . BL.toStrict . toLazyByteString
+
+lastFlags :: [a] -> [Bool]
+lastFlags xs = [i == length xs | i <- [1 .. length xs]]
 
 renderArray :: Int -> [Value] -> Builder
 renderArray indent items
@@ -232,14 +273,15 @@ renderArray indent items
   | otherwise =
       mconcat
         [ "[\n"
-        , sepBy ",\n" (map (renderItem indent) items)
+        , sepBy ",\n" (zipWith (renderItem indent) (lastFlags items) items)
         , "\n"
         , pad indent
         , "]"
         ]
 
-renderItem :: Int -> Value -> Builder
-renderItem indent v = pad (indent + 1) <> render (indent + 1) v
+renderItem :: Int -> Bool -> Value -> Builder
+renderItem indent isLast v =
+  pad (indent + 1) <> renderFitting (indent + 1) (2 * (indent + 1) + (if isLast then 0 else 1)) v
 
 sepBy :: Builder -> [Builder] -> Builder
 sepBy sep = mconcat . intercalate' sep

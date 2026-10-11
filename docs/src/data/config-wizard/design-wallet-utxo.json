@@ -1,0 +1,17 @@
+{
+  "ledger_backend": "lsm",
+  "insert_options": {
+    "preset": "only_utxo",
+    "tx_out": {"value": "prune", "force_tx_in": false},
+    "ledger": "ignore",
+    "shelley": {"enable": false},
+    "multi_asset": {"enable": true},
+    "metadata": {"enable": false},
+    "plutus": {"enable": false},
+    "governance": "enable",
+    "offchain_pool_data": "disable",
+    "offchain_vote_data": "disable",
+    "pool_stat": "disable",
+    "disable_epoch": true
+  }
+}

@@ -17,6 +17,8 @@ export default defineConfig({
         'src/i18n/pages.ts',
         'src/i18n/identifier.ts',
         'src/survey/labelIds.ts',
+        // The config schema validator shared by check:config and the config wizard (B10).
+        'src/data/**/*.mjs',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

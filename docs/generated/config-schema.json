@@ -1,0 +1,478 @@
+{
+  "config": {
+    "haskell": "SyncPreConfig",
+    "keys": [
+      {
+        "name": "NetworkName",
+        "required": true,
+        "shape": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "NodeConfigFile",
+        "required": true,
+        "shape": {
+          "type": "string"
+        }
+      },
+      {
+        "default": true,
+        "name": "EnableFutureGenesis",
+        "required": false,
+        "shape": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "EnableLogging",
+        "required": true,
+        "shape": {
+          "type": "boolean"
+        }
+      },
+      {
+        "name": "EnableLogMetrics",
+        "required": true,
+        "shape": {
+          "type": "boolean"
+        }
+      },
+      {
+        "default": 8080,
+        "name": "PrometheusPort",
+        "required": false,
+        "shape": {
+          "type": "integer"
+        }
+      },
+      {
+        "name": "insert_options",
+        "required": false,
+        "shape": {
+          "haskell": "SyncInsertConfig",
+          "keys": [
+            {
+              "name": "preset",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["full", "only_utxo", "only_governance", "disable_all"]
+              }
+            },
+            {
+              "default": "disable",
+              "name": "tx_cbor",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["enable", "disable"]
+              }
+            },
+            {
+              "name": "tx_out",
+              "required": false,
+              "shape": {
+                "haskell": "TxOutConfig",
+                "keys": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "shape": {
+                      "type": "enum",
+                      "values": ["enable", "disable", "consumed", "prune", "bootstrap"]
+                    }
+                  },
+                  {
+                    "default": false,
+                    "name": "force_tx_in",
+                    "required": false,
+                    "shape": {
+                      "type": "boolean"
+                    }
+                  },
+                  {
+                    "default": false,
+                    "name": "use_address_table",
+                    "required": false,
+                    "shape": {
+                      "type": "boolean"
+                    }
+                  }
+                ],
+                "line": 630,
+                "type": "object"
+              }
+            },
+            {
+              "default": "enable",
+              "name": "ledger",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["enable", "disable", "ignore"]
+              }
+            },
+            {
+              "name": "shelley",
+              "required": false,
+              "shape": {
+                "haskell": "ShelleyInsertConfig",
+                "keys": [
+                  {
+                    "name": "enable",
+                    "required": true,
+                    "shape": {
+                      "type": "boolean"
+                    }
+                  },
+                  {
+                    "name": "stake_addresses",
+                    "required": false,
+                    "shape": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  }
+                ],
+                "line": 666,
+                "type": "object"
+              }
+            },
+            {
+              "name": "multi_asset",
+              "required": false,
+              "shape": {
+                "haskell": "MultiAssetConfig",
+                "keys": [
+                  {
+                    "name": "enable",
+                    "required": true,
+                    "shape": {
+                      "type": "boolean"
+                    }
+                  },
+                  {
+                    "name": "policies",
+                    "required": false,
+                    "shape": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  }
+                ],
+                "line": 687,
+                "type": "object"
+              }
+            },
+            {
+              "name": "metadata",
+              "required": false,
+              "shape": {
+                "haskell": "MetadataConfig",
+                "keys": [
+                  {
+                    "name": "enable",
+                    "required": true,
+                    "shape": {
+                      "type": "boolean"
+                    }
+                  },
+                  {
+                    "name": "keys",
+                    "required": false,
+                    "shape": {
+                      "items": {
+                        "type": "integer"
+                      },
+                      "type": "array"
+                    }
+                  }
+                ],
+                "line": 708,
+                "type": "object"
+              }
+            },
+            {
+              "name": "plutus",
+              "required": false,
+              "shape": {
+                "haskell": "PlutusConfig",
+                "keys": [
+                  {
+                    "name": "enable",
+                    "required": true,
+                    "shape": {
+                      "type": "boolean"
+                    }
+                  },
+                  {
+                    "name": "script_hashes",
+                    "required": false,
+                    "shape": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "type": "array"
+                    }
+                  }
+                ],
+                "line": 729,
+                "type": "object"
+              }
+            },
+            {
+              "default": "enable",
+              "name": "governance",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["enable", "disable"]
+              }
+            },
+            {
+              "default": "disable",
+              "name": "offchain_pool_data",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["enable", "disable"]
+              }
+            },
+            {
+              "default": "disable",
+              "name": "offchain_vote_data",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["enable", "disable"]
+              }
+            },
+            {
+              "default": "disable",
+              "name": "pool_stat",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["enable", "disable"]
+              }
+            },
+            {
+              "default": "text",
+              "name": "json_type",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["text", "jsonb", "disable"]
+              }
+            },
+            {
+              "default": "disable",
+              "name": "remove_jsonb_from_schema",
+              "required": false,
+              "shape": {
+                "type": "enum",
+                "values": ["enable", "disable"]
+              }
+            },
+            {
+              "default": false,
+              "name": "disable_epoch",
+              "required": false,
+              "shape": {
+                "type": "boolean"
+              }
+            },
+            {
+              "default": null,
+              "name": "stop_at_block",
+              "required": false,
+              "shape": {
+                "nullable": true,
+                "type": "integer"
+              }
+            }
+          ],
+          "line": 480,
+          "presets": [
+            {
+              "key": "preset",
+              "values": {
+                "disable_all": {
+                  "disable_epoch": true,
+                  "governance": "disable",
+                  "json_type": "text",
+                  "ledger": "disable",
+                  "metadata": {
+                    "enable": false
+                  },
+                  "multi_asset": {
+                    "enable": false
+                  },
+                  "offchain_pool_data": "disable",
+                  "offchain_vote_data": "disable",
+                  "plutus": {
+                    "enable": false
+                  },
+                  "pool_stat": "disable",
+                  "remove_jsonb_from_schema": "disable",
+                  "shelley": {
+                    "enable": false
+                  },
+                  "stop_at_block": null,
+                  "tx_cbor": "disable",
+                  "tx_out": {
+                    "value": "disable"
+                  }
+                },
+                "full": {
+                  "disable_epoch": false,
+                  "governance": "enable",
+                  "json_type": "text",
+                  "ledger": "enable",
+                  "metadata": {
+                    "enable": true
+                  },
+                  "multi_asset": {
+                    "enable": true
+                  },
+                  "offchain_pool_data": "disable",
+                  "offchain_vote_data": "disable",
+                  "plutus": {
+                    "enable": true
+                  },
+                  "pool_stat": "enable",
+                  "remove_jsonb_from_schema": "disable",
+                  "shelley": {
+                    "enable": true
+                  },
+                  "stop_at_block": null,
+                  "tx_cbor": "disable",
+                  "tx_out": {
+                    "use_address_table": false,
+                    "value": "enable"
+                  }
+                },
+                "only_governance": {
+                  "disable_epoch": true,
+                  "governance": "enable",
+                  "json_type": "text",
+                  "ledger": "enable",
+                  "metadata": {
+                    "enable": false
+                  },
+                  "multi_asset": {
+                    "enable": false
+                  },
+                  "offchain_pool_data": "disable",
+                  "offchain_vote_data": "disable",
+                  "plutus": {
+                    "enable": false
+                  },
+                  "pool_stat": "enable",
+                  "remove_jsonb_from_schema": "disable",
+                  "shelley": {
+                    "enable": false
+                  },
+                  "stop_at_block": null,
+                  "tx_cbor": "disable",
+                  "tx_out": {
+                    "value": "disable"
+                  }
+                },
+                "only_utxo": {
+                  "disable_epoch": true,
+                  "governance": "enable",
+                  "json_type": "text",
+                  "ledger": "ignore",
+                  "metadata": {
+                    "enable": false
+                  },
+                  "multi_asset": {
+                    "enable": true
+                  },
+                  "offchain_pool_data": "disable",
+                  "offchain_vote_data": "disable",
+                  "plutus": {
+                    "enable": false
+                  },
+                  "pool_stat": "disable",
+                  "remove_jsonb_from_schema": "disable",
+                  "shelley": {
+                    "enable": false
+                  },
+                  "stop_at_block": null,
+                  "tx_cbor": "disable",
+                  "tx_out": {
+                    "force_tx_in": false,
+                    "use_address_table": false,
+                    "value": "bootstrap"
+                  }
+                }
+              }
+            }
+          ],
+          "type": "object"
+        }
+      },
+      {
+        "default": ["https://ipfs.io/ipfs"],
+        "name": "ipfs_gateway",
+        "required": false,
+        "shape": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      {
+        "name": "snapshot_interval",
+        "required": false,
+        "shape": {
+          "haskell": "SnapshotIntervalConfig",
+          "keys": [
+            {
+              "default": 580,
+              "name": "near_tip_epoch",
+              "required": false,
+              "shape": {
+                "type": "integer"
+              }
+            }
+          ],
+          "line": 803,
+          "type": "object"
+        }
+      },
+      {
+        "default": "inmemory",
+        "name": "ledger_backend",
+        "required": false,
+        "shape": {
+          "type": "enum",
+          "values": ["inmemory", "lsm"]
+        }
+      }
+    ],
+    "line": 442,
+    "type": "object"
+  },
+  "passthrough": [
+    {
+      "keys": ["TraceOptions", "HermodTracing", "Options"],
+      "reader": "readTraceConfig"
+    }
+  ],
+  "root": "SyncPreConfig",
+  "schemaVersion": 1,
+  "sources": [
+    "cardano-db-sync/src/Cardano/DbSync/Config.hs",
+    "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
+  ],
+  "unresolved": []
+}
