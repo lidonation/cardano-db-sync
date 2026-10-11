@@ -7,7 +7,8 @@
  */
 
 /* SEC-2: Docusaurus hides its SVG icon sprite with an inline style attribute, which
-   style-src 'self' blocks. Hide it from here instead, or it renders as an empty 300x150 box. */
-body > svg:has(> defs > symbol[id^='theme-svg-']) {
+   style-src 'self' blocks. plugins/security swaps it for this marker, hidden from here instead,
+   or it renders as an empty 300x150 box. */
+svg[data-dbs-icon-sprite] {
   display: none;
 }

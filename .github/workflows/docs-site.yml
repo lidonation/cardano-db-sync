@@ -14,6 +14,9 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+  # docs-i18n.yml dispatches this on the Crowdin translations branch, whose pull request is opened
+  # by GITHUB_TOKEN and so triggers nothing on its own.
+  workflow_dispatch:
 
 permissions:
   contents: read

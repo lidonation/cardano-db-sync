@@ -18,11 +18,13 @@ const ENTRIES = [
     source: '/i18n/en/**/*.json',
     ignore: ['/i18n/en/docusaurus-plugin-content-docs/version-*.json'],
     translation: '/i18n/%two_letters_code%/**/%original_file_name%',
+    skip_untranslated_strings: true,
   },
   {
     source: '/docs/**/*.{md,mdx}',
     translation:
       '/i18n/%two_letters_code%/docusaurus-plugin-content-docs/current/**/%original_file_name%',
+    skip_untranslated_files: true,
   },
 ];
 
@@ -118,6 +120,53 @@ describe('VER-2: only the current line is a source', () => {
   });
 });
 
+describe('exports never pass English off as a translation (A11Y-18, META-4)', () => {
+  const SKIP = 'set exactly one of skip_untranslated_strings or skip_untranslated_files';
+
+  it('flags an entry that would export untranslated strings or files as English', () => {
+    const {skip_untranslated_files: _omit, ...docs} = ENTRIES[1];
+    const problems = configProblems({...CONFIG_OK, files: [ENTRIES[0], docs]});
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toContain(`/docs/**/*.{md,mdx}: ${SKIP}`);
+  });
+
+  it('flags both skips on one entry, which the Crowdin CLI rejects', () => {
+    const both = {...ENTRIES[0], skip_untranslated_files: true};
+    expect(configProblems({...CONFIG_OK, files: [both, ENTRIES[1]]})[0]).toContain(SKIP);
+  });
+
+  it('ships a crowdin.yml that passes', async () => {
+    const shipped = path.join(import.meta.dirname, '..', '..', CONFIG);
+    const yaml = (await import('js-yaml')).default;
+    expect(configProblems(yaml.load(await fs.readFile(shipped, 'utf8')) as object)).toEqual([]);
+  });
+});
+
+describe('pattern hardening', () => {
+  it('reads a pattern without a leading slash the way Crowdin does', () => {
+    expect(
+      globToRegExp('versioned_docs/**/*.md').test('/versioned_docs/version-13.6/intro.md'),
+    ).toBe(true);
+    const slashless = {
+      ...ENTRIES[1],
+      source: 'versioned_docs/**/*.md',
+      skip_untranslated_files: true,
+    };
+    expect(configProblems({...CONFIG_OK, files: [...ENTRIES, slashless]})).toContain(
+      '/versioned_docs/version-13.6/intro.md would be uploaded: a released line must not be translatable (VER-2)',
+    );
+  });
+
+  it('treats an unbalanced brace as a literal instead of looping', () => {
+    expect(globToRegExp('/docs/{a.md').test('/docs/{a.md')).toBe(true);
+  });
+
+  it('reports a crowdin.yml that is not a mapping', () => {
+    expect(configProblems('just a string')).toEqual(['crowdin.yml is not a mapping']);
+    expect(configProblems([])).toEqual(['crowdin.yml is not a mapping']);
+  });
+});
+
 describe('check:i18n over a tree', () => {
   let root: string;
   const lines: string[] = [];
@@ -152,6 +201,7 @@ describe('check:i18n over a tree', () => {
         source: '/**/*.md',
         translation:
           '/i18n/%two_letters_code%/docusaurus-plugin-content-docs/current/**/%original_file_name%',
+        skip_untranslated_files: true,
       },
     ];
     expect((await sourcesInTree(root, broad)).oldLine).toEqual([
@@ -168,6 +218,7 @@ describe('check:i18n over a tree', () => {
       source: '/versioned_docs/version-13.5/**/*.md',
       translation:
         '/i18n/%two_letters_code%/docusaurus-plugin-content-docs/current/**/%original_file_name%',
+      skip_untranslated_files: true,
     };
     await write(CONFIG, toYaml({...CONFIG_OK, files: [...ENTRIES, narrow]}));
     expect(await main({root, out})).toBe(1);

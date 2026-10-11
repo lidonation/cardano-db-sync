@@ -69,6 +69,15 @@ describe('the policy in each page', () => {
       'script-src allows chrome-extension: (SEC-2, SEC-8)',
     ]);
   });
+
+  it('recognises a translated survey page under its locale directory (SEC-8)', () => {
+    const relaxed = serializePolicy(
+      policyFor('/survey', {surveyRelaxation: ['chrome-extension:']}),
+    );
+    expect(policyProblems(relaxed, 'fr/survey/index.html')).toEqual([]);
+    expect(policyProblems(relaxed, 'pt-BR/survey/index.html')).toEqual([]);
+    expect(policyProblems(relaxed, 'docs/survey/index.html')).toHaveLength(1);
+  });
 });
 
 describe('what each page does', () => {
@@ -101,6 +110,35 @@ describe('what each page does', () => {
       'SEC-2 <img src> loads from another origin: //cdn.example/a.png',
       'SEC-2 <img srcset> loads from another origin: https://cdn.example/b.png',
     ]);
+  });
+
+  it('reads every attribute of a tag, in any order and quoted or not', () => {
+    const head = '<link href="https://fonts.googleapis.com/css2" rel="stylesheet">';
+    const body =
+      '<img src="/a.png" srcset="https://cdn.example/b.png 2x">' +
+      '<script src=https://cdn.example/a.js></script>' +
+      '<svg><use href="https://cdn.example/s.svg#i"></use></svg>' +
+      '<a href=https://github.com>GitHub</a><link href="https://x.example/" rel="canonical">';
+    expect(rules('a.html', page(STRICT, head, body))).toEqual([
+      'SEC-2 <link href> loads from another origin: https://fonts.googleapis.com/css2',
+      'SEC-2 <img srcset> loads from another origin: https://cdn.example/b.png',
+      'SEC-2 <script src> loads from another origin: https://cdn.example/a.js',
+      'SEC-2 <use href> loads from another origin: https://cdn.example/s.svg#i',
+    ]);
+  });
+
+  it('treats every JavaScript MIME type, import maps included, as inline script (SEC-3)', () => {
+    for (const type of [
+      'text/ecmascript',
+      'application/x-javascript',
+      'importmap',
+      'TEXT/JavaScript; charset=utf-8',
+    ]) {
+      expect(
+        rules('a.html', page(STRICT, `<script type="${type}">x()</script>`)),
+        type,
+      ).toHaveLength(1);
+    }
   });
 });
 

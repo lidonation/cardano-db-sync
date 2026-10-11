@@ -4,14 +4,13 @@ import path from 'node:path';
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
+import {isRootBuild, localesDefaultFirst} from '../../config/i18n';
 import {PROFILES} from '../../config/profiles';
 import environmentPlugin, {
   NOINDEX_HTML,
   NOINDEX_META,
   ROBOTS_FILE,
   cacheByProfile,
-  isRootBuild,
-  localesDefaultFirst,
   emitRobots,
   environmentHeadTags,
   robotsTxt,

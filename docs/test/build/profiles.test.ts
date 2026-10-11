@@ -204,6 +204,19 @@ describe('five locales (A11Y-18, META-4, META-8)', () => {
     }
   });
 
+  it("points an untranslated doc's canonical at the English page; others are self-canonical", async () => {
+    const canonical = (html: string) => html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/)?.[1];
+    const en = canonical(await fs.readFile(page(OUT.prod, 'en', 'docs/intro'), 'utf8'));
+    expect(en).toMatch(/\/docs\/intro\/?$/);
+    expect(en).not.toMatch(/\/(ja|es|de|vi)\//);
+    for (const locale of ['ja', 'es', 'de', 'vi']) {
+      const doc = await fs.readFile(page(OUT.prod, locale, 'docs/intro'), 'utf8');
+      expect(canonical(doc), locale).toBe(en);
+      const home = await fs.readFile(page(OUT.prod, locale, ''), 'utf8');
+      expect(canonical(home), locale).toMatch(new RegExp(`/${locale}/?$`));
+    }
+  });
+
   it('emits no hreflang at all on the noindex preview (META-8)', async () => {
     for (const locale of Object.keys(LOCALE_DIRS)) {
       for (const route of ['', 'docs/intro']) {

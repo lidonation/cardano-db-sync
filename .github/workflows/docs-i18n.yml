@@ -8,6 +8,12 @@
 #   alert     after a scheduled download: a failure opens an ops-alert issue, the next success
 #             closes it (NUM-4, B41).
 #
+# The translations PR is opened with the workflow's own token, and GitHub starts no workflow for
+# events that token causes, so the download job dispatches docs-site.yml on the branch itself to
+# get the Docs CI gate reported. Opening the PR needs the repository setting "Allow GitHub Actions
+# to create and approve pull requests". The branch is rebuilt from the base on every run: fix a
+# translation in Crowdin, not on the branch.
+#
 # Credentials are the CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN Actions secrets. Without them
 # every job skips with a notice, so a fork or a fresh clone stays green (ENV-5). The Crowdin CLI
 # runs from npm at an exact version (SEC-5); bump it deliberately.
@@ -42,7 +48,9 @@ env:
 jobs:
   upload:
     name: Upload current-line sources
-    if: github.event_name != 'schedule'
+    # A manual run from any other branch would replace the current line's sources with that
+    # branch's copy, so uploads only ever come from the release branch.
+    if: github.event_name != 'schedule' && github.ref == 'refs/heads/release/community-site'
     runs-on: ubuntu-latest
     steps:
       - name: Crowdin credentials present
@@ -75,6 +83,7 @@ jobs:
     if: github.event_name != 'push'
     runs-on: ubuntu-latest
     permissions:
+      actions: write
       contents: write
       pull-requests: write
     env:
@@ -121,6 +130,8 @@ jobs:
               --title "i18n(docs): translations from Crowdin" \
               --body "Translations of the current line, downloaded from Crowdin by docs-i18n.yml. Review before merging."
           fi
+          # Events caused by GITHUB_TOKEN start no workflow, so run the docs CI on the branch here.
+          gh workflow run docs-site.yml --ref "$BRANCH"
 
   alert:
     name: Ops alert

@@ -17,12 +17,14 @@
  * Run by `npm run check:csp` after a build, and by CI. With no arguments it checks every profile
  * output under `build/`; pass build directories to check only those.
  */
-import {createHash} from 'node:crypto';
 import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
 import {lineIndex, profileOutputs, walk} from './lib/build-output.mjs';
+import {SCRIPT, hashSource, isInlineExecutable} from './lib/csp.mjs';
+
+export {hashSource};
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 const BUILD = path.join(ROOT, 'build');
@@ -41,15 +43,22 @@ export const EXPECTED = {
 
 const HASH_SOURCE = /^'sha256-[A-Za-z0-9+/]+=*'$/;
 const EXTENSION_SOURCE = /^(?:chrome|moz)-extension:$/;
-const SURVEY_FILE = /^survey(?:\/|$)/;
+/** The survey page, at the root or under a locale directory (`fr/`, `pt-BR/`). */
+const SURVEY_FILE = /^(?:[a-z]{2,3}(?:-[A-Za-z0-9]{2,8})*\/)?survey(?:\/|$)/;
 
 const META = /<meta\s+http-equiv=["']?Content-Security-Policy["']?\s+content="([^"]*)"\s*\/?>/gi;
-const SCRIPT = /<script\b([^>]*)>([\s\S]*?)<\/script>/gi;
-const EXECUTABLE_TYPES = new Set(['', 'text/javascript', 'application/javascript', 'module']);
 
-/** Attributes that make the browser fetch something. */
-const RESOURCE_ATTRIBUTE =
-  /<([a-z][a-z0-9-]*)\b([^>]*?)\s(src|srcset|poster|data|href)\s*=\s*["']([^"']*)["']/gi;
+/** An opening tag, attribute values with `>` in them included. */
+const TAG = /<([a-z][a-z0-9-]*)\b((?:[^>"']|"[^"]*"|'[^']*')*)>/gi;
+
+/** One attribute: double-quoted, single-quoted, unquoted or bare. */
+const ATTRIBUTE = /([^\s=/>"']+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?/g;
+
+/** Attributes that make the browser fetch something, on any element. */
+const RESOURCE_ATTRIBUTES = new Set(['src', 'srcset', 'poster', 'data', 'imagesrcset']);
+
+/** SVG elements whose `href` is fetched, not followed. */
+const SVG_FETCHING_HREF = new Set(['image', 'use', 'feimage', 'script']);
 
 /** `<link rel>` values that fetch the target. Anything else (`canonical`, `alternate`) is a name. */
 const FETCHING_RELS =
@@ -59,9 +68,36 @@ const EXTERNAL = /^(?:[a-z][a-z0-9+.-]*:)?\/\//i;
 
 /** @typedef {{file: string, line: number, rule: string, message: string}} Violation */
 
-/** `'sha256-…'` of a script body's exact UTF-8 bytes. */
-export function hashSource(code) {
-  return `'sha256-${createHash('sha256').update(code, 'utf8').digest('base64')}'`;
+/**
+ * A tag's attributes, lower-cased names to values, first occurrence winning as in a browser.
+ *
+ * @param {string} source
+ */
+export function parseAttributes(source) {
+  const attributes = new Map();
+  for (const m of source.matchAll(ATTRIBUTE)) {
+    const name = m[1].toLowerCase();
+    if (!attributes.has(name)) {
+      attributes.set(name, m[2] ?? m[3] ?? m[4] ?? '');
+    }
+  }
+  return attributes;
+}
+
+/**
+ * Whether the browser fetches this attribute of this element. `<a href>` and the like are
+ * navigation, and a `<link>` fetches only for the `rel` values that load something.
+ */
+function fetches(tag, name, attributes) {
+  if (RESOURCE_ATTRIBUTES.has(name)) {
+    return true;
+  }
+  if (name !== 'href' && name !== 'xlink:href') {
+    return false;
+  }
+  return tag === 'link'
+    ? FETCHING_RELS.test(attributes.get('rel') ?? '')
+    : SVG_FETCHING_HREF.has(tag);
 }
 
 /** Parse a policy string into `directive → sources`. */
@@ -136,9 +172,7 @@ export function findPageViolations(file, html) {
 
   const scriptSrc = parsePolicy(meta[1]).get('script-src') ?? [];
   for (const m of html.matchAll(SCRIPT)) {
-    const attrs = m[1];
-    const type = /\stype\s*=\s*["']?([^"'\s>]*)/i.exec(attrs)?.[1].toLowerCase() ?? '';
-    if (/\ssrc\s*=/i.test(attrs) || !EXECUTABLE_TYPES.has(type)) {
+    if (!isInlineExecutable(m[1])) {
       continue;
     }
     if (!scriptSrc.includes(hashSource(m[2]))) {
@@ -158,15 +192,17 @@ export function findPageViolations(file, html) {
     );
   }
 
-  for (const m of html.matchAll(RESOURCE_ATTRIBUTE)) {
-    const [, tag, attrs, attr, value] = m;
-    const lower = tag.toLowerCase();
-    if (attr.toLowerCase() === 'href' && !(lower === 'link' && FETCHING_RELS.test(attrs))) {
-      continue;
-    }
-    for (const url of value.split(',').map((u) => u.trim().split(/\s+/)[0])) {
-      if (EXTERNAL.test(url)) {
-        add(m.index, 'SEC-2', `<${lower} ${attr}> loads from another origin: ${url}`);
+  for (const m of html.matchAll(TAG)) {
+    const tag = m[1].toLowerCase();
+    const attributes = parseAttributes(m[2]);
+    for (const [name, value] of attributes) {
+      if (!fetches(tag, name, attributes)) {
+        continue;
+      }
+      for (const url of value.split(',').map((u) => u.trim().split(/\s+/)[0])) {
+        if (EXTERNAL.test(url)) {
+          add(m.index, 'SEC-2', `<${tag} ${name}> loads from another origin: ${url}`);
+        }
       }
     }
   }
