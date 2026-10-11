@@ -1,0 +1,104 @@
+name: Extract Haddock annotations
+
+# B07 (CON-2) — a path-filtered extraction workflow: it runs when the Haskell sources it
+# reads, the extractor itself, or the committed artifact change, and it fails on drift
+# between the committed artifact and a fresh extraction. The docs pipeline (docs-site.yml)
+# never runs a Haskell toolchain: it only consumes the committed JSON (CON-1), and
+# `check:annotations` guards that the committed artifact stays structurally consumable.
+#
+# The first run on a cold cache pays for building ghc-lib-parser once (several minutes);
+# after that the build cache makes the extraction itself the whole cost — well under the
+# CON-2 one-minute budget.
+
+on:
+  push:
+    branches: [master, release/community-site]
+    paths:
+      - "cardano-db/src/**"
+      - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
+      - "docs/extractor/**"
+      - "docs/generated/**"
+      - ".github/workflows/extract-haddock.yml"
+  pull_request:
+    paths:
+      - "cardano-db/src/**"
+      - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
+      - "docs/extractor/**"
+      - "docs/generated/**"
+      - ".github/workflows/extract-haddock.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: extract-haddock-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  extract:
+    name: Extract, test and diff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install GHC and Cabal
+        uses: haskell-actions/setup@v2
+        with:
+          ghc-version: "9.6.7"
+          cabal-version: "3.12.1.0"
+
+      - name: Cache the cabal store and build directory
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cabal/store
+            ~/.cabal/packages
+            docs/extractor/dist-newstyle
+          key: b07-${{ runner.os }}-ghc-9.6.7-${{ hashFiles('docs/extractor/cabal.project', 'docs/extractor/haddock-extractor.cabal') }}
+          restore-keys: |
+            b07-${{ runner.os }}-ghc-9.6.7-
+
+      - name: Build the extractor and run its golden test
+        working-directory: docs/extractor
+        run: |
+          cabal update
+          cabal build all
+          cabal test
+
+      - name: Extract over cardano-db/src
+        working-directory: docs/extractor
+        # `shell: bash` runs with `-o pipefail`, so the extractor's exit code is not
+        # swallowed by `tee`; the extractor fails the step on any unparseable file.
+        shell: bash
+        run: |
+          cabal run extract-haddock -- \
+            --repo-root ../.. \
+            --out ../generated/haddock-annotations.json \
+            --input cardano-db/src \
+            2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Commit the regenerated artifact (deploy lines)
+        if: github.event_name == 'push'
+        working-directory: .
+        run: |
+          if git diff --quiet -- docs/generated/; then
+            echo "The committed artifact is already up to date."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add docs/generated/haddock-annotations.json
+          git commit -m "chore(docs): regenerate Haddock annotations (B07)"
+          git push
+
+      - name: Drift gate (CON-2)
+        run: |
+          if git diff --quiet -- docs/generated/haddock-annotations.json; then
+            echo "No drift: the committed artifact matches a fresh extraction."
+            exit 0
+          fi
+          echo "::error::The committed Haddock annotations artifact has drifted from a fresh extraction."
+          git --no-pager diff --stat -- docs/generated/haddock-annotations.json
+          git --no-pager diff -- docs/generated/haddock-annotations.json | head -100
+          exit 1

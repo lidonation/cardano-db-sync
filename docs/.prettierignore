@@ -5,3 +5,4 @@ coverage
 SPECIFICATION.md
 DESIGN.md
 test/fixtures
+dist-newstyle

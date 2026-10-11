@@ -13,7 +13,16 @@ import process from 'node:process';
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 /** Directories never scanned. */
-const SKIP_DIRS = new Set(['node_modules', 'build', '.docusaurus', 'coverage', '.git']);
+const SKIP_DIRS = new Set([
+  'node_modules',
+  'build',
+  '.docusaurus',
+  'coverage',
+  '.git',
+  // The extractor's cabal build directory (B07): a machine-local artifact
+  // with generated JSON that is not part of the site.
+  'dist-newstyle',
+]);
 
 /** Extensions worth scanning. Binary and lockfile noise is skipped. */
 const SCAN_EXTENSIONS = new Set([

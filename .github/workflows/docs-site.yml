@@ -50,6 +50,8 @@ jobs:
         run: npm run check:baseurl
       - name: Style gates (FLOOR-4, PERF-3, PERF-5)
         run: npm run check:css
+      - name: Annotation artifact is consumable (CON-1)
+        run: npm run check:annotations
 
   unit-tests:
     name: Unit tests
