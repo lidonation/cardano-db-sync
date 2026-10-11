@@ -14,6 +14,14 @@
  *          sets the shorthand must also set `letter-spacing: var(--dbs-font-<style>-tracking)`,
  *          because the shorthand cannot carry tracking; the generated `.dbs-type-<style>` classes
  *          do both.
+ * TOK-5    Only text-role tokens in a text-colour position (`color`, `-webkit-text-fill-color`,
+ *          `caret-color`, `text-decoration-color`, `text-emphasis-color`): `--dbs-text-*`,
+ *          `--dbs-code-text*` or `--dbs-*-text`. A fill or border token there is a contrast bug
+ *          waiting for a theme; `brand.*` is named separately (TOK-4).
+ * TOK-1    No raw colour (hex or a colour function) in any stylesheet but the generated
+ *          `src/css/tokens.css`, custom properties included: there is no second palette.
+ * FLOOR-8  No side border (`border-left`/`-right`/`-inline-start`/`-inline-end`) wider than 1px,
+ *          and no gradient text (`background-clip: text`).
  *
  * Run by `npm run check:css` and by CI. Scans every `.css` and `.scss` file outside build output,
  * dependencies and the top-level `test/` directory (whose fixtures break the rules on purpose).
@@ -141,17 +149,6 @@ function removesOutline(property, value) {
   );
 }
 
-/**
- * Files exempt from DF-1's font/tracking pairing, with the reason. Everything else in DF-1 applies.
- */
-export const TRACKING_EXEMPT = new Map([
-  [
-    'src/styles/components-dark-parity.css',
-    'legacy #61 parity sheet, imported nowhere: its uppercase button tracking (0.5px) has no style ' +
-      'in the scale; it goes when the buttons are rebuilt on the tokens (DF-11)',
-  ],
-]);
-
 /** Values that defer to the cascade rather than set a size, so they never break the scale. */
 const CASCADE_KEYWORD = /^(inherit|initial|unset|revert|revert-layer)$/;
 
@@ -186,6 +183,66 @@ export async function loadTypeStyles(root = ROOT) {
   return new Set(Object.keys(style));
 }
 
+/** The generated token stylesheet: the one place colours are defined (TOK-1). */
+export const TOKENS_CSS = 'src/css/tokens.css';
+
+/** A raw colour: a hex literal (not a `url(#id)`) or a colour function. */
+const RAW_COLOUR =
+  /(?<!url\()#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i;
+
+/** Text-colour positions (TOK-5). */
+const TEXT_COLOUR_PROPERTIES = new Set([
+  'color',
+  'text-fill-color',
+  'caret-color',
+  'text-decoration-color',
+  'text-emphasis-color',
+]);
+
+/** Text-colour values that pick no palette colour of their own. */
+const TEXT_COLOUR_KEYWORD = /^(inherit|initial|unset|revert|revert-layer|currentcolor)$/i;
+
+/** A token a text-colour position may use: text.*, code.text* or *-text (TOK-5). */
+const TEXT_ROLE_TOKEN = /^var\(--dbs-(text-[a-z0-9-]+|code-text[a-z0-9-]*|[a-z0-9-]+-text)\)$/;
+
+/**
+ * The problem with a text-colour value, or null when it is a text-role token or a keyword.
+ *
+ * @param {string} value
+ */
+function textColourProblem(value) {
+  if (TEXT_COLOUR_KEYWORD.test(value) || TEXT_ROLE_TOKEN.test(value)) {
+    return null;
+  }
+  if (/^var\(--dbs-brand-/.test(value)) {
+    return ['TOK-4', 'brand token in a text position - use a text.* role'];
+  }
+  return [
+    'TOK-5',
+    'text colour is not a text-role token - use --dbs-text-*, --dbs-code-text* or *-text',
+  ];
+}
+
+/** Side-border properties (FLOOR-8) and the width a value sets, in px. */
+const SIDE_BORDER = /^border-(left|right|inline-start|inline-end)(-width)?$/;
+const KEYWORD_WIDTH = {thin: 1, medium: 3, thick: 5};
+
+/**
+ * The widest width a side-border value sets, in px (rem/em at 16px), or 0 when it sets none.
+ *
+ * @param {string} value
+ */
+function borderWidthPx(value) {
+  let widest = 0;
+  for (const part of value.split(/\s+/)) {
+    const keyword = KEYWORD_WIDTH[part.toLowerCase()];
+    const length = /^(\d*\.?\d+)(px|r?em)$/i.exec(part);
+    const px = keyword ?? (length ? Number(length[1]) * (length[2] === 'px' ? 1 : 16) : 0);
+    widest = Math.max(widest, px);
+  }
+  return widest;
+}
+
 function transitionNamesLayout(value) {
   return value.split(',').some((part) => LAYOUT_IN_LIST.test(part.trim().split(/\s+/)[0] ?? ''));
 }
@@ -197,9 +254,9 @@ function transitionNamesLayout(value) {
  *
  * @param {string} source
  * @param {Set<string>} [typeStyles]
- * @param {{pairTracking?: boolean}} [options] `pairTracking: false` skips the font/tracking pairing.
+ * @param {{definesColours?: boolean}} [options] `definesColours` for the generated tokens.css only.
  */
-export function checkCss(source, typeStyles, {pairTracking = true} = {}) {
+export function checkCss(source, typeStyles, {definesColours = false} = {}) {
   const css = stripComments(source);
   const lineAt = lineIndex(css);
   const violations = [];
@@ -257,6 +314,29 @@ export function checkCss(source, typeStyles, {pairTracking = true} = {}) {
       }
     }
 
+    if (!definesColours && RAW_COLOUR.test(value)) {
+      push(
+        decl,
+        'TOK-1',
+        'raw colour - use a --dbs-* token; colours are defined in tokens.css only',
+      );
+    }
+
+    if (TEXT_COLOUR_PROPERTIES.has(property)) {
+      const problem = textColourProblem(plain);
+      if (problem) {
+        push(decl, ...problem);
+      }
+    }
+
+    if (SIDE_BORDER.test(property) && borderWidthPx(plain) > 1) {
+      push(decl, 'FLOOR-8', 'side border wider than 1px - use a hairline or a full border');
+    }
+
+    if (property === 'background-clip' && /(^|[\s,])text($|[\s,])/.test(plain)) {
+      push(decl, 'FLOOR-8', 'gradient text - text keeps a solid text-role colour');
+    }
+
     if (property === 'letter-spacing') {
       blockOf(decl).tracking = typeToken(plain, '-tracking', typeStyles);
     }
@@ -268,16 +348,14 @@ export function checkCss(source, typeStyles, {pairTracking = true} = {}) {
     }
   }
 
-  if (pairTracking) {
-    for (const {font, tracking} of blocks.values()) {
-      if (font && tracking !== font.style) {
-        push(
-          font.decl,
-          'DF-1',
-          `font shorthand without its tracking - add letter-spacing: ` +
-            `var(--dbs-font-${font.style}-tracking), or use .dbs-type-${font.style}`,
-        );
-      }
+  for (const {font, tracking} of blocks.values()) {
+    if (font && tracking !== font.style) {
+      push(
+        font.decl,
+        'DF-1',
+        `font shorthand without its tracking - add letter-spacing: ` +
+          `var(--dbs-font-${font.style}-tracking), or use .dbs-type-${font.style}`,
+      );
     }
   }
 
@@ -297,8 +375,8 @@ export async function findViolations(root = ROOT) {
       continue;
     }
     const file = path.relative(root, full).split(path.sep).join('/');
-    const pairTracking = !TRACKING_EXEMPT.has(file);
-    for (const v of checkCss(await readFile(full, 'utf8'), typeStyles, {pairTracking})) {
+    const options = {definesColours: file === TOKENS_CSS};
+    for (const v of checkCss(await readFile(full, 'utf8'), typeStyles, options)) {
       violations.push({file, ...v});
     }
   }
@@ -318,7 +396,9 @@ export async function main(root = ROOT, out = /** @type {Reporter} */ (console))
   const violations = await findViolations(root);
 
   if (violations.length === 0) {
-    out.log('check:css - clean. FLOOR-4, PERF-3, PERF-5 and DF-1 hold.');
+    out.log(
+      'check:css - clean. FLOOR-4, FLOOR-8, PERF-3, PERF-5, DF-1, TOK-1, TOK-4 and TOK-5 hold.',
+    );
     return 0;
   }
 
