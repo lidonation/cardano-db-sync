@@ -1,8 +1,9 @@
-import {createHash} from 'node:crypto';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
 import type {LoadContext, Plugin} from '@docusaurus/types';
+
+import {SCRIPT, hashSource, isInlineExecutable} from '../../scripts/lib/csp.mjs';
 
 /** The webpack config Docusaurus hands `configureWebpack`. */
 type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
@@ -22,7 +23,10 @@ type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
  *
  * SEC-8: the policy is chosen per route. Every route gets the strict policy; only the survey route
  * may ever carry the extension-scheme allowance a wallet might need (SEC-7), and only once that
- * allowance is granted below. Nothing else can loosen it.
+ * allowance is granted below. Nothing else can loosen it. A meta policy is fixed by the page a visit
+ * starts on and Docusaurus navigates client-side after that, so a relaxation only reaches a visitor
+ * who loads the survey as a full page, and stays with them if they navigate away client-side.
+ * Granting one needs the survey entered and left by full page loads (docs/SECURITY.md).
  */
 
 export type Directives = Readonly<Record<string, readonly string[]>>;
@@ -100,28 +104,13 @@ export function cspMetaTag(directives: Directives): string {
   return `<meta http-equiv="Content-Security-Policy" content="${serializePolicy(directives)}">`;
 }
 
-/** CSP source for a script body: `'sha256-<base64>'` of its exact UTF-8 bytes. */
-export function hashSource(code: string): string {
-  return `'sha256-${createHash('sha256').update(code, 'utf8').digest('base64')}'`;
-}
+export {hashSource};
 
-/** Script types a browser executes. Anything else (`application/ld+json`) is a data block. */
-const EXECUTABLE_TYPES = new Set(['', 'text/javascript', 'application/javascript', 'module']);
-
-/** Inline scripts a browser would execute, with their exact bodies. */
+/** Inline scripts a browser would execute (or treat as script under `script-src`), exact bodies. */
 export function inlineScripts(html: string): string[] {
-  const scripts: string[] = [];
-  for (const match of html.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/gi)) {
-    const attrs = match[1];
-    if (/\ssrc\s*=/i.test(attrs)) {
-      continue;
-    }
-    const type = /\stype\s*=\s*["']?([^"'\s>]*)/i.exec(attrs)?.[1].toLowerCase() ?? '';
-    if (EXECUTABLE_TYPES.has(type)) {
-      scripts.push(match[2]);
-    }
-  }
-  return scripts;
+  return [...html.matchAll(SCRIPT)]
+    .filter((match) => isInlineExecutable(match[1]))
+    .map((match) => match[2]);
 }
 
 /** Docusaurus' colour-mode bootstrap: reads the stored theme and sets `data-theme` before paint. */
@@ -131,9 +120,12 @@ export function isColourModeBootstrap(code: string): boolean {
 
 /**
  * Docusaurus' icon sprite hides itself with an inline style, which `style-src 'self'` refuses
- * (and logs). custom.css hides it instead, so the attribute is dropped.
+ * (and logs). The style is swapped for a marker attribute that custom.css hides.
  */
 const SPRITE_STYLE = /<svg style="display: none;">(?=<defs>)/;
+
+/** The attribute custom.css hides the icon sprite by. */
+export const SPRITE_MARKER = 'data-dbs-icon-sprite';
 
 /**
  * Put the route's policy into a built page, first in `<head>` after the charset, so it governs
@@ -160,7 +152,7 @@ export function applyPolicy(html: string, route: string, file: string): string {
   const at = charset.index + charset[0].length;
   return `${html.slice(0, at)}\n${tag}${html.slice(at)}`.replace(
     SPRITE_STYLE,
-    '<svg aria-hidden="true">',
+    `<svg aria-hidden="true" ${SPRITE_MARKER}="">`,
   );
 }
 
@@ -226,16 +218,17 @@ export function emitFontsAsFiles(config: Configuration): number {
   return changed;
 }
 
-export default function securityPlugin(context: LoadContext): Plugin {
+export default function securityPlugin(_context: LoadContext): Plugin {
   return {
     name: 'dbsync-security',
     configureWebpack(config) {
       emitFontsAsFiles(config);
       return {};
     },
-    async postBuild({outDir, routesPaths}) {
-      // The locale's base, so routes are locale-relative and `/survey` is the survey in every locale.
-      await applyPolicies(outDir, routesPaths, context.baseUrl);
+    // `baseUrl` here is the locale's (`/fr/` for French), matching `outDir` and `routesPaths`.
+    // The profile's base path would map every translated route under a second locale directory.
+    async postBuild({outDir, routesPaths, baseUrl}) {
+      await applyPolicies(outDir, routesPaths, baseUrl);
     },
   };
 }
