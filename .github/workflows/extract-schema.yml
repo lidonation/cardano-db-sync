@@ -24,6 +24,11 @@ on:
       - "docs/scripts/lib/schema-*.mjs"
       - "docs/test/db/**"
       - "docs/generated/schema.json"
+      # The artifact is serialised with the repo's prettier config and pinned prettier version.
+      - "docs/.prettierrc"
+      - "docs/package-lock.json"
+      - "docs/vitest.db.config.mts"
+      - ".github/actions/docs-setup/**"
       - ".github/workflows/extract-schema.yml"
   pull_request:
     paths:
@@ -35,6 +40,11 @@ on:
       - "docs/scripts/lib/schema-*.mjs"
       - "docs/test/db/**"
       - "docs/generated/schema.json"
+      # The artifact is serialised with the repo's prettier config and pinned prettier version.
+      - "docs/.prettierrc"
+      - "docs/package-lock.json"
+      - "docs/vitest.db.config.mts"
+      - ".github/actions/docs-setup/**"
       - ".github/workflows/extract-schema.yml"
   workflow_dispatch:
 

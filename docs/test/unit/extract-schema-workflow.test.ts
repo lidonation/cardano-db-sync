@@ -48,6 +48,8 @@ describe('Schema extraction workflow (SCH-1, GDE-6)', () => {
           'docs/scripts/extract-schema.mjs',
           'docs/scripts/lib/schema-*.mjs',
           'docs/generated/schema.json',
+          'docs/.prettierrc',
+          'docs/package-lock.json',
         ]),
       );
     }
