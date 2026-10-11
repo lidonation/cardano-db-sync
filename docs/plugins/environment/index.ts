@@ -3,7 +3,11 @@ import path from 'node:path';
 
 import type {HtmlTagObject, LoadContext, Plugin} from '@docusaurus/types';
 
+import {isRootBuild, localesDefaultFirst} from '../../config/i18n';
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
+
+/** The webpack config Docusaurus hands `configureWebpack`. */
+type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
 
 /**
  * ENV-3 — a non-production build serves `noindex` on every page and never blocks crawling.
@@ -35,32 +39,62 @@ export function environmentHeadTags(profile: BuildProfile): HtmlTagObject[] {
 
 /**
  * `robots.txt` for the build: crawling allowed for every agent under every profile. An indexable
- * build also points at its sitemap. The file is written by the build, so a `robots.txt` that
- * reaches `static/` cannot add a `Disallow`. (Under a subpath crawlers read the host's root
- * `robots.txt`, not this one; the `noindex` meta is what holds there.)
+ * build also points at its sitemaps, one per locale: the default locale's at the base, each other
+ * locale's under its own prefix. The file is written by the build, so a `robots.txt` that reaches
+ * `static/` cannot add a `Disallow`. (Under a subpath crawlers read the host's root `robots.txt`,
+ * not this one; the `noindex` meta is what holds there.)
+ *
+ * @param locales The site's locales, default first.
  */
-export function robotsTxt(profile: BuildProfile): string {
+export function robotsTxt(profile: BuildProfile, locales: readonly string[] = ['en']): string {
   const lines = ['User-agent: *', 'Allow: /'];
   if (profile.indexable) {
-    lines.push('', `Sitemap: ${profile.url}${profile.baseUrl}sitemap.xml`);
+    lines.push('');
+    locales.forEach((locale, i) => {
+      lines.push(
+        `Sitemap: ${profile.url}${profile.baseUrl}${i === 0 ? '' : `${locale}/`}sitemap.xml`,
+      );
+    });
   }
   return `${lines.join('\n')}\n`;
 }
 
-export async function emitRobots(outDir: string, profile: BuildProfile): Promise<void> {
-  await fs.writeFile(path.join(outDir, ROBOTS_FILE), robotsTxt(profile), 'utf8');
+export async function emitRobots(
+  outDir: string,
+  profile: BuildProfile,
+  locales?: readonly string[],
+): Promise<void> {
+  await fs.writeFile(path.join(outDir, ROBOTS_FILE), robotsTxt(profile, locales), 'utf8');
 }
 
-export default function environmentPlugin(_context: LoadContext): Plugin {
+/**
+ * ENV-1: Docusaurus names webpack's filesystem cache by bundle, mode and locale only, and the
+ * profile comes from the environment rather than the config file, so a dev build followed by a
+ * prod build reused dev's compiled CSS, its subpath asset URLs included. Each profile gets
+ * a cache of its own.
+ */
+export function cacheByProfile(config: Configuration, profile: BuildProfile): void {
+  if (config.cache && typeof config.cache === 'object' && config.cache.type === 'filesystem') {
+    config.cache.name = `${config.cache.name ?? 'default'}-${profile.name}`;
+  }
+}
+
+export default function environmentPlugin(context: LoadContext): Plugin {
   const profile = resolveProfile();
 
   return {
     name: 'dbsync-environment',
+    configureWebpack(config) {
+      cacheByProfile(config, profile);
+      return {};
+    },
     injectHtmlTags() {
       return {headTags: environmentHeadTags(profile)};
     },
     async postBuild({outDir}) {
-      await emitRobots(outDir, profile);
+      if (isRootBuild(context)) {
+        await emitRobots(outDir, profile, localesDefaultFirst(context));
+      }
     },
   };
 }

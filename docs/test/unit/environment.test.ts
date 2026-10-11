@@ -4,11 +4,13 @@ import path from 'node:path';
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
+import {isRootBuild, localesDefaultFirst} from '../../config/i18n';
 import {PROFILES} from '../../config/profiles';
 import environmentPlugin, {
   NOINDEX_HTML,
   NOINDEX_META,
   ROBOTS_FILE,
+  cacheByProfile,
   emitRobots,
   environmentHeadTags,
   robotsTxt,
@@ -63,8 +65,52 @@ describe('ENV-3: noindex with crawling allowed', () => {
   });
 });
 
+describe('cacheByProfile (ENV-1)', () => {
+  it('gives each profile its own webpack filesystem cache', () => {
+    const dev = {cache: {type: 'filesystem' as const, name: 'client-production-en'}};
+    const prod = {cache: {type: 'filesystem' as const, name: 'client-production-en'}};
+    cacheByProfile(dev, PROFILES.dev);
+    cacheByProfile(prod, PROFILES.prod);
+    expect(dev.cache.name).toBe('client-production-en-dev');
+    expect(prod.cache.name).toBe('client-production-en-prod');
+  });
+
+  it('leaves a memory cache, or none, alone', () => {
+    const memory = {cache: {type: 'memory' as const}};
+    cacheByProfile(memory, PROFILES.dev);
+    expect(memory.cache).toEqual({type: 'memory'});
+    expect(() => cacheByProfile({}, PROFILES.dev)).not.toThrow();
+    const unnamed = {cache: {type: 'filesystem' as const}};
+    cacheByProfile(unnamed, PROFILES.prod);
+    expect(unnamed.cache).toEqual({type: 'filesystem', name: 'default-prod'});
+  });
+});
+
+describe('locale builds', () => {
+  const i18n = {currentLocale: 'ja', defaultLocale: 'en', locales: ['ja', 'en', 'de']};
+
+  it('treats only the default locale build as the site root', () => {
+    expect(isRootBuild({i18n} as LoadContext)).toBe(false);
+    expect(isRootBuild({i18n: {...i18n, currentLocale: 'en'}} as LoadContext)).toBe(true);
+  });
+
+  it('lists the locales default first', () => {
+    expect(localesDefaultFirst({i18n} as LoadContext)).toEqual(['en', 'ja', 'de']);
+  });
+
+  it('points production robots.txt at every locale sitemap', () => {
+    expect(robotsTxt(PROFILES.prod, ['en', 'ja'])).toBe(
+      'User-agent: *\nAllow: /\n\n' +
+        'Sitemap: https://dbsync.cardano.intersect.org/sitemap.xml\n' +
+        'Sitemap: https://dbsync.cardano.intersect.org/ja/sitemap.xml\n',
+    );
+  });
+});
+
 describe('environmentPlugin', () => {
-  const context = {} as LoadContext;
+  const context = {
+    i18n: {currentLocale: 'en', defaultLocale: 'en', locales: ['en', 'ja']},
+  } as LoadContext;
 
   async function withProfile<T>(name: string, fn: () => Promise<T> | T): Promise<T> {
     const previous = process.env.DOCS_PROFILE;
@@ -84,7 +130,17 @@ describe('environmentPlugin', () => {
     const plugin = await withProfile('dev', () => environmentPlugin(context));
     expect(plugin.name).toBe('dbsync-environment');
     expect(plugin.injectHtmlTags?.({content: undefined})).toEqual({headTags: [NOINDEX_META]});
+    const config = {cache: {type: 'filesystem' as const, name: 'server-production-en'}};
+    expect((plugin.configureWebpack as unknown as (c: object) => object)(config)).toEqual({});
+    expect(config.cache.name).toBe('server-production-en-dev');
     await plugin.postBuild?.({outDir} as Parameters<NonNullable<typeof plugin.postBuild>>[0]);
     expect(await readRobots()).toBe(robotsTxt(PROFILES.dev));
+  });
+
+  it("writes no robots.txt from a non-default locale's build", async () => {
+    const ja = {...context, i18n: {...context.i18n, currentLocale: 'ja'}} as LoadContext;
+    const plugin = await withProfile('prod', () => environmentPlugin(ja));
+    await plugin.postBuild?.({outDir} as Parameters<NonNullable<typeof plugin.postBuild>>[0]);
+    await expect(readRobots()).rejects.toThrow(/ENOENT/);
   });
 });

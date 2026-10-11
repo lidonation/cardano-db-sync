@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {PROFILES} from '../../config/profiles';
+import {STRICT_DIRECTIVES, cspMetaTag} from '../../plugins/security';
 import routeManifestPlugin, {
   MANIFEST_FILE,
   REDIRECT_SCRIPT,
@@ -200,9 +201,21 @@ describe('redirectPage', () => {
     expect(html.match(/<script/g)).toHaveLength(1);
   });
 
+  it('carries the strict policy, right after the charset (SEC-2)', () => {
+    const html = redirectPage('/docs', prod);
+    expect(html).toContain(`<meta charset="utf-8">\n${cspMetaTag(STRICT_DIRECTIVES)}\n`);
+  });
+
   it('carries noindex on the preview build only (ENV-3)', () => {
     expect(redirectPage('/docs', dev)).toContain('<meta name="robots" content="noindex">');
     expect(redirectPage('/docs', prod)).not.toMatch(/noindex/);
+  });
+
+  it("points a locale's stubs at that locale's pages", () => {
+    const html = redirectPage('/docs', prod, '/ja/');
+    expect(html).toContain('url=/ja/docs"');
+    expect(html).toContain('<script src="/ja/redirect.js" data-target="/ja/docs">');
+    expect(html).toContain('href="https://dbsync.cardano.intersect.org/ja/docs"');
   });
 
   it('escapes the target', () => {

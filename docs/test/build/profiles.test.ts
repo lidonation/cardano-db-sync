@@ -73,6 +73,22 @@ describe('baseUrl reaches the emitted HTML (ENV-1)', () => {
     const html = await fs.readFile(path.join(OUT.prod, 'docs', 'intro', 'index.html'), 'utf8');
     expect(html).not.toContain('/cardano-db-sync/assets/');
   });
+
+  it('keeps it out of production CSS and JS too, though dev built first in the same tree', async () => {
+    const assets = (await fs.readdir(path.join(OUT.prod, 'assets'), {recursive: true})).filter(
+      (f) => /\.(?:css|js)$/.test(f),
+    );
+    expect(assets.length).toBeGreaterThan(0);
+    for (const file of assets) {
+      const text = await fs.readFile(path.join(OUT.prod, 'assets', file), 'utf8');
+      expect(text, file).not.toContain('/cardano-db-sync/assets/');
+    }
+    const css = await fs.readFile(
+      path.join(OUT.dev, 'assets', 'css', (await fs.readdir(path.join(OUT.dev, 'assets', 'css')))[0]),
+      'utf8',
+    );
+    expect(css).toContain('/cardano-db-sync/assets/fonts/');
+  });
 });
 
 describe('the build carries no secrets and needs none (ENV-5)', () => {
@@ -154,6 +170,73 @@ describe('environment banner (ENV-4)', () => {
     for (const page of await htmlFiles(OUT.prod)) {
       const html = await fs.readFile(path.join(OUT.prod, page), 'utf8');
       expect(html, page).not.toContain('data-environment');
+    }
+  });
+});
+
+describe('five locales (A11Y-18, META-4, META-8)', () => {
+  const LOCALE_DIRS = {en: '', ja: 'ja', es: 'es', de: 'de', vi: 'vi'};
+  const page = (out: string, locale: string, route: string) =>
+    path.join(out, LOCALE_DIRS[locale as keyof typeof LOCALE_DIRS], route, 'index.html');
+  const alternates = (html: string) =>
+    [...html.matchAll(/<link[^>]*rel="alternate"[^>]*hreflang="([^"]+)"/g)].map((m) => m[1]);
+
+  it('builds every locale in both profiles, each with its own lang and dir', async () => {
+    for (const out of [OUT.dev, OUT.prod]) {
+      for (const locale of Object.keys(LOCALE_DIRS)) {
+        const html = await fs.readFile(page(out, locale, ''), 'utf8');
+        expect(html, `${out} ${locale}`).toMatch(new RegExp(`<html lang="${locale}" dir="ltr"`));
+      }
+    }
+  });
+
+  it('advertises an untranslated doc in English only, from every locale (META-4)', async () => {
+    for (const locale of Object.keys(LOCALE_DIRS)) {
+      const html = await fs.readFile(page(OUT.prod, locale, 'docs/intro'), 'utf8');
+      expect(alternates(html), locale).toEqual(['en', 'x-default']);
+    }
+  });
+
+  it('advertises a page that exists everywhere in every locale, reciprocally (META-4)', async () => {
+    for (const locale of Object.keys(LOCALE_DIRS)) {
+      const html = await fs.readFile(page(OUT.prod, locale, ''), 'utf8');
+      expect(alternates(html), locale).toEqual(['en', 'ja', 'es', 'de', 'vi', 'x-default']);
+    }
+  });
+
+  it("points an untranslated doc's canonical at the English page; others are self-canonical", async () => {
+    const canonical = (html: string) => html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/)?.[1];
+    const en = canonical(await fs.readFile(page(OUT.prod, 'en', 'docs/intro'), 'utf8'));
+    expect(en).toMatch(/\/docs\/intro\/?$/);
+    expect(en).not.toMatch(/\/(ja|es|de|vi)\//);
+    for (const locale of ['ja', 'es', 'de', 'vi']) {
+      const doc = await fs.readFile(page(OUT.prod, locale, 'docs/intro'), 'utf8');
+      expect(canonical(doc), locale).toBe(en);
+      const home = await fs.readFile(page(OUT.prod, locale, ''), 'utf8');
+      expect(canonical(home), locale).toMatch(new RegExp(`/${locale}/?$`));
+    }
+  });
+
+  it('emits no hreflang at all on the noindex preview (META-8)', async () => {
+    for (const locale of Object.keys(LOCALE_DIRS)) {
+      for (const route of ['', 'docs/intro']) {
+        const html = await fs.readFile(page(OUT.dev, locale, route), 'utf8');
+        expect(alternates(html), `${locale} ${route}`).toEqual([]);
+      }
+    }
+  });
+
+  it('marks an untranslated doc as English inside a translated page (A11Y-18)', async () => {
+    const en = await fs.readFile(page(OUT.prod, 'en', 'docs/intro'), 'utf8');
+    const ja = await fs.readFile(page(OUT.prod, 'ja', 'docs/intro'), 'utf8');
+    expect(ja).toMatch(/<div lang="en"><div class="theme-doc-markdown/);
+    expect(en).not.toMatch(/<div lang="en"><div class="theme-doc-markdown/);
+  });
+
+  it('renders identifiers as untranslated English in every locale (A11Y-18)', async () => {
+    for (const locale of Object.keys(LOCALE_DIRS)) {
+      const html = await fs.readFile(page(OUT.prod, locale, 'docs/intro'), 'utf8');
+      expect(html, locale).toMatch(/<code lang="en" translate="no">cardano-db-sync<\/code>/);
     }
   });
 });

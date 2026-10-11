@@ -5,6 +5,7 @@ import type {LoadContext, Plugin} from '@docusaurus/types';
 
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
 import {NOINDEX_HTML} from '../environment';
+import {STRICT_DIRECTIVES, cspMetaTag} from '../security';
 
 /**
  * VER-5 — every route this site has ever published keeps resolving.
@@ -283,18 +284,28 @@ export const REDIRECT_SCRIPT = `(function () {
  * server-side redirects. The only script is the external, same-origin {@link REDIRECT_SCRIPT},
  * which adds fragment forwarding for people; the redirect itself never depends on it. This is not
  * `@docusaurus/plugin-client-redirects`: its stubs carry an inline `window.location` script.
- * A non-production stub is a page like any other, so it carries `noindex` too (ENV-3).
+ * A non-production stub is a page like any other, so it carries `noindex` too (ENV-3). It also
+ * carries the strict policy (SEC-2): it loads nothing but its own-origin script, and a stub never
+ * needs a wallet, even where it replaces a survey URL.
+ *
+ * `baseUrl` is the locale's base (`/ja/` under the root profile): each locale's output carries its
+ * own stubs, pointing at that locale's pages.
  */
-export function redirectPage(target: string, profile: BuildProfile): string {
-  const href = `${profile.baseUrl}${target.slice(1)}`;
+export function redirectPage(
+  target: string,
+  profile: BuildProfile,
+  baseUrl: string = profile.baseUrl,
+): string {
+  const href = `${baseUrl}${target.slice(1)}`;
   const attr = escapeHtml(href);
   const canonical = escapeHtml(`${profile.url}${href}`);
-  const script = escapeHtml(`${profile.baseUrl}${REDIRECT_SCRIPT_FILE}`);
+  const script = escapeHtml(`${baseUrl}${REDIRECT_SCRIPT_FILE}`);
   return [
     '<!doctype html>',
     '<html lang="en">',
     '<head>',
     '<meta charset="utf-8">',
+    cspMetaTag(STRICT_DIRECTIVES),
     '<title>Page moved</title>',
     `<script src="${script}" data-target="${attr}"></script>`,
     `<meta http-equiv="refresh" content="0; url=${attr}">`,
@@ -317,6 +328,7 @@ export async function emitRedirects(
   outDir: string,
   manifest: RouteManifest,
   profile: BuildProfile,
+  baseUrl: string = profile.baseUrl,
 ): Promise<string[]> {
   const written: string[] = [];
   for (const [route, entry] of Object.entries(manifest.routes)) {
@@ -327,7 +339,7 @@ export async function emitRedirects(
     await fs.mkdir(path.dirname(file), {recursive: true});
     try {
       // `wx` fails if the file exists, so a redirect never replaces a published page.
-      await fs.writeFile(file, redirectPage(entry.redirect, profile), {
+      await fs.writeFile(file, redirectPage(entry.redirect, profile, baseUrl), {
         encoding: 'utf8',
         flag: 'wx',
       });
@@ -355,6 +367,11 @@ export interface ManifestRunOptions {
   readonly routesPaths: readonly string[];
   readonly profile: BuildProfile;
   readonly mode: ManifestMode;
+  /**
+   * Base path of the locale being built: the profile's `baseUrl`, plus `<locale>/` for every
+   * locale but the default. Manifest paths are relative to it, so every locale shares one manifest.
+   */
+  readonly baseUrl?: string;
 }
 
 /** Reconcile, then write (local) or verify (CI) the manifest, then emit redirects. */
@@ -363,7 +380,7 @@ export async function runManifest(options: ManifestRunOptions): Promise<Reconcil
   const previous = await readManifestText(file);
   const current = previous === null ? {routes: {}} : parseManifest(file, previous);
   const published = options.routesPaths
-    .map((route) => toManifestPath(route, options.profile.baseUrl))
+    .map((route) => toManifestPath(route, options.baseUrl ?? options.profile.baseUrl))
     .filter((route): route is string => route !== null);
   const result = reconcile(current, published);
 
@@ -380,7 +397,7 @@ export async function runManifest(options: ManifestRunOptions): Promise<Reconcil
     }
   }
 
-  await emitRedirects(options.outDir, result.manifest, options.profile);
+  await emitRedirects(options.outDir, result.manifest, options.profile, options.baseUrl);
   return result;
 }
 
@@ -391,7 +408,14 @@ export default function routeManifestPlugin(context: LoadContext): Plugin {
   return {
     name: 'dbsync-route-manifest',
     async postBuild({outDir, routesPaths}) {
-      await runManifest({siteDir: context.siteDir, outDir, routesPaths, profile, mode});
+      await runManifest({
+        siteDir: context.siteDir,
+        outDir,
+        routesPaths,
+        profile,
+        mode,
+        baseUrl: context.baseUrl,
+      });
     },
   };
 }
