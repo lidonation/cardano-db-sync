@@ -132,7 +132,8 @@ describe('preview is noindex and crawlable; production is neither blocked nor no
 
   it('serves no noindex anywhere in production, and does not disallow crawling', async () => {
     for (const page of await htmlFiles(OUT.prod)) {
-      expect(await fs.readFile(path.join(OUT.prod, page), 'utf8'), page).not.toMatch(/noindex/);
+      // The robots directive, not the word: a page may well document noindex.
+      expect(await fs.readFile(path.join(OUT.prod, page), 'utf8'), page).not.toMatch(NOINDEX);
     }
     const robots = await fs.readFile(path.join(OUT.prod, 'robots.txt'), 'utf8');
     expect(robots).not.toMatch(/Disallow/i);
