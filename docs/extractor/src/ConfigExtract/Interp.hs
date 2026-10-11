@@ -633,7 +633,9 @@ recordOf ex = case ex of
   ERecCon c fs -> Just (c, fs)
   _ -> Nothing
 
--- A positional constructor application is a record too, when its fields are named.
+-- | A record selector applied to a record-syntax value. Every option set the
+-- config module defines is written in record syntax; a positional one would
+-- leave its defaults unevaluated, which the run reports as unresolved.
 fieldOf :: Ex -> Text -> Maybe Ex
 fieldOf r sel = case r of
   ERecCon _ fs -> lookup sel fs
