@@ -130,3 +130,38 @@ jobs:
               exit 1
             fi
           done
+
+  # B41: publishes the developer profile to lidonation.github.io/cardano-db-sync. Deploys run only
+  # from release/community-site (the fork's ENV-6 deploy branch), after the Docs CI gate passes. The
+  # github-pages environment must allow this branch under Settings -> Environments.
+  deploy:
+    name: Deploy developer site to Pages
+    needs: gate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/release/community-site'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/docs-setup
+
+      - name: Build developer profile
+        run: npm run build:dev
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build/dev
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
