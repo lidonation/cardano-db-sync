@@ -92,6 +92,18 @@ describe('readDbInfoInstances', () => {
     );
   });
 
+  it('fails on an instance head split across lines (second-pass finding)', () => {
+    const source = 'instance\n  DbInfo X where\n  tableName _ = "x"\n';
+    expect(() => readDbInfoInstances(source, 'S.hs')).toThrow(
+      /S\.hs: DbInfo instance\(s\) the reader cannot parse: instance DbInfo X where/,
+    );
+  });
+
+  it('does not mistake a type instance on the line above for a DbInfo head', () => {
+    const source = 'type instance Key X = XId\ninstance DbInfo X where\n  tableName _ = "x"\n';
+    expect(readDbInfoInstances(source, 'K.hs').map((i) => i.type)).toEqual(['X']);
+  });
+
   it('fails when columnNames is not a list', () => {
     expect(() =>
       readDbInfoInstances('instance DbInfo X where\n  columnNames _ = names\n', 'X.hs'),
@@ -121,6 +133,30 @@ describe('readUnlinesBinding', () => {
     );
   });
 
+  it('rejects an expression around the list or literal (second-pass finding)', () => {
+    const after =
+      '  q =\n    Text.unlines\n      [ "SELECT"\n      ]\n      <> extra\n  next = 1\n';
+    expect(() => readUnlinesBinding(after, 'q')).toThrow(
+      /q: unexpected expression after the SQL: <> extra/,
+    );
+    const literal = '  q = "SELECT" <> extra\n';
+    expect(() => readUnlinesBinding(literal, 'q')).toThrow(
+      /unexpected expression after the SQL: <> extra/,
+    );
+    const before = '  q =\n    Text.unlines $ map f\n      [ "a" ]\n';
+    expect(() => readUnlinesBinding(before, 'q')).toThrow(
+      /q: expected \[ after Text\.unlines: \$ map f/,
+    );
+    expect(() => readUnlinesBinding('  q = sql\n', 'q')).toThrow(
+      /q: not a string literal or a Text\.unlines list: sql/,
+    );
+  });
+
+  it('ends a binding at the next line indented no deeper than it', () => {
+    const source = '  q =\n    Text.unlines\n      [ "a"\n      ]\n\n  r = 1\n';
+    expect(readUnlinesBinding(source, 'q')).toBe('a\n');
+  });
+
   it('keeps a ] inside a literal and skips -- comments inside the list', () => {
     const source = '  q =\n    Text.unlines\n      [ "a text[]" -- why\n      , "b"\n      ]\n';
     expect(readUnlinesBinding(source, 'q')).toBe('a text[]\nb\n');
@@ -129,6 +165,7 @@ describe('readUnlinesBinding', () => {
 
   it('fails on a missing binding or an empty list', () => {
     expect(() => readUnlinesBinding(sample, 'nope')).toThrow(/nope: binding not found/);
+    expect(() => parseStringList('xs = ys', 0, 'xs')).toThrow(/xs: no \[ … \] list found/);
     expect(() => readUnlinesBinding('  q =\n    Text.unlines\n      []\n', 'q')).toThrow(
       /list is empty/,
     );

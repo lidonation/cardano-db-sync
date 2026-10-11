@@ -61,65 +61,97 @@ function stringLiteral(literal) {
   return JSON.parse(literal);
 }
 
-/**
- * Parse a Haskell list of string literals starting at the first `[` at or after `from`. Every item
- * must be a standalone literal: an expression, a concatenation or a bare name fails, so the reader
- * can never replay SQL that differs from what the Haskell builds. `--` comments are skipped, and a
- * `]` inside a literal (`"text[]"`) does not end the list.
- */
-export function parseStringList(source, from, what) {
-  let i = source.indexOf('[', from);
-  if (i < 0) throw new Error(`${what}: no [ … ] list found`);
-  i++;
-  const items = [];
-  const skip = () => {
-    for (;;) {
-      while (i < source.length && /\s/.test(source[i])) i++;
-      if (source.startsWith('--', i)) {
-        while (i < source.length && source[i] !== '\n') i++;
-      } else {
-        return;
-      }
-    }
-  };
+/** The index of the first character at or after `i` that is not whitespace or a `--` comment. */
+function skipBlank(source, i) {
   for (;;) {
-    skip();
-    if (source[i] === ']' && items.length === 0) return items;
+    while (i < source.length && /\s/.test(source[i])) i++;
+    if (!source.startsWith('--', i)) return i;
+    while (i < source.length && source[i] !== '\n') i++;
+  }
+}
+
+const excerpt = (source, i) => source.slice(i, i + 40).split('\n')[0];
+
+/**
+ * Parse the Haskell list of string literals whose `[` is at `open`. Every item must be a standalone
+ * literal: an expression, a concatenation or a bare name fails, so the reader can never replay SQL
+ * that differs from what the Haskell builds. `--` comments are skipped, and a `]` inside a literal
+ * (`"text[]"`) does not end the list. Returns the items and the index just past the `]`.
+ */
+function parseListAt(source, open, what) {
+  let i = open + 1;
+  const items = [];
+  for (;;) {
+    i = skipBlank(source, i);
+    if (source[i] === ']' && items.length === 0) return {items, end: i + 1};
     const literal = /^"(?:[^"\\\n]|\\.)*"/.exec(source.slice(i));
-    if (!literal) {
-      throw new Error(
-        `${what}: list item is not a string literal: ${source.slice(i, i + 40).split('\n')[0]}`,
-      );
-    }
+    if (!literal)
+      throw new Error(`${what}: list item is not a string literal: ${excerpt(source, i)}`);
     items.push(stringLiteral(literal[0]));
-    i += literal[0].length;
-    skip();
-    if (source[i] === ']') return items;
-    if (source[i] !== ',') {
-      throw new Error(
-        `${what}: expected , or ] after a list item: ${source.slice(i, i + 40).split('\n')[0]}`,
-      );
-    }
+    i = skipBlank(source, i + literal[0].length);
+    if (source[i] === ']') return {items, end: i + 1};
+    if (source[i] !== ',')
+      throw new Error(`${what}: expected , or ] after a list item: ${excerpt(source, i)}`);
     i++;
   }
 }
 
+/** The string literals of the first list at or after `from` (used for `columnNames`). */
+export function parseStringList(source, from, what) {
+  const open = source.indexOf('[', from);
+  if (open < 0) throw new Error(`${what}: no [ … ] list found`);
+  return parseListAt(source, open, what).items;
+}
+
+/**
+ * The right-hand side of a top-level or `where`-local binding `name = …`: from after the `=` to the
+ * first following non-blank line indented no deeper than the binding itself.
+ */
+function bindingBody(source, name) {
+  const head = new RegExp(`^([ \\t]*)${name}[ \\t]*=(?!=)`, 'm').exec(source);
+  if (!head) return null;
+  const indent = head[1].length;
+  const start = head.index + head[0].length;
+  const rest = source.slice(start);
+  const lines = rest.split('\n');
+  let length = lines[0].length;
+  for (const line of lines.slice(1)) {
+    if (line.trim() !== '' && line.length - line.trimStart().length <= indent) break;
+    length += 1 + line.length;
+  }
+  return rest.slice(0, length);
+}
+
 /**
  * The value of a `name = Text.unlines [ "…", … ]` (or `name = "…"`) binding, as the SQL text the
- * Haskell builds. Fails when the binding is missing or is not built from string literals.
+ * Haskell builds. The whole right-hand side must be exactly that: anything else (a name, a
+ * concatenation before or after the list) fails, because replaying it would not be db-sync's SQL.
  */
 export function readUnlinesBinding(source, name) {
-  const match = new RegExp(`^\\s+${name}\\s*=\\s*\\n?\\s*Text\\.unlines\\b`, 'm').exec(source);
-  if (match) {
-    const lines = parseStringList(source, match.index + match[0].length, name);
-    if (lines.length === 0) throw new Error(`${name}: the Text.unlines list is empty`);
-    return lines.map((line) => `${line}\n`).join('');
+  const body = bindingBody(source, name);
+  if (body === null) throw new Error(`${name}: binding not found`);
+  let i = skipBlank(body, 0);
+  let value;
+  if (body.startsWith('Text.unlines', i)) {
+    i = skipBlank(body, i + 'Text.unlines'.length);
+    if (body[i] !== '[')
+      throw new Error(`${name}: expected [ after Text.unlines: ${excerpt(body, i)}`);
+    const {items, end} = parseListAt(body, i, name);
+    if (items.length === 0) throw new Error(`${name}: the Text.unlines list is empty`);
+    value = items.map((line) => `${line}\n`).join('');
+    i = end;
+  } else {
+    const literal = /^"(?:[^"\\\n]|\\.)*"/.exec(body.slice(i));
+    if (!literal) {
+      throw new Error(`${name}: not a string literal or a Text.unlines list: ${excerpt(body, i)}`);
+    }
+    value = stringLiteral(literal[0]);
+    i += literal[0].length;
   }
-  const single = new RegExp(`^\\s+${name}\\s*=\\s*\\n?\\s*("(?:[^"\\\\]|\\\\.)*")`, 'm').exec(
-    source,
-  );
-  if (single) return stringLiteral(single[1]);
-  throw new Error(`${name}: binding not found or not a string literal / Text.unlines list`);
+  i = skipBlank(body, i);
+  if (i < body.length)
+    throw new Error(`${name}: unexpected expression after the SQL: ${excerpt(body, i)}`);
+  return value;
 }
 
 /** The address-variant DDL, statement blocks in the order db-sync runs them. */
@@ -168,10 +200,18 @@ export function readRecords(source, file) {
  */
 export function readDbInfoInstances(source, file) {
   const instances = [];
-  const declared = source.split('\n').filter((line) => /^\s*instance\b.*\bDbInfo\b/.test(line));
+  // Every instance head that names DbInfo, even one split across lines or with a context. A head
+  // never crosses `where`, a plain `=` (as in `type instance Key X = XId`) or a blank line.
+  const declared = [
+    ...source.matchAll(
+      /\binstance\b(?:(?!\bwhere\b|\binstance\b|=(?!>)|\n[ \t]*\n)[\s\S])*?\bDbInfo\b/g,
+    ),
+  ].map((m) => m.index);
+  const parsed = new Set();
   const pattern = /^instance DbInfo ([A-Z][A-Za-z0-9_']*)(?:\s+where)?\s*(?:--.*)?$/gm;
   let match;
   while ((match = pattern.exec(source)) !== null) {
+    parsed.add(match.index);
     const start = match.index + match[0].length;
     const next = source.slice(start).search(/^\S/m);
     const body = next < 0 ? source.slice(start) : source.slice(start, start + next);
@@ -186,14 +226,15 @@ export function readDbInfoInstances(source, file) {
         : null,
     });
   }
-  if (instances.length !== declared.length) {
-    const read = new Set(instances.map((i) => i.type));
-    const unread = declared.filter(
-      (line) => !read.has(/DbInfo\s+\(?([A-Z][A-Za-z0-9_']*)/.exec(line)?.[1]),
+  const unread = declared.filter((index) => !parsed.has(index));
+  if (unread.length > 0) {
+    const heads = unread.map((index) =>
+      source
+        .slice(index, index + 60)
+        .replace(/\s+/g, ' ')
+        .trim(),
     );
-    throw new Error(
-      `${file}: DbInfo instance(s) the reader cannot parse: ${unread.map((l) => l.trim()).join(' | ')}`,
-    );
+    throw new Error(`${file}: DbInfo instance(s) the reader cannot parse: ${heads.join(' | ')}`);
   }
   return instances;
 }
