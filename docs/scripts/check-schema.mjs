@@ -16,7 +16,13 @@ import {existsSync, readFileSync} from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
-import {ARTIFACT_FILE, ARTIFACT_VERSION, POSTGRES_MAJOR, fingerprint} from './lib/schema-model.mjs';
+import {
+  ARTIFACT_FILE,
+  ARTIFACT_VERSION,
+  POSTGRES_MAJOR,
+  compareNames,
+  fingerprint,
+} from './lib/schema-model.mjs';
 
 const VARIANT_ORDER = {all: 0, core: 1, address: 2};
 const KINDS = new Set(['table', 'view']);
@@ -90,7 +96,7 @@ export function findProblems(docsRoot) {
     if (!KINDS.has(table.kind)) problems.push(`${label}: unknown kind ${table.kind}`);
     if (previous) {
       const order =
-        previous.name.localeCompare(table.name) ||
+        compareNames(previous.name, table.name) ||
         VARIANT_ORDER[previous.variant] - VARIANT_ORDER[table.variant];
       if (order >= 0) problems.push(`${label}: tables are not sorted by name, then variant`);
     }
@@ -107,7 +113,10 @@ export function findProblems(docsRoot) {
       problems.push(`${label}: has no columns`);
       continue;
     }
+    const names = new Set();
     for (const column of table.columns) {
+      if (names.has(column.name)) problems.push(`${label}: column ${column.name} appears twice`);
+      names.add(column.name);
       const where = `${table.name}.${column.name} [${table.variant}]`;
       checkResolvedType(where, column.resolved_type, domains, problems);
       if (typeof column.nullable !== 'boolean')

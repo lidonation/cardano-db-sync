@@ -6,6 +6,7 @@ import {
   buildDomains,
   canonicalJson,
   changedFingerprints,
+  compareNames,
   crossCheck,
   domainTypedColumns,
   fingerprint,
@@ -536,7 +537,32 @@ describe('buildArtifact and fingerprint diffs', () => {
   it('changedFingerprints names exactly the columns whose contract moved', () => {
     const before = buildArtifact({catalogs: catalogs(catalog()), haskell}).artifact;
     const after = buildArtifact({catalogs: catalogs(catalog([])), haskell}).artifact;
-    expect(changedFingerprints(before, after)).toEqual(['all:epoch_finalized.out_sum']);
+    expect(changedFingerprints(before, after)).toEqual([
+      'core:epoch_finalized.out_sum',
+      'address:epoch_finalized.out_sum',
+    ]);
     expect(changedFingerprints(before, before)).toEqual([]);
+  });
+
+  it('changedFingerprints still compares a table that splits into per-variant entries', () => {
+    const before = buildArtifact({catalogs: catalogs(catalog()), haskell}).artifact;
+    const merged = before.tables.find((t) => t.name === 'epoch_finalized')!;
+    expect(merged.variant).toBe('all');
+    const columns = merged.columns.map((c) =>
+      c.name === 'out_sum' ? {...c, fingerprint: 'sha256:changed'} : c,
+    );
+    const after = {
+      ...before,
+      tables: [
+        {...merged, variant: 'core' as const},
+        {...merged, variant: 'address' as const, columns},
+      ],
+    };
+    expect(changedFingerprints(before, after)).toEqual(['address:epoch_finalized.out_sum']);
+    expect(changedFingerprints(after, before)).toEqual(['address:epoch_finalized.out_sum']);
+  });
+
+  it('compareNames orders by code unit, not by locale', () => {
+    expect(['a_b', 'a1', 'a'].sort(compareNames)).toEqual(['a', 'a1', 'a_b']);
   });
 });

@@ -28,6 +28,15 @@ export const POSTGRES_MAJOR = 17;
 /** The tx_out variants db-sync can run with (`tx_out.use_address_table`). */
 export const VARIANTS = ['core', 'address'];
 
+/**
+ * Order names by UTF-16 code unit, the same everywhere. `localeCompare` depends on the runtime's ICU
+ * locale (it puts `_` before digits, code-unit order puts it after), so the extractor and
+ * `check:schema` must never mix the two.
+ */
+export function compareNames(a, b) {
+  return a < b ? -1 : a > b ? 1 : 0;
+}
+
 /** A JSON string with object keys sorted at every level, so equal values hash equally. */
 export function canonicalJson(value) {
   if (Array.isArray(value)) return `[${value.map(canonicalJson).join(',')}]`;
@@ -175,7 +184,7 @@ export function buildDomains(types, schema = 'public') {
   const domains = {};
   const owned = [...types.values()]
     .filter((t) => t.kind === 'd' && t.schema === schema)
-    .sort((a, b) => a.name.localeCompare(b.name));
+    .sort((a, b) => compareNames(a.name, b.name));
   for (const domain of owned) domains[domain.name] = resolveDomain(domain.oid, types).resolved;
   return domains;
 }
@@ -243,7 +252,7 @@ function annotateTable(name, columns, hs) {
 export function mergeVariants(dbTables, haskellTables) {
   const names = new Set([...dbTables.core.keys(), ...dbTables.address.keys()]);
   const tables = [];
-  for (const name of [...names].sort()) {
+  for (const name of [...names].sort(compareNames)) {
     const entries = VARIANTS.filter((v) => dbTables[v].has(name)).map((v) => ({
       variant: v,
       ...annotateTable(name, dbTables[v].get(name), haskellTables[v].get(name)),
@@ -307,9 +316,11 @@ export function domainTypedColumns(artifact) {
 }
 
 /**
- * Columns whose fingerprint differs between two artifacts, keyed `variant:table.column`. Columns
- * present on only one side are not counted: a drop or an add is not a contract change of the
- * column that survives.
+ * Columns whose fingerprint differs between two artifacts, keyed `variant:table.column` with the
+ * variant always `core` or `address`. A table tagged `all` counts once per variant, so a table that
+ * merges or splits between the two artifacts is still compared column by column. Columns present on
+ * only one side are not counted: a drop or an add is not a contract change of the column that
+ * survives.
  *
  * @param {SchemaArtifact} before
  * @param {SchemaArtifact} after
@@ -320,7 +331,9 @@ export function changedFingerprints(before, after) {
   const index = (artifact) =>
     new Map(
       artifact.tables.flatMap((t) =>
-        t.columns.map((c) => [`${t.variant}:${t.name}.${c.name}`, c.fingerprint]),
+        (t.variant === 'all' ? VARIANTS : [t.variant]).flatMap((v) =>
+          t.columns.map((c) => [`${v}:${t.name}.${c.name}`, c.fingerprint]),
+        ),
       ),
     );
   const a = index(before);

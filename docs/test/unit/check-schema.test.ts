@@ -144,6 +144,13 @@ describe('check:schema catches', () => {
     ]);
   });
 
+  it('a column that appears twice in one table', () => {
+    const problems = withArtifact((a) => {
+      a.tables[0].columns.push(a.tables[0].columns[0]);
+    });
+    expect(problems).toEqual([expect.stringMatching(/: column \w+ appears twice$/)]);
+  });
+
   it('a Haskell source path that does not exist, and an empty table list', () => {
     expect(
       withArtifact((a) => {
