@@ -21,9 +21,8 @@
 .btn-dark {
   height: 44px;
   padding: 0 24px;
-  font:
-    600 14px/44px Inter,
-    sans-serif;
+  font: var(--dbs-font-label);
+  line-height: 44px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
   clip-path: polygon(

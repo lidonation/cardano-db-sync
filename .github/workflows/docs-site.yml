@@ -48,8 +48,10 @@ jobs:
         run: npm run typecheck
       - name: No hardcoded environment values (ENV-1)
         run: npm run check:baseurl
-      - name: Style gates (FLOOR-4, PERF-3, PERF-5)
+      - name: Style gates (FLOOR-4, PERF-3, PERF-5, DF-1 type scale)
         run: npm run check:css
+      - name: Tokens regenerate byte-identically (DF-1, DF-11)
+        run: npm run check:tokens
 
       # VER-5: the route manifest is append-only. Base is the PR base, or the commit a push replaced.
       # The checkout is shallow, so fetch just the base commit rather than the repo's full history.

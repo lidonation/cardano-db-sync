@@ -4,14 +4,28 @@ import path from 'node:path';
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
-import {checkCss, findViolations, main} from '../../scripts/check-css-gates.mjs';
+import {
+  TOKEN_SOURCE,
+  TRACKING_EXEMPT,
+  checkCss,
+  findViolations,
+  loadTypeStyles,
+  main,
+} from '../../scripts/check-css-gates.mjs';
 
 let root: string;
 
 beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'dbsync-css-'));
   await fs.mkdir(path.join(root, 'src'), {recursive: true});
+  await writeTokenSource({base: {typography: {style: {body: {}}}}});
 });
+
+/** Every tree scan needs the token source that names the type scale. */
+async function writeTokenSource(source: unknown): Promise<void> {
+  await fs.mkdir(path.join(root, 'design'), {recursive: true});
+  await fs.writeFile(path.join(root, TOKEN_SOURCE), JSON.stringify(source));
+}
 
 afterEach(async () => {
   await fs.rm(root, {recursive: true, force: true});
@@ -105,6 +119,85 @@ describe('scanner', () => {
   });
 });
 
+describe('DF-1: no type size outside the 13-style scale', () => {
+  const scale = new Set(['body', 'label']);
+  const df1 = (css: string) => checkCss(css, scale).map((v) => v.rule);
+
+  it.each(['15px', '1rem', '0.9em', 'larger', 'calc(1rem + 2px)', 'var(--other-size)'])(
+    'flags `font-size: %s`',
+    (value) => {
+      expect(df1(`p { font-size: ${value}; }`)).toEqual(['DF-1']);
+    },
+  );
+
+  it('allows a scale size token, with or without !important', () => {
+    expect(df1('p { font-size: var(--dbs-font-body-size); }')).toEqual([]);
+    expect(df1('p { font-size: var(--dbs-font-label-size) !important; }')).toEqual([]);
+  });
+
+  it('flags a size token for a style the scale does not have', () => {
+    expect(df1('p { font-size: var(--dbs-font-huge-size); }')).toEqual(['DF-1']);
+  });
+
+  it.each(['inherit', 'initial', 'unset', 'revert', 'revert-layer'])(
+    'allows `font-size: %s`, which defers to the cascade',
+    (value) => {
+      expect(df1(`p { font-size: ${value}; }`)).toEqual([]);
+    },
+  );
+
+  it('requires the font shorthand to be a style token, not a literal or a family', () => {
+    expect(df1('p { font: 600 14px/1.2 Inter, sans-serif; }')).toEqual(['DF-1']);
+    expect(df1('p { font: var(--dbs-font-ui); }')).toEqual(['DF-1']);
+    expect(
+      df1(
+        'p { font: var(--dbs-font-label); letter-spacing: var(--dbs-font-label-tracking); line-height: 44px; }',
+      ),
+    ).toEqual([]);
+  });
+
+  describe('a font shorthand keeps its tracking', () => {
+    const messages = (css: string) => checkCss(css, scale).map((v) => v.message);
+
+    it('flags a shorthand with no tracking, pointing at the token and the class', () => {
+      expect(messages('p { font: var(--dbs-font-label); }')).toEqual([
+        'font shorthand without its tracking - add letter-spacing: var(--dbs-font-label-tracking), or use .dbs-type-label',
+      ]);
+    });
+
+    it.each([
+      ['another style', 'var(--dbs-font-body-tracking)'],
+      ['a literal', '0.5px'],
+    ])('flags tracking from %s', (_label, tracking) => {
+      expect(df1(`p { font: var(--dbs-font-label); letter-spacing: ${tracking}; }`)).toEqual([
+        'DF-1',
+      ]);
+    });
+
+    it('pairs within one rule block, not across blocks or at-rules', () => {
+      expect(
+        df1(
+          '@media (min-width: 1px) { p { font: var(--dbs-font-label); } } p { letter-spacing: var(--dbs-font-label-tracking); }',
+        ),
+      ).toEqual(['DF-1']);
+    });
+
+    it('leaves a letter-spacing alone when the block sets no font shorthand', () => {
+      expect(df1('p { letter-spacing: 0.02em; }')).toEqual([]);
+    });
+
+    it('can be switched off for an exempt file', () => {
+      expect(checkCss('p { font: var(--dbs-font-label); }', scale, {pairTracking: false})).toEqual(
+        [],
+      );
+    });
+  });
+
+  it('leaves custom property definitions alone', () => {
+    expect(df1(':root { --dbs-font-body-size: 15px; --ifm-font-size-base: 15px; }')).toEqual([]);
+  });
+});
+
 describe('check:css over a tree', () => {
   it('scans .css and .scss and names the file', async () => {
     await fs.writeFile(path.join(root, 'src', 'a.css'), 'a { outline: none; }\n');
@@ -114,6 +207,38 @@ describe('check:css over a tree', () => {
       'src/a.css:FLOOR-4',
       'src/b.scss:PERF-5',
     ]);
+  });
+
+  it('reads the type scale from the token source', async () => {
+    expect(await loadTypeStyles(root)).toEqual(new Set(['body']));
+    await fs.writeFile(
+      path.join(root, 'src', 'a.css'),
+      'p { font-size: var(--dbs-font-body-size); } q { font-size: var(--dbs-font-label-size); }',
+    );
+    expect((await findViolations(root)).map((v) => v.text)).toEqual([
+      'font-size: var(--dbs-font-label-size)',
+    ]);
+  });
+
+  it('exempts only the listed legacy files from the tracking pairing, and gives a reason', async () => {
+    const [legacy, reason] = [...TRACKING_EXEMPT][0];
+    expect(reason).toMatch(/\S/);
+    const css = 'p { font: var(--dbs-font-body); }';
+    await fs.mkdir(path.dirname(path.join(root, legacy)), {recursive: true});
+    await fs.writeFile(path.join(root, legacy), css);
+    await fs.writeFile(path.join(root, 'src', 'a.css'), css);
+    expect((await findViolations(root)).map((v) => v.file)).toEqual(['src/a.css']);
+  });
+
+  it('fails when the token source has no type scale', async () => {
+    await writeTokenSource({base: {}});
+    await expect(loadTypeStyles(root)).rejects.toThrow(/no base.typography.style/);
+  });
+
+  it('fails rather than passing every font token when the token source is missing', async () => {
+    await fs.rm(path.join(root, TOKEN_SOURCE));
+    await fs.writeFile(path.join(root, 'src', 'a.css'), 'p { font: var(--dbs-font-ui); }');
+    await expect(findViolations(root)).rejects.toThrow(/not found - DF-1 cannot check/);
   });
 
   it('skips build output, dependencies, tests and non-style files', async () => {
