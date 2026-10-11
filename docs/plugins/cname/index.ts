@@ -4,7 +4,7 @@ import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
-import {isRootBuild} from '../environment';
+import {isRootBuild} from '../../config/i18n';
 
 export const CNAME_FILE = 'CNAME';
 

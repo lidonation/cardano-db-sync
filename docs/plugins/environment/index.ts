@@ -3,6 +3,7 @@ import path from 'node:path';
 
 import type {HtmlTagObject, LoadContext, Plugin} from '@docusaurus/types';
 
+import {isRootBuild, localesDefaultFirst} from '../../config/i18n';
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
 
 /** The webpack config Docusaurus hands `configureWebpack`. */
@@ -64,20 +65,6 @@ export async function emitRobots(
   locales?: readonly string[],
 ): Promise<void> {
   await fs.writeFile(path.join(outDir, ROBOTS_FILE), robotsTxt(profile, locales), 'utf8');
-}
-
-/**
- * Docusaurus builds each locale into its own directory under the site root. Files that belong at
- * the root itself (`robots.txt`, `CNAME`) come from the default locale's build only.
- */
-export function isRootBuild(context: Pick<LoadContext, 'i18n'>): boolean {
-  return context.i18n.currentLocale === context.i18n.defaultLocale;
-}
-
-/** The site's locales, default first. */
-export function localesDefaultFirst(context: Pick<LoadContext, 'i18n'>): string[] {
-  const {defaultLocale, locales} = context.i18n;
-  return [defaultLocale, ...locales.filter((l) => l !== defaultLocale)];
 }
 
 /**
