@@ -17,11 +17,12 @@ import ConfigExtract.Syntax
 import Data.Aeson (Value (..), object, (.=))
 import qualified Data.Aeson.Key as Key
 import qualified Data.Aeson.KeyMap as KM
+import qualified Data.ByteString as BS
 import Data.Either (lefts, rights)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as Text
-import qualified Data.Text.IO as TIO
+import qualified Data.Text.Encoding as TE
 import GHC.Types.SrcLoc (unLoc)
 import HaddockExtract.Parse (ParseOutcome (..), parseSource, stripCpp)
 import System.FilePath ((</>))
@@ -56,12 +57,17 @@ extractConfig root sources rootType = do
     [] -> pure (Right (extractSchema (mconcatSyntax (rights parsed)) rootType))
     errs -> pure (Left errs)
   where
+    -- Sources are decoded as UTF-8 whatever the locale, as B07 does: the
+    -- extraction must be the same on every machine.
     parseOne path = do
-      src <- TIO.readFile (root </> path)
-      let (stripped, _) = stripCpp src
-      pure $ case parseSource stripped path of
-        Parsed _ _ lmod -> Right (lowerModule (unLoc lmod))
-        Failed err -> Left err
+      bytes <- BS.readFile (root </> path)
+      pure $ case TE.decodeUtf8' bytes of
+        Left err -> Left (Text.pack (path <> ": not valid UTF-8: " <> show err))
+        Right src ->
+          let (stripped, _) = stripCpp src
+           in case parseSource stripped path of
+                Parsed _ _ lmod -> Right (lowerModule (unLoc lmod))
+                Failed err -> Left err
 
 mconcatSyntax :: [ModuleSyntax] -> ModuleSyntax
 mconcatSyntax = foldr merge (ModuleSyntax Map.empty Map.empty Map.empty Map.empty)

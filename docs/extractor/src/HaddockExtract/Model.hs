@@ -262,7 +262,7 @@ printWidth :: Int
 printWidth = 100
 
 builderLength :: Builder -> Int
-builderLength = T.length . TE.decodeUtf8 . BL.toStrict . toLazyByteString
+builderLength = Text.length . TE.decodeUtf8 . BL.toStrict . toLazyByteString
 
 lastFlags :: [a] -> [Bool]
 lastFlags xs = [i == length xs | i <- [1 .. length xs]]
