@@ -282,6 +282,7 @@ export const REDIRECT_SCRIPT = `(function () {
  * server-side redirects. The only script is the external, same-origin {@link REDIRECT_SCRIPT},
  * which adds fragment forwarding for people; the redirect itself never depends on it. This is not
  * `@docusaurus/plugin-client-redirects`: its stubs carry an inline `window.location` script.
+ * A non-production stub is a page like any other, so it carries `noindex` too (ENV-3).
  */
 export function redirectPage(target: string, profile: BuildProfile): string {
   const href = `${profile.baseUrl}${target.slice(1)}`;
@@ -297,6 +298,7 @@ export function redirectPage(target: string, profile: BuildProfile): string {
     `<script src="${script}" data-target="${attr}"></script>`,
     `<meta http-equiv="refresh" content="0; url=${attr}">`,
     `<link rel="canonical" href="${canonical}">`,
+    ...(profile.indexable ? [] : ['<meta name="robots" content="noindex">']),
     '</head>',
     '<body>',
     `<p>This page has moved to <a href="${attr}">${escapeHtml(target)}</a>.</p>`,

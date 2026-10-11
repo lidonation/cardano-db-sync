@@ -109,3 +109,50 @@ describe('theme tokens reach the built CSS with their precedence intact (TOK-1)'
     }
   });
 });
+
+/** Every HTML file under a build output, as paths relative to it. */
+async function htmlFiles(dir: string): Promise<string[]> {
+  const entries = await fs.readdir(dir, {recursive: true});
+  return entries.filter((f) => f.endsWith('.html')).sort();
+}
+
+const NOINDEX = /<meta[^>]*name="robots"[^>]*content="noindex"/;
+
+describe('preview is noindex and crawlable; production is neither blocked nor noindex (ENV-3)', () => {
+  it('serves noindex on every preview page while robots.txt allows crawling', async () => {
+    const pages = await htmlFiles(OUT.dev);
+    expect(pages).toContain('404.html');
+    for (const page of pages) {
+      expect(await fs.readFile(path.join(OUT.dev, page), 'utf8'), page).toMatch(NOINDEX);
+    }
+    const robots = await fs.readFile(path.join(OUT.dev, 'robots.txt'), 'utf8');
+    expect(robots).toMatch(/^User-agent: \*\nAllow: \/$/m);
+    expect(robots).not.toMatch(/Disallow/i);
+  });
+
+  it('serves no noindex anywhere in production, and does not disallow crawling', async () => {
+    for (const page of await htmlFiles(OUT.prod)) {
+      expect(await fs.readFile(path.join(OUT.prod, page), 'utf8'), page).not.toMatch(/noindex/);
+    }
+    const robots = await fs.readFile(path.join(OUT.prod, 'robots.txt'), 'utf8');
+    expect(robots).not.toMatch(/Disallow/i);
+  });
+});
+
+describe('environment banner (ENV-4)', () => {
+  it('labels every preview page, linking to production', async () => {
+    for (const page of await htmlFiles(OUT.dev)) {
+      const html = await fs.readFile(path.join(OUT.dev, page), 'utf8');
+      expect(html, page).toMatch(/<aside[^>]*aria-label="Build environment"[^>]*>/);
+      expect(html, page).toContain('data-environment="preview"');
+      expect(html, page).toContain('href="https://dbsync.cardano.intersect.org/"');
+    }
+  });
+
+  it('is absent from every production page', async () => {
+    for (const page of await htmlFiles(OUT.prod)) {
+      const html = await fs.readFile(path.join(OUT.prod, page), 'utf8');
+      expect(html, page).not.toContain('data-environment');
+    }
+  });
+});

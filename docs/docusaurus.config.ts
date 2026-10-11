@@ -1,8 +1,9 @@
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
-import {resolveProfile} from './config/profiles';
+import {PROFILES, resolveProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
+import environmentPlugin from './plugins/environment';
 import routeManifestPlugin from './plugins/route-manifest';
 
 const profile = resolveProfile();
@@ -37,6 +38,8 @@ const config: Config = {
   // Exposed to pages and components so no surface re-derives the environment (ENV-1, ENV-2).
   customFields: {
     profile,
+    // ENV-4: the environment banner's way out to the real site.
+    productionUrl: `${PROFILES.prod.url}${PROFILES.prod.baseUrl}`,
   },
 
   i18n: {
@@ -62,8 +65,9 @@ const config: Config = {
     ],
   ],
 
-  // VER-5: records every published route and redirects retired ones (B04).
-  plugins: [cnamePlugin, routeManifestPlugin],
+  // VER-5: records every published route and redirects retired ones (B04). ENV-3: noindex and
+  // robots.txt per profile (B05).
+  plugins: [cnamePlugin, routeManifestPlugin, environmentPlugin],
 
   themeConfig: {
     navbar: {

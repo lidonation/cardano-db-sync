@@ -7,7 +7,13 @@ export default defineConfig({
     globals: true,
     coverage: {
       provider: 'v8',
-      include: ['config/**/*.ts', 'plugins/**/*.ts', 'scripts/**/*.mjs', 'docusaurus.config.ts'],
+      include: [
+        'config/**/*.ts',
+        'plugins/**/*.ts',
+        'scripts/**/*.mjs',
+        'src/wallet/**/*.ts',
+        'docusaurus.config.ts',
+      ],
       reporter: ['text-summary', 'json-summary'],
       reportsDirectory: 'coverage',
       thresholds: {
