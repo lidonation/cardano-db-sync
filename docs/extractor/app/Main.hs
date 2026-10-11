@@ -9,6 +9,7 @@
 -- lose documentation.
 module Main (main) where
 
+import Control.Exception (IOException, catch)
 import Control.Monad (unless)
 import qualified Data.ByteString as BS
 
@@ -20,10 +21,10 @@ import HaddockExtract (
   encodeArtifact,
   extractTree,
  )
-import System.Directory (createDirectoryIfMissing, doesPathExist, makeAbsolute)
+import System.Directory (canonicalizePath, createDirectoryIfMissing, doesDirectoryExist, makeAbsolute)
 import System.Environment (getArgs)
 import System.Exit (exitFailure)
-import System.FilePath (makeRelative, takeDirectory, (</>))
+import System.FilePath (takeDirectory)
 import System.IO
 
 main :: IO ()
@@ -34,7 +35,12 @@ main = do
       hPutStrLn stderr ("extract-haddock: " <> err)
       hPutStrLn stderr usage
       exitFailure
-    Right opts -> run opts
+    Right opts -> run opts `catch` reportIOError
+
+reportIOError :: IOException -> IO ()
+reportIOError err = do
+  hPutStrLn stderr ("extract-haddock: " <> show err)
+  exitFailure
 
 usage :: String
 usage =
@@ -42,8 +48,8 @@ usage =
     [ "usage: extract-haddock --repo-root DIR --out FILE [--input PATH]..."
     , "  --repo-root DIR   repository the artifact paths are relative to (default: .)"
     , "  --out FILE        artifact to write (required)"
-    , "  --input PATH      file or directory to extract (repeatable; default: cardano-db/src)."
-    , "                   Paths are repository-relative; paths that are not are resolved."
+    , "  --input PATH      file or directory to extract (repeatable; default: cardano-db/src and config Types.hs)."
+    , "                   Paths are repository-relative or absolute paths inside the repository."
     ]
 
 data Options = Options
@@ -53,11 +59,14 @@ data Options = Options
   }
 
 parseArgs :: [String] -> Either String Options
-parseArgs = go (Options "." "" ["cardano-db/src"])
+parseArgs = go (Options "." "" [])
   where
     go opts [] = case optOut opts of
       "" -> Left "missing --out FILE"
-      _ -> Right opts
+      _
+        | null (optInputs opts) ->
+            Right opts {optInputs = ["cardano-db/src", "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"]}
+        | otherwise -> Right opts
     go opts (flag : value : rest) = case flag of
       "--repo-root" -> go opts {optRoot = value} rest
       "--out" -> go opts {optOut = value} rest
@@ -67,9 +76,12 @@ parseArgs = go (Options "." "" ["cardano-db/src"])
 
 run :: Options -> IO ()
 run options = do
-  inputs <- traverse (resolveInput (optRoot options)) (optInputs options)
+  absoluteRoot <- makeAbsolute (optRoot options)
+  rootExists <- doesDirectoryExist absoluteRoot
+  unless rootExists (ioError (userError (absoluteRoot <> ": repository root does not exist")))
+  root <- canonicalizePath absoluteRoot
   started <- getMonotonicTimeNSec
-  (artifact, stats, failures) <- extractTree (optRoot options) inputs
+  (artifact, stats, failures) <- extractTree root (optInputs options)
   unless (null failures) $ do
     hPutStrLn stderr "extract-haddock: some files did not parse:"
     mapM_ (hPutStrLn stderr . T.unpack) failures
@@ -89,18 +101,6 @@ run options = do
   unless (null (tsCppFiles stats)) $
     hPutStrLn stderr ("CPP-stripped: " <> T.unpack (T.intercalate ", " (tsCppFiles stats)))
   hPutStrLn stderr ("wrote " <> optOut options)
-
--- | Inputs are repository-relative: they become the @path@ values in the
--- artifact. A caller that passes a path relative to the current directory
--- gets it resolved against the repository root either way.
-resolveInput :: FilePath -> FilePath -> IO FilePath
-resolveInput root input = do
-  rootedExists <- doesPathExist (root </> input)
-  if rootedExists
-    then pure input
-    else do
-      absolute <- makeAbsolute input
-      pure (makeRelative root absolute)
 
 writeArtifact :: FilePath -> Artifact -> IO ()
 writeArtifact path artifact = do
