@@ -95,6 +95,23 @@ describe('check:schema catches', () => {
     ]);
   });
 
+  it('an unresolved domain inside an array element', () => {
+    const problems = withArtifact((a) => {
+      const col = a.tables.find((t: {name: string}) => t.name === 'epoch_finalized').columns[1];
+      col.resolved_type = {
+        base: 'numeric(39,0)[]',
+        domains: [],
+        checks: [],
+        not_null: false,
+        element: {base: 'word128type', domains: [], checks: [], not_null: false},
+      };
+      col.fingerprint = fingerprint(col);
+    });
+    expect(problems).toEqual([
+      'epoch_finalized.out_sum [all] (element): domain word128type is unresolved (resolved_type.base names a domain)',
+    ]);
+  });
+
   it('a wrong version, Postgres major, or domain chain', () => {
     const problems = withArtifact((a) => {
       a.schemaVersion = 2;

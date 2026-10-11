@@ -41,8 +41,12 @@ function checkResolvedType(where, resolved, domains, problems) {
       problems.push(`${where}: a CHECK is not attached to a domain on the chain`);
     }
   }
-  if (typeof resolved.not_null !== 'boolean')
+  if (typeof resolved.not_null !== 'boolean') {
     problems.push(`${where}: resolved_type.not_null must be a boolean`);
+  }
+  if (resolved.element !== undefined) {
+    checkResolvedType(`${where} (element)`, resolved.element, domains, problems);
+  }
 }
 
 /**
