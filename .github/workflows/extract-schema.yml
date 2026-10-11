@@ -49,6 +49,8 @@ jobs:
   extract:
     name: Replay, test and diff
     runs-on: ubuntu-latest
+    # A replay of every migration takes seconds; a hung server should not hold a runner.
+    timeout-minutes: 10
     services:
       postgres:
         # Pinned major: catalog rendering is stable within a major, which keeps regeneration
