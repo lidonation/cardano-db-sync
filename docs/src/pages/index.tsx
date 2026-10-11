@@ -22,7 +22,8 @@ export default function Home(): React.JSX.Element {
 
   return (
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
-      <main>
+      {/* A11Y-18: placeholder copy, English in every locale until the designed page (B47). */}
+      <main lang="en">
         <h1>{siteConfig.title}</h1>
         <p>{siteConfig.tagline}</p>
         <p>

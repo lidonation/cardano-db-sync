@@ -4,8 +4,6 @@ import path from 'node:path';
 
 import type {LoadContext, Plugin} from '@docusaurus/types';
 
-import {resolveProfile} from '../../config/profiles';
-
 /** The webpack config Docusaurus hands `configureWebpack`. */
 type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
 
@@ -228,9 +226,7 @@ export function emitFontsAsFiles(config: Configuration): number {
   return changed;
 }
 
-export default function securityPlugin(_context: LoadContext): Plugin {
-  const profile = resolveProfile();
-
+export default function securityPlugin(context: LoadContext): Plugin {
   return {
     name: 'dbsync-security',
     configureWebpack(config) {
@@ -238,7 +234,8 @@ export default function securityPlugin(_context: LoadContext): Plugin {
       return {};
     },
     async postBuild({outDir, routesPaths}) {
-      await applyPolicies(outDir, routesPaths, profile.baseUrl);
+      // The locale's base, so routes are locale-relative and `/survey` is the survey in every locale.
+      await applyPolicies(outDir, routesPaths, context.baseUrl);
     },
   };
 }

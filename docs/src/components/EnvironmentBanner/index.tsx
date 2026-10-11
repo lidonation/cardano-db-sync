@@ -2,6 +2,8 @@ import React from 'react';
 
 import Translate, {translate} from '@docusaurus/Translate';
 
+import useFallbackLang from '../../i18n/useFallbackLang';
+
 import type {CardanoNetwork} from '../../../config/profiles';
 
 import styles from './styles.module.css';
@@ -23,13 +25,22 @@ export interface EnvironmentBannerProps {
  *
  * Every string goes through `<Translate>` so the banner is localised with the rest of the site
  * (I18N). The "not on mainnet" sentence is only said when it is true of the build's network.
+ * Until a locale translates the banner, it is marked as English (A11Y-18).
  */
 export default function EnvironmentBanner({
   network,
   productionUrl,
 }: EnvironmentBannerProps): React.JSX.Element {
+  const description = `environmentBanner.description.${network === 'mainnet' ? 'mainnet' : 'testnet'}`;
+  const lang = useFallbackLang([
+    'environmentBanner.ariaLabel',
+    'environmentBanner.label',
+    description,
+    'environmentBanner.productionLink',
+  ]);
   return (
     <aside
+      lang={lang}
       className={styles.banner}
       aria-label={translate({
         id: 'environmentBanner.ariaLabel',

@@ -211,6 +211,13 @@ describe('redirectPage', () => {
     expect(redirectPage('/docs', prod)).not.toMatch(/noindex/);
   });
 
+  it("points a locale's stubs at that locale's pages", () => {
+    const html = redirectPage('/docs', prod, '/ja/');
+    expect(html).toContain('url=/ja/docs"');
+    expect(html).toContain('<script src="/ja/redirect.js" data-target="/ja/docs">');
+    expect(html).toContain('href="https://dbsync.cardano.intersect.org/ja/docs"');
+  });
+
   it('escapes the target', () => {
     const html = redirectPage('/a"<b>&', prod);
     expect(html).toContain('url=/a&quot;&lt;b&gt;&amp;"');

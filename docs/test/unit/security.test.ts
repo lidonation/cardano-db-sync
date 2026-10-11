@@ -151,6 +151,13 @@ describe('routeFile', () => {
     expect(routeFile(route, '/b/')).toEqual(expected);
   });
 
+  it("maps a locale build's routes against the locale base, so policies are per page in every locale", () => {
+    expect(routeFile('/b/ja/docs/intro', '/b/ja/')).toEqual({
+      route: '/docs/intro',
+      file: 'docs/intro/index.html',
+    });
+  });
+
   it('skips routes outside the base path', () => {
     expect(routeFile('/elsewhere', '/b/')).toBeNull();
   });
@@ -188,7 +195,7 @@ describe('applyPolicies and the plugin', () => {
     const previous = process.env.DOCS_PROFILE;
     process.env.DOCS_PROFILE = 'prod';
     try {
-      const plugin = securityPlugin({} as LoadContext);
+      const plugin = securityPlugin({baseUrl: '/'} as LoadContext);
       expect(plugin.name).toBe('dbsync-security');
       await plugin.postBuild?.({outDir, routesPaths: ['/']} as Parameters<
         NonNullable<typeof plugin.postBuild>
@@ -247,7 +254,7 @@ describe('emitFontsAsFiles (SEC-2)', () => {
     const previous = process.env.DOCS_PROFILE;
     process.env.DOCS_PROFILE = 'dev';
     try {
-      const plugin = securityPlugin({} as LoadContext);
+      const plugin = securityPlugin({baseUrl: '/'} as LoadContext);
       const c = config();
       expect((plugin.configureWebpack as unknown as (c: Configuration) => object)(c)).toEqual({});
       expect(

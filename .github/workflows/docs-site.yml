@@ -58,6 +58,8 @@ jobs:
         run: npm run check:deps
       - name: No unreviewed high or critical advisory (SEC-5)
         run: npm run check:audit
+      - name: Only the current line is translatable (VER-2)
+        run: npm run check:i18n
 
       # VER-5: the route manifest is append-only. Base is the PR base, or the commit a push replaced.
       # The checkout is shallow, so fetch just the base commit rather than the repo's full history.

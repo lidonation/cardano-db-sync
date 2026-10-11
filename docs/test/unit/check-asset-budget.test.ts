@@ -8,6 +8,7 @@ import {
   gzipSize,
   initialAssets,
   kindOf,
+  localeSites,
   main,
   measure,
   overBudget,
@@ -171,5 +172,43 @@ describe('parseBudget', () => {
     await expect(
       main([root], {log: () => {}, error: () => {}}, {totals: {jss: 1}}),
     ).rejects.toThrow('not a kind');
+  });
+});
+
+describe('each locale is its own site', () => {
+  const page = '<script src="/assets/a.js"></script>';
+
+  beforeEach(async () => {
+    await write('index.html', page);
+    await write('assets/a.js', 'a'.repeat(4000));
+    for (const locale of ['ja', 'de']) {
+      await write(`${locale}/index.html`, page);
+      await write(`${locale}/assets/a.js`, 'b'.repeat(4000));
+    }
+    // A plain content directory with an assets folder but no home page is not a site.
+    await write('docs/assets/x.png', 'x');
+    await write('docs/index.html', page);
+    await fs.rm(path.join(root, 'docs', 'index.html'));
+    await write('docs/intro/index.html', page);
+  });
+
+  it('finds the locale directories that are whole sites', async () => {
+    expect(await localeSites(root)).toEqual([path.join(root, 'de'), path.join(root, 'ja')]);
+  });
+
+  it('measures the default locale without the others', async () => {
+    const all = await measure(root);
+    const own = await measure(root, await localeSites(root));
+    expect(own.totals.js).toBe(size('a'.repeat(4000)));
+    expect(all.totals.js).toBe(own.totals.js + 2 * size('b'.repeat(4000)));
+  });
+
+  it('holds every locale to the budget separately', async () => {
+    const lines: string[] = [];
+    const out = {log: (m: string) => lines.push(m), error: (m: string) => lines.push(m)};
+    const limit = size('a'.repeat(4000)) + 10;
+    expect(await main([root], out, {totals: {js: limit}})).toBe(0);
+    expect(lines.filter((l) => l.startsWith('check:budget - '))).toHaveLength(4);
+    expect(lines.join('\n')).toMatch(/\/ja \(gzip\)/);
   });
 });
