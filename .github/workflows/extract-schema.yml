@@ -1,0 +1,85 @@
+name: Extract schema fingerprints
+
+# B08 (SCH-1, GDE-6) — replays every migration into a throwaway Postgres 17, resolves each column
+# to `(name, resolved_type, nullable, default)` with domains resolved transitively, cross-checks
+# the result against the Haskell `DbInfo` records, and fails on drift between the committed
+# docs/generated/schema.json and a fresh extraction.
+#
+# Path-filtered: it runs when the migrations, the schema records, the runtime address-variant DDL,
+# the extractor, or the committed artifact change. The docs pipeline (docs-site.yml) never needs a
+# database: it only reads the committed JSON, and `check:schema` guards that the JSON is sound.
+#
+# Unlike extract-haddock, nothing is committed back: the author regenerates the artifact with
+# `npm run extract:schema` and the drift gate holds it to that.
+
+on:
+  push:
+    branches: [master, release/community-site]
+    paths:
+      - "schema/**"
+      - "cardano-db/src/Cardano/Db/Schema/**"
+      - "cardano-db/src/Cardano/Db/Statement/ConsumedTxOut.hs"
+      - "cardano-db/src/Cardano/Db/Statement/Types.hs"
+      - "docs/scripts/extract-schema.mjs"
+      - "docs/scripts/lib/schema-*.mjs"
+      - "docs/test/db/**"
+      - "docs/generated/schema.json"
+      - ".github/workflows/extract-schema.yml"
+  pull_request:
+    paths:
+      - "schema/**"
+      - "cardano-db/src/Cardano/Db/Schema/**"
+      - "cardano-db/src/Cardano/Db/Statement/ConsumedTxOut.hs"
+      - "cardano-db/src/Cardano/Db/Statement/Types.hs"
+      - "docs/scripts/extract-schema.mjs"
+      - "docs/scripts/lib/schema-*.mjs"
+      - "docs/test/db/**"
+      - "docs/generated/schema.json"
+      - ".github/workflows/extract-schema.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: extract-schema-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  extract:
+    name: Replay, test and diff
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        # Pinned major: catalog rendering is stable within a major, which keeps regeneration
+        # byte-identical. The extractor refuses any other major.
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    defaults:
+      run:
+        working-directory: docs
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+
+      - name: Replay tests (outsum chain, 2-0030 regression)
+        run: npm run test:schema-db
+
+      - name: Drift gate (SCH-1, GDE-6)
+        # `shell: bash` runs with `-o pipefail`, so the extractor's exit code survives `tee`.
+        shell: bash
+        run: npm run --silent extract:schema -- --check 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"

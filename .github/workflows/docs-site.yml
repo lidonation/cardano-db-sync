@@ -55,6 +55,8 @@ jobs:
         run: npm run check:css
       - name: Annotation artifact is consumable (CON-1)
         run: npm run check:annotations
+      - name: Schema artifact is sound (SCH-1, GDE-6)
+        run: npm run check:schema
       - name: Tokens regenerate byte-identically (THM-2, DF-1, DF-11)
         run: npm run check:tokens
       - name: Token lint (THM-4, TOK-1, TOK-10, TOK-12)
