@@ -1,0 +1,20 @@
+name: Docs site setup
+description: Node 22 with the npm cache, and optionally the docs dependencies installed.
+
+inputs:
+  install:
+    description: Run `npm ci` in docs/. Jobs that only run the dependency-free gate scripts skip it.
+    default: "true"
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v4
+      with:
+        node-version: 22
+        cache: ${{ inputs.install == 'true' && 'npm' || '' }}
+        cache-dependency-path: docs/package-lock.json
+    - if: inputs.install == 'true'
+      shell: bash
+      working-directory: docs
+      run: npm ci
