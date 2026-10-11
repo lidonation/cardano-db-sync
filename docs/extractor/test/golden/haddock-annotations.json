@@ -1,0 +1,98 @@
+{
+  "files": [
+    {
+      "annotations": [
+        {
+          "constructors": [
+            {
+              "doc": "A square, sized by its side.",
+              "fields": [
+                {
+                  "doc": "The side length, in drawing units.",
+                  "name": "side"
+                }
+              ],
+              "name": "Square"
+            },
+            {
+              "doc": "A circle, sized by its radius.",
+              "fields": [
+                {
+                  "doc": "The radius, in drawing units.",
+                  "name": "radius"
+                }
+              ],
+              "name": "Circle"
+            }
+          ],
+          "doc": "A documented geometric shape.",
+          "kind": "data",
+          "line": 17,
+          "name": "Shape",
+          "position": "before"
+        },
+        {
+          "doc": "Things that can be rendered as one line of text.",
+          "kind": "class",
+          "line": 31,
+          "name": "Describable",
+          "position": "before"
+        },
+        {
+          "doc": "Render the value as a single line.",
+          "kind": "class-method",
+          "line": 33,
+          "name": "describe",
+          "position": "before"
+        },
+        {
+          "doc": "The area of the value.\nAttached to the method above.",
+          "kind": "class-method",
+          "line": 36,
+          "name": "area",
+          "position": "before"
+        },
+        {
+          "doc": "Compute the area of a shape.\n\nUsed by the schema explorer to show relative sizes.",
+          "kind": "function",
+          "line": 42,
+          "name": "area",
+          "position": "before"
+        },
+        {
+          "doc": "A distance in drawing units.",
+          "kind": "type-synonym",
+          "line": 48,
+          "name": "Length",
+          "position": "before"
+        },
+        {
+          "doc": "Rendering",
+          "kind": "section",
+          "line": 50,
+          "name": "",
+          "position": "section",
+          "sectionLevel": 1
+        },
+        {
+          "doc": "How to draw the shape described above.",
+          "kind": "named",
+          "line": 56,
+          "name": "setup",
+          "position": "named"
+        },
+        {
+          "doc": "Shapes describe themselves.",
+          "kind": "instance",
+          "line": 63,
+          "name": "Describable Shape",
+          "position": "before"
+        }
+      ],
+      "header": "Fixture module for the golden test.\n\nEvery documented shape the extractor understands appears here once; the golden file pins the\nexact association rules. The B07 DoD verification adds an annotation to this file (the same way\nit adds one to a schema module) and checks that it appears in the artifact on the next run.",
+      "module": "Sample",
+      "path": "test/fixtures/Sample.hs"
+    }
+  ],
+  "schemaVersion": 1
+}

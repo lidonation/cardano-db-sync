@@ -6,7 +6,14 @@ import {readdir} from 'node:fs/promises';
 import path from 'node:path';
 
 /** Directories no gate scans, wherever they sit. */
-export const SKIP_DIRS = new Set(['node_modules', 'build', '.docusaurus', 'coverage', '.git']);
+export const SKIP_DIRS = new Set([
+  'node_modules',
+  'build',
+  '.docusaurus',
+  'coverage',
+  '.git',
+  'dist-newstyle',
+]);
 
 /** The generated token stylesheet, relative to the docs root: the one place colours are defined. */
 export const TOKENS_CSS = 'src/css/tokens.css';

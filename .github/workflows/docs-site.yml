@@ -53,6 +53,8 @@ jobs:
         run: npm run check:baseurl
       - name: Style gates (FLOOR-4, FLOOR-8, PERF-3, PERF-5, DF-1, TOK-1, TOK-4, TOK-5)
         run: npm run check:css
+      - name: Annotation artifact is consumable (CON-1)
+        run: npm run check:annotations
       - name: Tokens regenerate byte-identically (THM-2, DF-1, DF-11)
         run: npm run check:tokens
       - name: Token lint (THM-4, TOK-1, TOK-10, TOK-12)
