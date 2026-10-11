@@ -2,28 +2,10 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import {fileURLToPath} from 'node:url';
-
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {SIZE_LIMIT, TIME_LIMIT, main, treeSize} from '../../scripts/check-publish.mjs';
-
-/** Import the script as `node` would run it, so its command-line entry point executes. */
-async function runAsScript(script: string, args: string[], env: NodeJS.ProcessEnv = {}) {
-  const argv = process.argv;
-  const saved = {...process.env};
-  process.argv = [argv[0], fileURLToPath(new URL(script, import.meta.url)), ...args];
-  Object.assign(process.env, env);
-  try {
-    const specifier = `${script}?cli=${Math.random()}`;
-    await import(/* @vite-ignore */ specifier);
-    return process.exitCode;
-  } finally {
-    process.argv = argv;
-    process.env = saved;
-    process.exitCode = undefined;
-  }
-}
+import {runAsScript} from './run-as-script';
 
 let dir: string;
 const lines: string[] = [];
