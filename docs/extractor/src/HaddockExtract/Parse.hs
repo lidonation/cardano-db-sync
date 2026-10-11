@@ -14,9 +14,8 @@ module HaddockExtract.Parse (
 )
 where
 
-import Data.Foldable (toList)
 import Data.Text (Text)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import GHC.Data.EnumSet (EnumSet, empty, fromList)
 import GHC.Data.FastString (mkFastString)
 import GHC.Data.StringBuffer (stringToStringBuffer)
@@ -152,13 +151,13 @@ parserExtensions =
 -- too). A file that needed this is flagged in the artifact (@cpp: true@).
 stripCpp :: Text -> (Text, Bool)
 stripCpp src
-  | any isDirective (T.lines src) = (T.unlines (filter (not . isDirective) (T.lines src)), True)
+  | any isDirective (Text.lines src) = (Text.unlines (map (\line -> if isDirective line then "" else line) (Text.lines src)), True)
   | otherwise = (src, False)
   where
-    isDirective line = case T.dropWhile (== ' ') line of
-      rest -> not (T.null rest) && T.head rest == '#'
+    isDirective line = case Text.stripStart line of
+      rest -> not (Text.null rest) && Text.head rest == '#'
 
--- | Parse a Haskell source with Haddock comments attached to the AST.
+-- | Parse a Haskell source with Haddock comments attached to the ASText.
 --
 -- A file that fails to parse — or that leaves the parser with diagnostics
 -- after producing a module — is reported as 'Failed': a file that does not
@@ -167,18 +166,18 @@ parseSource :: Text -> FilePath -> ParseOutcome
 parseSource source path =
   case unP parseModule initialState of
     POk final lmod
-      | errorsFound errs -> Failed (T.pack path <> ":\n" <> renderMessages errs)
+      | errorsFound errs -> Failed (Text.pack path <> ":\n" <> renderMessages errs)
       | otherwise -> Parsed False header lmod
       where
         (_, errs) = getPsMessages final
-        header = fmap (T.pack . renderHsDocString . hsDocString . unLoc) (moduleHeader lmod)
+        header = fmap (Text.pack . renderHsDocString . hsDocString . unLoc) (moduleHeader lmod)
     PFailed final ->
-      Failed (T.pack path <> ":\n" <> renderMessages (getPsErrorMessages final))
+      Failed (Text.pack path <> ":\n" <> renderMessages (getPsErrorMessages final))
   where
     initialState =
       initParserState
         options
-        (stringToStringBuffer (T.unpack source))
+        (stringToStringBuffer (Text.unpack source))
         (mkRealSrcLoc (mkFastString path) 1 1)
     options =
       mkParserOpts
@@ -188,14 +187,14 @@ parseSource source path =
         False -- safe imports off: files may carry Safe Haskell pragmas
         True -- keep Haddock comment tokens — the point of the extractor
         False -- regular comments carry no documentation
-        True -- honour LINE/COLUMN pragmas when computing positions
+        False -- report physical source lines, not remapped LINE/COLUMN positions
 
 moduleHeader :: Located (HsModule GhcPs) -> Maybe (LHsDoc GhcPs)
 moduleHeader = unLoc . fmap (hsmodHaddockModHeader . hsmodExt)
 
 renderMessages :: Messages PsMessage -> Text
 renderMessages msgs =
-  T.pack (showSDocOneLine defaultSDocContext (pprMessages diag msgs))
+  Text.pack (showSDocOneLine defaultSDocContext (pprMessages diag msgs))
   where
     diag = defaultDiagnosticOpts @PsMessage
 

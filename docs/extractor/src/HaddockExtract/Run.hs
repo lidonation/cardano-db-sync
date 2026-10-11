@@ -12,15 +12,15 @@ module HaddockExtract.Run (
   TreeStats (..),
 ) where
 
+import Control.Exception (IOException, try)
+import Control.Monad (unless, when)
+import qualified Data.ByteString as BS
 import Data.Either (lefts, rights)
 import Data.List (nub, sort, sortBy)
 import Data.Ord (comparing)
 import Data.Text (Text)
-import qualified Data.Text as T
-import qualified Data.ByteString as BS
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TE
-import Control.Exception (IOException, try)
-import Control.Monad (unless, when)
 import GHC.Types.SrcLoc (unLoc)
 import HaddockExtract.Model
 import HaddockExtract.Parse (ParseOutcome (..), parseSource, stripCpp)
@@ -43,14 +43,14 @@ extractFile :: FilePath -> FilePath -> IO (Either Text ModuleAnnotations)
 extractFile root path = do
   result <- try (BS.readFile (root </> path)) :: IO (Either IOException BS.ByteString)
   pure $ case result of
-    Left err -> Left (T.pack path <> ": cannot read source: " <> T.pack (show err))
+    Left err -> Left (Text.pack path <> ": cannot read source: " <> Text.pack (show err))
     Right bytes -> case TE.decodeUtf8' bytes of
-      Left err -> Left (T.pack path <> ": invalid UTF-8: " <> T.pack (show err))
+      Left err -> Left (Text.pack path <> ": invalid UTF-8: " <> Text.pack (show err))
       Right source ->
         let (stripped, cpp) = stripCpp source
          in case parseSource stripped path of
               Parsed _ _ lmod ->
-                Right (moduleAnnotations cpp (T.pack (posixPath path)) (unLoc lmod))
+                Right (moduleAnnotations cpp (Text.pack (posixPath path)) (unLoc lmod))
               Failed err -> Left err
 
 -- | Every Haskell file under the given repository-relative paths, path-sorted
@@ -74,13 +74,15 @@ collectHaskellFiles root inputs = do
       isDir <- doesDirectoryExist canonical
       symbolic <- pathIsSymbolicLink path
       if isDir
-        then if symbolic
-          then if explicit
-            then ioError (userError (path <> ": symbolic-link directories are not supported"))
-            else pure [] -- Never follow directory links, including cycles.
-          else do
-            entries <- listDirectory canonical
-            concat <$> traverse (walk canonicalRoot False . (canonical </>)) entries
+        then
+          if symbolic
+            then
+              if explicit
+                then ioError (userError (path <> ": symbolic-link directories are not supported"))
+                else pure [] -- Never follow directory links, including cycles.
+            else do
+              entries <- listDirectory canonical
+              concat <$> traverse (walk canonicalRoot False . (canonical </>)) entries
         else do
           isFile <- doesFileExist canonical
           pure [relative | isFile && FP.isExtensionOf ".hs" canonical]

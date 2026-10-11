@@ -22,22 +22,23 @@ module HaddockExtract.Walk (
 where
 
 import Data.Foldable (toList)
-import Data.List (foldl')
-import Data.List.NonEmpty (NonEmpty (..))
+import Data.List (foldl', sortOn)
 import Data.Maybe (fromMaybe, mapMaybe)
 import Data.Set (Set)
 import qualified Data.Set as Set
 import Data.Text (Text)
-import qualified Data.Text as T
+import qualified Data.Text as Text
+import GHC.Data.Bag (bagToList)
 import GHC.Hs
 import GHC.Types.Name.Occurrence (occNameString)
 import GHC.Types.Name.Reader (RdrName, rdrNameOcc)
-import GHC.Types.SrcLoc (GenLocated (..), SrcSpan (..), srcSpanStartLine, unLoc)
+import GHC.Types.SrcLoc (GenLocated (..), SrcSpan (..), srcSpanStartCol, srcSpanStartLine, unLoc)
+import GHC.Utils.Outputable (Outputable, defaultSDocContext, ppr, showSDocOneLine)
 import HaddockExtract.Model
 
 -- | The module name, if the module header carries one.
 moduleNameText :: HsModule GhcPs -> Maybe Text
-moduleNameText = fmap (T.pack . moduleNameString . unLoc) . hsmodName
+moduleNameText = fmap (Text.pack . moduleNameString . unLoc) . hsmodName
 
 -- | Everything extracted from one parsed module.
 moduleAnnotations :: Bool -> Text -> HsModule GhcPs -> ModuleAnnotations
@@ -56,10 +57,12 @@ moduleAnnotations cpp path hsmod =
 -- the right declaration) and drops them here.
 walkModule :: HsModule GhcPs -> [Annotation]
 walkModule hsmod =
-  filter (not . T.null . annDoc) (wOut (foldl' step initWalker (declItems bound decls)))
+  reverse (filter documented (wOut (foldl' step initWalker (declItems bound decls))))
   where
     decls = hsmodDecls hsmod
     bound = boundValueNames decls
+    documented a = not (Text.null (annDoc a)) || any constructorDocumented (annConstructors a)
+    constructorDocumented c = not (Text.null (conDoc c)) || not (all (Text.null . fieldDoc) (conFields c))
 
 -- Bound value names -------------------------------------------------------
 
@@ -86,7 +89,7 @@ data Item
   | ItemSection Int Int Text
   | -- | A real declaration: its line, its skeleton (when the extractor
     -- recognises it) and any nested annotations it yields (class methods).
-    ItemDecl Int (Maybe AnnSkeleton) [Annotation]
+    ItemDecl Int [AnnSkeleton] [Annotation]
 
 -- | Everything the extractor knows about a declaration before its Haddock
 -- comment is attached.
@@ -103,21 +106,27 @@ declItems bound = mapMaybe classify
     classify ldecl = case unLoc ldecl of
       DocD _ docDecl -> Just (docItem (startLine (getLocA ldecl)) docDecl)
       TyClD _ tyCl ->
-        Just (ItemDecl (startLine (getLocA ldecl)) (tyClSkeleton bound tyCl) (tyClExtras tyCl))
+        Just (ItemDecl (startLine (getLocA ldecl)) (maybe [] pure (tyClSkeleton bound tyCl)) (tyClExtras tyCl))
       SigD _ sig ->
         Just (ItemDecl (startLine (getLocA ldecl)) (sigSkeleton bound sig) [])
       ValD _ bind ->
         Just (ItemDecl (startLine (getLocA ldecl)) (bindSkeleton bind) [])
-      InstD _ _ ->
-        Just (ItemDecl (startLine (getLocA ldecl)) (Just (AnnSkeleton "" InstanceKind [])) [])
+      InstD _ inst ->
+        let name = case inst of
+              ClsInstD {cid_inst = ClsInstDecl {cid_poly_ty}} -> pretty cid_poly_ty
+              _ -> pretty inst
+         in Just (ItemDecl (startLine (getLocA ldecl)) [AnnSkeleton name InstanceKind []] [])
       ForD _ fd ->
         Just
           ( ItemDecl
               (startLine (getLocA ldecl))
-              (Just (AnnSkeleton (rdrNameText (unLoc (fd_name fd))) ForeignKind []))
+              [AnnSkeleton (rdrNameText (unLoc (fd_name fd))) ForeignKind []]
               []
           )
-      _ -> Nothing
+      _ -> Just (ItemDecl (startLine (getLocA ldecl)) [] [])
+
+pretty :: Outputable a => a -> Text
+pretty value = Text.pack (showSDocOneLine defaultSDocContext (ppr value))
 
 startLine :: SrcSpan -> Int
 startLine (RealSrcSpan r _) = srcSpanStartLine r
@@ -137,17 +146,18 @@ docItem ln docDecl = case docDecl of
 -- it is dropped from every line. Leading and trailing blank lines go too, so
 -- consumers see the documentation exactly as the author wrote it.
 renderDoc :: LHsDoc GhcPs -> Text
-renderDoc = normaliseDoc . T.pack . renderHsDocString . hsDocString . unLoc
+renderDoc = normaliseDoc . Text.pack . renderHsDocString . hsDocString . unLoc
 
 normaliseDoc :: Text -> Text
-normaliseDoc = T.stripEnd . T.intercalate "\n" . map dropDecoratorSpace . T.lines
+normaliseDoc = Text.intercalate "\n" . trimBlank . map dropDecoratorSpace . Text.lines
   where
-    dropDecoratorSpace t = case T.uncons t of
+    trimBlank = reverse . dropWhile (Text.null . Text.strip) . reverse . dropWhile (Text.null . Text.strip)
+    dropDecoratorSpace t = case Text.uncons t of
       Just (' ', rest) -> rest
       _ -> t
 
 rdrNameText :: RdrName -> Text
-rdrNameText = T.pack . occNameString . rdrNameOcc
+rdrNameText = Text.pack . occNameString . rdrNameOcc
 
 -- Skeletons ----------------------------------------------------------------
 
@@ -175,15 +185,15 @@ dataKind cons = case cons of
 
 dataConstructors :: HsDataDefn GhcPs -> [Constructor]
 dataConstructors defn =
-  [ Constructor (conDeclName con) (fromMaybe "" (fmap renderDoc (conDeclDoc con))) (conDeclFields con)
+  [ Constructor name (maybe "" renderDoc (conDeclDoc con)) (conDeclFields con)
   | (L _ con) <- toList (dd_cons defn)
+  , name <- conDeclNames con
   ]
 
-conDeclName :: ConDecl GhcPs -> Text
-conDeclName con = case con of
-  ConDeclH98 {con_name} -> rdrNameText (unLoc con_name)
-  ConDeclGADT {con_names} -> case con_names of
-    name :| _ -> rdrNameText (unLoc name)
+conDeclNames :: ConDecl GhcPs -> [Text]
+conDeclNames con = case con of
+  ConDeclH98 {con_name} -> [rdrNameText (unLoc con_name)]
+  ConDeclGADT {con_names} -> map (rdrNameText . unLoc) (toList con_names)
 
 conDeclDoc :: ConDecl GhcPs -> Maybe (LHsDoc GhcPs)
 conDeclDoc con = case con of
@@ -192,36 +202,32 @@ conDeclDoc con = case con of
 
 conDeclFields :: ConDecl GhcPs -> [ConField]
 conDeclFields con = case con of
-  ConDeclH98 {con_args = RecCon flds} -> map conField (unLoc flds)
-  ConDeclGADT {con_g_args = RecConGADT flds _} -> map conField (unLoc flds)
+  ConDeclH98 {con_args = RecCon flds} -> concatMap conFieldsFor (unLoc flds)
+  ConDeclGADT {con_g_args = RecConGADT flds _} -> concatMap conFieldsFor (unLoc flds)
   _ -> []
   where
-    conField (L _ ConDeclField {cd_fld_names, cd_fld_doc}) =
-      ConField
-        (fieldOccName (firstField cd_fld_names))
-        (fromMaybe "" (fmap renderDoc cd_fld_doc))
+    conFieldsFor (L _ ConDeclField {cd_fld_names, cd_fld_doc}) =
+      [ ConField (fieldOccName name) (maybe "" renderDoc cd_fld_doc)
+      | name <- cd_fld_names
+      ]
 
 fieldOccName :: LFieldOcc GhcPs -> Text
 fieldOccName = rdrNameText . unLoc . foLabel . unLoc
 
-firstField :: [a] -> a
-firstField [] = errorWithoutStackTrace "a record field always has a name"
-firstField (x : _) = x
-
-sigSkeleton :: Set Text -> Sig GhcPs -> Maybe AnnSkeleton
+sigSkeleton :: Set Text -> Sig GhcPs -> [AnnSkeleton]
 sigSkeleton bound sig = case sig of
-  TypeSig _ names _ -> case names of
-    [] -> Nothing
-    name : _ ->
-      let nm = rdrNameText (unLoc name)
-       in Just (AnnSkeleton nm (if Set.member nm bound then FunctionKind else SignatureKind) [])
-  _ -> Nothing
+  TypeSig _ names _ ->
+    [ AnnSkeleton nm (if Set.member nm bound then FunctionKind else SignatureKind) []
+    | name <- names
+    , let nm = rdrNameText (unLoc name)
+    ]
+  _ -> []
 
-bindSkeleton :: HsBind GhcPs -> Maybe AnnSkeleton
+bindSkeleton :: HsBind GhcPs -> [AnnSkeleton]
 bindSkeleton bind = case bind of
-  FunBind {fun_id} -> Just (AnnSkeleton (rdrNameText (unLoc fun_id)) FunctionKind [])
-  PatBind {} -> Just (AnnSkeleton "" BindingKind [])
-  _ -> Nothing
+  FunBind {fun_id} -> [AnnSkeleton (rdrNameText (unLoc fun_id)) FunctionKind []]
+  PatBind {pat_lhs} -> [AnnSkeleton (rdrNameText name) BindingKind [] | name <- collectPatBinders CollNoDictBinders pat_lhs]
+  _ -> []
 
 -- Class bodies --------------------------------------------------------------
 
@@ -230,14 +236,15 @@ bindSkeleton bind = case bind of
 -- source position. A doc before a signature documents that method; a doc
 -- after one attaches to it; a named chunk or section heading stands alone.
 tyClExtras :: TyClDecl GhcPs -> [Annotation]
-tyClExtras ClassDecl {tcdSigs, tcdDocs} =
-  methodDocs methodEntities tcdDocs
+tyClExtras ClassDecl {tcdSigs, tcdDocs, tcdATs, tcdATDefs, tcdMeths} =
+  methodDocs declarations tcdDocs
   where
-    methodEntities =
-      [ (startLine (getLocA s), nm)
-      | s@(L _ sig) <- tcdSigs
-      , nm <- sigNames sig
-      ]
+    item located skeletons = (sourcePosition (getLocA located), ItemDecl (startLine (getLocA located)) skeletons [])
+    declarations =
+      [item sig [AnnSkeleton name ClassMethodKind [] | name <- sigNames (unLoc sig)] | sig <- tcdSigs]
+        ++ [item family [AnnSkeleton (rdrNameText (unLoc (fdLName (unLoc family)))) (familyKind (fdInfo (unLoc family))) []] | family <- tcdATs]
+        ++ [item def [] | def <- tcdATDefs]
+        ++ [item bind [skeleton {skKind = ClassMethodKind} | skeleton <- bindSkeleton (unLoc bind)] | bind <- bagToList tcdMeths]
 tyClExtras _ = []
 
 sigNames :: Sig GhcPs -> [Text]
@@ -246,74 +253,45 @@ sigNames sig = case sig of
   ClassOpSig _ _ names _ -> map (rdrNameText . unLoc) names
   _ -> []
 
-methodDocs :: [(Int, Text)] -> [LDocDecl GhcPs] -> [Annotation]
-methodDocs entities = mapMaybe attach
+sourcePosition :: SrcSpan -> (Int, Int)
+sourcePosition (RealSrcSpan r _) = (srcSpanStartLine r, srcSpanStartCol r)
+sourcePosition _ = (0, 0)
+
+methodDocs :: [((Int, Int), Item)] -> [LDocDecl GhcPs] -> [Annotation]
+methodDocs declarations docs = reverse (wOut (foldl' step initWalker items))
   where
-    attach :: LDocDecl GhcPs -> Maybe Annotation
-    attach dloc = case unLoc dloc of
-      DocCommentNext doc ->
-        Just (method (startLine (getLocA dloc)) (renderDoc doc) Before)
-      DocCommentPrev doc ->
-        Just (method (startLine (getLocA dloc)) (renderDoc doc) After)
-      DocCommentNamed nm doc ->
-        Just (namedAnnotation nm (renderDoc doc) (startLine (getLocA dloc)))
-      DocGroup lvl doc ->
-        Just (sectionAnnotation lvl (renderDoc doc) (startLine (getLocA dloc)))
-    method ln doc pos =
-      Annotation
-        { annName = lookupEntity ln pos
-        , annKind = ClassMethodKind
-        , annLine = ln
-        , annDoc = doc
-        , annPosition = pos
-        , annConstructors = []
-        , annSectionLevel = Nothing
-        }
-    lookupEntity ln pos = case pos of
-      -- A "-- |" doc sits above the signature it documents.
-      Before -> fromMaybe "" (firstAfterEntities ln)
-      -- A "-- ^" doc sits below the signature it documents.
-      After -> fromMaybe "" (lastBeforeEntities ln)
-      _ -> ""
-    firstAfterEntities ln = case dropWhile ((<= ln) . fst) entities of
-      ((_, nm) : _) -> Just nm
-      [] -> Nothing
-    lastBeforeEntities ln = case filter ((< ln) . fst) entities of
-      xs -> case reverse xs of
-        ((_, nm) : _) -> Just nm
-        [] -> Nothing
+    items = map snd (sortOn fst (declarations ++ comments))
+    comments = [(sourcePosition (getLocA d), docItem (startLine (getLocA d)) (unLoc d)) | d <- docs]
 
 -- Folding ------------------------------------------------------------------
 
--- | The walker state. 'wOut' is kept reversed, and 'wLastPos' indexes it from
--- the head (0 = most recently emitted annotation).
+-- | The output is kept reversed. Following comments attach to every name
+-- in the most recent declaration, not to nested methods or section headings.
 data Walker = Walker
   { wPendingNext :: Maybe Text
-  , wLastPos :: Maybe Int
+  , wLastPositions :: [Int]
   , wOut :: [Annotation]
   }
 
 initWalker :: Walker
-initWalker = Walker Nothing Nothing []
+initWalker = Walker Nothing [] []
 
 step :: Walker -> Item -> Walker
 step w item = case item of
-  ItemNext doc -> w {wPendingNext = Just doc}
-  ItemPrev ln doc -> case wLastPos w of
-    Just pos -> w {wOut = patch pos (attachPrevDoc doc) (wOut w)}
-    Nothing ->
-      w {wOut = Annotation "" BindingKind ln doc After [] Nothing : wOut w, wLastPos = Just 0}
-  ItemNamed nm ln doc -> emitGroup w [namedAnnotation nm doc ln]
-  ItemSection lvl ln doc -> emitGroup w [sectionAnnotation lvl doc ln]
-  ItemDecl ln mskel extras -> case fmap (\sk -> skeletonToAnnotation sk ln (wPendingNext w)) mskel of
-    Just ann -> emitGroup (w {wPendingNext = Nothing}) (ann : extras)
-    Nothing -> emitGroup w extras
+  ItemNext doc -> w {wPendingNext = Just (maybe doc (\previous -> previous <> "\n" <> doc) (wPendingNext w))}
+  ItemPrev _ doc -> w {wOut = foldl' (\out pos -> patch pos (attachPrevDoc doc) out) (wOut w) (wLastPositions w)}
+  ItemNamed nm ln doc -> emitGroup (w {wPendingNext = Nothing}) [] [namedAnnotation nm doc ln]
+  ItemSection lvl ln doc -> emitGroup (w {wPendingNext = Nothing}) [] [sectionAnnotation lvl doc ln]
+  ItemDecl ln skeletons extras ->
+    let anns = map (\sk -> skeletonToAnnotation sk ln (wPendingNext w)) skeletons
+        positions = [length (anns ++ extras) - length anns .. length (anns ++ extras) - 1]
+     in emitGroup (w {wPendingNext = Nothing}) positions (anns ++ extras)
 
 -- | A @-- ^@ document attaches to an entity that already has its @-- |@
 -- document by appending: both are part of the declaration's documentation.
 attachPrevDoc :: Text -> Annotation -> Annotation
 attachPrevDoc doc ann
-  | T.null (annDoc ann) = ann {annDoc = doc}
+  | Text.null (annDoc ann) = ann {annDoc = doc}
   | otherwise = ann {annDoc = annDoc ann <> "\n" <> doc}
 
 patch :: Int -> (a -> a) -> [a] -> [a]
@@ -326,14 +304,13 @@ patch n f = go n
 -- | Emit a group of annotations. The LAST emitter is the most recent, except
 -- that a following @-- ^@ must still attach to the group's first member (the
 -- declaration itself), so the position is kept on the first item.
-emitGroup :: Walker -> [Annotation] -> Walker
-emitGroup w anns
-  | null anns = w
-  | otherwise = w {wLastPos = Just (length anns - 1), wOut = reverse anns ++ wOut w}
+emitGroup :: Walker -> [Int] -> [Annotation] -> Walker
+emitGroup w positions anns =
+  w {wLastPositions = positions, wOut = reverse anns ++ wOut w}
 
 namedAnnotation :: String -> Text -> Int -> Annotation
 namedAnnotation nm doc ln =
-  Annotation {annName = T.pack nm, annKind = NamedKind, annLine = ln, annDoc = doc, annPosition = Named, annConstructors = [], annSectionLevel = Nothing}
+  Annotation {annName = Text.pack nm, annKind = NamedKind, annLine = ln, annDoc = doc, annPosition = Named, annConstructors = [], annSectionLevel = Nothing}
 
 sectionAnnotation :: Int -> Text -> Int -> Annotation
 sectionAnnotation lvl doc ln =

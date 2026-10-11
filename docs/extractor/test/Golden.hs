@@ -18,7 +18,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Char8 as BC
 import Data.List (find)
 import Data.Maybe (fromMaybe)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import HaddockExtract
 import System.Directory (listDirectory)
 import System.Environment (getArgs)
@@ -36,7 +36,7 @@ main = do
   (artifact, stats, failures) <- extractTree "." [fixtureDir]
   unless (null failures) $ do
     hPutStrLn stderr "golden-test: fixtures did not parse:"
-    forM_ failures (hPutStrLn stderr . T.unpack)
+    forM_ failures (hPutStrLn stderr . Text.unpack)
     exitFailure
 
   -- One artifact entry per fixture file, and the fixture is documented.
@@ -68,19 +68,12 @@ main = do
       ]
 
   assertEntity
-    "class method documented below"
-    (\a -> annKind a == ClassMethodKind && annName a == "area" && annPosition a == After)
+    "class method joins its before and after comments"
+    (\a -> annKind a == ClassMethodKind && annName a == "area")
     annotations
     $ \a ->
-      [ "doc" `holds` (annDoc a == "Attached to the method above.")
-      ]
-
-  assertEntity
-    "class method documented above"
-    (\a -> annKind a == ClassMethodKind && annName a == "area" && annPosition a == Before)
-    annotations
-    $ \a ->
-      [ "doc" `holds` (annDoc a == "The area of the value.")
+      [ "doc" `holds` (annDoc a == "The area of the value.\nAttached to the method above.")
+      , "line" `holds` (annLine a == 36)
       ]
 
   assertEntity
@@ -111,7 +104,7 @@ main = do
     (\a -> annKind a == NamedKind && annName a == "setup")
     annotations
     $ \a ->
-      [ "doc" `holds` ("How to draw the shape described above." `T.isInfixOf` annDoc a)
+      [ "doc" `holds` ("How to draw the shape described above." `Text.isInfixOf` annDoc a)
       ]
 
   assertEntity
@@ -127,7 +120,7 @@ main = do
         [moduleAnn] ->
           [
             ( "header"
-            , "Fixture module for the golden test." `T.isPrefixOf` fromMaybe "" (modHeader moduleAnn)
+            , "Fixture module for the golden test." `Text.isPrefixOf` fromMaybe "" (modHeader moduleAnn)
             )
           , ("module", modModule moduleAnn == Just "Sample")
           , ("path", modPath moduleAnn == "test/fixtures/Sample.hs")
@@ -141,7 +134,7 @@ main = do
   expected <- BS.readFile goldenPath
   let actual = encodeArtifact artifact
   if actual == expected
-    then hPutStrLn stdout "golden-test: the artifact matches the golden file"
+    then putStrLn "golden-test: the artifact matches the golden file"
     else do
       hPutStrLn stderr ("golden-test: artifact differs from " <> goldenPath)
       hPutStrLn stderr (diff expected actual)

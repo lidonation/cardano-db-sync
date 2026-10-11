@@ -13,7 +13,7 @@ import Control.Exception (IOException, catch)
 import Control.Monad (unless)
 import qualified Data.ByteString as BS
 
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import GHC.Clock (getMonotonicTimeNSec)
 import HaddockExtract (
   Artifact (..),
@@ -84,7 +84,7 @@ run options = do
   (artifact, stats, failures) <- extractTree root (optInputs options)
   unless (null failures) $ do
     hPutStrLn stderr "extract-haddock: some files did not parse:"
-    mapM_ (hPutStrLn stderr . T.unpack) failures
+    mapM_ (hPutStrLn stderr . Text.unpack) failures
     exitFailure
   writeArtifact (optOut options) artifact
   elapsed <- (/ 1e9) . fromIntegral . subtract started <$> getMonotonicTimeNSec
@@ -99,7 +99,7 @@ run options = do
           <> showElapsed elapsed
   hPutStrLn stderr summary
   unless (null (tsCppFiles stats)) $
-    hPutStrLn stderr ("CPP-stripped: " <> T.unpack (T.intercalate ", " (tsCppFiles stats)))
+    hPutStrLn stderr ("CPP-stripped: " <> Text.unpack (Text.intercalate ", " (tsCppFiles stats)))
   hPutStrLn stderr ("wrote " <> optOut options)
 
 writeArtifact :: FilePath -> Artifact -> IO ()

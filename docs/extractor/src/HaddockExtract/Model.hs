@@ -31,7 +31,7 @@ import qualified Data.ByteString.Lazy as BL
 import Data.List (sortOn)
 import Data.Scientific (Scientific)
 import Data.Text (Text)
-import qualified Data.Text as T
+import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TE
 import qualified Data.Vector as V
 
@@ -137,7 +137,7 @@ data ModuleAnnotations = ModuleAnnotations
   deriving (Eq, Show)
 
 -- | The whole committed artifact.
-data Artifact = Artifact
+newtype Artifact = Artifact
   { artFiles :: [ModuleAnnotations]
   }
   deriving (Eq, Show)
@@ -150,18 +150,12 @@ instance ToJSON ConField where
       ]
 
 instance ToJSON Constructor where
-  toJSON Constructor {..}
-    | null conFields =
-        object
-          [ "name" .= conName
-          , "doc" .= conDoc
-          ]
-    | otherwise =
-        object
-          [ "name" .= conName
-          , "doc" .= conDoc
-          , "fields" .= conFields
-          ]
+  toJSON Constructor {..} =
+    object
+      [ "name" .= conName
+      , "doc" .= conDoc
+      , "fields" .= conFields
+      ]
 
 instance ToJSON Annotation where
   toJSON Annotation {..} =
@@ -260,7 +254,7 @@ pad :: Int -> Builder
 pad n = byteString (BS.replicate (fromIntegral (2 * n)) 0x20)
 
 renderString :: Text -> Builder
-renderString t = byteString "\"" <> foldMap escapeChar (T.unpack t) <> byteString "\""
+renderString t = byteString "\"" <> foldMap escapeChar (Text.unpack t) <> byteString "\""
 
 escapeChar :: Char -> Builder
 escapeChar c = case c of
@@ -273,13 +267,12 @@ escapeChar c = case c of
   '\t' -> "\\t"
   _
     | c < '\x20' -> "\\u" <> hex4 (fromEnum c)
-    | otherwise -> TE.encodeUtf8Builder (T.singleton c)
+    | otherwise -> TE.encodeUtf8Builder (Text.singleton c)
 
 hex4 :: Int -> Builder
 hex4 n =
   mconcat
-    [ "0"
-    , hexD (n `div` 4096)
+    [ hexD (n `div` 4096)
     , hexD ((n `div` 256) `mod` 16)
     , hexD ((n `div` 16) `mod` 16)
     , hexD (n `mod` 16)
