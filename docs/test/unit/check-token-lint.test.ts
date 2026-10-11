@@ -78,7 +78,7 @@ describe('TOK-1 / TOK-10 in code', () => {
   it('flags a hex colour string in component code, not a hex-free anchor', () => {
     const problems = findCodeProblems('src/a.tsx', "const c = '#0f1117';\nconst a = '#faq-item';");
     expect(problems).toEqual([
-      {line: 1, rule: 'TOK-1', message: "hex colour '#0f1117' - use a --dbs-* token"},
+      {line: 1, rule: 'TOK-1', message: "colour literal '#0f1117' - use a --dbs-* token"},
     ]);
   });
 
@@ -126,7 +126,7 @@ describe('check:token-lint over a tree', () => {
     await write('src/a.tsx', "const c = '#fff';");
     const {lines, out} = recorder();
     expect(await main({root, out})).toBe(1);
-    expect(lines.join('\n')).toMatch(/dark\.surface\.base {2}THM-4 {2}no-op override/);
+    expect(lines.join('\n')).toMatch(/dark\.surface\.base {2}TOK-12 {2}no-op override/);
     expect(lines.join('\n')).toMatch(/src\/a\.tsx:1 {2}TOK-1/);
   });
 
@@ -135,5 +135,59 @@ describe('check:token-lint over a tree', () => {
     const {lines, out} = recorder();
     expect(await main({root, out})).toBe(2);
     expect(lines.join('\n')).toMatch(/cannot read/);
+  });
+});
+
+describe('B03 gaps closed in review', () => {
+  it.each([
+    "const s = {border: '1px solid #30363d'};",
+    'const c = "rgba(0, 0, 0, 0.5)";',
+    'const g = `linear-gradient(#0f1117cc, hsl(200 50% 50%))`;',
+  ])('TOK-1 flags a colour inside a longer string: %s', (code) => {
+    expect(findCodeProblems('src/components/x.tsx', code).map((p) => p.rule)).toEqual(['TOK-1']);
+  });
+
+  it.each(['<a href="#add">Add</a>', '<Link to="#bead">x</Link>', '[Jump](#bead)'])(
+    'TOK-1 leaves an anchor alone: %s',
+    (code) => {
+      expect(findCodeProblems('src/pages/x.mdx', code)).toEqual([]);
+    },
+  );
+
+  it.each(["color: '#FFF'", "fill: '#0f1117'", 'style={{color: "#0F1117CC"}}'])(
+    'TOK-1 still flags a bare hex colour value: %s',
+    (code) => {
+      expect(findCodeProblems('src/components/x.tsx', code).map((p) => p.rule)).toEqual(['TOK-1']);
+    },
+  );
+
+  it('treats a case-only difference as a no-op override', () => {
+    const problems = findOverrideProblems({
+      base: {text: {primary: '#ffffff'}},
+      cream: {text: {primary: '#FFFFFF'}},
+    });
+    expect(problems).toEqual([expect.objectContaining({rule: 'TOK-12', name: 'text.primary'})]);
+  });
+
+  it('names the rule each override problem breaks', () => {
+    const problems = findOverrideProblems({
+      base: {text: {primary: '#ffffff'}},
+      dark: {text: {primary: '#ffffff', ghost: '#000000'}},
+    });
+    expect(problems.map((p) => [p.name, p.rule])).toEqual([
+      ['text.primary', 'TOK-12'],
+      ['text.ghost', 'THM-4'],
+    ]);
+  });
+
+  it('reports each override problem under its own rule', async () => {
+    await write(
+      SOURCE,
+      JSON.stringify({...SOURCE_OK, cream: {surface: {base: '#ffffff', ghost: '#000000'}}}),
+    );
+    const {lines, out} = recorder();
+    expect(await main({root, out})).toBe(1);
+    expect(lines.join('\n')).toContain('cream.surface.base  TOK-12');
+    expect(lines.join('\n')).toContain('cream.surface.ghost  THM-4');
   });
 });
