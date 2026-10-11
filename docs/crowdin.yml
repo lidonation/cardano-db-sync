@@ -10,6 +10,12 @@ api_token_env: CROWDIN_PERSONAL_TOKEN
 base_path: .
 preserve_hierarchy: true
 
+# A11Y-18 / META-4: the site decides "translated or English fallback" by whether a string or a file
+# exists for the locale. Crowdin's default export fills every gap with the English source, which
+# would make every locale look fully translated the first time `crowdin download` runs. So UI
+# strings export without their untranslated entries, and a doc exports only once it is fully
+# translated. (The CLI rejects both options on one entry.) `npm run check:i18n` enforces this.
+
 files:
   # UI strings: code.json, navbar, footer and the current docs version's sidebar labels, written
   # by `npm run i18n:sources` (docusaurus write-translations --locale en).
@@ -17,6 +23,8 @@ files:
     ignore:
       - /i18n/en/docusaurus-plugin-content-docs/version-*.json
     translation: /i18n/%two_letters_code%/**/%original_file_name%
+    skip_untranslated_strings: true
   # Docs of the current line.
   - source: /docs/**/*.{md,mdx}
     translation: /i18n/%two_letters_code%/docusaurus-plugin-content-docs/current/**/%original_file_name%
+    skip_untranslated_files: true
