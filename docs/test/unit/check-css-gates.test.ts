@@ -17,7 +17,14 @@ let root: string;
 beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'dbsync-css-'));
   await fs.mkdir(path.join(root, 'src'), {recursive: true});
+  await writeTokenSource({base: {typography: {style: {body: {}}}}});
 });
+
+/** Every tree scan needs the token source that names the type scale. */
+async function writeTokenSource(source: unknown): Promise<void> {
+  await fs.mkdir(path.join(root, 'design'), {recursive: true});
+  await fs.writeFile(path.join(root, TOKEN_SOURCE), JSON.stringify(source));
+}
 
 afterEach(async () => {
   await fs.rm(root, {recursive: true, force: true});
@@ -161,11 +168,6 @@ describe('check:css over a tree', () => {
   });
 
   it('reads the type scale from the token source', async () => {
-    await fs.mkdir(path.join(root, 'design'));
-    await fs.writeFile(
-      path.join(root, TOKEN_SOURCE),
-      JSON.stringify({base: {typography: {style: {body: {}}}}}),
-    );
     expect(await loadTypeStyles(root)).toEqual(new Set(['body']));
     await fs.writeFile(
       path.join(root, 'src', 'a.css'),
@@ -177,9 +179,14 @@ describe('check:css over a tree', () => {
   });
 
   it('fails when the token source has no type scale', async () => {
-    await fs.mkdir(path.join(root, 'design'));
-    await fs.writeFile(path.join(root, TOKEN_SOURCE), JSON.stringify({base: {}}));
+    await writeTokenSource({base: {}});
     await expect(loadTypeStyles(root)).rejects.toThrow(/no base.typography.style/);
+  });
+
+  it('fails rather than passing every font token when the token source is missing', async () => {
+    await fs.rm(path.join(root, TOKEN_SOURCE));
+    await fs.writeFile(path.join(root, 'src', 'a.css'), 'p { font: var(--dbs-font-ui); }');
+    await expect(findViolations(root)).rejects.toThrow(/not found - DF-1 cannot check/);
   });
 
   it('skips build output, dependencies, tests and non-style files', async () => {

@@ -147,14 +147,17 @@ function typeToken(value, suffix, styles) {
   return name && (!styles || styles.has(name)) ? name : null;
 }
 
-/** The style names in a token source's typography group (DF-1), or undefined when absent. */
+/**
+ * The style names in the token source's typography group (DF-1). A missing source is an error, not
+ * a pass: without the scale every `--dbs-font-*` name, family tokens included, would satisfy DF-1.
+ */
 export async function loadTypeStyles(root = ROOT) {
   let raw;
   try {
     raw = await readFile(path.join(root, TOKEN_SOURCE), 'utf8');
   } catch (error) {
     if (/** @type {NodeJS.ErrnoException} */ (error).code === 'ENOENT') {
-      return undefined;
+      throw new Error(`${TOKEN_SOURCE} not found - DF-1 cannot check the type scale without it`);
     }
     throw error;
   }
@@ -171,7 +174,8 @@ function transitionNamesLayout(value) {
 
 /**
  * Check one stylesheet's text. Returns violations without a file name. `typeStyles` is the set of
- * type style names (DF-1); without it any `--dbs-font-*` token passes the type-scale rule.
+ * type style names (DF-1); without it any `--dbs-font-*` token passes the type-scale rule, so the
+ * tree scan always passes it.
  *
  * @param {string} source
  * @param {Set<string>} [typeStyles]
