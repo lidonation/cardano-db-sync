@@ -10,9 +10,14 @@ handles the W3C export shape Penpot writes: one top-level object per set, tokens
 {"$value": ..., "$type": ...}). Set names map to themes:
 
     base      -> :root
-    dark      -> [data-theme="dark"]
-    cream     -> [data-theme="cream"]
-    navy      -> [data-theme="navy"]
+    dark      -> :root[data-theme="dark"]
+    cream     -> :root[data-theme="cream"]
+    navy      -> :root[data-theme="navy"]
+
+Theme selectors out-rank :root (0,2,0 against 0,1,0) on purpose. With equal specificity the theme
+only won by coming later, and the production CSS minifier does not keep that order: it merged the
+values dark and navy share into one rule and hoisted it above :root, so those tokens kept their
+light values in dark mode.
 
 The base set's `typography` group is not a flat token tree: Penpot tokens cannot carry a composite
 text style. It is emitted as the 13-style scale (DF-1) by emit_typography(). Only the Infima bridge
@@ -23,10 +28,10 @@ import json, sys, re
 THEME_SELECTOR = {
     "base": ":root",
     "light": ":root",
-    "dark": '[data-theme="dark"]',
-    "cream": '[data-theme="cream"]',
-    "navy": '[data-theme="navy"]',
-    "intersect-navy": '[data-theme="navy"]',
+    "dark": ':root[data-theme="dark"]',
+    "cream": ':root[data-theme="cream"]',
+    "navy": ':root[data-theme="navy"]',
+    "intersect-navy": ':root[data-theme="navy"]',
 }
 
 def flatten(node, prefix=()):
