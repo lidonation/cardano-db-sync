@@ -1,0 +1,36 @@
+# Scheduled-job alerting (NUM-4, B41). Every scheduled docs workflow calls this as its last job,
+# passing the watched job's result. A failure opens (or comments on) one `ops-alert` issue for that
+# workflow, so repository watchers are notified; the next success closes it. See docs/RUNBOOK.md.
+#
+# The caller grants `issues: write` to the calling job. No secret is involved.
+name: Docs ops alert
+
+on:
+  workflow_call:
+    inputs:
+      result:
+        description: The watched job's result (success, failure, cancelled, skipped).
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  alert:
+    name: Raise or clear the alert
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: docs/scripts
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Report the result
+        run: node docs/scripts/ops-alert.mjs
+        env:
+          OPS_RESULT: ${{ inputs.result }}
+          OPS_WORKFLOW: ${{ github.workflow }}
+          GITHUB_TOKEN: ${{ github.token }}

@@ -5,6 +5,8 @@
 #   download  daily and on demand: downloads translations of the current line and opens (or
 #             updates) one pull request into release/community-site. Translations are reviewed
 #             like any other change, never committed straight to the branch.
+#   alert     after a scheduled download: a failure opens an ops-alert issue, the next success
+#             closes it (NUM-4, B41).
 #
 # Credentials are the CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN Actions secrets. Without them
 # every job skips with a notice, so a fork or a fresh clone stays green (ENV-5). The Crowdin CLI
@@ -119,3 +121,14 @@ jobs:
               --title "i18n(docs): translations from Crowdin" \
               --body "Translations of the current line, downloaded from Crowdin by docs-i18n.yml. Review before merging."
           fi
+
+  alert:
+    name: Ops alert
+    needs: download
+    if: always() && github.event_name == 'schedule'
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/docs-ops-alert.yml
+    with:
+      result: ${{ needs.download.result }}

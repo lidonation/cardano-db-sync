@@ -156,13 +156,20 @@ jobs:
             fi
           done
 
-  # B41: publishes the developer profile to lidonation.github.io/cardano-db-sync. Deploys run only
-  # from release/community-site (the fork's ENV-6 deploy branch), after the Docs CI gate passes. The
-  # github-pages environment must allow this branch under Settings -> Environments.
-  deploy:
+  # B41 / ENV-6: one repository, one Pages site, one profile.
+  #   - The fork (lidonation) publishes the developer profile from release/community-site only,
+  #     through the `github-pages` environment.
+  #   - Upstream (IntersectMBO) publishes the production profile from master only, through the
+  #     `production` environment, whose required reviewers approve each deploy (B48 cutover).
+  # Both run after the Docs CI gate, and assert BLD-1: the published tree under 1 GB before upload,
+  # the deploy under 10 minutes after it. Environment and Pages settings: docs/RUNBOOK.md.
+  deploy-dev:
     name: Deploy developer site to Pages
     needs: gate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/release/community-site'
+    if: >-
+      github.event_name == 'push' &&
+      github.repository != 'IntersectMBO/cardano-db-sync' &&
+      github.ref == 'refs/heads/release/community-site'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -175,12 +182,19 @@ jobs:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
+      - name: Start the deploy clock (BLD-1)
+        working-directory: .
+        run: echo "DEPLOY_STARTED=$(date +%s)" >> "$GITHUB_ENV"
+
       - uses: actions/checkout@v4
 
       - uses: ./.github/actions/docs-setup
 
       - name: Build developer profile
         run: npm run build:dev
+
+      - name: Published tree fits Pages (BLD-1)
+        run: node scripts/check-publish.mjs size build/dev | tee -a "$GITHUB_STEP_SUMMARY"
 
       - uses: actions/configure-pages@v5
 
@@ -190,3 +204,51 @@ jobs:
 
       - id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Deploy finished inside the Pages timeout (BLD-1)
+        run: node scripts/check-publish.mjs elapsed "$DEPLOY_STARTED" | tee -a "$GITHUB_STEP_SUMMARY"
+
+  deploy-production:
+    name: Deploy production site to Pages
+    needs: gate
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'IntersectMBO/cardano-db-sync' &&
+      github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Start the deploy clock (BLD-1)
+        working-directory: .
+        run: echo "DEPLOY_STARTED=$(date +%s)" >> "$GITHUB_ENV"
+
+      - uses: actions/checkout@v4
+
+      - uses: ./.github/actions/docs-setup
+
+      - name: Build production profile
+        run: npm run build:prod
+
+      - name: Published tree fits Pages (BLD-1)
+        run: node scripts/check-publish.mjs size build/prod | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/build/prod
+
+      - id: deployment
+        uses: actions/deploy-pages@v4
+
+      - name: Deploy finished inside the Pages timeout (BLD-1)
+        run: node scripts/check-publish.mjs elapsed "$DEPLOY_STARTED" | tee -a "$GITHUB_STEP_SUMMARY"

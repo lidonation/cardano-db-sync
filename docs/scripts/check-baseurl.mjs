@@ -42,6 +42,7 @@ const ALLOWLIST = new Map([
   ['scripts/check-baseurl.mjs', 'this gate has to name what it looks for'],
   ['SPECIFICATION.md', 'normative planning document, not shipped source'],
   ['DESIGN.md', 'design reference, not shipped source'],
+  ['RUNBOOK.md', 'operations runbook: names the hosts the Pages settings must hold, not shipped'],
   ['package-lock.json', 'generated dependency lockfile'],
   ['eslint.config.mjs', 'the lint rule has to name the literal it forbids'],
 ]);
