@@ -1,7 +1,7 @@
 /**
  * Ejected from @docusaurus/theme-classic 3.10.2 `theme/SiteMetadata` to scope hreflang (META-4,
- * META-8). Only `AlternateLangHeaders` differs from upstream; on a Docusaurus upgrade, diff the
- * rest against the new version.
+ * META-8). Only `AlternateLangHeaders` and the fallback canonical in `CanonicalUrlHeaders` differ
+ * from upstream; on a Docusaurus upgrade, diff the rest against the new version.
  */
 import React from 'react';
 
@@ -25,16 +25,24 @@ const bcp47ToOpenGraphLocale = (code: string) => code.replace('-', '_');
  * them (META-4). An untranslated doc is not advertised in the locales it falls back in. None at
  * all on a noindex build (META-8).
  */
-function AlternateLangHeaders(): React.JSX.Element | null {
+/** The locales the current page exists in, and the plugin's data (META-4). */
+function usePageLocales(): {existing: readonly string[]; data: I18nGlobalData} {
   const {
     siteConfig: {baseUrl},
-    i18n: {currentLocale, defaultLocale, localeConfigs, locales},
+    i18n: {locales},
   } = useDocusaurusContext();
   const data = usePluginData(PLUGIN_NAME) as I18nGlobalData;
-  const alternatePageUtils = useAlternatePageUtils();
   const {pathname} = useLocation();
+  return {existing: pageLocales(localePath(pathname, baseUrl), data, locales), data};
+}
+
+function AlternateLangHeaders(): React.JSX.Element | null {
+  const {
+    i18n: {currentLocale, defaultLocale, localeConfigs},
+  } = useDocusaurusContext();
+  const {existing, data} = usePageLocales();
+  const alternatePageUtils = useAlternatePageUtils();
   const currentHtmlLang = localeConfigs[currentLocale]!.htmlLang;
-  const existing = pageLocales(localePath(pathname, baseUrl), data, locales);
 
   return (
     <Head>
@@ -79,12 +87,23 @@ function useDefaultCanonicalUrl() {
   return siteUrl + canonicalPathname;
 }
 
+/**
+ * An untranslated doc under `/ja/…` is the English page again, word for word. It points its
+ * canonical at the English page so search engines index one copy, not five (META-4).
+ */
 function CanonicalUrlHeaders({permalink}: {permalink?: string}) {
   const {
     siteConfig: {url: siteUrl},
+    i18n: {currentLocale, defaultLocale},
   } = useDocusaurusContext();
+  const {existing} = usePageLocales();
+  const alternatePageUtils = useAlternatePageUtils();
   const defaultCanonicalUrl = useDefaultCanonicalUrl();
-  const canonicalUrl = permalink ? `${siteUrl}${permalink}` : defaultCanonicalUrl;
+  const fallbackCanonicalUrl = existing.includes(currentLocale)
+    ? null
+    : alternatePageUtils.createUrl({locale: defaultLocale, fullyQualified: true});
+  const canonicalUrl =
+    fallbackCanonicalUrl ?? (permalink ? `${siteUrl}${permalink}` : defaultCanonicalUrl);
   return (
     <Head>
       <meta property="og:url" content={canonicalUrl} />
