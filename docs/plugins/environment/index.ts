@@ -5,6 +5,9 @@ import type {HtmlTagObject, LoadContext, Plugin} from '@docusaurus/types';
 
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
 
+/** The webpack config Docusaurus hands `configureWebpack`. */
+type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
+
 /**
  * ENV-3 — a non-production build serves `noindex` on every page and never blocks crawling.
  *
@@ -51,11 +54,27 @@ export async function emitRobots(outDir: string, profile: BuildProfile): Promise
   await fs.writeFile(path.join(outDir, ROBOTS_FILE), robotsTxt(profile), 'utf8');
 }
 
+/**
+ * ENV-1: Docusaurus names webpack's filesystem cache by bundle, mode and locale only, and the
+ * profile comes from the environment rather than the config file, so a dev build followed by a
+ * prod build reused dev's compiled CSS, its subpath asset URLs included. Each profile gets
+ * a cache of its own.
+ */
+export function cacheByProfile(config: Configuration, profile: BuildProfile): void {
+  if (config.cache && typeof config.cache === 'object' && config.cache.type === 'filesystem') {
+    config.cache.name = `${config.cache.name ?? 'default'}-${profile.name}`;
+  }
+}
+
 export default function environmentPlugin(_context: LoadContext): Plugin {
   const profile = resolveProfile();
 
   return {
     name: 'dbsync-environment',
+    configureWebpack(config) {
+      cacheByProfile(config, profile);
+      return {};
+    },
     injectHtmlTags() {
       return {headTags: environmentHeadTags(profile)};
     },

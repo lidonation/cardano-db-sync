@@ -8,6 +8,7 @@ import {PROFILES} from '../../config/profiles';
 import environmentPlugin, {
   NOINDEX_HTML,
   NOINDEX_META,
+  cacheByProfile,
   ROBOTS_FILE,
   emitRobots,
   environmentHeadTags,
@@ -63,6 +64,27 @@ describe('ENV-3: noindex with crawling allowed', () => {
   });
 });
 
+describe('cacheByProfile (ENV-1)', () => {
+  it('gives each profile its own webpack filesystem cache', () => {
+    const dev = {cache: {type: 'filesystem' as const, name: 'client-production-en'}};
+    const prod = {cache: {type: 'filesystem' as const, name: 'client-production-en'}};
+    cacheByProfile(dev, PROFILES.dev);
+    cacheByProfile(prod, PROFILES.prod);
+    expect(dev.cache.name).toBe('client-production-en-dev');
+    expect(prod.cache.name).toBe('client-production-en-prod');
+  });
+
+  it('leaves a memory cache, or none, alone', () => {
+    const memory = {cache: {type: 'memory' as const}};
+    cacheByProfile(memory, PROFILES.dev);
+    expect(memory.cache).toEqual({type: 'memory'});
+    expect(() => cacheByProfile({}, PROFILES.dev)).not.toThrow();
+    const unnamed = {cache: {type: 'filesystem' as const}};
+    cacheByProfile(unnamed, PROFILES.prod);
+    expect(unnamed.cache).toEqual({type: 'filesystem', name: 'default-prod'});
+  });
+});
+
 describe('environmentPlugin', () => {
   const context = {} as LoadContext;
 
@@ -84,6 +106,9 @@ describe('environmentPlugin', () => {
     const plugin = await withProfile('dev', () => environmentPlugin(context));
     expect(plugin.name).toBe('dbsync-environment');
     expect(plugin.injectHtmlTags?.({content: undefined})).toEqual({headTags: [NOINDEX_META]});
+    const config = {cache: {type: 'filesystem' as const, name: 'server-production-en'}};
+    expect((plugin.configureWebpack as unknown as (c: object) => object)(config)).toEqual({});
+    expect(config.cache.name).toBe('server-production-en-dev');
     await plugin.postBuild?.({outDir} as Parameters<NonNullable<typeof plugin.postBuild>>[0]);
     expect(await readRobots()).toBe(robotsTxt(PROFILES.dev));
   });
