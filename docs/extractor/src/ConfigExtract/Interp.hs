@@ -51,10 +51,10 @@ import qualified Data.Vector as V
 -- | The JSON a key accepts.
 data Shape
   = SBool
-  | SInt
+  | SInt Text (Maybe Text) (Maybe Text)
   | SString
   | SEnum [Text]
-  | SArray Shape
+  | SArray Int Shape
   | -- | Haskell type, the line of its parser, keys, and presets the object defines.
     SObject Text Int [Key] [Preset]
   | SNullable Shape
@@ -139,17 +139,34 @@ extractSchema ms root =
 intTypes :: [Text]
 intTypes = ["Int", "Integer", "Word", "Word8", "Word16", "Word32", "Word64", "Int64", "Natural"]
 
+-- Bounds are decimal text so consumers can compare them without losing Word64 precision.
+integerShape :: Text -> Shape
+integerShape t = SInt t lo hi
+  where
+    dec = Just . Text.pack . show
+    (lo, hi) = case t of
+      "Word8" -> unsigned 8
+      "Word16" -> unsigned 16
+      "Word32" -> unsigned 32
+      "Word64" -> unsigned 64
+      "Word" -> unsigned 64
+      "Int64" -> signed 64
+      "Int" -> signed 64
+      "Natural" -> (Just "0", Nothing)
+      _ -> (Nothing, Nothing)
+    unsigned n = (Just "0", dec (2 ^ (n :: Int) - 1 :: Integer))
+    signed n = (dec (negate (2 ^ (n - 1) :: Integer)), dec (2 ^ (n - 1) - 1 :: Integer))
+
 typeShape :: Env -> Ty -> M Shape
 typeShape env ty = case ty of
   TCon "Bool" -> pure SBool
   TCon t | t `elem` ["Text", "String", "FilePath"] -> pure SString
-  TCon t | t `elem` intTypes -> pure SInt
+  TCon t | t `elem` intTypes -> pure (integerShape t)
   TApp (TCon "Maybe") t -> SNullable <$> typeShape env t
-  TList t -> SArray <$> typeShape env t
-  TApp (TCon c) t | c `elem` ["NonEmpty", "Vector", "Set"] -> SArray <$> typeShape env t
+  TList t -> SArray 0 <$> typeShape env t
+  TApp (TCon c) t | c `elem` ["NonEmpty", "Vector", "Set"] -> SArray (if c == "NonEmpty" then 1 else 0) <$> typeShape env t
   TCon t -> namedShape env t
-  TApp _ _ -> pure (SOpaque (renderTy ty))
-  _ -> pure (SOpaque (renderTy ty))
+  _ -> unresolved ("type " <> renderTy ty <> ": unrecognised form") >> pure (SOpaque (renderTy ty))
 
 namedShape :: Env -> Text -> M Shape
 namedShape env t = do
@@ -158,7 +175,7 @@ namedShape env t = do
   case cached of
     Just s -> pure s
     Nothing
-      | visiting -> pure (SOpaque t)
+      | visiting -> unresolved ("type " <> t <> ": recursive parser") >> pure (SOpaque t)
       | otherwise -> do
           modify' (\s -> s {stVisiting = Set.insert t (stVisiting s)})
           shape <- case Map.lookup ("FromJSON", t) (msInstances (envMod env)) of
@@ -168,7 +185,7 @@ namedShape env t = do
                 | diNewtypeDerivesFromJSON d
                 , [ConInfo _ [(_, fty)]] <- diCons d ->
                     typeShape env fty
-              _ -> pure (SOpaque t)
+              _ -> unresolved ("type " <> t <> ": parser not found") >> pure (SOpaque t)
           modify' (\s -> s {stVisiting = Set.delete t (stVisiting s), stCache = Map.insert t shape (stCache s)})
           pure shape
 
@@ -193,16 +210,29 @@ lookupBind (Scope m) n = Map.lookup n m
 parserShape :: Env -> Text -> Scope -> Ex -> M Shape
 parserShape env t scope ex = case ex of
   EApp (EApp (EVar "withObject") _) f -> objectShape env t scope f
-  EApp (EApp (EVar "withText") _) f -> pure (SEnum (map fst (textAlternatives scope f)))
+  EApp (EApp (EVar "withText") _) f -> do
+    let vals = textAlternatives scope f
+    if null vals || not (textComplete scope f)
+      then unknown
+      else pure (SEnum (map fst vals))
   EApp (EApp (EVar "withBool") _) _ -> pure SBool
-  EApp (EApp (EVar "withScientific") _) _ -> pure SInt
+  EApp (EApp (EVar "withScientific") _) _ -> unknown
   ELam [PVar v] (ECase (EVar v') alts) | v == v' -> case [s | Alt (PCon "String" [PStr s]) _ <- alts] of
     [] -> unknown
-    strs -> pure (SEnum strs)
+    strs
+      | all
+          ( \(Alt p body) -> case p of
+              PCon "String" [PStr _] -> not (unsupportedBody body)
+              _ -> isFail body
+          )
+          alts ->
+          pure (SEnum [s | Alt (PCon "String" [PStr s]) body <- alts, not (isFail body)])
+      | otherwise -> unknown
   ELam [PVar v] (EApp f (EVar v')) | v == v' -> parserShape env t scope f
   EVar fn | Just b <- lookupBind scope fn -> parserShape env t scope (lambda (bParams b) (bBody b))
   _ -> unknown
   where
+    unsupportedBody body = any (\e -> case e of EIf {} -> True; ELet {} -> True; EOther -> True; _ -> False) (universe body)
     unknown = do
       unresolved ("parser for " <> t <> ": unrecognised form")
       pure (SOpaque t)
@@ -230,6 +260,43 @@ textAlternatives scope f = case f of
       ELamCase alts -> [(s, body) | Alt (PStr s) body <- alts]
       ECase _ alts -> [(s, body) | Alt (PStr s) body <- alts]
       _ -> []
+
+-- A text parser is finite only when every nonliteral alternative fails.
+-- Guards and arbitrary helper applications cannot be interpreted safely.
+textComplete :: Scope -> Ex -> Bool
+textComplete scope f = case f of
+  ELamCase as -> complete as
+  ELam [PVar v] (ECase (EVar v') as) | v == v' -> complete as
+  ELam [PVar v] (ECase (EApp (EVar h) (EVar v')) as)
+    | v == v'
+    , Just hb <- lookupBind scope h ->
+        let helper = case bBody hb of
+              ELamCase xs -> xs
+              ECase _ xs -> xs
+              _ -> []
+         in not (null helper)
+              && all literalOrNothing helper
+              && all (\(Alt _ e) -> isFail e || accepted e) as
+  _ -> False
+  where
+    complete as =
+      not (null as)
+        && all
+          ( \(Alt p e) -> case p of
+              PStr _ -> isFail e || accepted e
+              _ -> isFail e
+          )
+          as
+    literalOrNothing (Alt p e) = case p of
+      PStr _ -> accepted e
+      _ -> e == ECon "Nothing"
+    accepted e = case stripPure e of
+      ECon _ -> True
+      EVar _ -> True
+      EApp a b -> accepted a && accepted b
+      EStr _ -> True
+      EInt _ -> True
+      _ -> False
 
 -- | The body of the first alternative matching a value, with the
 -- alternative's variables substituted — unless that body is a failure.
@@ -299,6 +366,7 @@ objectShape env t scope f = case f of
       let analysis = analyseObject env scope o body
           -- with no preset, a switch takes its Nothing branch (the plain defaults)
           plain = [(bound, e) | (bound, _, alts) <- oaSwitches analysis, (PCon "Nothing" [], e) <- alts]
+      mapM_ unresolved (oaErrors analysis)
       keys <- forM (oaKeys analysis) (keyFromInfo env plain)
       presets <- presetsOf env analysis
       pure (SObject t (lineOf env t) keys presets)
@@ -307,7 +375,8 @@ lineOf :: Env -> Text -> Int
 lineOf env t = maybe 0 (bLine . fst) (Map.lookup ("FromJSON", t) (msInstances (envMod env)))
 
 data ObjectAnalysis = ObjectAnalysis
-  { oaKeys :: [KeyInfo]
+  { oaErrors :: [Text]
+  , oaKeys :: [KeyInfo]
   , oaProductions :: [Production]
   , oaSwitches :: [(Text, Text, [(Pat, Ex)])]
   -- ^ (bound variable, the key variable it switches on, alternatives)
@@ -320,7 +389,7 @@ analyseObject env scope o body = case body of
   EDo stmts -> doBlock stmts
   _ -> case applicative body of
     Just (con, args) -> applicativeObject con args
-    Nothing -> ObjectAnalysis [] [] []
+    Nothing -> ObjectAnalysis ["object body: unrecognised form"] [] [] []
   where
     -- C <$> a1 <*> a2 ...
     applicativeObject con args =
@@ -333,7 +402,7 @@ analyseObject env scope o body = case body of
           template = [(kiName ki, TVar (kiVar ki)) | ki <- infos]
           varTys = [(v, ty) | (Just (v, Just ty, _), _) <- argExs]
           prod = Production template (foldl EApp (ECon con) (map snd argExs)) varTys
-       in ObjectAnalysis infos [prod] []
+       in ObjectAnalysis ["applicative argument: unrecognised form" | (_, Left EOther) <- parsed] infos [prod] []
 
     -- One applicative argument: a key access (possibly wrapped), or a plain value.
     keyArg :: Int -> Ex -> Ty -> Either Ex (KeyInfo, Ex -> Ex)
@@ -384,11 +453,53 @@ analyseObject env scope o body = case body of
             es -> last es
           keyedInfos = map (refine final switches) keyed
           helperInfos = concatMap (oaKeys . snd) helpers
-          prods = finalProductions final (map snd keyedInfos)
+          baseProds = finalProductions final (map snd keyedInfos)
+          plain = [(bound, e) | (bound, _, as) <- switches, (PCon "Nothing" [], e) <- as]
+          prods =
+            [ Production template (reducePattern plain Nothing pat) tys
+            | Production template pat tys <- foldl expandHelper baseProds helpers
+            ]
+          known x _rhs = any ((== x) . fst) keyed || any ((== x) . fst) helpers || any (\(v, _, _) -> v == x) switches
+          errors =
+            ["object expression: unsupported conditional or local binding" | any unsupported (universe body)]
+              ++ ["do result: multiple expression statements" | length [() | SBody _ <- stmts] > 1]
+              ++ ["do binding " <> x <> ": unrecognised form" | (x, rhs) <- binds, not (known x rhs)]
+              ++ [ "do statement: unrecognised form"
+                 | st <- stmts
+                 , case st of
+                     SBind (PVar _) _ -> False
+                     SBody e -> e /= final
+                     _ -> True
+                 ]
+              ++ ["object result: unrecognised form" | null baseProds]
+              ++ concatMap (oaErrors . snd) helpers
        in ObjectAnalysis
+            errors
             (map snd keyedInfos ++ helperInfos)
             prods
             (switches ++ concatMap (oaSwitches . snd) helpers)
+
+    -- Keep key variables symbolic, but evaluate constant fields in productions.
+    -- This includes non-configurable fields copied from the default option set.
+    reducePattern ctx want ex = case evalEx env ctx want ex of
+      Just value -> value
+      Nothing -> case spine ex of
+        (ECon c, args) ->
+          let tys = map (Just . snd) (conFields env c) ++ repeat Nothing
+           in foldl EApp (ECon c) (zipWith (reducePattern ctx) tys args)
+        _ -> ex
+
+    unsupported e = case e of
+      EIf {} -> True
+      ELet {} -> True
+      EOther -> True
+      _ -> False
+
+    expandHelper prods (v, helper) =
+      [ Production (template ++ ht) (substitute [(v, hp)] pat) (tys ++ htys)
+      | Production template pat tys <- prods
+      , Production ht hp htys <- oaProductions helper
+      ]
 
     analyseHelper hb args =
       let subst = [(p, a) | (PVar p, a) <- zip (bParams hb) args]
@@ -437,7 +548,17 @@ analyseObject env scope o body = case body of
         use e = case spine e of
           (ECon c, args) -> listToMaybe [ty | (a, (_, ty)) <- zip args (conFields env c), a == EVar p]
           (EVar "map", [EVar f, EVar p']) | p' == p -> case Map.lookup f (msSigs (envMod env)) of
-            Just (TFun argTy _) -> Just (TList argTy)
+            Just (TFun argTy _) ->
+              let container =
+                    listToMaybe
+                      [ cty
+                      | (ECon c, args) <- map spine (universe b)
+                      , (a, (_, cty)) <- zip args (conFields env c)
+                      , a == e
+                      ]
+               in Just $ case container of
+                    Just (TApp (TCon "NonEmpty") _) -> TApp (TCon "NonEmpty") argTy
+                    _ -> TList argTy
             _ -> Nothing
           _ -> Nothing
 
@@ -562,17 +683,17 @@ keyFromInfo env ctx ki = do
       unresolved ("key " <> kiName ki <> ": type not determined")
       pure (SOpaque "unknown")
   def <- case (kiDefault ki, kiTy ki) of
-    (Just d, Just ty) | not (isObject shape) -> defaultValue env (kiName ki) ctx ty d
+    (Just d, Just ty) -> defaultValue env (kiName ki) ctx ty d
     _ -> pure Nothing
-  pure (Key (kiName ki) (kiRequired ki) shape def)
+  pure (Key (kiName ki) (kiRequired ki) (if kiRequired ki then shape else nullable shape) def)
   where
     -- a `.:?` key on a Maybe field reads as the inner type when absent
     optionalTy ty = case ty of
       TApp (TCon "Maybe") t | isNothing (kiDefault ki) -> t
       _ -> ty
-    isObject s = case s of
-      SObject {} -> True
-      _ -> False
+    nullable s = case s of
+      SNullable _ -> s
+      _ -> SNullable s
 
 -- | Evaluate a default expression and turn the value back into JSON.
 defaultValue :: Env -> Text -> [(Text, Ex)] -> Ty -> Ex -> M (Maybe Value)
@@ -607,8 +728,14 @@ evalEx env ctx want ex = case ex of
   ERecUpd base upds -> do
     r <- evalEx env ctx want base
     (c, fields) <- recordOf r
-    pure (ERecCon c [(f, fromMaybe x (lookup f upds)) | (f, x) <- fields])
-  ERecCon c fields -> Just (ERecCon c fields)
+    evalEx env ctx want (ERecCon c [(f, fromMaybe x (lookup f upds)) | (f, x) <- fields])
+  ERecCon c fields -> do
+    let types = conFields env c
+    fs <- forM fields $ \(name, x) -> do
+      let ty = lookup (Just name) types
+      y <- evalEx env ctx ty x
+      pure (name, y)
+    pure (ERecCon c fs)
   EList xs -> EList <$> mapM (evalEx env ctx Nothing) xs
   EStr _ -> Just ex
   EInt _ -> Just ex
@@ -647,15 +774,20 @@ invert :: Env -> Ty -> Ex -> M (Maybe Value)
 invert env ty v = case (ty, v) of
   (TCon "Bool", ECon "True") -> pure (Just (Bool True))
   (TCon "Bool", ECon "False") -> pure (Just (Bool False))
-  (TCon t, EInt n) | t `elem` intTypes -> pure (Just (Number (fromInteger n)))
+  (TCon t, EInt n) | t `elem` intTypes -> pure $
+    case integerShape t of
+      SInt _ lo hi | maybe True (n >=) (readBound lo), maybe True (n <=) (readBound hi) -> Just (Number (fromInteger n))
+      _ -> Nothing
   (TCon t, EStr s) | t `elem` ["Text", "String", "FilePath"] -> pure (Just (String s))
   (TApp (TCon "Maybe") _, ECon "Nothing") -> pure (Just Null)
   (TApp (TCon "Maybe") t, EApp (ECon "Just") x) -> invert env t x
+  (TApp (TCon c) t, EList xs) | c `elem` ["NonEmpty", "Vector", "Set"] -> fmap (fmap (Array . V.fromList) . sequence) (mapM (invert env t) xs)
   (TList t, EList xs) -> fmap (fmap (Array . V.fromList) . sequence) (mapM (invert env t) xs)
   (TCon t, _) -> named t
   (TApp _ _, _) | Just t <- tyName ty -> named t
   _ -> pure Nothing
   where
+    readBound = fmap (read . Text.unpack)
     named t = case Map.lookup t (msData (envMod env)) of
       Just d
         | diNewtypeDerivesFromJSON d
@@ -666,7 +798,15 @@ invert env ty v = case (ty, v) of
       _ -> do
         prods <- productionsOf env t
         firstJust [fill p | p <- prods]
-    fill (Production template pat varTys) = case unify pat v of
+    positional ex = case ex of
+      ERecCon c fields ->
+        foldl
+          EApp
+          (ECon c)
+          [positional x | (Just name, _) <- conFields env c, Just x <- [lookup name fields]]
+      EApp a b -> EApp (positional a) (positional b)
+      _ -> ex
+    fill (Production template pat varTys) = case unify pat (positional v) of
       Nothing -> pure Nothing
       Just binds -> do
         parts <- forM template $ \(k, tv) -> case tv of

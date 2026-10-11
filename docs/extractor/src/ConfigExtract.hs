@@ -30,7 +30,7 @@ import System.FilePath ((</>))
 -- | Version of the config artifact schema. Bump when a field is removed or
 -- its meaning changes; consumers refuse unknown versions.
 configSchemaVersion :: Int
-configSchemaVersion = 1
+configSchemaVersion = 2
 
 -- | Where the artifact is committed, relative to @docs/@.
 configArtifactFile :: FilePath
@@ -98,10 +98,17 @@ schemaJson sources rootType Schema {..} =
 shapeJson :: Shape -> Value
 shapeJson shape = case shape of
   SBool -> object ["type" .= ("boolean" :: Text)]
-  SInt -> object ["type" .= ("integer" :: Text)]
+  SInt t lo hi ->
+    object $
+      ["type" .= ("integer" :: Text), "haskell" .= t]
+        ++ ["minimum" .= n | Just n <- [lo]]
+        ++ ["maximum" .= n | Just n <- [hi]]
   SString -> object ["type" .= ("string" :: Text)]
   SEnum vals -> object ["type" .= ("enum" :: Text), "values" .= vals]
-  SArray s -> object ["type" .= ("array" :: Text), "items" .= shapeJson s]
+  SArray minItems s ->
+    object $
+      ["type" .= ("array" :: Text), "items" .= shapeJson s]
+        ++ ["minItems" .= minItems | minItems > 0]
   SOpaque t -> object ["type" .= ("opaque" :: Text), "haskell" .= t]
   SNullable s -> case shapeJson s of
     Object o -> Object (KM.insert "nullable" (Bool True) o)
