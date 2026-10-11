@@ -259,22 +259,42 @@ function escapeHtml(value: string): string {
     .replaceAll('>', '&gt;');
 }
 
+/** Same-origin script that redirect stubs load, written to the build root next to them. */
+export const REDIRECT_SCRIPT_FILE = 'redirect.js';
+
+/**
+ * Forwards `?query#fragment`, which a `meta refresh` drops, so a deep link to a retired page lands
+ * on the same section of its target. The stub loads it from `'self'` (no inline script, SEC-2/3)
+ * ahead of the refresh, so it runs first; if it cannot load or run, the refresh still redirects.
+ */
+export const REDIRECT_SCRIPT = `(function () {
+  var script = document.currentScript;
+  var target = script && script.getAttribute('data-target');
+  if (target) {
+    location.replace(target + location.search + location.hash);
+  }
+})();
+`;
+
 /**
  * A redirect stub (VER-4): served with HTTP 200, an instant `meta refresh` (which search engines
- * read as a permanent redirect) and `rel="canonical"` to the target. No JavaScript redirect — the
- * spec rules it out, which is also why this is not `@docusaurus/plugin-client-redirects`: its
- * stubs always carry a `window.location` script. GitHub Pages has no server-side redirects.
+ * read as a permanent redirect) and `rel="canonical"` to the target. GitHub Pages has no
+ * server-side redirects. The only script is the external, same-origin {@link REDIRECT_SCRIPT},
+ * which adds fragment forwarding for people; the redirect itself never depends on it. This is not
+ * `@docusaurus/plugin-client-redirects`: its stubs carry an inline `window.location` script.
  */
 export function redirectPage(target: string, profile: BuildProfile): string {
   const href = `${profile.baseUrl}${target.slice(1)}`;
   const attr = escapeHtml(href);
   const canonical = escapeHtml(`${profile.url}${href}`);
+  const script = escapeHtml(`${profile.baseUrl}${REDIRECT_SCRIPT_FILE}`);
   return [
     '<!doctype html>',
     '<html lang="en">',
     '<head>',
     '<meta charset="utf-8">',
     '<title>Page moved</title>',
+    `<script src="${script}" data-target="${attr}"></script>`,
     `<meta http-equiv="refresh" content="0; url=${attr}">`,
     `<link rel="canonical" href="${canonical}">`,
     '</head>',
@@ -286,7 +306,10 @@ export function redirectPage(target: string, profile: BuildProfile): string {
   ].join('\n');
 }
 
-/** Writes a redirect page at every retired route. Refuses to overwrite a published file. */
+/**
+ * Writes a redirect page at every retired route, plus the script they load when there is at least
+ * one. Refuses to overwrite a published file.
+ */
 export async function emitRedirects(
   outDir: string,
   manifest: RouteManifest,
@@ -309,6 +332,16 @@ export async function emitRedirects(
       throw new Error(`Cannot write the redirect for retired route ${route}: ${String(error)}`);
     }
     written.push(route);
+  }
+  if (written.length > 0) {
+    try {
+      await fs.writeFile(path.join(outDir, REDIRECT_SCRIPT_FILE), REDIRECT_SCRIPT, {
+        encoding: 'utf8',
+        flag: 'wx',
+      });
+    } catch (error) {
+      throw new Error(`Cannot write ${REDIRECT_SCRIPT_FILE}: ${String(error)}`);
+    }
   }
   return written;
 }

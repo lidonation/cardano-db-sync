@@ -1,12 +1,15 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import vm from 'node:vm';
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {PROFILES} from '../../config/profiles';
 import routeManifestPlugin, {
   MANIFEST_FILE,
+  REDIRECT_SCRIPT,
+  REDIRECT_SCRIPT_FILE,
   isManifestPath,
   nearestLiveAncestor,
   parseManifest,
@@ -188,15 +191,39 @@ describe('redirectPage', () => {
     expect(redirectPage('/', prod)).toContain('url=/"');
   });
 
-  it('carries no JavaScript redirect and no noindex (VER-4)', () => {
-    const html = redirectPage('/docs', prod);
-    expect(html).not.toMatch(/<script|location\.|noindex/);
+  it('loads only the same-origin forwarding script, ahead of the refresh, and no noindex', () => {
+    const html = redirectPage('/docs', dev);
+    const script =
+      '<script src="/cardano-db-sync/redirect.js" data-target="/cardano-db-sync/docs">';
+    expect(html).toContain(`${script}</script>`);
+    expect(html.indexOf(script)).toBeLessThan(html.indexOf('http-equiv="refresh"'));
+    expect(html.match(/<script/g)).toHaveLength(1);
+    expect(html).not.toMatch(/noindex/);
   });
 
   it('escapes the target', () => {
     const html = redirectPage('/a"<b>&', prod);
     expect(html).toContain('url=/a&quot;&lt;b&gt;&amp;"');
     expect(html).not.toContain('<b>');
+  });
+});
+
+describe('REDIRECT_SCRIPT', () => {
+  function run(target: string | null, search = '', hash = '') {
+    const replaced: string[] = [];
+    vm.runInNewContext(REDIRECT_SCRIPT, {
+      document: {currentScript: {getAttribute: () => target}},
+      location: {search, hash, replace: (url: string) => replaced.push(url)},
+    });
+    return replaced;
+  }
+
+  it('forwards the query and fragment a meta refresh would drop', () => {
+    expect(run('/docs', '?v=1', '#flags')).toEqual(['/docs?v=1#flags']);
+  });
+
+  it('does nothing without a target, leaving the meta refresh to redirect', () => {
+    expect(run(null, '', '#flags')).toEqual([]);
   });
 });
 
@@ -249,6 +276,25 @@ describe('runManifest', () => {
     await runManifest({siteDir, outDir, routesPaths: ['/'], profile: prod, mode: 'check'});
     const html = await fs.readFile(path.join(outDir, 'docs', 'old', 'page', 'index.html'), 'utf8');
     expect(html).toContain('url=/"');
+    expect(await fs.readFile(path.join(outDir, REDIRECT_SCRIPT_FILE), 'utf8')).toBe(
+      REDIRECT_SCRIPT,
+    );
+  });
+
+  it('writes no redirect script when nothing is retired', async () => {
+    await writeManifest({routes: {'/': {status: 'live'}}});
+    await runManifest({siteDir, outDir, routesPaths: ['/'], profile: prod, mode: 'check'});
+    await expect(fs.stat(path.join(outDir, REDIRECT_SCRIPT_FILE))).rejects.toThrow(/ENOENT/);
+  });
+
+  it('refuses to overwrite a published file with the redirect script', async () => {
+    await writeManifest({
+      routes: {'/': {status: 'live'}, '/x': {status: 'retired', redirect: '/'}},
+    });
+    await fs.writeFile(path.join(outDir, REDIRECT_SCRIPT_FILE), 'published');
+    await expect(
+      runManifest({siteDir, outDir, routesPaths: ['/'], profile: prod, mode: 'check'}),
+    ).rejects.toThrow(/Cannot write redirect\.js/);
   });
 
   it('retires a removed page locally and redirects its old URL', async () => {
