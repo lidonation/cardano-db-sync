@@ -1,0 +1,36 @@
+# Ops alert drill (B41). Proves the scheduled-job alert end to end without waiting for a real
+# failure: pushing a branch named `ops-drill/<anything>` runs a stand-in job that fails, and the
+# same alert path every scheduled workflow uses opens an `ops-alert` issue. Pushing a branch whose
+# name ends in `-pass` runs it green, and the alert closes. Delete the drill branches afterwards.
+# Procedure in docs/RUNBOOK.md, "Running the alert drill".
+name: Docs ops alert drill
+
+on:
+  push:
+    branches: ["ops-drill/**"]
+
+permissions:
+  contents: read
+
+jobs:
+  scheduled-job:
+    name: Stand-in scheduled job
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fail, unless the drill branch asks for a pass
+        run: |
+          case "$GITHUB_REF_NAME" in
+            *-pass) echo "Seeded pass." ;;
+            *) echo "::error::Seeded failure (B41 alert drill)."; exit 1 ;;
+          esac
+
+  alert:
+    name: Ops alert
+    needs: scheduled-job
+    if: always()
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/docs-ops-alert.yml
+    with:
+      result: ${{ needs.scheduled-job.result }}

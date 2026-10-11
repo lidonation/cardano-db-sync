@@ -159,13 +159,20 @@ jobs:
             fi
           done
 
-  # B41: publishes the developer profile to lidonation.github.io/cardano-db-sync. Deploys run only
-  # from release/community-site (the fork's ENV-6 deploy branch), after the Docs CI gate passes. The
-  # github-pages environment must allow this branch under Settings -> Environments.
-  deploy:
+  # B41 / ENV-6: one repository, one Pages site, one profile.
+  #   - The fork (lidonation) publishes the developer profile from release/community-site only,
+  #     through the `github-pages` environment.
+  #   - Upstream (IntersectMBO) publishes the production profile from master only, through the
+  #     `production` environment, whose required reviewers approve each deploy (B48 cutover).
+  # Both run after the Docs CI gate. The shared steps, including the BLD-1 size and timeout checks,
+  # live in .github/actions/docs-deploy. Environment and Pages settings: docs/RUNBOOK.md.
+  deploy-dev:
     name: Deploy developer site to Pages
     needs: gate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/release/community-site'
+    if: >-
+      github.event_name == 'push' &&
+      github.repository != 'IntersectMBO/cardano-db-sync' &&
+      github.ref == 'refs/heads/release/community-site'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -176,20 +183,35 @@ jobs:
       cancel-in-progress: false
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/docs-setup
-
-      - name: Build developer profile
-        run: npm run build:dev
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
+      - id: deploy
+        uses: ./.github/actions/docs-deploy
         with:
-          path: docs/build/dev
+          profile: dev
 
-      - id: deployment
-        uses: actions/deploy-pages@v4
+  deploy-production:
+    name: Deploy production site to Pages
+    needs: gate
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'IntersectMBO/cardano-db-sync' &&
+      github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: deploy
+        uses: ./.github/actions/docs-deploy
+        with:
+          profile: prod
