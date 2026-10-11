@@ -12,7 +12,7 @@
  *
  * Run by `npm run check:annotations` and by CI.
  */
-import {existsSync, readFileSync} from 'node:fs';
+import {existsSync, readFileSync, realpathSync, statSync} from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
@@ -67,32 +67,65 @@ export function findProblems(docsRoot) {
   }
 
   const problems = [];
+  const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
+  const hasText = (value) => typeof value === 'string' && value.trim() !== '';
+  if (!isObject(artifact)) {
+    return ['artifact must be an object'];
+  }
 
   if (artifact.schemaVersion !== SCHEMA_VERSION) {
-    problems.push(`schema version ${artifact.schemaVersion} is not ${SCHEMA_VERSION}`);
+    problems.push(
+      `schema version ${JSON.stringify(artifact.schemaVersion)} is not ${SCHEMA_VERSION}`,
+    );
   }
 
   if (!Array.isArray(artifact.files) || artifact.files.length === 0) {
     problems.push('files must be a non-empty array');
+    return problems;
   }
 
   let previousPath = null;
   for (const file of artifact.files) {
-    const at = file.path ?? '<missing path>';
-    if (typeof file.path !== 'string' || !file.path.endsWith('.hs')) {
+    if (!isObject(file)) {
+      problems.push('each file must be an object');
+      continue;
+    }
+    const at =
+      typeof file.path === 'string' ? file.path : (JSON.stringify(file.path) ?? '<missing path>');
+    const validPath = typeof file.path === 'string' && file.path.endsWith('.hs');
+    if (!validPath) {
       problems.push(`${at}: path must be a .hs file`);
+    } else {
+      if (previousPath !== null && file.path <= previousPath) {
+        problems.push(`${at}: files must be sorted by path (after ${previousPath})`);
+      }
+      previousPath = file.path;
+      if (
+        path.isAbsolute(file.path) ||
+        file.path.split('/').includes('..') ||
+        file.path.includes('\\')
+      ) {
+        problems.push(`${at}: path must be repository-relative`);
+      } else {
+        const source = path.join(repoRoot, file.path);
+        try {
+          const relative = path.relative(realpathSync(repoRoot), realpathSync(source));
+          if (
+            relative.startsWith('..') ||
+            path.isAbsolute(relative) ||
+            !statSync(source).isFile()
+          ) {
+            problems.push(`${at}: path must reference a file inside the repository`);
+          }
+        } catch {
+          problems.push(`${at}: the referenced Haskell file does not exist or cannot be read`);
+        }
+      }
     }
-    if (previousPath !== null && file.path <= previousPath) {
-      problems.push(`${at}: files must be sorted by path (after ${previousPath})`);
-    }
-    previousPath = file.path;
-    if (path.isAbsolute(file.path) || file.path.split('/').includes('..')) {
-      problems.push(`${at}: path must be repository-relative`);
-    }
-    if (!existsSync(path.join(repoRoot, file.path))) {
-      problems.push(`${at}: the referenced Haskell file does not exist`);
-    }
-    if (file.module !== null && !MODULE_NAME.test(file.module ?? '')) {
+    if (
+      file.module !== null &&
+      (typeof file.module !== 'string' || !MODULE_NAME.test(file.module))
+    ) {
       problems.push(
         `${at}: module must be null or a dotted module name, got ${JSON.stringify(file.module)}`,
       );
@@ -108,20 +141,37 @@ export function findProblems(docsRoot) {
       continue;
     }
     for (const annotation of file.annotations) {
-      const atAnnotation = `${at}:${annotation.line ?? '?'}`;
+      if (!isObject(annotation)) {
+        problems.push(`${at}: each annotation must be an object`);
+        continue;
+      }
+      const atAnnotation = `${at}:${Number.isInteger(annotation.line) ? annotation.line : '?'}`;
       if (!KINDS.has(annotation.kind)) {
         problems.push(`${atAnnotation}: unknown kind ${JSON.stringify(annotation.kind)}`);
       }
       if (!POSITIONS.has(annotation.position)) {
         problems.push(`${atAnnotation}: unknown position ${JSON.stringify(annotation.position)}`);
       }
-      if (
-        annotation.kind !== 'section' &&
-        (typeof annotation.name !== 'string' || annotation.name === '')
-      ) {
-        problems.push(`${atAnnotation}: a ${annotation.kind} annotation must carry a name`);
+      if (annotation.kind !== 'section' && !hasText(annotation.name)) {
+        problems.push(
+          `${atAnnotation}: a ${JSON.stringify(annotation.kind)} annotation must carry a name`,
+        );
       }
-      if (typeof annotation.doc !== 'string' || annotation.doc === '') {
+      const nestedDocumentation =
+        Array.isArray(annotation.constructors) &&
+        annotation.constructors.some(
+          (constructor) =>
+            isObject(constructor) &&
+            (hasText(constructor.doc) ||
+              (Array.isArray(constructor.fields) &&
+                constructor.fields.some((field) => isObject(field) && hasText(field.doc)))),
+        );
+      const dataWithDocumentedChildren =
+        ['data', 'newtype'].includes(annotation.kind) && nestedDocumentation;
+      if (
+        typeof annotation.doc !== 'string' ||
+        (!hasText(annotation.doc) && !dataWithDocumentedChildren)
+      ) {
         problems.push(`${atAnnotation}: annotation must carry a document`);
       }
       if (!Number.isInteger(annotation.line) || annotation.line < 1) {
@@ -130,25 +180,51 @@ export function findProblems(docsRoot) {
       if (annotation.sectionLevel !== undefined && annotation.kind !== 'section') {
         problems.push(`${atAnnotation}: sectionLevel is only carried by section headings`);
       }
-      if (annotation.kind === 'section' && !Number.isInteger(annotation.sectionLevel ?? 0)) {
+      if (
+        annotation.kind === 'section' &&
+        (!Number.isInteger(annotation.sectionLevel) || annotation.sectionLevel < 1)
+      ) {
         problems.push(
           `${atAnnotation}: sectionLevel must be a positive integer on section headings`,
         );
       }
+      if (annotation.kind === 'section' && typeof annotation.name !== 'string') {
+        problems.push(`${atAnnotation}: section name must be a string`);
+      }
+      if (annotation.constructors !== undefined && !Array.isArray(annotation.constructors)) {
+        problems.push(`${atAnnotation}: constructors must be an array`);
+        continue;
+      }
       for (const constructor of annotation.constructors ?? []) {
+        if (!isObject(constructor)) {
+          problems.push(`${atAnnotation}: each constructor must be an object`);
+          continue;
+        }
         if (typeof constructor.name !== 'string' || constructor.name === '') {
           problems.push(`${atAnnotation}: a constructor must carry a name`);
         }
         if (typeof constructor.doc !== 'string') {
-          problems.push(`${atAnnotation} ${constructor.name}: constructor doc must be a string`);
+          problems.push(
+            `${atAnnotation} ${JSON.stringify(constructor.name)}: constructor doc must be a string`,
+          );
         }
-        for (const field of constructor.fields ?? []) {
+        if (!Array.isArray(constructor.fields)) {
+          problems.push(`${atAnnotation}: constructor fields must be an array`);
+          continue;
+        }
+        for (const field of constructor.fields) {
+          if (!isObject(field)) {
+            problems.push(`${atAnnotation}: each field must be an object`);
+            continue;
+          }
           if (typeof field.name !== 'string' || field.name === '') {
-            problems.push(`${atAnnotation} ${constructor.name}: a record field must carry a name`);
+            problems.push(
+              `${atAnnotation} ${JSON.stringify(constructor.name)}: a record field must carry a name`,
+            );
           }
           if (typeof field.doc !== 'string') {
             problems.push(
-              `${atAnnotation} ${constructor.name}.${field.name}: field doc must be a string`,
+              `${atAnnotation} ${JSON.stringify(constructor.name)}.${JSON.stringify(field.name)}: field doc must be a string`,
             );
           }
         }

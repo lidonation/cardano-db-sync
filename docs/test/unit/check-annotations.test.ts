@@ -42,7 +42,7 @@ afterEach(async () => {
   await fs.rm(repo, {recursive: true, force: true});
 });
 
-async function writeArtifact(artifact: {schemaVersion: number; files: AnnotatedModule[]}) {
+async function writeArtifact(artifact: unknown) {
   await fs.mkdir(path.join(docs, 'generated'), {recursive: true});
   await fs.writeFile(
     path.join(docs, 'generated/haddock-annotations.json'),
@@ -56,7 +56,82 @@ async function touchHaskellFile(relativePath: string) {
   await fs.writeFile(path.join(repo, relativePath), '-- placeholder\n');
 }
 
+function recorderForShape() {
+  return {log: () => {}, error: () => {}};
+}
+
 describe('check:annotations gate (CON-1)', () => {
+  it.each([
+    null,
+    [],
+    true,
+    'artifact',
+    {},
+    {schemaVersion: 1, files: null},
+    {schemaVersion: 1, files: [null]},
+    {schemaVersion: {toString: null, valueOf: null}, files: []},
+    {schemaVersion: 1, files: [{path: {toString: null, valueOf: null}}]},
+    {
+      schemaVersion: 1,
+      files: [
+        fileEntry({annotations: [{kind: {toString: null, valueOf: null}, line: {toString: null}}]}),
+      ],
+    },
+    {schemaVersion: 1, files: [{path: 12}]},
+    {schemaVersion: 1, files: [fileEntry({annotations: [null]})]},
+    {schemaVersion: 1, files: [fileEntry({annotations: [{constructors: {}}]})]},
+  ])('reports malformed JSON shapes without throwing: %j', async (artifact) => {
+    await writeArtifact(artifact);
+    expect(() => findProblems(docs)).not.toThrow();
+    expect(findProblems(docs).length).toBeGreaterThan(0);
+    expect(await main(docs, recorderForShape())).toBe(1);
+  });
+
+  it.each([undefined, 0, -1, 1.5])(
+    'rejects missing or nonpositive section level %s',
+    async (sectionLevel) => {
+      const entry = fileEntry();
+      await touchHaskellFile(entry.path);
+      entry.annotations[0] = {
+        name: '',
+        kind: 'section',
+        line: 1,
+        doc: 'Heading',
+        position: 'section',
+        sectionLevel,
+      };
+      await writeArtifact({schemaVersion: 1, files: [entry]});
+      expect(findProblems(docs).join('\n')).toContain('sectionLevel must be a positive integer');
+    },
+  );
+
+  it('accepts a data type whose documentation lives on its fields', async () => {
+    const entry = fileEntry();
+    await touchHaskellFile(entry.path);
+    entry.annotations[0].doc = '';
+    entry.annotations[0].constructors = [
+      {name: 'Error', doc: '', fields: [{name: 'code', doc: 'Error code.'}]},
+    ];
+    await writeArtifact({schemaVersion: 1, files: [entry]});
+    expect(findProblems(docs)).toEqual([]);
+  });
+
+  it.each([
+    null,
+    {},
+    [null],
+    [{name: 'Error', doc: '', fields: null}],
+    [{name: 'Error', doc: '', fields: [null]}],
+  ])('rejects malformed constructor shape %j', async (constructors) => {
+    const entry = fileEntry();
+    await touchHaskellFile(entry.path);
+    const annotation = entry.annotations[0] as unknown as Record<string, unknown>;
+    annotation.constructors = constructors;
+    await writeArtifact({schemaVersion: 1, files: [entry]});
+    expect(() => findProblems(docs)).not.toThrow();
+    expect(findProblems(docs).length).toBeGreaterThan(0);
+  });
+
   it('passes over the real committed artifact', () => {
     expect(findProblems(DOCS_ROOT)).toEqual([]);
   });

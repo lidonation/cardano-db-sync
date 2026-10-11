@@ -34,18 +34,21 @@ cabal build all
 cabal run extract-haddock -- \
   --repo-root ../.. \
   --out ../generated/haddock-annotations.json \
-  --input cardano-db/src
+  --input cardano-db/src \
+  --input cardano-db-sync/src/Cardano/DbSync/Config/Types.hs
 ```
 
 `--input` is repository-relative (it becomes the `path` in the artifact) and
 may name a file or a directory; directories are walked recursively for `*.hs`.
+Explicit inputs replace defaults. Without them, the schema tree and config types
+are selected. Missing, empty, escaped and invalid UTF-8 inputs fail the run.
 `--repo-root` is the repository those paths are relative to.
 
 CI runs this from [`.github/workflows/extract-haddock.yml`](../../.github/workflows/extract-haddock.yml):
-it builds, runs the golden test, extracts over `cardano-db/src`, and fails when
-the committed artifact differs from a fresh extraction. On `master` and
-`release/community-site` the regenerated artifact is committed back; on pull
-requests the drift gate fails with the diff instead.
+it builds, runs the golden, regression and CLI tests, extracts schema and config
+sources, and fails on drift on both pull requests and deploy branches. Regenerate
+and commit the artifact with the source change. The workflow has read-only access
+and never commits a repair after deployment has started.
 
 ## Layout
 
@@ -61,8 +64,8 @@ requests the drift gate fails with the diff instead.
 ## Notes
 
 - **CPP.** One source file uses `#if`. Compiling to preprocess is out of the
-  question for a docs build, so preprocessor lines are stripped (both sides of
-  a conditional survive) and the file is flagged `cpp: true` in the artifact.
+  question for a docs build, so preprocessor lines are replaced with blank lines (both sides of
+  a conditional survive, and physical source line numbers stay correct) and the file is flagged `cpp: true` in the artifact.
 - **Extensions.** The extractor parses with a generous fixed extension set
   rather than replicating each package's cabal file: extensions only matter
   here where they change the grammar, and more than a file needs never alters
@@ -71,3 +74,8 @@ requests the drift gate fails with the diff instead.
   schema explorer, config wizard). Later items may extend the shape; bump
   `schemaVersion` and the access layer together when a field's meaning
   changes.
+
+Dependency selection is pinned by `cabal.project`. The extraction step has a
+60-second timeout; toolchain installation and building the extractor are reported
+separately and take longer on a cold cache. CPP conditionals are not evaluated.
+Incompatible alternatives fail parsing with a diagnostic, never partial output.

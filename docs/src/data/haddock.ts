@@ -12,7 +12,7 @@
  * extractor) by running the workflow, or locally:
  *
  *     cd docs/extractor && cabal run extract-haddock -- \
- *       --repo-root ../.. --out ../generated/haddock-annotations.json --input ../../cardano-db/src
+ *       --repo-root ../.. --out ../generated/haddock-annotations.json --input cardano-db/src
  *
  * The shape mirrors `HaddockExtract.Model`; `check:annotations` verifies the
  * committed file against the same rules.

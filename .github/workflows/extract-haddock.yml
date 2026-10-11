@@ -65,40 +65,30 @@ jobs:
           cabal update
           cabal build all
           cabal test
+          sh test/cli.sh "$(cabal list-bin extract-haddock)"
 
-      - name: Extract over cardano-db/src
+      - name: Extract schema and config annotations
         working-directory: docs/extractor
         # `shell: bash` runs with `-o pipefail`, so the extractor's exit code is not
         # swallowed by `tee`; the extractor fails the step on any unparseable file.
         shell: bash
         run: |
-          cabal run extract-haddock -- \
+          extractor=$(cabal list-bin extract-haddock)
+          timeout 60s "$extractor" \
             --repo-root ../.. \
             --out ../generated/haddock-annotations.json \
             --input cardano-db/src \
+            --input cardano-db-sync/src/Cardano/DbSync/Config/Types.hs \
             2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
-
-      - name: Commit the regenerated artifact (deploy lines)
-        if: github.event_name == 'push'
-        working-directory: .
-        run: |
-          if git diff --quiet -- docs/generated/; then
-            echo "The committed artifact is already up to date."
-            exit 0
-          fi
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add docs/generated/haddock-annotations.json
-          git commit -m "chore(docs): regenerate Haddock annotations (B07)"
-          git push
 
       - name: Drift gate (CON-2)
         run: |
+          git ls-files --error-unmatch docs/generated/haddock-annotations.json >/dev/null
           if git diff --quiet -- docs/generated/haddock-annotations.json; then
             echo "No drift: the committed artifact matches a fresh extraction."
             exit 0
           fi
           echo "::error::The committed Haddock annotations artifact has drifted from a fresh extraction."
           git --no-pager diff --stat -- docs/generated/haddock-annotations.json
-          git --no-pager diff -- docs/generated/haddock-annotations.json | head -100
+          git --no-pager diff -- docs/generated/haddock-annotations.json | sed -n '1,100p'
           exit 1
