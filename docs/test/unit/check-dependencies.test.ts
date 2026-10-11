@@ -58,6 +58,15 @@ describe('SEC-6 review gate', () => {
     ]);
   });
 
+  it('needs a listed package that is installed only transitively to become direct', () => {
+    const gated = {packages: {cbor: {reason: 'CBOR encoding'}}};
+    const lock = {lockfileVersion: 3, packages: {'node_modules/wallet/node_modules/cbor': {}}};
+    expect(messages(reviewGateProblems(gated, PKG, lock))).toEqual([
+      'SEC-6 cbor is installed but not a direct dependency, so package.json does not pin it',
+    ]);
+    expect(reviewGateProblems(gated, PKG, {lockfileVersion: 3, packages: {}})).toEqual([]);
+  });
+
   it('rejects a list without a packages object', () => {
     expect(messages(reviewGateProblems({packages: []}, PKG))).toEqual([
       `SEC-6 ${REVIEW_GATED} has no "packages" object`,
@@ -93,6 +102,12 @@ describe('check:deps', () => {
     await write('package.json', JSON.stringify({dependencies: {react: '^19.0.0'}}));
     expect(await main({root, out})).toBe(1);
     expect(lines.join('\n')).toMatch(/SEC-5 {2}dependencies.react is "\^19.0.0"/);
+  });
+
+  it('cannot run on a malformed lockfile, rather than crashing', async () => {
+    await write('package-lock.json', '{not json');
+    expect(await main({root, out})).toBe(2);
+    expect(lines.join('\n')).toMatch(/check:deps - cannot run/);
   });
 
   it('cannot run without the review-gated list', async () => {
