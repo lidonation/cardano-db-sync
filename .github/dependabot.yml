@@ -1,0 +1,19 @@
+# SEC-5: automated dependency PRs for the docs site, reviewed by a human before merge. Nothing
+# auto-merges them. Packages in docs/config/review-gated-dependencies.json (SEC-6) also get their
+# diff reviewed as code on every update.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /docs
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    versioning-strategy: increase
+    groups:
+      docusaurus:
+        patterns:
+          - "@docusaurus/*"
+      vitest:
+        patterns:
+          - "vitest"
+          - "@vitest/*"

@@ -12,8 +12,12 @@
  * reported but not limited. Run by `npm run check:budget` after a build, and by CI. With no
  * arguments it checks every profile output under `build/`; pass build directories to check only
  * those.
+ *
+ * Each locale is a site of its own: Docusaurus builds every non-default locale into a top-level
+ * directory with its own `assets/`, so each locale is measured against the budget separately, and
+ * the default locale's measurement leaves those directories out.
  */
-import {readFile} from 'node:fs/promises';
+import {readFile, readdir, stat} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import {gzipSync} from 'node:zlib';
@@ -94,16 +98,18 @@ export function gzipSize(bytes) {
  * Measure one build output directory.
  *
  * @param {string} dir
+ * @param {readonly string[]} [exclude] Directories under `dir` to leave out (other locales' sites).
  * @returns {Promise<{totals: Record<string, number>, pages: Array<{page: string, bytes: number}>}>}
  */
-export async function measure(dir) {
+export async function measure(dir, exclude = []) {
   /** @type {Record<string, number>} */
   const totals = {};
   /** gzip size by build-relative POSIX path. */
   const sizes = new Map();
   const htmlFiles = [];
 
-  for await (const full of walk(dir)) {
+  const skip = new Set(exclude.map((d) => path.resolve(d)));
+  for await (const full of walk(dir, (d) => skip.has(path.resolve(d)))) {
     const rel = path.relative(dir, full).split(path.sep).join('/');
     const size = gzipSize(await readFile(full));
     sizes.set(rel, size);
@@ -131,6 +137,37 @@ export async function measure(dir) {
   pages.sort((a, b) => b.bytes - a.bytes);
 
   return {totals, pages};
+}
+
+/** True when `target` exists and is a directory (`dir: true`) or a file (`dir: false`). */
+async function exists(target, dir) {
+  try {
+    return (await stat(target)).isDirectory() === dir;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The locale sites in a profile output: the top-level directories that are whole sites, holding
+ * their own `index.html` and `assets/`.
+ *
+ * @param {string} dir A profile output.
+ * @returns {Promise<string[]>}
+ */
+export async function localeSites(dir) {
+  const sites = [];
+  for (const entry of await readdir(dir, {withFileTypes: true})) {
+    const sub = path.join(dir, entry.name);
+    if (
+      entry.isDirectory() &&
+      (await exists(path.join(sub, 'assets'), true)) &&
+      (await exists(path.join(sub, 'index.html'), false))
+    ) {
+      sites.push(sub);
+    }
+  }
+  return sites.sort();
 }
 
 /**
@@ -247,10 +284,16 @@ export async function main(dirs = [], out = /** @type {Reporter} */ (console), b
     return 1;
   }
 
-  let failed = 0;
+  const sites = [];
   for (const dir of targets) {
+    const locales = await localeSites(dir);
+    sites.push({dir, exclude: locales}, ...locales.map((sub) => ({dir: sub, exclude: []})));
+  }
+
+  let failed = 0;
+  for (const {dir, exclude} of sites) {
     const name = path.relative(ROOT, dir) || dir;
-    const measured = await measure(dir);
+    const measured = await measure(dir, exclude);
     const summary = Object.entries(measured.totals)
       .sort(([a], [b]) => a.localeCompare(b))
       .map(([kind, bytes]) => `${kind} ${kb(bytes)}`)

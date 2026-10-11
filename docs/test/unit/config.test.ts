@@ -61,6 +61,13 @@ describe('docusaurus.config (ENV-1)', () => {
     expect(config.customFields?.profile).toEqual(PROFILES.dev);
   });
 
+  it('gives every profile the production address for the environment banner (ENV-4)', async () => {
+    for (const name of ['dev', 'prod']) {
+      const config = await loadConfig(name);
+      expect(config.customFields?.productionUrl).toBe('https://dbsync.cardano.intersect.org/');
+    }
+  });
+
   it('fails to load at all when no profile is selected', async () => {
     await expect(loadConfig(undefined)).rejects.toThrow(/is not set/);
   });
@@ -91,6 +98,16 @@ describe('CON-9 - markdown.format stays at the mdx default', () => {
   });
 });
 
+describe('TOK-1 - tokens.css is imported once, at the root', () => {
+  it('lists the generated tokens first in customCss, exactly once', async () => {
+    const config = await loadConfig('dev');
+    const [, options] = (config.presets ?? [])[0] as [string, {theme?: {customCss?: string[]}}];
+    const css = options.theme?.customCss ?? [];
+    expect(css[0]).toBe('./src/css/tokens.css');
+    expect(css.filter((f) => f.endsWith('tokens.css'))).toHaveLength(1);
+  });
+});
+
 describe('build hygiene', () => {
   it('throws on broken links and anchors rather than warning', async () => {
     const config = await loadConfig('dev');
@@ -99,8 +116,23 @@ describe('build hygiene', () => {
     expect(config.markdown?.hooks?.onBrokenMarkdownLinks).toBe('throw');
   });
 
-  it('registers the CNAME plugin', async () => {
+  it('registers the CNAME, route-manifest, environment, security and i18n plugins', async () => {
     const config = await loadConfig('prod');
-    expect(config.plugins).toHaveLength(1);
+    const {default: cnamePlugin} = await import('../../plugins/cname');
+    const {default: routeManifestPlugin} = await import('../../plugins/route-manifest');
+    const {default: environmentPlugin} = await import('../../plugins/environment');
+    const {default: securityPlugin} = await import('../../plugins/security');
+    const {default: i18nPlugin} = await import('../../plugins/i18n');
+    expect(config.plugins).toEqual([
+      cnamePlugin,
+      routeManifestPlugin,
+      environmentPlugin,
+      securityPlugin,
+      i18nPlugin,
+    ]);
+  });
+
+  it('turns off the base-URL banner, an inline script the CSP would refuse (SEC-3)', async () => {
+    expect((await loadConfig('dev')).baseUrlIssueBanner).toBe(false);
   });
 });

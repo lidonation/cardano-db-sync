@@ -1,0 +1,309 @@
+{
+  "_meta": {
+    "_comment": "Authoritative token definition for the Penpot token library. Values below are the REAL colours measured from the boards on 2026-08-15, not the ones documented on the Colour board. Theme sets override base BY NAME only — never add a name a theme-less build would miss."
+  },
+  "base": {
+    "surface": {
+      "base": "#ffffff",
+      "sunken": "#f0f2f5",
+      "accent-subtle": "#eaf2ff",
+      "warm": "#f5f3eb",
+      "inverse-selected": "#10233f",
+      "selected": "#17c3a5",
+      "inverse-tip": "#0e2a25",
+      "navy-raised": "#0b1b45"
+    },
+    "border": {
+      "default": "#e1e4e8",
+      "strong": "#d0d7de",
+      "warm": "#e4dfd2",
+      "warm-strong": "#d6cfbc",
+      "selected": "#0b7c68",
+      "interactive": "#7e8893",
+      "inverse": "#30363d"
+    },
+    "text": {
+      "primary": "#1a1a2e",
+      "secondary": "#57606a",
+      "tertiary": "#686f77",
+      "placeholder": "#6e7781",
+      "on-navy": "#8fa3d9",
+      "warm-tertiary": "#6e6656",
+      "on-selected": "#1a1a2e",
+      "disabled": "#9aa4b2"
+    },
+    "accent": {
+      "primary": "#0e6ff7",
+      "primary-hover": "#0b57c4",
+      "primary-active": "#0a4ba8",
+      "primary-text": "#0b57c4",
+      "primary-mid": "#7fa8ff",
+      "primary-tint": "#c8d5fd",
+      "secondary": "#17c3a5",
+      "secondary-tint": "#b7e4d8",
+      "secondary-deep": "#06584a",
+      "primary-inverse": "#4493f8",
+      "primary-inverse-hover": "#79b8ff",
+      "navy-primary": "#5b82ff",
+      "navy-primary-hover": "#85a3ff",
+      "secondary-inverse": "#2dd4b5"
+    },
+    "brand": {
+      "cardano-blue": "#0033ad",
+      "intersect-navy": "#011555",
+      "electric-blue": "#2353ff"
+    },
+    "status": {
+      "warning": "#e5a100",
+      "warning-subtle": "#fff6de",
+      "warning-text": "#8a6100",
+      "danger": "#fd551f",
+      "danger-subtle": "#ffe3d9",
+      "danger-text": "#a83208"
+    },
+    "space": {
+      "4": "4px",
+      "8": "8px",
+      "12": "12px",
+      "16": "16px",
+      "24": "24px",
+      "32": "32px",
+      "48": "48px",
+      "64": "64px",
+      "96": "96px"
+    },
+    "radius": {
+      "sm": "6px",
+      "md": "8px",
+      "lg": "10px",
+      "xl": "12px",
+      "xxl": "16px",
+      "pill": "999px"
+    },
+    "code": {
+      "surface": "#0f1117",
+      "surface-raised": "#161b22",
+      "border": "#30363d",
+      "text": "#e6edf3",
+      "text-muted": "#8b949e",
+      "prompt": "#79b8ff",
+      "accent": "#2dd4b5"
+    },
+    "typography": {
+      "_comment": "DF-1: the 13-style scale. Sizes in px; leading is a unitless line-height; tracking is a CSS letter-spacing. No type size outside these styles (lint DF-1).",
+      "family": {
+        "heading": "\"Space Grotesk\", system-ui, sans-serif",
+        "ui": "Inter, system-ui, sans-serif",
+        "code": "\"JetBrains Mono\", ui-monospace, SFMono-Regular, monospace"
+      },
+      "style": {
+        "display-hero": {
+          "family": "heading",
+          "size": 58,
+          "weight": 700,
+          "leading": 1.1,
+          "tracking": "-0.02em"
+        },
+        "heading-lg": {
+          "family": "heading",
+          "size": 38,
+          "weight": 700,
+          "leading": 1.2,
+          "tracking": "-0.02em"
+        },
+        "heading-md": {
+          "family": "heading",
+          "size": 26,
+          "weight": 700,
+          "leading": 1.25,
+          "tracking": "-0.01em"
+        },
+        "title": {
+          "family": "heading",
+          "size": 20,
+          "weight": 600,
+          "leading": 1.3,
+          "tracking": "0"
+        },
+        "wordmark": {
+          "family": "heading",
+          "size": 19,
+          "weight": 300,
+          "leading": 1.2,
+          "tracking": "0"
+        },
+        "body": {
+          "family": "ui",
+          "size": 15,
+          "weight": 400,
+          "leading": 1.65,
+          "tracking": "0"
+        },
+        "body-sm": {
+          "family": "ui",
+          "size": 13,
+          "weight": 400,
+          "leading": 1.6,
+          "tracking": "0"
+        },
+        "label": {
+          "family": "ui",
+          "size": 14,
+          "weight": 600,
+          "leading": 1.2,
+          "tracking": "0"
+        },
+        "label-sm": {
+          "family": "ui",
+          "size": 12,
+          "weight": 700,
+          "leading": 1.2,
+          "tracking": "0.04em"
+        },
+        "caption": {
+          "family": "ui",
+          "size": 12,
+          "weight": 400,
+          "leading": 1.4,
+          "tracking": "0"
+        },
+        "mono": {
+          "family": "code",
+          "size": 13,
+          "weight": 400,
+          "leading": 1.5,
+          "tracking": "0"
+        },
+        "mono-sm": {
+          "family": "code",
+          "size": 11.5,
+          "weight": 400,
+          "leading": 1.5,
+          "tracking": "0"
+        },
+        "eyebrow": {
+          "family": "code",
+          "size": 13,
+          "weight": 600,
+          "leading": 1.2,
+          "tracking": "0"
+        }
+      }
+    }
+  },
+  "dark": {
+    "surface": {
+      "base": "#0f1117",
+      "sunken": "#161b22",
+      "accent-subtle": "#10233f",
+      "warm": "#0e2a25",
+      "selected": "#2dd4b5"
+    },
+    "border": {
+      "default": "#30363d",
+      "strong": "#30363d",
+      "warm": "#30363d",
+      "interactive": "#6e7781",
+      "selected": "#2dd4b5"
+    },
+    "text": {
+      "primary": "#e6edf3",
+      "secondary": "#9aa4b2",
+      "tertiary": "#8b949e",
+      "placeholder": "#8b949e",
+      "on-selected": "#0f1117",
+      "warm-tertiary": "#8b949e",
+      "disabled": "#59616a"
+    },
+    "accent": {
+      "primary": "#4493f8",
+      "primary-hover": "#79b8ff",
+      "primary-active": "#79b8ff",
+      "primary-text": "#4493f8",
+      "secondary": "#2dd4b5",
+      "secondary-deep": "#2dd4b5",
+      "primary-tint": "#10233f",
+      "secondary-tint": "#0e2a25"
+    },
+    "status": {
+      "danger": "#ff8a65",
+      "danger-text": "#ff8a65",
+      "warning-text": "#e5a100",
+      "warning-subtle": "#2e2410",
+      "danger-subtle": "#331410"
+    },
+    "brand": {
+      "cardano-blue": "#6685ce"
+    },
+    "code": {
+      "text-muted": "#9aa4b2"
+    }
+  },
+  "cream": {
+    "surface": {
+      "base": "#fcfbf5",
+      "sunken": "#eae6d8"
+    },
+    "border": {
+      "default": "#e4dfd2",
+      "strong": "#d6cfbc",
+      "interactive": "#857e6a"
+    },
+    "text": {
+      "primary": "#2a2419",
+      "secondary": "#6e6656",
+      "tertiary": "#6e6656",
+      "placeholder": "#6e6656",
+      "on-selected": "#2a2419",
+      "disabled": "#9e9482"
+    }
+  },
+  "navy": {
+    "surface": {
+      "base": "#011555",
+      "sunken": "#0b1b45",
+      "accent-subtle": "#0e2a6b",
+      "warm": "#010e33",
+      "selected": "#2dd4b5"
+    },
+    "border": {
+      "default": "#21356e",
+      "strong": "#2e4589",
+      "warm": "#21356e",
+      "interactive": "#8fa3d9",
+      "selected": "#2dd4b5"
+    },
+    "text": {
+      "primary": "#e6edf3",
+      "secondary": "#8fa3d9",
+      "tertiary": "#748dd0",
+      "placeholder": "#748dd0",
+      "on-selected": "#0f1117",
+      "warm-tertiary": "#8fa3d9",
+      "disabled": "#4364bf"
+    },
+    "accent": {
+      "primary": "#4493f8",
+      "primary-hover": "#79b8ff",
+      "primary-active": "#79b8ff",
+      "primary-text": "#79b8ff",
+      "secondary": "#2dd4b5",
+      "secondary-deep": "#2dd4b5",
+      "primary-tint": "#0e2a6b",
+      "secondary-tint": "#010e33"
+    },
+    "brand": {
+      "cardano-blue": "#6685ce"
+    },
+    "status": {
+      "danger": "#ff8a65",
+      "danger-text": "#ff8a65",
+      "danger-subtle": "#331410",
+      "warning-text": "#e5a100",
+      "warning-subtle": "#2e2410"
+    },
+    "code": {
+      "text-muted": "#8fa3d9"
+    }
+  }
+}

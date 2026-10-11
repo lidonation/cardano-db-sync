@@ -10,19 +10,11 @@ import {readFile, readdir} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
+import {SKIP_DIRS} from './lib/build-output.mjs';
+
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 /** Directories never scanned. */
-const SKIP_DIRS = new Set([
-  'node_modules',
-  'build',
-  '.docusaurus',
-  'coverage',
-  '.git',
-  // The extractor's cabal build directory (B07): a machine-local artifact
-  // with generated JSON that is not part of the site.
-  'dist-newstyle',
-]);
 
 /** Extensions worth scanning. Binary and lockfile noise is skipped. */
 const SCAN_EXTENSIONS = new Set([
@@ -50,6 +42,7 @@ const ALLOWLIST = new Map([
   ['scripts/check-baseurl.mjs', 'this gate has to name what it looks for'],
   ['SPECIFICATION.md', 'normative planning document, not shipped source'],
   ['DESIGN.md', 'design reference, not shipped source'],
+  ['RUNBOOK.md', 'operations runbook: names the hosts the Pages settings must hold, not shipped'],
   ['package-lock.json', 'generated dependency lockfile'],
   ['eslint.config.mjs', 'the lint rule has to name the literal it forbids'],
 ]);

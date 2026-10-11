@@ -4,7 +4,7 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-import type {BuildProfile} from '../../config/profiles';
+import useBuildEnvironment from '../lib/useBuildEnvironment';
 
 /**
  * Placeholder landing page.
@@ -18,11 +18,12 @@ import type {BuildProfile} from '../../config/profiles';
  */
 export default function Home(): React.JSX.Element {
   const {siteConfig} = useDocusaurusContext();
-  const profile = siteConfig.customFields?.profile as BuildProfile | undefined;
+  const {profile} = useBuildEnvironment();
 
   return (
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
-      <main>
+      {/* A11Y-18: placeholder copy, English in every locale until the designed page (B47). */}
+      <main lang="en">
         <h1>{siteConfig.title}</h1>
         <p>{siteConfig.tagline}</p>
         <p>
@@ -31,11 +32,9 @@ export default function Home(): React.JSX.Element {
         <p>
           <Link to="/docs/intro">Read the documentation</Link>
         </p>
-        {profile ? (
-          <p data-testid="build-network">
-            This build reads the Cardano <strong>{profile.network}</strong> network.
-          </p>
-        ) : null}
+        <p data-testid="build-network">
+          This build reads the Cardano <strong>{profile.network}</strong> network.
+        </p>
       </main>
     </Layout>
   );

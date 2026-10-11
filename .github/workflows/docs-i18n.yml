@@ -1,0 +1,146 @@
+# Crowdin sync for the docs site (B40, VER-2).
+#
+#   upload    on a push to release/community-site that touches translatable content: writes the
+#             English UI strings and uploads the current line's sources (docs/crowdin.yml).
+#   download  daily and on demand: downloads translations of the current line and opens (or
+#             updates) one pull request into release/community-site. Translations are reviewed
+#             like any other change, never committed straight to the branch.
+#   alert     after every download, scheduled or run by hand: a failure opens an ops-alert issue,
+#             the next success closes it (NUM-4, B41). A manual re-run is how the runbook clears an
+#             alert, so it has to report too.
+#
+# The translations PR is opened with the workflow's own token, and GitHub starts no workflow for
+# events that token causes, so the download job dispatches docs-site.yml on the branch itself to
+# get the Docs CI gate reported. Opening the PR needs the repository setting "Allow GitHub Actions
+# to create and approve pull requests". The branch is rebuilt from the base on every run: fix a
+# translation in Crowdin, not on the branch.
+#
+# Credentials are the CROWDIN_PROJECT_ID and CROWDIN_PERSONAL_TOKEN Actions secrets. Without them
+# every job skips with a notice, so a fork or a fresh clone stays green (ENV-5). The Crowdin CLI
+# runs from npm at an exact version (SEC-5); bump it deliberately.
+name: Documentation translations
+
+on:
+  push:
+    branches: [release/community-site]
+    paths:
+      - docs/docs/**
+      - docs/src/**
+      - docs/docusaurus.config.ts
+      - docs/sidebars.ts
+      - docs/crowdin.yml
+      - .github/workflows/docs-i18n.yml
+  schedule:
+    - cron: "17 4 * * *"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: docs-i18n
+  cancel-in-progress: false
+
+env:
+  CROWDIN_CLI: "@crowdin/cli@5.3.0"
+  CROWDIN_PROJECT_ID: ${{ secrets.CROWDIN_PROJECT_ID }}
+  CROWDIN_PERSONAL_TOKEN: ${{ secrets.CROWDIN_PERSONAL_TOKEN }}
+
+jobs:
+  upload:
+    name: Upload current-line sources
+    # A manual run from any other branch would replace the current line's sources with that
+    # branch's copy, so uploads only ever come from the release branch.
+    if: github.event_name != 'schedule' && github.ref == 'refs/heads/release/community-site'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Crowdin credentials present
+        id: creds
+        run: |
+          if [ -n "$CROWDIN_PROJECT_ID" ] && [ -n "$CROWDIN_PERSONAL_TOKEN" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Crowdin secrets are not set; skipping the upload (ENV-5)."
+          fi
+      - if: steps.creds.outputs.ok
+        uses: actions/checkout@v4
+      - if: steps.creds.outputs.ok
+        uses: ./.github/actions/docs-setup
+      - name: Only the current line is translatable (VER-2)
+        if: steps.creds.outputs.ok
+        working-directory: docs
+        run: npm run check:i18n
+      - name: Write English UI strings
+        if: steps.creds.outputs.ok
+        working-directory: docs
+        run: npm run i18n:sources
+      - name: Upload sources
+        if: steps.creds.outputs.ok
+        working-directory: docs
+        run: npm exec --yes --package="$CROWDIN_CLI" -- crowdin upload sources --no-progress
+
+  download:
+    name: Download translations
+    if: github.event_name != 'push'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+      contents: write
+      pull-requests: write
+    env:
+      BRANCH: i18n/crowdin
+      BASE: release/community-site
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - name: Crowdin credentials present
+        id: creds
+        run: |
+          if [ -n "$CROWDIN_PROJECT_ID" ] && [ -n "$CROWDIN_PERSONAL_TOKEN" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "::notice::Crowdin secrets are not set; skipping the download (ENV-5)."
+          fi
+      - if: steps.creds.outputs.ok
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.BASE }}
+      - if: steps.creds.outputs.ok
+        uses: ./.github/actions/docs-setup
+        with:
+          install: "false"
+      - name: Download translations
+        if: steps.creds.outputs.ok
+        working-directory: docs
+        run: npm exec --yes --package="$CROWDIN_CLI" -- crowdin download --no-progress
+      - name: Open or update the translations pull request
+        if: steps.creds.outputs.ok
+        run: |
+          git add docs/i18n
+          git reset -q -- docs/i18n/en
+          if git diff --cached --quiet; then
+            echo "No new translations."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git switch -c "$BRANCH"
+          git commit -q -m "i18n(docs): translations from Crowdin"
+          git push --force origin "$BRANCH"
+          if [ -z "$(gh pr list --head "$BRANCH" --base "$BASE" --json number --jq '.[].number')" ]; then
+            gh pr create --head "$BRANCH" --base "$BASE" \
+              --title "i18n(docs): translations from Crowdin" \
+              --body "Translations of the current line, downloaded from Crowdin by docs-i18n.yml. Review before merging."
+          fi
+          # Events caused by GITHUB_TOKEN start no workflow, so run the docs CI on the branch here.
+          gh workflow run docs-site.yml --ref "$BRANCH"
+
+  alert:
+    name: Ops alert
+    needs: download
+    if: always() && github.event_name != 'push'
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/docs-ops-alert.yml
+    with:
+      result: ${{ needs.download.result }}

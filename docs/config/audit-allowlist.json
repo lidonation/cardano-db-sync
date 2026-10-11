@@ -1,0 +1,29 @@
+{
+  "$comment": "SEC-5: high/critical advisories accepted after review, checked by scripts/check-audit.mjs. Every entry needs a reason and an expiry; an expired entry, or one npm no longer reports, fails CI. Never add an entry to turn CI green without reading the advisory.",
+  "advisories": [
+    {
+      "id": "GHSA-5gmw-xhrv-c9v3",
+      "package": "tinypool",
+      "reason": "Docusaurus core's static-generation worker pool (tinypool@1, pinned by @docusaurus/core 3.10.2; the fix is tinypool 2, a major). Exploitation needs an attacker-controlled worker option or a prior prototype-pollution primitive in the build process; the build only renders this repository's own content. Build-time only, never shipped to the browser.",
+      "expires": "2027-01-09"
+    },
+    {
+      "id": "GHSA-85c8-ppgw-ccpr",
+      "package": "tinypool",
+      "reason": "Same package and path as GHSA-5gmw-xhrv-c9v3: a prototype-pollution gadget in run() options, reachable only from inputs the build controls. Build-time only.",
+      "expires": "2027-01-09"
+    },
+    {
+      "id": "GHSA-5c6j-r48x-rmvq",
+      "package": "serialize-javascript",
+      "reason": "Via copy-webpack-plugin and css-minimizer-webpack-plugin inside @docusaurus/bundler (serialize-javascript@6; the fix is 7.0.5, a major). The RCE needs attacker-crafted RegExp/Date objects to be serialized; both plugins serialize only build options written in this repository. Build-time only.",
+      "expires": "2027-01-09"
+    },
+    {
+      "id": "GHSA-vfj7-8cjw-p6xm",
+      "package": "braces",
+      "reason": "No patched release exists (3.0.3 is the latest and is affected). Denial of service on deeply nested brace patterns, via chokidar and micromatch in Docusaurus; every pattern comes from this repository's config. Build-time only.",
+      "expires": "2027-01-09"
+    }
+  ]
+}

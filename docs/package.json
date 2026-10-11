@@ -4,7 +4,7 @@
   "private": true,
   "description": "Documentation and community site for cardano-db-sync",
   "engines": {
-    "node": ">=20.11"
+    "node": ">=22.12"
   },
   "scripts": {
     "docusaurus": "docusaurus",
@@ -20,36 +20,53 @@
     "format:check": "prettier --check .",
     "check:baseurl": "node scripts/check-baseurl.mjs",
     "check:css": "node scripts/check-css-gates.mjs",
+    "check:tokens": "node scripts/check-tokens.mjs",
+    "check:token-lint": "node scripts/check-token-lint.mjs",
+    "check:deps": "node scripts/check-dependencies.mjs",
+    "check:audit": "node scripts/check-audit.mjs",
+    "check:i18n": "node scripts/check-i18n.mjs",
+    "tokens": "python3 design/tools/tokens-to-css.py design/tokens.source.json > src/css/tokens.css",
+    "i18n:sources": "cross-env DOCS_PROFILE=prod docusaurus write-translations --locale en",
+    "check:manifest": "node scripts/check-route-manifest.mjs",
     "check:links": "node scripts/check-links.mjs",
-    "check:annotations": "node scripts/check-annotations.mjs",
+    "check:csp": "node scripts/check-csp.mjs",
     "check:budget": "node scripts/check-asset-budget.mjs",
     "test": "vitest run --coverage",
-    "test:build": "vitest run --config vitest.build.config.ts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run test && npm run test:build && npm run check:links && npm run check:budget"
+    "test:build": "vitest run --config vitest.build.config.mts",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run check:tokens && npm run check:token-lint && npm run check:deps && npm run check:audit && npm run check:i18n && npm run check:manifest && npm run test && npm run test:build && npm run check:links && npm run check:csp && npm run check:budget",
+    "check:annotations": "node scripts/check-annotations.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
+    "@docusaurus/plugin-content-docs": "3.10.2",
     "@docusaurus/preset-classic": "3.10.2",
-    "@mdx-js/react": "^3.0.0",
-    "clsx": "^2.1.1",
-    "prism-react-renderer": "^2.4.1",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+    "@docusaurus/theme-common": "3.10.2",
+    "@docusaurus/utils-common": "3.10.2",
+    "@fontsource-variable/inter": "5.3.0",
+    "@fontsource-variable/jetbrains-mono": "5.3.0",
+    "@fontsource-variable/space-grotesk": "5.3.0",
+    "@mdx-js/react": "3.1.1",
+    "clsx": "2.1.1",
+    "prism-react-renderer": "2.4.1",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
   },
   "devDependencies": {
     "@docusaurus/module-type-aliases": "3.10.2",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",
-    "@eslint/js": "^9.15.0",
-    "@types/node": "^22.10.0",
-    "@types/react": "^19.0.0",
-    "@vitest/coverage-v8": "^2.1.8",
-    "cross-env": "^7.0.3",
-    "eslint": "^9.15.0",
-    "prettier": "^3.4.0",
-    "typescript": "~5.6.0",
-    "typescript-eslint": "^8.16.0",
-    "vitest": "^2.1.8"
+    "@eslint/js": "9.39.5",
+    "@types/js-yaml": "4.0.9",
+    "@types/node": "22.20.2",
+    "@types/react": "19.3.0",
+    "@vitest/coverage-v8": "5.0.3",
+    "cross-env": "7.0.3",
+    "eslint": "9.39.5",
+    "js-yaml": "4.3.2",
+    "prettier": "3.9.6",
+    "typescript": "5.6.3",
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.3"
   },
   "browserslist": {
     "production": [

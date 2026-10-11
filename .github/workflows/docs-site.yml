@@ -14,6 +14,9 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+  # docs-i18n.yml dispatches this on the Crowdin translations branch, whose pull request is opened
+  # by GITHUB_TOKEN and so triggers nothing on its own.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -48,10 +51,31 @@ jobs:
         run: npm run typecheck
       - name: No hardcoded environment values (ENV-1)
         run: npm run check:baseurl
-      - name: Style gates (FLOOR-4, PERF-3, PERF-5)
+      - name: Style gates (FLOOR-4, FLOOR-8, PERF-3, PERF-5, DF-1, TOK-1, TOK-4, TOK-5)
         run: npm run check:css
       - name: Annotation artifact is consumable (CON-1)
         run: npm run check:annotations
+      - name: Tokens regenerate byte-identically (THM-2, DF-1, DF-11)
+        run: npm run check:tokens
+      - name: Token lint (THM-4, TOK-1, TOK-10, TOK-12)
+        run: npm run check:token-lint
+      - name: Dependencies pinned, survey set review-gated (SEC-5, SEC-6)
+        run: npm run check:deps
+      - name: No unreviewed high or critical advisory (SEC-5)
+        run: npm run check:audit
+      - name: Only the current line is translatable (VER-2)
+        run: npm run check:i18n
+
+      # VER-5: the route manifest is append-only. Base is the PR base, or the commit a push replaced.
+      # The checkout is shallow, so fetch just the base commit rather than the repo's full history.
+      - name: Route manifest is append-only (VER-5)
+        run: |
+          if [ -n "$MANIFEST_BASE_REF" ] && ! printf '%s' "$MANIFEST_BASE_REF" | grep -Eq '^0+$'; then
+            git fetch --no-tags --depth=1 origin "$MANIFEST_BASE_REF"
+          fi
+          npm run check:manifest
+        env:
+          MANIFEST_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
 
   unit-tests:
     name: Unit tests
@@ -70,6 +94,8 @@ jobs:
       - uses: ./.github/actions/docs-setup
       # B01 DoD: both profiles build clean from one working tree, the developer output carries no
       # CNAME, the production output does, and a broken Markdown file fails the build.
+      # Under CI the build checks the route manifest instead of writing it, and fails listing any
+      # published route the committed manifest does not account for (VER-5).
       - name: Build and profile assertions
         run: npm run test:build
       - uses: actions/upload-artifact@v4
@@ -94,6 +120,8 @@ jobs:
           path: docs/build/
       - name: Internal links resolve in every profile (BLD-3)
         run: node scripts/check-links.mjs
+      - name: Every page under its CSP, no external origin (SEC-1, SEC-2, SEC-3)
+        run: node scripts/check-csp.mjs
 
   asset-budget:
     name: Asset budget
@@ -133,13 +161,20 @@ jobs:
             fi
           done
 
-  # B41: publishes the developer profile to lidonation.github.io/cardano-db-sync. Deploys run only
-  # from release/community-site (the fork's ENV-6 deploy branch), after the Docs CI gate passes. The
-  # github-pages environment must allow this branch under Settings -> Environments.
-  deploy:
+  # B41 / ENV-6: one repository, one Pages site, one profile.
+  #   - The fork (lidonation) publishes the developer profile from release/community-site only,
+  #     through the `github-pages` environment.
+  #   - Upstream (IntersectMBO) publishes the production profile from master only, through the
+  #     `production` environment, whose required reviewers approve each deploy (B48 cutover).
+  # Both run after the Docs CI gate. The shared steps, including the BLD-1 size and timeout checks,
+  # live in .github/actions/docs-deploy. Environment and Pages settings: docs/RUNBOOK.md.
+  deploy-dev:
     name: Deploy developer site to Pages
     needs: gate
-    if: github.event_name == 'push' && github.ref == 'refs/heads/release/community-site'
+    if: >-
+      github.event_name == 'push' &&
+      github.repository != 'IntersectMBO/cardano-db-sync' &&
+      github.ref == 'refs/heads/release/community-site'
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -150,20 +185,35 @@ jobs:
       cancel-in-progress: false
     environment:
       name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+      url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
-
-      - uses: ./.github/actions/docs-setup
-
-      - name: Build developer profile
-        run: npm run build:dev
-
-      - uses: actions/configure-pages@v5
-
-      - uses: actions/upload-pages-artifact@v3
+      - id: deploy
+        uses: ./.github/actions/docs-deploy
         with:
-          path: docs/build/dev
+          profile: dev
 
-      - id: deployment
-        uses: actions/deploy-pages@v4
+  deploy-production:
+    name: Deploy production site to Pages
+    needs: gate
+    if: >-
+      github.event_name == 'push' &&
+      github.repository == 'IntersectMBO/cardano-db-sync' &&
+      github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    concurrency:
+      group: pages
+      cancel-in-progress: false
+    environment:
+      name: production
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: deploy
+        uses: ./.github/actions/docs-deploy
+        with:
+          profile: prod

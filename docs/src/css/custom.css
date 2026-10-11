@@ -5,3 +5,10 @@
  * token pipeline exists, this file carries no colour, type size, radius or spacing value: KICKOFF
  * §3 forbids inventing one, and `tokens.css` is generated, never hand-written.
  */
+
+/* SEC-2: Docusaurus hides its SVG icon sprite with an inline style attribute, which
+   style-src 'self' blocks. plugins/security swaps it for this marker, hidden from here instead,
+   or it renders as an empty 300x150 box. */
+svg[data-dbs-icon-sprite] {
+  display: none;
+}
