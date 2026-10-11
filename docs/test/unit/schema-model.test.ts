@@ -29,6 +29,7 @@ type TypeRow = {
   kind: string;
   base_oid: number;
   base_format: string | null;
+  elem_oid?: number | null;
   not_null: boolean;
   default: string | null;
   checks: string[];
@@ -39,7 +40,7 @@ function domain(
   oid: number,
   name: string,
   baseOid: number,
-  baseFormat: string,
+  baseFormat: string | null,
   over: Partial<TypeRow> = {},
 ): TypeRow {
   return {
@@ -79,6 +80,13 @@ function catalog(word128Checks: string[] = [WORD128_CHECK], word128Base = 'numer
     ],
     [104, domain(104, 'rewardkind', 103, 'rewardtype')],
     [105, domain(105, 'cardinal', 23, 'integer', {schema: 'information_schema'})],
+    // A NOT NULL domain, arrays over it and over the enum, and domains over those arrays.
+    [106, domain(106, 'nn', 23, 'integer', {not_null: true, checks: ['CHECK ((VALUE > 0))']})],
+    [107, {...domain(107, '_nn', 0, null), kind: 'a', elem_oid: 106}],
+    [108, {...domain(108, '_rewardtype', 0, null), kind: 'a', elem_oid: 103}],
+    [109, domain(109, 'rewardtypes', 108, 'rewardtype[]')],
+    [110, domain(110, 'nns', 107, 'nn[]')],
+    [111, {...domain(111, '_word31type', 0, null), kind: 'a', elem_oid: 102}],
   ]);
 }
 
@@ -233,16 +241,47 @@ describe('resolveColumnType', () => {
       'leader',
       'member',
     ]);
-    const arr = resolveColumnType(row('a', 999, 'word31type[]', {elem_oid: 102}), types).resolved;
-    expect(arr).toEqual({
+    expect(resolveColumnType(row('a', 111, 'word31type[]'), types).resolved).toEqual({
       base: 'integer[]',
-      domains: ['word31type'],
-      checks: [{domain: 'word31type', definition: 'CHECK ((VALUE >= 0))'}],
+      domains: [],
+      checks: [],
       not_null: false,
+      element: {
+        base: 'integer',
+        domains: ['word31type'],
+        checks: [{domain: 'word31type', definition: 'CHECK ((VALUE >= 0))'}],
+        not_null: false,
+      },
     });
-    expect(
-      resolveColumnType(row('b', 1007, 'integer[]', {elem_oid: 23}), types).resolved.base,
-    ).toBe('integer[]');
+    expect(resolveColumnType(row('b', 1007, 'integer[]'), types).resolved.base).toBe('integer[]');
+  });
+
+  it('resolves a domain over an enum array and over a domain array (review finding 2)', () => {
+    const types = catalog();
+    expect(resolveColumnType(row('kinds', 109, 'rewardtypes'), types).resolved).toEqual({
+      base: 'rewardtype[]',
+      domains: ['rewardtypes'],
+      checks: [],
+      not_null: false,
+      element: {
+        base: 'rewardtype',
+        domains: [],
+        checks: [],
+        not_null: false,
+        enum: ['leader', 'member'],
+      },
+    });
+    const nns = resolveColumnType(row('c', 110, 'nns'), types).resolved;
+    expect(nns.base).toBe('integer[]');
+    expect(nns.element).toMatchObject({domains: ['nn'], not_null: true});
+  });
+
+  it('fails on an array whose element the catalog does not carry', () => {
+    const types = catalog();
+    types.set(112, {...types.get(111)!, oid: 112, elem_oid: 999});
+    expect(() => resolveColumnType(row('z', 112, 'x[]'), types)).toThrow(
+      /has no resolvable element/,
+    );
   });
 });
 
@@ -257,6 +296,26 @@ describe('buildColumn', () => {
     expect(own.default).toBe('9');
     expect(buildColumn(row('n', 20, 'bigint', {not_null: false}), catalog()).nullable).toBe(true);
     expect(buildColumn({...row('n', 20, 'bigint'), kind: undefined}, catalog()).kind).toBe('table');
+  });
+
+  it('a nullable array of NOT NULL domain elements stays nullable (review finding 1)', () => {
+    const col = buildColumn(row('a', 107, 'nn[]', {not_null: false}), catalog());
+    expect(col.nullable).toBe(true);
+    expect(col.resolved_type.element?.not_null).toBe(true);
+  });
+
+  it('element changes flip the fingerprint: enum labels, element CHECKs', () => {
+    const before = catalog();
+    const relabelled = catalog();
+    relabelled.set(103, {...relabelled.get(103)!, labels: ['leader', 'member', 'refund']});
+    const unchecked = catalog();
+    unchecked.set(106, {...unchecked.get(106)!, checks: []});
+    const kinds = row('kinds', 109, 'rewardtypes');
+    const nns = row('c', 110, 'nns');
+    expect(buildColumn(kinds, relabelled).fingerprint).not.toBe(
+      buildColumn(kinds, before).fingerprint,
+    );
+    expect(buildColumn(nns, unchecked).fingerprint).not.toBe(buildColumn(nns, before).fingerprint);
   });
 
   it('regression (the 179-column incident): a domain change flips every dependent fingerprint', () => {
@@ -287,7 +346,15 @@ describe('buildColumn', () => {
 describe('buildDomains', () => {
   it('resolves only the db-sync schema domains, sorted', () => {
     const domains = buildDomains(catalog());
-    expect(Object.keys(domains)).toEqual(['outsum', 'rewardkind', 'word128type', 'word31type']);
+    expect(Object.keys(domains)).toEqual([
+      'nn',
+      'nns',
+      'outsum',
+      'rewardkind',
+      'rewardtypes',
+      'word128type',
+      'word31type',
+    ]);
     expect(domains.outsum.domains).toEqual(['outsum', 'word128type']);
   });
 });

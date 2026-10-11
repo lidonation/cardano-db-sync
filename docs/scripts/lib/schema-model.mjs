@@ -45,11 +45,49 @@ export function fingerprint({name, resolved_type, nullable, default: def}) {
 }
 
 /**
- * Resolve one domain to its concrete base type, transitively.
+ * Resolve any catalog type: a domain (walked transitively), an enum (with its labels), or an array
+ * of either (resolved as `element`). Returns null for a type the catalog snapshot does not carry,
+ * which is a plain base type.
+ *
+ * @param {number} oid
+ * @param {Map<number, object>} types catalog rows keyed by oid (`{oid, name, kind: 'd' | 'e' | 'a',
+ *   base_oid, elem_oid, base_format, not_null, default, checks, labels}`)
+ * @returns {{resolved: ResolvedType, default: string | null} | null}
+ */
+export function resolveType(oid, types) {
+  const type = types.get(oid);
+  if (!type) return null;
+  if (type.kind === 'd') return resolveDomain(oid, types);
+  if (type.kind === 'e') {
+    return {
+      resolved: {base: type.name, domains: [], checks: [], not_null: false, enum: [...type.labels]},
+      default: null,
+    };
+  }
+  // An array: element constraints (CHECK, NOT NULL) apply to the elements, never to the array
+  // value, so they stay inside `element` and do not make the column NOT NULL.
+  const element = resolveType(type.elem_oid, types);
+  if (!element) throw new Error(`array type ${type.name} has no resolvable element`);
+  return {
+    resolved: {
+      base: `${element.resolved.base}[]`,
+      domains: [],
+      checks: [],
+      not_null: false,
+      element: element.resolved,
+    },
+    default: null,
+  };
+}
+
+/**
+ * Resolve one domain to its concrete base type, transitively: the chain (outermost first), every
+ * CHECK on it, domain NOT NULL, the outermost default, and the enum labels or array element the
+ * chain ends at.
  *
  * @param {number} oid the domain's type oid
  * @param {Map<number, object>} types catalog rows keyed by oid
- *   (`{oid, name, kind, base_oid, base_format, not_null, default, checks, labels}`)
+ * @returns {{resolved: ResolvedType, default: string | null}}
  */
 export function resolveDomain(oid, types) {
   const domains = [];
@@ -69,8 +107,15 @@ export function resolveDomain(oid, types) {
     domainDefault ??= current.default;
     const next = types.get(current.base_oid);
     if (!next || next.kind !== 'd') {
-      const resolved = {base: current.base_format, domains, checks, not_null: notNull};
-      if (next && next.kind === 'e') resolved.enum = [...next.labels];
+      const inner = next ? resolveType(next.oid, types).resolved : null;
+      const resolved = {
+        base: inner ? inner.base : current.base_format,
+        domains,
+        checks,
+        not_null: notNull,
+      };
+      if (inner?.enum) resolved.enum = inner.enum;
+      if (inner?.element) resolved.element = inner.element;
       return {resolved, default: domainDefault};
     }
     current = next;
@@ -80,23 +125,20 @@ export function resolveDomain(oid, types) {
 
 /**
  * The resolved type of a column: base type, the domain chain (outermost first), every CHECK on the
- * chain, enum labels when the base is an enum, and whether a domain forbids NULL.
+ * chain, enum labels when the base is an enum, the element type of an array of domains or enums,
+ * and whether a domain forbids NULL.
+ *
+ * @param {{type_oid: number, format: string}} column
+ * @param {Map<number, object>} types
+ * @returns {{resolved: ResolvedType, default: string | null}}
  */
 export function resolveColumnType(column, types) {
-  const type = types.get(column.type_oid);
-  if (type && type.kind === 'd') return resolveDomain(column.type_oid, types);
-  if (type && type.kind === 'e') {
-    return {
-      resolved: {base: type.name, domains: [], checks: [], not_null: false, enum: [...type.labels]},
+  return (
+    resolveType(column.type_oid, types) ?? {
+      resolved: {base: column.format, domains: [], checks: [], not_null: false},
       default: null,
-    };
-  }
-  const element = column.elem_oid ? types.get(column.elem_oid) : undefined;
-  if (element && (element.kind === 'd' || element.kind === 'e')) {
-    const inner = resolveColumnType({type_oid: element.oid}, types);
-    return {resolved: {...inner.resolved, base: `${inner.resolved.base}[]`}, default: null};
-  }
-  return {resolved: {base: column.format, domains: [], checks: [], not_null: false}, default: null};
+    }
+  );
 }
 
 /** One fingerprinted column from a catalog row. */

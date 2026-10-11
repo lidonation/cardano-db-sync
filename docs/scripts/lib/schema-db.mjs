@@ -88,8 +88,9 @@ export function applySql(database, sql) {
 
 const CATALOG_SQL = `
 WITH types AS (
-  SELECT t.oid::int AS oid, t.typname AS name, n.nspname AS schema, t.typtype AS kind,
-         t.typbasetype::int AS base_oid,
+  SELECT t.oid::int AS oid, t.typname AS name, n.nspname AS schema,
+         CASE WHEN t.typtype IN ('d', 'e') THEN t.typtype::text ELSE 'a' END AS kind,
+         t.typbasetype::int AS base_oid, NULLIF(t.typelem, 0)::int AS elem_oid,
          CASE WHEN t.typtype = 'd' THEN format_type(t.typbasetype, t.typtypmod) END AS base_format,
          t.typnotnull AS not_null,
          t.typdefault AS "default",
@@ -98,18 +99,20 @@ WITH types AS (
          COALESCE((SELECT json_agg(e.enumlabel ORDER BY e.enumsortorder)
                    FROM pg_enum e WHERE e.enumtypid = t.oid), '[]') AS labels
   FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace
+  -- Domains, enums, and arrays whose element is a domain or an enum (resolved as the element type).
   WHERE t.typtype IN ('d', 'e')
+     OR (t.typcategory = 'A' AND EXISTS (
+           SELECT 1 FROM pg_type e WHERE e.oid = t.typelem AND e.typtype IN ('d', 'e')))
 ), columns AS (
   SELECT c.relname AS "table", CASE c.relkind WHEN 'v' THEN 'view' ELSE 'table' END AS kind,
          a.attnum AS position, a.attname AS name,
-         a.atttypid::int AS type_oid, NULLIF(t.typelem, 0)::int AS elem_oid,
+         a.atttypid::int AS type_oid,
          format_type(a.atttypid, a.atttypmod) AS format,
          a.attnotnull AS not_null,
          pg_get_expr(d.adbin, d.adrelid) AS "default"
   FROM pg_attribute a
   JOIN pg_class c ON c.oid = a.attrelid
   JOIN pg_namespace n ON n.oid = c.relnamespace
-  JOIN pg_type t ON t.oid = a.atttypid
   LEFT JOIN pg_attrdef d ON d.adrelid = a.attrelid AND d.adnum = a.attnum
   WHERE n.nspname = 'public' AND c.relkind IN ('r', 'p', 'v') AND a.attnum > 0 AND NOT a.attisdropped
 )

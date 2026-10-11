@@ -7,6 +7,7 @@ import {describe, expect, it} from 'vitest';
 import {
   camelToSnake,
   fieldToColumn,
+  parseStringList,
   readAddressVariantDdl,
   readDbInfoInstances,
   readHaskellTables,
@@ -77,6 +78,20 @@ describe('readDbInfoInstances', () => {
     ).toBe('last');
   });
 
+  it('reads an instance header with a trailing comment (review finding 3)', () => {
+    const source = 'instance DbInfo X where -- comment\n  tableName _ = "x"\n';
+    expect(readDbInfoInstances(source, 'X.hs')).toEqual([
+      {type: 'X', file: 'X.hs', tableName: 'x', columnNames: null},
+    ]);
+  });
+
+  it('fails on a DbInfo instance it cannot parse instead of dropping it', () => {
+    const source = 'instance (Show a) => DbInfo (Wrapped a) where\n  tableName _ = "w"\n';
+    expect(() => readDbInfoInstances(source, 'W.hs')).toThrow(
+      /W\.hs: DbInfo instance\(s\) the reader cannot parse: instance \(Show a\) => DbInfo \(Wrapped a\) where/,
+    );
+  });
+
   it('fails when columnNames is not a list', () => {
     expect(() =>
       readDbInfoInstances('instance DbInfo X where\n  columnNames _ = names\n', 'X.hs'),
@@ -92,6 +107,24 @@ describe('readUnlinesBinding', () => {
     expect(readUnlinesBinding(sample, 'singleQuery')).toBe(
       'CREATE INDEX IF NOT EXISTS idx ON t(c);',
     );
+  });
+
+  it('rejects a list item that is not a standalone literal (review finding 4)', () => {
+    const withName =
+      '  q =\n    Text.unlines\n      [ "SELECT"\n      , fragment\n      , "1"\n      ]\n';
+    expect(() => readUnlinesBinding(withName, 'q')).toThrow(
+      /q: list item is not a string literal: fragment/,
+    );
+    const concat = '  q =\n    Text.unlines\n      [ "SELECT" <> x\n      ]\n';
+    expect(() => readUnlinesBinding(concat, 'q')).toThrow(
+      /q: expected , or \] after a list item: <> x/,
+    );
+  });
+
+  it('keeps a ] inside a literal and skips -- comments inside the list', () => {
+    const source = '  q =\n    Text.unlines\n      [ "a text[]" -- why\n      , "b"\n      ]\n';
+    expect(readUnlinesBinding(source, 'q')).toBe('a text[]\nb\n');
+    expect(parseStringList('xs = []', 0, 'xs')).toEqual([]);
   });
 
   it('fails on a missing binding or an empty list', () => {

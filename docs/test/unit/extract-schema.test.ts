@@ -41,7 +41,6 @@ function agreeingCatalog(variant: 'core' | 'address') {
       {
         name: 'id',
         type_oid: 20,
-        elem_oid: null,
         format: 'bigint',
         not_null: true,
         default: null,
@@ -50,7 +49,6 @@ function agreeingCatalog(variant: 'core' | 'address') {
       ...t.columns.map((c: {column: string; nullable: boolean}) => ({
         name: c.column,
         type_oid: 20,
-        elem_oid: null,
         format: 'bigint',
         not_null: !c.nullable,
         default: null,

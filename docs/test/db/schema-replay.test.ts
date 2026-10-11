@@ -1,7 +1,12 @@
 import {beforeAll, describe, expect, it} from 'vitest';
 
 import {extractArtifact} from '../../scripts/extract-schema.mjs';
-import {changedFingerprints, domainTypedColumns} from '../../scripts/lib/schema-model.mjs';
+import {applySql, createDatabase, dropDatabase, readCatalog} from '../../scripts/lib/schema-db.mjs';
+import {
+  buildColumn,
+  changedFingerprints,
+  domainTypedColumns,
+} from '../../scripts/lib/schema-model.mjs';
 
 /*
  * B08 against a real Postgres 17: the migrations are replayed, not modelled. Run with
@@ -79,5 +84,56 @@ describe('the 2-0030 domain migration (regression for the incident)', () => {
     const a = declared(before);
     const b = declared(after);
     for (const key of changedFingerprints(before, after)) expect(b.get(key)).toBe(a.get(key));
+  });
+});
+
+describe('arrays and enums against the real catalog (review findings 1 and 2)', () => {
+  const name = `dbsync_schema_arrays_${process.pid}`;
+  const column = (table: string, col: string) => {
+    const catalog = readCatalog(name);
+    return buildColumn(
+      catalog.tables.get(table)!.find((c: {name: string}) => c.name === col),
+      catalog.types,
+    );
+  };
+
+  it('keeps element constraints inside element, and flips on element changes', () => {
+    createDatabase('postgres', name);
+    try {
+      applySql(
+        name,
+        `CREATE TABLE schema_version (stage_one int, stage_two int, stage_three int);
+         INSERT INTO schema_version VALUES (1, 2, 3);
+         CREATE DOMAIN nn AS integer NOT NULL CHECK (VALUE > 0);
+         CREATE TYPE colour AS ENUM ('red', 'blue');
+         CREATE DOMAIN colours AS colour[];
+         CREATE DOMAIN nns AS nn[];
+         CREATE TABLE t (a nn[] NULL, b colours, c nns);`,
+      );
+      const a = column('t', 'a');
+      expect(a.nullable).toBe(true);
+      expect(a.resolved_type).toMatchObject({
+        base: 'integer[]',
+        element: {domains: ['nn'], not_null: true},
+      });
+      const b = column('t', 'b');
+      expect(b.resolved_type).toMatchObject({
+        base: 'colour[]',
+        domains: ['colours'],
+        element: {base: 'colour', enum: ['red', 'blue']},
+      });
+      const c = column('t', 'c');
+      expect(c.resolved_type.element).toMatchObject({
+        checks: [{domain: 'nn', definition: 'CHECK ((VALUE > 0))'}],
+      });
+
+      applySql(name, `ALTER TYPE colour ADD VALUE 'green'`);
+      expect(column('t', 'b').fingerprint).not.toBe(b.fingerprint);
+      applySql(name, 'ALTER DOMAIN nn DROP CONSTRAINT nn_check');
+      expect(column('t', 'c').fingerprint).not.toBe(c.fingerprint);
+      expect(column('t', 'a').fingerprint).not.toBe(a.fingerprint);
+    } finally {
+      dropDatabase('postgres', name);
+    }
   });
 });

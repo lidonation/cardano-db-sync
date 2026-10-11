@@ -61,14 +61,47 @@ function stringLiteral(literal) {
   return JSON.parse(literal);
 }
 
-const STRING_LITERAL = /"(?:[^"\\]|\\.)*"/g;
-
-/** The string literals in a bracketed list that starts at or after `from`. */
-function stringListAt(source, from, what) {
-  const open = source.indexOf('[', from);
-  const close = open < 0 ? -1 : source.indexOf(']', open);
-  if (open < 0 || close < 0) throw new Error(`${what}: no [ … ] list found`);
-  return (source.slice(open, close).match(STRING_LITERAL) ?? []).map(stringLiteral);
+/**
+ * Parse a Haskell list of string literals starting at the first `[` at or after `from`. Every item
+ * must be a standalone literal: an expression, a concatenation or a bare name fails, so the reader
+ * can never replay SQL that differs from what the Haskell builds. `--` comments are skipped, and a
+ * `]` inside a literal (`"text[]"`) does not end the list.
+ */
+export function parseStringList(source, from, what) {
+  let i = source.indexOf('[', from);
+  if (i < 0) throw new Error(`${what}: no [ … ] list found`);
+  i++;
+  const items = [];
+  const skip = () => {
+    for (;;) {
+      while (i < source.length && /\s/.test(source[i])) i++;
+      if (source.startsWith('--', i)) {
+        while (i < source.length && source[i] !== '\n') i++;
+      } else {
+        return;
+      }
+    }
+  };
+  for (;;) {
+    skip();
+    if (source[i] === ']' && items.length === 0) return items;
+    const literal = /^"(?:[^"\\\n]|\\.)*"/.exec(source.slice(i));
+    if (!literal) {
+      throw new Error(
+        `${what}: list item is not a string literal: ${source.slice(i, i + 40).split('\n')[0]}`,
+      );
+    }
+    items.push(stringLiteral(literal[0]));
+    i += literal[0].length;
+    skip();
+    if (source[i] === ']') return items;
+    if (source[i] !== ',') {
+      throw new Error(
+        `${what}: expected , or ] after a list item: ${source.slice(i, i + 40).split('\n')[0]}`,
+      );
+    }
+    i++;
+  }
 }
 
 /**
@@ -78,7 +111,7 @@ function stringListAt(source, from, what) {
 export function readUnlinesBinding(source, name) {
   const match = new RegExp(`^\\s+${name}\\s*=\\s*\\n?\\s*Text\\.unlines\\b`, 'm').exec(source);
   if (match) {
-    const lines = stringListAt(source, match.index + match[0].length, name);
+    const lines = parseStringList(source, match.index + match[0].length, name);
     if (lines.length === 0) throw new Error(`${name}: the Text.unlines list is empty`);
     return lines.map((line) => `${line}\n`).join('');
   }
@@ -128,10 +161,15 @@ export function readRecords(source, file) {
   return records;
 }
 
-/** `instance DbInfo X where` blocks with their `tableName` / `columnNames` overrides. */
+/**
+ * `instance DbInfo X where` blocks with their `tableName` / `columnNames` overrides. Every line that
+ * declares a DbInfo instance must be readable: one the reader cannot parse fails the run instead of
+ * dropping a table out of the cross-check.
+ */
 export function readDbInfoInstances(source, file) {
   const instances = [];
-  const pattern = /^instance DbInfo ([A-Z][A-Za-z0-9_']*)(?: where)?\s*$/gm;
+  const declared = source.split('\n').filter((line) => /^\s*instance\b.*\bDbInfo\b/.test(line));
+  const pattern = /^instance DbInfo ([A-Z][A-Za-z0-9_']*)(?:\s+where)?\s*(?:--.*)?$/gm;
   let match;
   while ((match = pattern.exec(source)) !== null) {
     const start = match.index + match[0].length;
@@ -144,9 +182,18 @@ export function readDbInfoInstances(source, file) {
       file,
       tableName: table ? stringLiteral(table[1]) : null,
       columnNames: columns
-        ? stringListAt(body, columns.index, `${file}: ${match[1]}.columnNames`)
+        ? parseStringList(body, columns.index, `${file}: ${match[1]}.columnNames`)
         : null,
     });
+  }
+  if (instances.length !== declared.length) {
+    const read = new Set(instances.map((i) => i.type));
+    const unread = declared.filter(
+      (line) => !read.has(/DbInfo\s+\(?([A-Z][A-Za-z0-9_']*)/.exec(line)?.[1]),
+    );
+    throw new Error(
+      `${file}: DbInfo instance(s) the reader cannot parse: ${unread.map((l) => l.trim()).join(' | ')}`,
+    );
   }
   return instances;
 }

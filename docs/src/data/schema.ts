@@ -35,6 +35,8 @@ export interface ResolvedType {
   checks: DomainCheck[];
   not_null: boolean;
   enum?: string[];
+  /** For an array of domains or enums: the element type, with its own constraints. */
+  element?: ResolvedType;
 }
 
 /** One column. `fingerprint` hashes exactly `(name, resolved_type, nullable, default)`. */
