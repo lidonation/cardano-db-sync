@@ -10,10 +10,11 @@ import {readFile, readdir} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
+import {SKIP_DIRS} from './lib/build-output.mjs';
+
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 /** Directories never scanned. */
-const SKIP_DIRS = new Set(['node_modules', 'build', '.docusaurus', 'coverage', '.git']);
 
 /** Extensions worth scanning. Binary and lockfile noise is skipped. */
 const SCAN_EXTENSIONS = new Set([

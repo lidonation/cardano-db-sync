@@ -385,3 +385,63 @@ describe('gaps closed in review', () => {
     expect((await findViolations(root)).map((v) => v.file)).toEqual(['src/test/real.css']);
   });
 });
+
+describe('B03 gaps closed in review', () => {
+  it.each([
+    'background: white',
+    'border-color: RebeccaPurple',
+    'outline: 2px solid black',
+    'box-shadow: 0 0 0 1px red',
+  ])('TOK-1 flags a named colour: `%s`', (decl) => {
+    expect(rules(`p { ${decl}; }`)).toEqual(['TOK-1']);
+  });
+
+  it('TOK-1 flags a named colour in a custom property', () => {
+    expect(rules(':root { --accent: tomato; }')).toEqual(['TOK-1']);
+  });
+
+  it.each([
+    'background: transparent',
+    'border-color: currentColor',
+    'transition: color 0.2s, background-color 0.2s',
+    'grid-template-areas: "red gold"',
+    'content: "#fade"',
+    'mask: url("#bead")',
+    "filter: url('#cafe')",
+  ])('TOK-1 leaves `%s` alone', (decl) => {
+    expect(rules(`p { ${decl}; }`)).toEqual([]);
+  });
+
+  it.each([
+    'border-inline: 3px solid var(--dbs-border-default)',
+    'border-inline-width: 2px',
+    'border-width: 0 0 0 4px',
+    'border-width: 1px 3px',
+    'border-left: var(--dbs-space-4) solid var(--dbs-border-default)',
+    'border-inline-start-width: var(--dbs-radius-sm)',
+  ])('FLOOR-8 flags `%s`', (decl) => {
+    expect(rules(`.card { ${decl}; }`)).toEqual(['FLOOR-8']);
+  });
+
+  it.each(['border-width: 2px', 'border-width: 3px 1px', 'border-inline: 1px solid'])(
+    'FLOOR-8 allows `%s`',
+    (decl) => {
+      expect(rules(`.card { ${decl}; }`)).toEqual([]);
+    },
+  );
+
+  it.each([
+    ['text-decoration', 'underline var(--dbs-border-default)'],
+    ['text-emphasis', 'dot var(--dbs-accent-primary)'],
+  ])('TOK-5 checks the colour inside the `%s` shorthand', (property, value) => {
+    expect(rules(`a { ${property}: ${value}; }`)).toEqual(['TOK-5']);
+  });
+
+  it.each([
+    'text-decoration: underline',
+    'text-decoration: underline var(--dbs-accent-primary-text)',
+    'text-decoration: none',
+  ])('TOK-5 allows `%s`', (decl) => {
+    expect(rules(`a { ${decl}; }`)).toEqual([]);
+  });
+});

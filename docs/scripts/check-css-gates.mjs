@@ -17,11 +17,13 @@
  * TOK-5    Only text-role tokens in a text-colour position (`color`, `-webkit-text-fill-color`,
  *          `caret-color`, `text-decoration-color`, `text-emphasis-color`): `--dbs-text-*`,
  *          `--dbs-code-text*` or `--dbs-*-text`. A fill or border token there is a contrast bug
- *          waiting for a theme; `brand.*` is named separately (TOK-4).
- * TOK-1    No raw colour (hex or a colour function) in any stylesheet but the generated
+ *          waiting for a theme; `brand.*` is named separately (TOK-4). The colour inside a
+ *          `text-decoration` or `text-emphasis` shorthand is held to the same rule.
+ * TOK-1    No raw colour (hex, a colour function or a named colour) in any stylesheet but the generated
  *          `src/css/tokens.css`, custom properties included: there is no second palette.
- * FLOOR-8  No side border (`border-left`/`-right`/`-inline-start`/`-inline-end`) wider than 1px,
- *          and no gradient text (`background-clip: text`).
+ * FLOOR-8  No side border (`border-left`/`-right`/`-inline`/`-inline-start`/`-inline-end`, or a
+ *          `border-width` whose sides outweigh top and bottom) wider than 1px, and no gradient text
+ *          (`background-clip: text`).
  *
  * Run by `npm run check:css` and by CI. Scans every `.css` and `.scss` file outside build output,
  * dependencies and the top-level `test/` directory (whose fixtures break the rules on purpose).
@@ -30,15 +32,12 @@ import {readFile} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
-import {lineIndex, walk} from './lib/build-output.mjs';
+import {SKIP_DIRS, TOKENS_CSS, lineIndex, walk} from './lib/build-output.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
 /** The token source that names the 13 type styles (DF-1), relative to the scanned root. */
 export const TOKEN_SOURCE = 'design/tokens.source.json';
-
-/** Directories never scanned, wherever they sit. */
-const SKIP_DIRS = new Set(['node_modules', 'build', '.docusaurus', 'coverage', '.git']);
 
 /** Directories skipped only at the scan root: `test/` holds fixtures that break the rules. */
 const SKIP_ROOT_DIRS = new Set(['test']);
@@ -184,11 +183,42 @@ export async function loadTypeStyles(root = ROOT) {
 }
 
 /** The generated token stylesheet: the one place colours are defined (TOK-1). */
-export const TOKENS_CSS = 'src/css/tokens.css';
+export {TOKENS_CSS};
 
-/** A raw colour: a hex literal (not a `url(#id)`) or a colour function. */
+/** A raw colour: a hex literal or a colour function. Strings and `url()` are blanked first. */
 const RAW_COLOUR =
-  /(?<!url\()#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i;
+  /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i;
+
+/** The CSS named colours, less `transparent` and `currentColor`, which pick no palette colour. */
+const NAMED_COLOURS = (
+  'aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue ' +
+  'blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk ' +
+  'crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki ' +
+  'darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen ' +
+  'darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue ' +
+  'dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite ' +
+  'gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki ' +
+  'lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan ' +
+  'lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen ' +
+  'lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen ' +
+  'magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen ' +
+  'mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream ' +
+  'mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid ' +
+  'palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum ' +
+  'powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown ' +
+  'seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen ' +
+  'steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen'
+).split(' ');
+const NAMED_COLOUR = new RegExp(`(?<![\\w-])(?:${NAMED_COLOURS.join('|')})(?![\\w-])`, 'i');
+
+/** Properties that can take a colour, so a bare word there is a named colour, not a name. */
+const COLOUR_PROPERTY =
+  /^--|color|background|border|outline|shadow|^fill$|^stroke$|text-decoration|text-emphasis|column-rule|scrollbar/;
+
+/** The value with quoted strings and `url()` blanked, so `url("#id")` and `content` never match. */
+function withoutStrings(value) {
+  return value.replace(/url\([^)]*\)/gi, ' ').replace(/(["'])(?:\\.|(?!\1)[^\\])*\1/g, ' ');
+}
 
 /** Text-colour positions (TOK-5). */
 const TEXT_COLOUR_PROPERTIES = new Set([
@@ -199,11 +229,17 @@ const TEXT_COLOUR_PROPERTIES = new Set([
   'text-emphasis-color',
 ]);
 
+/** Shorthands that carry a text colour among other parts (TOK-5). */
+const TEXT_COLOUR_SHORTHANDS = new Set(['text-decoration', 'text-emphasis']);
+
 /** Text-colour values that pick no palette colour of their own. */
 const TEXT_COLOUR_KEYWORD = /^(inherit|initial|unset|revert|revert-layer|currentcolor)$/i;
 
 /** A token a text-colour position may use: text.*, code.text* or *-text (TOK-5). */
 const TEXT_ROLE_TOKEN = /^var\(--dbs-(text-[a-z0-9-]+|code-text[a-z0-9-]*|[a-z0-9-]+-text)\)$/;
+
+/** A length token: the `space` and `radius` groups (TOK-3). */
+const LENGTH_TOKEN = /^var\(--dbs-(space|radius)-([a-z0-9-]+)\)$/;
 
 /**
  * The problem with a text-colour value, or null when it is a text-role token or a keyword.
@@ -223,24 +259,66 @@ function textColourProblem(value) {
   ];
 }
 
-/** Side-border properties (FLOOR-8) and the width a value sets, in px. */
-const SIDE_BORDER = /^border-(left|right|inline-start|inline-end)(-width)?$/;
+/**
+ * The colour parts of a `text-decoration` / `text-emphasis` shorthand: every `var()` that is not a
+ * length token, and any raw colour (which TOK-1 reports as well).
+ *
+ * @param {string} value
+ */
+function shorthandColours(value) {
+  const vars = [...value.matchAll(/var\([^)]*\)/g)].map((m) => m[0]);
+  return vars.filter((v) => !LENGTH_TOKEN.test(v) && !/^var\(--dbs-font-/.test(v));
+}
+
+/** Side-border properties (FLOOR-8): one side, or both inline sides at once. */
+const SIDE_BORDER = /^border-(left|right|inline|inline-start|inline-end)(-width)?$/;
 const KEYWORD_WIDTH = {thin: 1, medium: 3, thick: 5};
 
 /**
- * The widest width a side-border value sets, in px (rem/em at 16px), or 0 when it sets none.
+ * The width one value part sets, in px (rem/em at 16px), or 0 when it sets none. A `space` token
+ * is its own name in px; a `radius` token is never a hairline, so it counts as 2px.
+ *
+ * @param {string} part
+ */
+function partWidthPx(part) {
+  const keyword = KEYWORD_WIDTH[part.toLowerCase()];
+  if (keyword) {
+    return keyword;
+  }
+  const length = /^(\d*\.?\d+)(px|r?em)$/i.exec(part);
+  if (length) {
+    return Number(length[1]) * (length[2].toLowerCase() === 'px' ? 1 : 16);
+  }
+  const token = LENGTH_TOKEN.exec(part);
+  if (token) {
+    return token[1] === 'space' && /^\d+$/.test(token[2]) ? Number(token[2]) : 2;
+  }
+  return 0;
+}
+
+/** The value split into parts, keeping each `var(...)` whole. */
+const valueParts = (value) => value.match(/var\([^)]*\)|[^\s]+/g) ?? [];
+
+/**
+ * The widest width a side-border value sets, in px, or 0 when it sets none.
  *
  * @param {string} value
  */
 function borderWidthPx(value) {
-  let widest = 0;
-  for (const part of value.split(/\s+/)) {
-    const keyword = KEYWORD_WIDTH[part.toLowerCase()];
-    const length = /^(\d*\.?\d+)(px|r?em)$/i.exec(part);
-    const px = keyword ?? (length ? Number(length[1]) * (length[2] === 'px' ? 1 : 16) : 0);
-    widest = Math.max(widest, px);
-  }
-  return widest;
+  return Math.max(0, ...valueParts(value).map(partWidthPx));
+}
+
+/**
+ * True when a `border-width` shorthand makes a side accent: a left or right side wider than 1px
+ * and wider than the top and bottom. A uniform 2px border is a full border, not a side accent.
+ *
+ * @param {string} value
+ */
+function borderWidthIsSideAccent(value) {
+  const widths = valueParts(value).map(partWidthPx);
+  const [top, right = top, bottom = top, left = right] = widths;
+  const side = Math.max(right, left);
+  return widths.length > 1 && side > 1 && side > Math.max(top, bottom);
 }
 
 function transitionNamesLayout(value) {
@@ -314,7 +392,11 @@ export function checkCss(source, typeStyles, {definesColours = false} = {}) {
       }
     }
 
-    if (!definesColours && RAW_COLOUR.test(value)) {
+    const bare = withoutStrings(plain);
+    if (
+      !definesColours &&
+      (RAW_COLOUR.test(bare) || (COLOUR_PROPERTY.test(property) && NAMED_COLOUR.test(bare)))
+    ) {
       push(
         decl,
         'TOK-1',
@@ -329,7 +411,17 @@ export function checkCss(source, typeStyles, {definesColours = false} = {}) {
       }
     }
 
-    if (SIDE_BORDER.test(property) && borderWidthPx(plain) > 1) {
+    if (TEXT_COLOUR_SHORTHANDS.has(property)) {
+      const problem = shorthandColours(plain).map(textColourProblem).find(Boolean);
+      if (problem) {
+        push(decl, ...problem);
+      }
+    }
+
+    if (
+      (SIDE_BORDER.test(property) && borderWidthPx(plain) > 1) ||
+      (property === 'border-width' && borderWidthIsSideAccent(plain))
+    ) {
       push(decl, 'FLOOR-8', 'side border wider than 1px - use a hairline or a full border');
     }
 
