@@ -12,6 +12,11 @@ export default defineConfig({
         'plugins/**/*.ts',
         'scripts/**/*.mjs',
         'src/wallet/**/*.ts',
+        // The browser-free i18n helpers. The hooks and theme components that use them need a
+        // Docusaurus build and are covered by test:build.
+        'src/i18n/pages.ts',
+        'src/i18n/identifier.ts',
+        'src/survey/labelIds.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

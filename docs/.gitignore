@@ -11,3 +11,6 @@
 # Misc
 .DS_Store
 *.log
+
+# Crowdin source strings, written by `npm run i18n:sources`
+/i18n/en

@@ -4,6 +4,7 @@ import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
+import {isRootBuild} from '../../config/i18n';
 
 export const CNAME_FILE = 'CNAME';
 
@@ -24,13 +25,16 @@ export async function emitCname(outDir: string, profile: BuildProfile): Promise<
   await fs.writeFile(target, `${profile.cname}\n`, 'utf8');
 }
 
-export default function cnamePlugin(_context: LoadContext): Plugin {
+export default function cnamePlugin(context: LoadContext): Plugin {
   const profile = resolveProfile();
 
   return {
     name: 'dbsync-cname',
     async postBuild({outDir}) {
-      await emitCname(outDir, profile);
+      // CNAME belongs at the site root, which only the default locale's build writes.
+      if (isRootBuild(context)) {
+        await emitCname(outDir, profile);
+      }
     },
   };
 }

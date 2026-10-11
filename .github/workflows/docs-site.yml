@@ -14,6 +14,9 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+  # docs-i18n.yml dispatches this on the Crowdin translations branch, whose pull request is opened
+  # by GITHUB_TOKEN and so triggers nothing on its own.
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -58,6 +61,8 @@ jobs:
         run: npm run check:deps
       - name: No unreviewed high or critical advisory (SEC-5)
         run: npm run check:audit
+      - name: Only the current line is translatable (VER-2)
+        run: npm run check:i18n
 
       # VER-5: the route manifest is append-only. Base is the PR base, or the commit a push replaced.
       # The checkout is shallow, so fetch just the base commit rather than the repo's full history.

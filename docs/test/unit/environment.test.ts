@@ -4,12 +4,13 @@ import path from 'node:path';
 
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
+import {isRootBuild, localesDefaultFirst} from '../../config/i18n';
 import {PROFILES} from '../../config/profiles';
 import environmentPlugin, {
   NOINDEX_HTML,
   NOINDEX_META,
-  cacheByProfile,
   ROBOTS_FILE,
+  cacheByProfile,
   emitRobots,
   environmentHeadTags,
   robotsTxt,
@@ -85,8 +86,31 @@ describe('cacheByProfile (ENV-1)', () => {
   });
 });
 
+describe('locale builds', () => {
+  const i18n = {currentLocale: 'ja', defaultLocale: 'en', locales: ['ja', 'en', 'de']};
+
+  it('treats only the default locale build as the site root', () => {
+    expect(isRootBuild({i18n} as LoadContext)).toBe(false);
+    expect(isRootBuild({i18n: {...i18n, currentLocale: 'en'}} as LoadContext)).toBe(true);
+  });
+
+  it('lists the locales default first', () => {
+    expect(localesDefaultFirst({i18n} as LoadContext)).toEqual(['en', 'ja', 'de']);
+  });
+
+  it('points production robots.txt at every locale sitemap', () => {
+    expect(robotsTxt(PROFILES.prod, ['en', 'ja'])).toBe(
+      'User-agent: *\nAllow: /\n\n' +
+        'Sitemap: https://dbsync.cardano.intersect.org/sitemap.xml\n' +
+        'Sitemap: https://dbsync.cardano.intersect.org/ja/sitemap.xml\n',
+    );
+  });
+});
+
 describe('environmentPlugin', () => {
-  const context = {} as LoadContext;
+  const context = {
+    i18n: {currentLocale: 'en', defaultLocale: 'en', locales: ['en', 'ja']},
+  } as LoadContext;
 
   async function withProfile<T>(name: string, fn: () => Promise<T> | T): Promise<T> {
     const previous = process.env.DOCS_PROFILE;
@@ -111,5 +135,12 @@ describe('environmentPlugin', () => {
     expect(config.cache.name).toBe('server-production-en-dev');
     await plugin.postBuild?.({outDir} as Parameters<NonNullable<typeof plugin.postBuild>>[0]);
     expect(await readRobots()).toBe(robotsTxt(PROFILES.dev));
+  });
+
+  it("writes no robots.txt from a non-default locale's build", async () => {
+    const ja = {...context, i18n: {...context.i18n, currentLocale: 'ja'}} as LoadContext;
+    const plugin = await withProfile('prod', () => environmentPlugin(ja));
+    await plugin.postBuild?.({outDir} as Parameters<NonNullable<typeof plugin.postBuild>>[0]);
+    await expect(readRobots()).rejects.toThrow(/ENOENT/);
   });
 });

@@ -55,7 +55,9 @@ describe('emitCname (ENV-6)', () => {
 });
 
 describe('cnamePlugin', () => {
-  const context = {} as LoadContext;
+  const i18n = (currentLocale: string) =>
+    ({i18n: {currentLocale, defaultLocale: 'en', locales: ['en', 'ja']}}) as LoadContext;
+  const context = i18n('en');
 
   it('resolves its profile at plugin construction, from the environment', () => {
     const previous = process.env.DOCS_PROFILE;
@@ -105,6 +107,24 @@ describe('cnamePlugin', () => {
       expect(() => cnamePlugin(context)).toThrow(/is not set/);
     } finally {
       if (previous !== undefined) {
+        process.env.DOCS_PROFILE = previous;
+      }
+    }
+  });
+
+  it("writes nothing from a non-default locale's build, which is not the site root", async () => {
+    const previous = process.env.DOCS_PROFILE;
+    process.env.DOCS_PROFILE = 'prod';
+    try {
+      const plugin = cnamePlugin(i18n('ja')) as Plugin & {
+        postBuild: (props: {outDir: string}) => Promise<void>;
+      };
+      await plugin.postBuild({outDir});
+      expect(await readCname()).toBeNull();
+    } finally {
+      if (previous === undefined) {
+        delete process.env.DOCS_PROFILE;
+      } else {
         process.env.DOCS_PROFILE = previous;
       }
     }
