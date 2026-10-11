@@ -5,6 +5,7 @@ import type {LoadContext, Plugin} from '@docusaurus/types';
 
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
 import {NOINDEX_HTML} from '../environment';
+import {STRICT_DIRECTIVES, cspMetaTag} from '../security';
 
 /**
  * VER-5 — every route this site has ever published keeps resolving.
@@ -283,7 +284,9 @@ export const REDIRECT_SCRIPT = `(function () {
  * server-side redirects. The only script is the external, same-origin {@link REDIRECT_SCRIPT},
  * which adds fragment forwarding for people; the redirect itself never depends on it. This is not
  * `@docusaurus/plugin-client-redirects`: its stubs carry an inline `window.location` script.
- * A non-production stub is a page like any other, so it carries `noindex` too (ENV-3).
+ * A non-production stub is a page like any other, so it carries `noindex` too (ENV-3). It also
+ * carries the strict policy (SEC-2): it loads nothing but its own-origin script, and a stub never
+ * needs a wallet, even where it replaces a survey URL.
  */
 export function redirectPage(target: string, profile: BuildProfile): string {
   const href = `${profile.baseUrl}${target.slice(1)}`;
@@ -295,6 +298,7 @@ export function redirectPage(target: string, profile: BuildProfile): string {
     '<html lang="en">',
     '<head>',
     '<meta charset="utf-8">',
+    cspMetaTag(STRICT_DIRECTIVES),
     '<title>Page moved</title>',
     `<script src="${script}" data-target="${attr}"></script>`,
     `<meta http-equiv="refresh" content="0; url=${attr}">`,

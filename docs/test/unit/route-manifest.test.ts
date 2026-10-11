@@ -6,6 +6,7 @@ import vm from 'node:vm';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {PROFILES} from '../../config/profiles';
+import {STRICT_DIRECTIVES, cspMetaTag} from '../../plugins/security';
 import routeManifestPlugin, {
   MANIFEST_FILE,
   REDIRECT_SCRIPT,
@@ -198,6 +199,11 @@ describe('redirectPage', () => {
     expect(html).toContain(`${script}</script>`);
     expect(html.indexOf(script)).toBeLessThan(html.indexOf('http-equiv="refresh"'));
     expect(html.match(/<script/g)).toHaveLength(1);
+  });
+
+  it('carries the strict policy, right after the charset (SEC-2)', () => {
+    const html = redirectPage('/docs', prod);
+    expect(html).toContain(`<meta charset="utf-8">\n${cspMetaTag(STRICT_DIRECTIVES)}\n`);
   });
 
   it('carries noindex on the preview build only (ENV-3)', () => {

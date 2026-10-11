@@ -73,6 +73,22 @@ describe('baseUrl reaches the emitted HTML (ENV-1)', () => {
     const html = await fs.readFile(path.join(OUT.prod, 'docs', 'intro', 'index.html'), 'utf8');
     expect(html).not.toContain('/cardano-db-sync/assets/');
   });
+
+  it('keeps it out of production CSS and JS too, though dev built first in the same tree', async () => {
+    const assets = (await fs.readdir(path.join(OUT.prod, 'assets'), {recursive: true})).filter(
+      (f) => /\.(?:css|js)$/.test(f),
+    );
+    expect(assets.length).toBeGreaterThan(0);
+    for (const file of assets) {
+      const text = await fs.readFile(path.join(OUT.prod, 'assets', file), 'utf8');
+      expect(text, file).not.toContain('/cardano-db-sync/assets/');
+    }
+    const css = await fs.readFile(
+      path.join(OUT.dev, 'assets', 'css', (await fs.readdir(path.join(OUT.dev, 'assets', 'css')))[0]),
+      'utf8',
+    );
+    expect(css).toContain('/cardano-db-sync/assets/fonts/');
+  });
 });
 
 describe('the build carries no secrets and needs none (ENV-5)', () => {

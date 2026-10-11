@@ -1,0 +1,4 @@
+{
+  "$comment": "SEC-6: the survey route's dependency set. Every package that takes part in CBOR encoding, transaction construction or wallet interaction is listed here, pinned to an exact version, and every change to its version is reviewed by a human as code, diff included, never merged as a routine bump. A package reaching the survey route without being listed here is a review failure. Checked by scripts/check-dependencies.mjs. Empty until the survey work adds its first such package.",
+  "packages": {}
+}

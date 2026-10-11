@@ -5,6 +5,7 @@ import {PROFILES, resolveProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
 import environmentPlugin from './plugins/environment';
 import routeManifestPlugin from './plugins/route-manifest';
+import securityPlugin from './plugins/security';
 
 const profile = resolveProfile();
 
@@ -27,6 +28,9 @@ const config: Config = {
   projectName: profile.projectName,
 
   onBrokenLinks: 'throw',
+  // SEC-3: the base-URL warning banner is an inline script with inline styles. The profiles own
+  // baseUrl (ENV-1), so the runtime check has nothing to catch.
+  baseUrlIssueBanner: false,
   onBrokenAnchors: 'throw',
 
   markdown: {
@@ -59,7 +63,7 @@ const config: Config = {
         blog: false,
         theme: {
           // TOK-1: the generated tokens are imported once, here, ahead of everything that uses them.
-          customCss: ['./src/css/tokens.css', './src/css/custom.css'],
+          customCss: ['./src/css/tokens.css', './src/css/fonts.css', './src/css/custom.css'],
         },
       } satisfies Preset.Options,
     ],
@@ -67,7 +71,8 @@ const config: Config = {
 
   // VER-5: records every published route and redirects retired ones (B04). ENV-3: noindex and
   // robots.txt per profile (B05).
-  plugins: [cnamePlugin, routeManifestPlugin, environmentPlugin],
+  // SEC-1..3, SEC-8: a per-route meta CSP in every page, the colour-mode bootstrap hashed (B06).
+  plugins: [cnamePlugin, routeManifestPlugin, environmentPlugin, securityPlugin],
 
   themeConfig: {
     navbar: {

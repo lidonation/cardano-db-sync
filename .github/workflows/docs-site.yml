@@ -54,6 +54,10 @@ jobs:
         run: npm run check:tokens
       - name: Token lint (THM-4, TOK-1, TOK-10, TOK-12)
         run: npm run check:token-lint
+      - name: Dependencies pinned, survey set review-gated (SEC-5, SEC-6)
+        run: npm run check:deps
+      - name: No unreviewed high or critical advisory (SEC-5)
+        run: npm run check:audit
 
       # VER-5: the route manifest is append-only. Base is the PR base, or the commit a push replaced.
       # The checkout is shallow, so fetch just the base commit rather than the repo's full history.
@@ -109,6 +113,8 @@ jobs:
           path: docs/build/
       - name: Internal links resolve in every profile (BLD-3)
         run: node scripts/check-links.mjs
+      - name: Every page under its CSP, no external origin (SEC-1, SEC-2, SEC-3)
+        run: node scripts/check-csp.mjs
 
   asset-budget:
     name: Asset budget
