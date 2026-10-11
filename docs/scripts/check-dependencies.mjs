@@ -7,8 +7,9 @@
  *        committed and installs go through `npm ci`, which refuses a lockfile that disagrees with
  *        package.json, so its integrity hashes are what CI installs.
  * SEC-6  `config/review-gated-dependencies.json` lists the survey route's packages (CBOR, transaction
- *        construction, wallet interaction), each with the reason it is gated. A listed package must
- *        be a direct dependency at an exact version once installed.
+ *        construction, wallet interaction), each with the reason it is gated. A listed package that
+ *        is installed at all must be a direct dependency at an exact version: one that arrives only
+ *        through another package floats with that package's range.
  *
  * Run by `npm run check:deps` and by CI. Needs no network.
  */
@@ -46,8 +47,25 @@ export function pinProblems(pkg, npmrc, lock) {
   return out;
 }
 
-/** SEC-6 problems: the list's shape, and each listed package's pin. */
-export function reviewGateProblems(gated, pkg) {
+/**
+ * Whether the lockfile installs `name` anywhere in the tree.
+ *
+ * @param {{packages?: Record<string, unknown>} | null} lock
+ * @param {string} name
+ */
+const installed = (lock, name) =>
+  Object.keys(lock?.packages ?? {}).some(
+    (key) => key === `node_modules/${name}` || key.endsWith(`/node_modules/${name}`),
+  );
+
+/**
+ * SEC-6 problems: the list's shape, and each listed package's pin.
+ *
+ * @param {{packages?: unknown}} gated The parsed review-gated list.
+ * @param {{dependencies?: Record<string, string>, devDependencies?: Record<string, string>}} pkg
+ * @param {{lockfileVersion?: number, packages?: Record<string, unknown>} | null} [lock] The parsed lockfile, when there is one.
+ */
+export function reviewGateProblems(gated, pkg, lock = null) {
   /** @type {Problem[]} */
   const out = [];
   if (
@@ -67,6 +85,11 @@ export function reviewGateProblems(gated, pkg) {
         rule: 'SEC-6',
         message: `${name} is review-gated but "${direct[name]}" is not exact`,
       });
+    } else if (!(name in direct) && installed(lock, name)) {
+      out.push({
+        rule: 'SEC-6',
+        message: `${name} is installed but not a direct dependency, so package.json does not pin it`,
+      });
     }
   }
   return out;
@@ -84,26 +107,25 @@ async function readOptional(file) {
 
 /**
  * @param {{root?: string, out?: Reporter}} [options]
- * @returns {Promise<number>} 0 clean, 1 on a violation, 2 when package.json or the list is unreadable.
+ * @returns {Promise<number>} 0 clean, 1 on a violation, 2 when package.json, the list or the
+ *   lockfile is unreadable.
  */
 export async function main({root = ROOT, out = /** @type {Reporter} */ (console)} = {}) {
   let pkg;
   let gated;
+  let lock;
   try {
     pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
     gated = JSON.parse(await readFile(path.join(root, REVIEW_GATED), 'utf8'));
+    const lockText = await readOptional(path.join(root, 'package-lock.json'));
+    lock = lockText === null ? null : JSON.parse(lockText);
   } catch (error) {
     out.error(`check:deps - cannot run: ${error instanceof Error ? error.message : error}`);
     return 2;
   }
-  const lockText = await readOptional(path.join(root, 'package-lock.json'));
   const problems = [
-    ...pinProblems(
-      pkg,
-      await readOptional(path.join(root, '.npmrc')),
-      lockText && JSON.parse(lockText),
-    ),
-    ...reviewGateProblems(gated, pkg),
+    ...pinProblems(pkg, await readOptional(path.join(root, '.npmrc')), lock),
+    ...reviewGateProblems(gated, pkg, lock),
   ];
   if (problems.length === 0) {
     const count = Object.keys(gated.packages).length;
