@@ -7,7 +7,7 @@
  * Fix by editing the source and running `npm run tokens`. Run by `npm run check:tokens` and CI.
  */
 import {execFile} from 'node:child_process';
-import {readFile} from 'node:fs/promises';
+import {access, readFile} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 import {promisify} from 'node:util';
@@ -17,8 +17,8 @@ export const SOURCE = 'design/tokens.source.json';
 export const GENERATOR = 'design/tools/tokens-to-css.py';
 export const OUTPUT = 'src/css/tokens.css';
 
-/** Lines differ: first `limit` mismatches as {line, committed, generated}. */
-export function firstDifferences(committed, generated, limit = 5) {
+/** Differing lines: the first `limit` mismatches (all by default) as {line, committed, generated}. */
+export function firstDifferences(committed, generated, limit = Infinity) {
   const a = committed.split('\n');
   const b = generated.split('\n');
   const out = [];
@@ -34,6 +34,9 @@ export function firstDifferences(committed, generated, limit = 5) {
   return out;
 }
 
+/** How many differing lines the report prints before summarising the rest. */
+const SHOWN = 5;
+
 /** @typedef {import('./lib/build-output.mjs').Reporter} Reporter */
 
 /**
@@ -48,6 +51,13 @@ export async function main({
   python = process.env.PYTHON || 'python3',
   out = /** @type {Reporter} */ (console),
 } = {}) {
+  try {
+    await access(path.join(root, OUTPUT));
+  } catch {
+    out.error(`check:tokens - ${OUTPUT} is missing. Run \`npm run tokens\` and commit it.`);
+    return 1;
+  }
+
   let generated;
   let committed;
   try {
@@ -68,10 +78,14 @@ export async function main({
   }
 
   out.error(`check:tokens - ${OUTPUT} does not match a fresh run of ${GENERATOR}:\n`);
-  for (const d of firstDifferences(committed, generated)) {
+  const differences = firstDifferences(committed, generated);
+  for (const d of differences.slice(0, SHOWN)) {
     out.error(`  line ${d.line}`);
     out.error(`    committed: ${d.committed}`);
     out.error(`    generated: ${d.generated}`);
+  }
+  if (differences.length > SHOWN) {
+    out.error(`  ...and ${differences.length - SHOWN} more differing line(s)`);
   }
   out.error(`\n${OUTPUT} is generated. Edit ${SOURCE}, then run \`npm run tokens\`.`);
   return 1;
