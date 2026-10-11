@@ -1,0 +1,176 @@
+{
+  "entities": [
+    {
+      "formerNames": [
+        {
+          "name": "alpha",
+          "until": {
+            "file": "migration-2-0001-20200101.sql",
+            "stage": 2,
+            "version": 1
+          }
+        },
+        {
+          "name": "beta",
+          "until": {
+            "file": "migration-2-0002-20200102.sql",
+            "stage": 2,
+            "version": 2
+          }
+        }
+      ],
+      "kind": "table",
+      "name": "gamma"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "old_col",
+          "until": {
+            "file": "migration-2-0001-20200101.sql",
+            "stage": 2,
+            "version": 1
+          }
+        },
+        {
+          "name": "new_col",
+          "until": {
+            "file": "migration-2-0002-20200102.sql",
+            "stage": 2,
+            "version": 2
+          }
+        }
+      ],
+      "kind": "column",
+      "name": "newer_col",
+      "table": "gamma"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "it's_unique",
+          "until": {
+            "file": "migration-2-0002-20200102.sql",
+            "stage": 2,
+            "version": 2
+          }
+        }
+      ],
+      "kind": "constraint",
+      "name": "beta_unique",
+      "table": "gamma"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "beta_id_seq",
+          "until": {
+            "file": "migration-2-0002-20200102.sql",
+            "stage": 2,
+            "version": 2
+          }
+        }
+      ],
+      "kind": "sequence",
+      "name": "gamma_id_seq"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "idx_alpha_note",
+          "until": {
+            "file": "migration-3-0001-20200103.sql",
+            "stage": 3,
+            "version": 1
+          }
+        }
+      ],
+      "kind": "index",
+      "name": "idx_gamma_note"
+    }
+  ],
+  "renames": [
+    {
+      "from": "alpha",
+      "kind": "table",
+      "line": 9,
+      "migration": {
+        "file": "migration-2-0001-20200101.sql",
+        "stage": 2,
+        "version": 1
+      },
+      "to": "beta"
+    },
+    {
+      "from": "old_col",
+      "kind": "column",
+      "line": 11,
+      "migration": {
+        "file": "migration-2-0001-20200101.sql",
+        "stage": 2,
+        "version": 1
+      },
+      "table": "beta",
+      "to": "new_col"
+    },
+    {
+      "from": "new_col",
+      "kind": "column",
+      "line": 8,
+      "migration": {
+        "file": "migration-2-0002-20200102.sql",
+        "stage": 2,
+        "version": 2
+      },
+      "table": "beta",
+      "to": "newer_col"
+    },
+    {
+      "from": "it's_unique",
+      "kind": "constraint",
+      "line": 9,
+      "migration": {
+        "file": "migration-2-0002-20200102.sql",
+        "stage": 2,
+        "version": 2
+      },
+      "table": "beta",
+      "to": "beta_unique"
+    },
+    {
+      "from": "beta",
+      "kind": "table",
+      "line": 19,
+      "migration": {
+        "file": "migration-2-0002-20200102.sql",
+        "stage": 2,
+        "version": 2
+      },
+      "to": "gamma"
+    },
+    {
+      "from": "beta_id_seq",
+      "kind": "sequence",
+      "line": 20,
+      "migration": {
+        "file": "migration-2-0002-20200102.sql",
+        "stage": 2,
+        "version": 2
+      },
+      "to": "gamma_id_seq"
+    },
+    {
+      "from": "idx_alpha_note",
+      "kind": "index",
+      "line": 2,
+      "migration": {
+        "file": "migration-3-0001-20200103.sql",
+        "stage": 3,
+        "version": 1
+      },
+      "to": "idx_gamma_note"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": "schema"
+}

@@ -26,4 +26,9 @@ describe('Haddock extraction workflow (CON-2)', () => {
     expect(workflow).toContain('cabal test');
     expect(workflow).toContain('sh test/cli.sh');
   });
+  it('extracts the rename map from schema/ and gates its drift (B09)', () => {
+    expect(workflow).toContain('- "schema/**"');
+    expect(workflow).toContain('extractor=$(cabal list-bin extract-renames)');
+    expect(workflow).toContain('git diff --quiet -- docs/generated/schema-renames.json');
+  });
 });
