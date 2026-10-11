@@ -1,6 +1,6 @@
 import {beforeAll, describe, expect, it} from 'vitest';
 
-import {extractArtifact} from '../../scripts/extract-schema.mjs';
+import {adminDatabase, extractArtifact} from '../../scripts/extract-schema.mjs';
 import {applySql, createDatabase, dropDatabase, readCatalog} from '../../scripts/lib/schema-db.mjs';
 import {
   buildColumn,
@@ -64,7 +64,11 @@ describe('the 2-0030 domain migration (regression for the incident)', () => {
       before.tables.flatMap((t) =>
         t.columns
           .filter((c) => c.resolved_type.domains.length > 0)
-          .map((c) => `${t.variant}:${t.name}.${c.name}`),
+          .flatMap((c) =>
+            (t.variant === 'all' ? ['core', 'address'] : [t.variant]).map(
+              (v) => `${v}:${t.name}.${c.name}`,
+            ),
+          ),
       ),
     );
     const changed = changedFingerprints(before, after);
@@ -98,7 +102,7 @@ describe('arrays and enums against the real catalog (review findings 1 and 2)', 
   };
 
   it('keeps element constraints inside element, and flips on element changes', () => {
-    createDatabase('postgres', name);
+    createDatabase(adminDatabase(), name);
     try {
       applySql(
         name,
@@ -133,7 +137,7 @@ describe('arrays and enums against the real catalog (review findings 1 and 2)', 
       expect(column('t', 'c').fingerprint).not.toBe(c.fingerprint);
       expect(column('t', 'a').fingerprint).not.toBe(a.fingerprint);
     } finally {
-      dropDatabase('postgres', name);
+      dropDatabase(adminDatabase(), name);
     }
   });
 });

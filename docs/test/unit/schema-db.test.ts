@@ -1,3 +1,5 @@
+import fs from 'node:fs';
+import os from 'node:os';
 import path from 'node:path';
 
 import {beforeEach, describe, expect, it, vi} from 'vitest';
@@ -13,6 +15,7 @@ import {
   migrationFiles,
   queryValue,
   readCatalog,
+  replayPlan,
   selectMigrations,
   serverMajor,
 } from '../../scripts/lib/schema-db.mjs';
@@ -45,6 +48,26 @@ describe('migration selection (mirrors Cardano.Db.Migration)', () => {
     expect(core.some((n) => n.startsWith('migration-4-0001-'))).toBe(true);
     expect(address.some((n) => n.startsWith('migration-4-0001-'))).toBe(false);
     expect(core.length - address.length).toBe(1);
+  });
+
+  it('replays stages 1-3 before the address DDL and stage 4 after it, as db-sync does', () => {
+    const {beforeVariant, afterVariant} = replayPlan(selectMigrations(files, 'address'));
+    expect(beforeVariant.every((f) => f.stage < 4)).toBe(true);
+    expect(afterVariant.length).toBeGreaterThan(0);
+    expect(afterVariant.every((f) => f.stage === 4)).toBe(true);
+    expect([...beforeVariant, ...afterVariant]).toEqual(selectMigrations(files, 'address'));
+  });
+
+  it('refuses a .sql file db-sync would run but the replay cannot name', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'b08-migrations-'));
+    try {
+      fs.writeFileSync(path.join(dir, 'migration-1-0000-20190730.sql'), '');
+      fs.writeFileSync(path.join(dir, 'migration-2-0099-2026.sql'), '');
+      fs.writeFileSync(path.join(dir, 'README.md'), '');
+      expect(() => migrationFiles(dir)).toThrow(/migration-2-0099-2026\.sql/);
+    } finally {
+      fs.rmSync(dir, {recursive: true, force: true});
+    }
   });
 
   it('upTo rebuilds a historical schema and drops later stages', () => {

@@ -33,6 +33,7 @@ import {
   dropDatabase,
   migrationFiles,
   readCatalog,
+  replayPlan,
   selectMigrations,
   serverMajor,
 } from './lib/schema-db.mjs';
@@ -42,9 +43,15 @@ import {ARTIFACT_FILE, POSTGRES_MAJOR, VARIANTS, buildArtifact} from './lib/sche
 const docsRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const repoRoot = path.resolve(docsRoot, '..');
 
+/** The database used to create and drop the throwaway ones: SCHEMA_PG_ADMIN_DB, else `postgres`. */
+export function adminDatabase() {
+  return process.env.SCHEMA_PG_ADMIN_DB || 'postgres';
+}
+
 /**
- * Replay one variant into a fresh database and return its catalog. The database is dropped
- * afterwards whatever happens.
+ * Replay one variant into a fresh database and return its catalog, in db-sync's order: stages 1–3,
+ * then (address only) the runtime DDL, then stage 4. The database is dropped afterwards whatever
+ * happens.
  *
  * @param {object} options
  * @param {'core' | 'address'} options.variant
@@ -52,19 +59,30 @@ const repoRoot = path.resolve(docsRoot, '..');
  * @param {string} [options.adminDb]
  * @param {string} [options.repo] repository root
  */
-export function replayCatalog({variant, upTo, adminDb = 'postgres', repo = repoRoot}) {
+export function replayCatalog({variant, upTo, adminDb = adminDatabase(), repo = repoRoot}) {
   const schemaDir = path.join(repo, 'schema');
   const name = `dbsync_schema_${variant}_${process.pid}_${Date.now()}`;
+  const plan = replayPlan(selectMigrations(migrationFiles(schemaDir), variant, upTo));
   createDatabase(adminDb, name);
+  let catalog;
   try {
-    applyMigrations(name, schemaDir, selectMigrations(migrationFiles(schemaDir), variant, upTo));
+    applyMigrations(name, schemaDir, plan.beforeVariant);
     if (variant === 'address') {
       for (const block of readAddressVariantDdl(repo)) applySql(name, block);
     }
-    return readCatalog(name);
-  } finally {
-    dropDatabase(adminDb, name);
+    applyMigrations(name, schemaDir, plan.afterVariant);
+    catalog = readCatalog(name);
+  } catch (error) {
+    // Never let cleanup hide the replay failure that caused it.
+    try {
+      dropDatabase(adminDb, name);
+    } catch {
+      // The replay error below is the one worth reading.
+    }
+    throw error;
   }
+  dropDatabase(adminDb, name);
+  return catalog;
 }
 
 /**
@@ -74,11 +92,7 @@ export function replayCatalog({variant, upTo, adminDb = 'postgres', repo = repoR
  * @param {{upTo?: {stage: number, version: number}, adminDb?: string, repo?: string}} [options]
  * @returns {{artifact: import('../src/data/schema').SchemaArtifact, problems: string[]}}
  */
-export function extractArtifact({
-  upTo,
-  adminDb = process.env.SCHEMA_PG_ADMIN_DB || 'postgres',
-  repo = repoRoot,
-} = {}) {
+export function extractArtifact({upTo, adminDb = adminDatabase(), repo = repoRoot} = {}) {
   const major = serverMajor(adminDb);
   if (major !== POSTGRES_MAJOR) {
     throw new Error(

@@ -16,15 +16,22 @@ import path from 'node:path';
 
 const MIGRATION_FILE = /^migration-([1-4])-(\d{4})-\d{8}\.sql$/;
 
-/** The official migration files, parsed and in db-sync's lexical order. */
+/**
+ * The official migration files, parsed and in db-sync's lexical order. Any other `.sql` file fails:
+ * db-sync would try to run it, so skipping it here would replay a different schema.
+ */
 export function migrationFiles(schemaDir) {
-  return readdirSync(schemaDir)
-    .filter((name) => MIGRATION_FILE.test(name))
-    .sort()
-    .map((name) => {
-      const [, stage, version] = MIGRATION_FILE.exec(name);
-      return {name, stage: Number(stage), version: Number(version)};
-    });
+  const sql = readdirSync(schemaDir).filter((name) => name.endsWith('.sql'));
+  const unknown = sql.filter((name) => !MIGRATION_FILE.test(name));
+  if (unknown.length > 0) {
+    throw new Error(
+      `${schemaDir}: .sql file(s) not named migration-<stage>-<nnnn>-<yyyymmdd>.sql: ${unknown.join(', ')}`,
+    );
+  }
+  return sql.sort().map((name) => {
+    const [, stage, version] = MIGRATION_FILE.exec(name);
+    return {name, stage: Number(stage), version: Number(version)};
+  });
 }
 
 /**
@@ -41,6 +48,20 @@ export function selectMigrations(files, variant, upTo) {
     if (!upTo) return true;
     return f.stage < upTo.stage || (f.stage === upTo.stage && f.version <= upTo.version);
   });
+}
+
+/**
+ * A replay in db-sync's own order: the files before the address-variant DDL (stages 1–3, as
+ * `Initial` runs them) and the files after it (stage 4, as `NearTip` runs them). The core variant
+ * has no DDL, so the split does not change what it applies.
+ *
+ * @param {Array<{name: string, stage: number, version: number}>} files from `selectMigrations`
+ */
+export function replayPlan(files) {
+  return {
+    beforeVariant: files.filter((f) => f.stage < 4),
+    afterVariant: files.filter((f) => f.stage === 4),
+  };
 }
 
 function run(args, input) {
