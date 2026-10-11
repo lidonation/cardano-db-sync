@@ -5,8 +5,9 @@
 #   download  daily and on demand: downloads translations of the current line and opens (or
 #             updates) one pull request into release/community-site. Translations are reviewed
 #             like any other change, never committed straight to the branch.
-#   alert     after a scheduled download: a failure opens an ops-alert issue, the next success
-#             closes it (NUM-4, B41).
+#   alert     after every download, scheduled or run by hand: a failure opens an ops-alert issue,
+#             the next success closes it (NUM-4, B41). A manual re-run is how the runbook clears an
+#             alert, so it has to report too.
 #
 # The translations PR is opened with the workflow's own token, and GitHub starts no workflow for
 # events that token causes, so the download job dispatches docs-site.yml on the branch itself to
@@ -136,7 +137,7 @@ jobs:
   alert:
     name: Ops alert
     needs: download
-    if: always() && github.event_name == 'schedule'
+    if: always() && github.event_name != 'push'
     permissions:
       contents: read
       issues: write

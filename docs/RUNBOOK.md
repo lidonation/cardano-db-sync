@@ -58,7 +58,8 @@ Every scheduled docs workflow (today the daily Crowdin download in `docs-i18n.ym
 
 **When an alert opens:** follow the run link and fix the cause, then re-run the workflow
 (**Actions → the workflow → Run workflow**). Do not close the issue by hand; the successful run
-closes it, which proves the job works again. While it stays open, the chain and survey figures on
+closes it, which proves the job works again. The alert job reports on manual runs as well as
+scheduled ones for exactly this reason (a manual run that fails comments on the issue too). While it stays open, the chain and survey figures on
 the site are stale.
 
 Schedules run only from the repository's default branch, and fork pull requests cannot read

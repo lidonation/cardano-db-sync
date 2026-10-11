@@ -24,7 +24,8 @@ interface Job {
   defaults?: {run?: {shell?: string}};
 }
 interface Workflow {
-  jobs?: Record<string, Job>;
+  on?: Record<string, unknown>;
+  jobs?: Record<string, Job & {uses?: string; if?: string}>;
   defaults?: {run?: {shell?: string}};
   runs?: {steps?: Step[]};
 }
@@ -83,5 +84,32 @@ describe('workflow run steps', () => {
       }
     }
     expect(found).toEqual([]);
+  });
+});
+
+describe('scheduled-job alerts (NUM-4)', () => {
+  it('every scheduled docs workflow ends with the ops alert, on manual runs too', async () => {
+    const problems: string[] = [];
+    for await (const file of yamlFiles(path.join(ROOT, '.github/workflows'))) {
+      const doc = yaml.load(await fs.readFile(file, 'utf8')) as Workflow;
+      // The Haskell workflows are the node team's, not the docs site's.
+      if (!path.basename(file).startsWith('docs-') || !doc.on || !('schedule' in doc.on)) {
+        continue;
+      }
+      const name = path.basename(file);
+      const alerts = Object.values(doc.jobs ?? {}).filter((job) =>
+        job.uses?.endsWith('/docs-ops-alert.yml'),
+      );
+      if (alerts.length === 0) {
+        problems.push(`${name}: no ops alert job`);
+      }
+      for (const job of alerts) {
+        // The runbook clears an alert with a manual run, so the alert cannot be schedule-only.
+        if (/event_name\s*==\s*'schedule'/.test(job.if ?? '')) {
+          problems.push(`${name}: the alert only reports scheduled runs`);
+        }
+      }
+    }
+    expect(problems).toEqual([]);
   });
 });
