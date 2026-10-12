@@ -124,4 +124,6 @@ it('removes only emitted tokens absent from CSS dependencies and runtime referen
     '--dbs-runtime:green',
   );
   expect(pruneUnusedTokens(css, ['"--dbs-" + name'])).toBe(css);
+  expect(pruneUnusedTokens(css, ['"--dbs-font-" + name'])).toBe(css);
+  expect(pruneUnusedTokens(css, ['`--dbs-font-${name}`'])).toBe(css);
 });

@@ -101,7 +101,8 @@ export function pruneCss(
  * All CSS var() dependencies are retained, even in otherwise unused token declarations.
  * Runtime literals are retained; dynamic token-name construction disables this optimization. */
 export function pruneUnusedTokens(css: string, runtimeTexts: readonly string[]): string {
-  if (runtimeTexts.some((text) => /["'`]--dbs-["'`]/.test(text))) return css;
+  if (runtimeTexts.some((text) => /["'`]--dbs-(?:[\w]+-)*["'`]|["'`]--dbs-[\w-]*\$\{/.test(text)))
+    return css;
   const used = new Set([...css.matchAll(/var\(\s*(--dbs-[\w-]+)/g)].map((match) => match[1]));
   for (const text of runtimeTexts)
     for (const match of text.matchAll(/--dbs-[\w-]+/g)) used.add(match[0]);
