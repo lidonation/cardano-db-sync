@@ -1,17 +1,21 @@
-import {translate as defaultTranslate} from '@docusaurus/Translate';
-
 import type {PageMessage} from '../i18n/pageTranslator';
+
+/** One question; `key` is stable across locales, for anchors and the FAQ page's grouping. */
+export interface FaqItem {
+  readonly key: string;
+  readonly question: string;
+  readonly answer: string;
+}
 
 /**
  * The FAQ as the landing page shows it. Figures come from the repository README's system
  * requirements (May 2025) and `doc/`, not from the design file, whose drafts predate them. The
  * FAQ page (B44-c) adds the rest and the FAQPage structured data.
  */
-export function faqItems(
-  translate: (message: PageMessage) => string = defaultTranslate,
-): readonly {readonly question: string; readonly answer: string}[] {
+export function faqItems(translate: (message: PageMessage) => string): readonly FaqItem[] {
   return [
     {
+      key: 'sync',
       question: translate({
         id: 'landing.faq.sync.q',
         message: 'How long does the initial sync take?',
@@ -23,6 +27,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'disk',
       question: translate({id: 'landing.faq.disk.q', message: 'How much disk space do I need?'}),
       answer: translate({
         id: 'landing.faq.disk.a',
@@ -31,6 +36,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'genesis',
       question: translate({
         id: 'landing.faq.genesis.q',
         message: 'Can I skip syncing from genesis?',
@@ -42,6 +48,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'shrink',
       question: translate({id: 'landing.faq.shrink.q', message: 'Can I shrink the database?'}),
       answer: translate({
         id: 'landing.faq.shrink.a',
@@ -50,6 +57,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'node',
       question: translate({id: 'landing.faq.node.q', message: 'Do I need to run a cardano-node?'}),
       answer: translate({
         id: 'landing.faq.node.a',
@@ -57,6 +65,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'hardware',
       question: translate({id: 'landing.faq.hardware.q', message: 'What hardware is recommended?'}),
       answer: translate({
         id: 'landing.faq.hardware.a',
@@ -65,6 +74,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'postgres',
       question: translate({
         id: 'landing.faq.postgres.q',
         message: 'Which PostgreSQL versions work?',
@@ -76,6 +86,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'upgrade',
       question: translate({
         id: 'landing.faq.upgrade.q',
         message: 'How do I avoid a painful upgrade?',
@@ -87,6 +98,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'progress',
       question: translate({id: 'landing.faq.progress.q', message: 'How do I check sync progress?'}),
       answer: translate({
         id: 'landing.faq.progress.a',
@@ -94,6 +106,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'share',
       question: translate({
         id: 'landing.faq.share.q',
         message: 'Can two instances share one database?',
@@ -104,6 +117,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'read',
       question: translate({id: 'landing.faq.read.q', message: 'Can I query while it is syncing?'}),
       answer: translate({
         id: 'landing.faq.read.a',
@@ -112,6 +126,7 @@ export function faqItems(
       }),
     },
     {
+      key: 'compare',
       question: translate({
         id: 'landing.faq.compare.q',
         message: 'How does this differ from Blockfrost or Kupo?',

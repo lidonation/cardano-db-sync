@@ -21,6 +21,12 @@
   padding-block: var(--dbs-space-96) 0;
 }
 
+/* A page that ends on a plain section (the FAQ) keeps the rhythm above the footer; the landing
+   page ends on its warm band. */
+.section:last-child {
+  padding-block-end: var(--dbs-space-96);
+}
+
 /* Bands that sit on the code surface in every palette re-point the text roles to the code roles,
    which are measured against that surface; the components inside follow (TOK-5). */
 .dark {
