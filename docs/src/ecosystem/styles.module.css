@@ -1,0 +1,184 @@
+/* B44-b — the ecosystem page, after the landing's B47 tiers (DF-7):
+ *   lg 1280+   margins 120 at 1440 (a centred 1200 content width), 3-column tool grid
+ *   md 1024    margins 48, 3-column tool grid
+ *   sm 768     margins 32, 2-column tool grid
+ *   xs <768    margins 16, 1 column; display type steps down to heading-lg
+ * Flat fills, 1px borders, square corners, no shadows. Every colour a token. */
+
+.ecosystem {
+  --dbs-ecosystem-margin: max(var(--dbs-space-48), calc((100% - 1200px) / 2));
+
+  overflow-wrap: break-word;
+}
+
+.inner {
+  box-sizing: border-box;
+  inline-size: 100%;
+  padding-inline: var(--dbs-ecosystem-margin);
+}
+
+.section {
+  padding-block: var(--dbs-space-96) 0;
+}
+
+.warm {
+  margin-block-start: var(--dbs-space-96);
+  padding-block: var(--dbs-space-48);
+  background: var(--dbs-surface-warm);
+  color: var(--dbs-text-primary);
+}
+
+/* ---- type ---- */
+
+.eyebrow {
+  margin: 0 0 var(--dbs-space-16);
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-eyebrow);
+  letter-spacing: var(--dbs-font-eyebrow-tracking);
+}
+
+.title {
+  margin: 0;
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-display-hero);
+  letter-spacing: var(--dbs-font-display-hero-tracking);
+}
+
+.heading {
+  margin: 0;
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-heading-lg);
+  letter-spacing: var(--dbs-font-heading-lg-tracking);
+}
+
+.intro {
+  max-inline-size: 65ch;
+  margin: var(--dbs-space-16) 0 0;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-body);
+  letter-spacing: var(--dbs-font-body-tracking);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dbs-space-16);
+  margin-block-start: var(--dbs-space-32);
+}
+
+/* ---- tools ---- */
+
+.tools {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--dbs-space-24);
+  margin: var(--dbs-space-32) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tool {
+  display: flex;
+  flex-direction: column;
+  min-inline-size: 0;
+}
+
+.links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--dbs-space-24);
+  margin: var(--dbs-space-8) 0 0;
+}
+
+.more {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+  min-block-size: 44px;
+  color: var(--dbs-accent-primary-text);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+  text-decoration: none;
+}
+
+.more:hover {
+  color: var(--dbs-accent-primary-text);
+  text-decoration: underline;
+}
+
+.more:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+.more svg {
+  stroke: currentColor;
+}
+
+/* ---- named empty state (B44 DoD): what is missing and what fills it (CONTENT-5) ---- */
+
+.empty {
+  margin: var(--dbs-space-32) 0 0;
+  padding: var(--dbs-space-24);
+  border: 1px dashed var(--dbs-border-interactive);
+}
+
+.emptyTitle {
+  margin: 0;
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-title);
+  letter-spacing: var(--dbs-font-title-tracking);
+}
+
+.emptyBody {
+  max-inline-size: 65ch;
+  margin: var(--dbs-space-8) 0 0;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-body);
+  letter-spacing: var(--dbs-font-body-tracking);
+}
+
+.empty .more {
+  margin-block-start: var(--dbs-space-8);
+}
+
+/* ---- tiers ---- */
+
+@media (max-width: 1023px) {
+  .ecosystem {
+    --dbs-ecosystem-margin: var(--dbs-space-32);
+  }
+
+  .tools {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .ecosystem {
+    --dbs-ecosystem-margin: var(--dbs-space-16);
+  }
+
+  .title {
+    font: var(--dbs-font-heading-lg);
+    letter-spacing: var(--dbs-font-heading-lg-tracking);
+  }
+
+  .heading {
+    font: var(--dbs-font-heading-md);
+    letter-spacing: var(--dbs-font-heading-md-tracking);
+  }
+
+  .section {
+    padding-block-start: var(--dbs-space-64);
+  }
+
+  .warm {
+    margin-block-start: var(--dbs-space-64);
+  }
+
+  .tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

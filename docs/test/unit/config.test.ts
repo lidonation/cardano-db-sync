@@ -181,3 +181,45 @@ describe('B30 - the three global controls share the navbar (THM-1, A11Y-29, DF-7
     expect(items.map((item) => item.type)).not.toContain('colorModeToggle');
   });
 });
+
+describe('B44-b - the ecosystem page joins the site (CON-11)', () => {
+  interface NavbarItem {
+    readonly type?: string;
+    readonly to?: string;
+    readonly label?: string;
+    readonly position?: string;
+  }
+
+  interface FooterLink {
+    readonly label?: string;
+    readonly to?: string;
+  }
+
+  async function themeConfig(): Promise<{
+    navbar?: {items?: NavbarItem[]};
+    footer?: {links?: {items?: FooterLink[]}[]};
+  }> {
+    const config = await loadConfig('dev');
+    return (config.themeConfig ?? {}) as {
+      navbar?: {items?: NavbarItem[]};
+      footer?: {links?: {items?: FooterLink[]}[]};
+    };
+  }
+
+  it('links the ecosystem surface from the navbar, on the left', async () => {
+    const items = (await themeConfig()).navbar?.items ?? [];
+    expect(items.filter((item) => item.position === 'left')).toContainEqual(
+      expect.objectContaining({to: '/ecosystem', label: 'Ecosystem'}),
+    );
+  });
+
+  it('links the ecosystem surface from the footer community column', async () => {
+    const columns = (await themeConfig()).footer?.links ?? [];
+    const labels = columns.flatMap((column) => (column.items ?? []).map((item) => item.label));
+    expect(labels).toContain('Ecosystem');
+    const target = columns
+      .flatMap((column) => column.items ?? [])
+      .find((item) => item.label === 'Ecosystem');
+    expect(target?.to).toBe('/ecosystem');
+  });
+});

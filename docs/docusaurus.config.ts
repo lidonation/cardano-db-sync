@@ -112,6 +112,9 @@ const config: Config = {
           position: 'left',
           label: 'Docs',
         },
+        // B44-b: the ecosystem app page. Active state derives from the path (NAV-1);
+        // below 1280px it rides the Menu drawer with the docs section (DF-7).
+        {to: '/ecosystem', label: 'Ecosystem', position: 'left'},
         // B30: the three global controls share one discipline (THM-1, A11Y-29, DF-7).
         // The theme switcher is the swizzled ColorModeToggle (four palettes); locale and
         // version ride on Docusaurus' own dropdowns so same-page navigation (hreflang
@@ -142,6 +145,7 @@ const config: Config = {
         {
           title: 'Community',
           items: [
+            {label: 'Ecosystem', to: '/ecosystem'},
             {label: 'Discord #db-sync', href: 'https://discord.com/invite/inter-sect'},
             {label: 'Issues', href: `${profile.repoUrl}/issues`},
           ],

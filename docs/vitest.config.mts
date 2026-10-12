@@ -32,6 +32,9 @@ export default defineConfig({
         // B44-a: the landing page's build facts and route-gated surfaces.
         'src/data/release-facts.ts',
         'src/data/surfaces.ts',
+        // B44-b: the ecosystem page's tool data. The page itself is audited in a real
+        // browser by test:components.
+        'src/ecosystem/tools.ts',
         // B44-c: the FAQ questions and their FAQPage JSON-LD.
         'src/faq/questions.ts',
         'src/faq/jsonld.ts',
