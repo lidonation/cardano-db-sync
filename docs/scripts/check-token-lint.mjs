@@ -129,6 +129,7 @@ const DECORATIVE_BORDERS = new Map([
     new Map([['.stage', 'static "how it works" step, not interactive']]),
   ],
   ['src/inventory/styles.module.css', new Map([['.entry', 'inventory section rule']])],
+  ['src/landing/styles.module.css', new Map([['.stage', 'static pipeline illustration frame']])],
 ]);
 
 /**

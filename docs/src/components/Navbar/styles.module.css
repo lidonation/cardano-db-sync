@@ -7,6 +7,7 @@
 
 .bar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: var(--dbs-space-24);
@@ -59,13 +60,7 @@
 .menu:active {
   background: var(--dbs-surface-accent-subtle);
 }
-
-.link:focus-visible,
-.link[data-dbs-demo='focus'],
-.home:focus-visible,
-.github:focus-visible,
-.search:focus-visible,
-.menu:focus-visible {
+.link[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);
 }
@@ -144,7 +139,7 @@
   gap: var(--dbs-space-8);
   margin-block-start: var(--dbs-space-12);
   padding-block-start: var(--dbs-space-12);
-  border-block-start: 1px solid var(--dbs-border-default);
+  border-block-start: 1px solid var(--dbs-border-interactive);
 }
 
 .drawer {
@@ -199,7 +194,10 @@
 
   .drawer:not([hidden]) {
     display: block;
-    max-block-size: calc(100dvh - 73px);
+    max-block-size: calc(
+      100dvh - var(--dbs-navbar-bar-size, var(--ifm-navbar-height)) - var(--dbs-navbar-top, 0px) -
+        1px
+    );
     overflow-y: auto;
     padding: var(--dbs-space-8) var(--dbs-space-32) var(--dbs-space-16);
     border-block-start: 1px solid var(--dbs-border-default);
