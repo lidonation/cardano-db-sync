@@ -315,7 +315,9 @@ describe('global brand icons survive localized builds (#63)', () => {
         for (const [rel, file] of Object.entries(icons)) {
           const links = $(`link[rel="${rel}"]`);
           expect(links.length, `${name} ${page} ${rel}`).toBe(1);
-          const url = new URL(links.attr('href')!, profile.url);
+          const href = links.attr('href')!;
+          expect(href, `${name} ${page} ${rel}`).toBe(`${profile.baseUrl}${file}`);
+          const url = new URL(href, profile.url);
           expect(url.origin, `${name} ${page} ${rel}`).toBe(profile.url);
           expect(url.pathname, `${name} ${page} ${rel}`).toBe(`${profile.baseUrl}${file}`);
         }

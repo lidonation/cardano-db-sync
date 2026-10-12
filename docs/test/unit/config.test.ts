@@ -193,11 +193,16 @@ describe('B01 follow-up - brand assets in static/ and favicon (#63)', () => {
     return (config.headTags ?? []) as HeadTag[];
   }
 
-  it('uses the global static mark without a locale prefix (ENV-1, CON)', async () => {
+  it('emits the global favicon directly, without locale resolution or an absolute URL', async () => {
     for (const name of ['dev', 'prod'] as const) {
       const config = await loadConfig(name);
-      expect(config.favicon).toBe(
-        `${PROFILES[name].url}${PROFILES[name].baseUrl}brand/png/mark-badge-32.png`,
+      expect(config.favicon).toBeUndefined();
+      const tags = await headTags(name);
+      const icons = tags.filter((tag) => tag.attributes?.rel === 'icon');
+      expect(icons).toHaveLength(1);
+      expect(icons[0].tagName).toBe('link');
+      expect(icons[0].attributes?.href).toBe(
+        `${PROFILES[name].baseUrl}brand/png/mark-badge-32.png`,
       );
     }
   });
