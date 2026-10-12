@@ -15,7 +15,8 @@ To connect the chain refresh:
   including milliseconds, for `updatedAt`, `nextBoundary` and completed epoch boundaries.
 - Supply the provider name in `source`. Supply the model basis and selected configuration in
   `storage.methodology` and `storage.configuration`. Use `storage: null` if model outputs are
-  unavailable. Storage sizes are decimal GB; monthly costs are USD.
+  unavailable. Storage sizes are decimal GB; `growth` is the modelled increase during each epoch, not total
+  database size. Monthly costs are USD.
 - Validate the committed artifact with `numbersState(snapshot, buildNetwork, asOf)`. Pass a
   deterministic build timestamp for `asOf`, not a separate server and browser clock. Data is
   stale when `asOf` reaches `nextBoundary`; a future-dated snapshot is invalid. A wrong-network
