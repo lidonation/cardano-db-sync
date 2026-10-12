@@ -1,0 +1,102 @@
+/* Footer — invariant: brand navy, code-text roles (THM-6). Columns stack below 768px (DF-7). */
+.footer {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
+  gap: var(--dbs-space-32) var(--dbs-space-48);
+  padding: var(--dbs-space-48) var(--dbs-space-48) var(--dbs-space-32);
+  background: var(--dbs-brand-intersect-navy);
+  color: var(--dbs-code-text);
+}
+
+.brand {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-8);
+}
+
+.brand [data-icon] {
+  stroke: var(--dbs-code-prompt);
+}
+
+.brand [data-icon] circle {
+  fill: var(--dbs-code-prompt);
+}
+
+.meta {
+  color: var(--dbs-code-text-muted);
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+
+.columns {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--dbs-space-24);
+}
+
+.column {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-8);
+}
+
+.heading {
+  color: var(--dbs-code-text);
+  font: var(--dbs-font-label-sm);
+  letter-spacing: var(--dbs-font-label-sm-tracking);
+}
+
+.links {
+  display: flex;
+  flex-direction: column;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  color: var(--dbs-code-text-muted);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+  text-decoration: none;
+}
+
+.link:hover,
+.link[data-dbs-demo='hover'] {
+  color: var(--dbs-code-text);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.link:active,
+.link[data-dbs-demo='pressed'] {
+  color: var(--dbs-code-text);
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  text-underline-offset: 3px;
+}
+
+.link:focus-visible,
+.link[data-dbs-demo='focus'] {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+.note {
+  grid-column: 1 / -1;
+  margin: 0;
+  color: var(--dbs-code-text-muted);
+  font: var(--dbs-font-caption);
+  letter-spacing: var(--dbs-font-caption-tracking);
+}
+
+@media (max-width: 767px) {
+  .footer {
+    grid-template-columns: minmax(0, 1fr);
+    padding: var(--dbs-space-32) var(--dbs-space-16) var(--dbs-space-24);
+  }
+}

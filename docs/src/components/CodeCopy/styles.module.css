@@ -1,0 +1,90 @@
+/* Code / Copy — theme-invariant: it always sits on the code surface. */
+.wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+  padding: var(--dbs-space-4);
+  background: var(--dbs-code-surface);
+}
+
+.copy {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+  min-block-size: 32px;
+  padding: 0 var(--dbs-space-12);
+  border: 1px solid var(--dbs-code-text-muted);
+  background: var(--dbs-code-surface);
+  color: var(--dbs-code-text);
+  cursor: pointer;
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+
+/* drawn 32px tall, with a hit area of at least 44 (DF-6) */
+.copy::before {
+  content: '';
+  position: absolute;
+  inset: -7px 0;
+}
+
+.copy:hover,
+.copy[data-dbs-demo='hover'] {
+  background: var(--dbs-code-surface-raised);
+}
+
+.copy:active,
+.copy[data-dbs-demo='pressed'] {
+  background: var(--dbs-code-border);
+}
+
+.copy:focus-visible,
+.copy[data-dbs-demo='focus'] {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+.copy[data-state='copied'] {
+  border-color: var(--dbs-code-accent);
+}
+
+/* the tick takes the accent; the word stays in code.text */
+.copy[data-state='copied'] svg {
+  stroke: var(--dbs-code-accent);
+}
+
+.copy[data-state='failed'] {
+  border-color: var(--dbs-status-danger);
+}
+
+.copy[aria-disabled='true'] {
+  border-color: var(--dbs-code-border);
+  color: var(--dbs-code-text-muted);
+  cursor: not-allowed;
+}
+
+.copy[aria-busy='true'] {
+  border-color: var(--dbs-code-text-muted);
+  color: var(--dbs-code-text-muted);
+  cursor: progress;
+}
+
+.status {
+  color: var(--dbs-code-text-muted);
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+
+.status[data-state='copied'] {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.status[data-state='failed'] {
+  color: var(--dbs-code-text);
+}

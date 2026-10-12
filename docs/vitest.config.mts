@@ -19,6 +19,11 @@ export default defineConfig({
         'src/survey/labelIds.ts',
         // The config schema validator shared by check:config and the config wizard (B10).
         'src/data/**/*.mjs',
+        // B29: the component manifest and the browser-free component logic. The components
+        // themselves are audited in a real browser by test:components.
+        'src/components/inventory.ts',
+        'src/components/shared/states.ts',
+        'src/components/Tabs/keyboard.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

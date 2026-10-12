@@ -2,6 +2,8 @@ build
 .docusaurus
 node_modules
 coverage
+test-results
+playwright-report
 SPECIFICATION.md
 DESIGN.md
 test/fixtures

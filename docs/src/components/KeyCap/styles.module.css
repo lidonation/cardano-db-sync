@@ -1,0 +1,16 @@
+.cap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-inline-size: 24px;
+  min-block-size: 20px;
+  box-sizing: border-box;
+  padding: 0 var(--dbs-space-4);
+  border: 1px solid var(--dbs-border-strong);
+  border-radius: 0;
+  background: var(--dbs-surface-base);
+  box-shadow: none;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
