@@ -310,15 +310,16 @@ test('resizing closes the drawer without leaving focus on hidden content', async
   await expect(menuButton(page)).toHaveAttribute('aria-expanded', 'false');
 });
 
-test('focus the browser drops while the drawer hides still lands on the home link', async ({
+test('blurring a narrow drawer closes it without stealing focus on later resize', async ({
   page,
 }) => {
   await open(page, PAGE, 375);
   await menuButton(page).click();
-  // Chrome's focus fixup can blur the hidden drawer's link before the media listener runs
+  // An intentional blur at narrow width leaves the nonmodal drawer before any resize.
   await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await expect(menuButton(page)).toHaveAttribute('aria-expanded', 'false');
   await page.setViewportSize({width: 1440, height: 900});
-  await expect(page.locator('header[data-dbs-component="Navbar / Full"] a').first()).toBeFocused();
+  expect(await page.evaluate(() => document.activeElement === document.body)).toBe(true);
 });
 
 test('all language choices remain reachable in a landscape-phone drawer', async ({page}) => {
