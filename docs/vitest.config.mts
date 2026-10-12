@@ -32,6 +32,7 @@ export default defineConfig({
         // B44-a: the landing page's build facts and route-gated surfaces.
         'src/data/release-facts.ts',
         'src/data/surfaces.ts',
+        'src/updates/model.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],
