@@ -305,7 +305,7 @@ describe('Updates page and fixture isolation (B44-d, VER-5, A11Y-18)', () => {
         const prefix = locale === DEFAULT_LOCALE ? '' : locale;
         const html = await fs.readFile(path.join(OUT[profile], prefix, 'updates', 'index.html'), 'utf8');
         expect(html).toContain('The Updates feed is not available yet.');
-        expect(html).toMatch(/<main[^>]*lang="en"/);
+        expect(html).toMatch(locale === DEFAULT_LOCALE ? /<html[^>]*lang="en"/ : /<main[^>]*lang="en"/);
         expect(html).toContain('role="tablist"');
         expect(html).toContain('role="status"');
         expect(html).not.toContain('example.com/current');
