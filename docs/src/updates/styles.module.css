@@ -1,0 +1,116 @@
+/* B44-d: Penpot's 440 x 560 Updates panel. It grows for real rows and translated copy. */
+.page {
+  padding: var(--dbs-space-48) var(--dbs-space-16);
+  color: var(--dbs-text-primary);
+}
+.heading {
+  margin: 0 0 var(--dbs-space-24);
+  font: var(--dbs-font-heading-lg);
+  letter-spacing: var(--dbs-font-heading-lg-tracking);
+}
+.panel {
+  box-sizing: border-box;
+  inline-size: 100%;
+  max-inline-size: 440px;
+  min-block-size: 560px;
+  padding: var(--dbs-space-24);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-primary);
+  overflow-wrap: anywhere;
+}
+.metric {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-4);
+  margin-block-end: var(--dbs-space-24);
+}
+.count {
+  font: var(--dbs-font-heading-lg);
+  letter-spacing: var(--dbs-font-heading-lg-tracking);
+}
+.label {
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+.entries {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.entry {
+  padding-block: var(--dbs-space-12);
+}
+.entryMeta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--dbs-space-8) var(--dbs-space-16);
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+.identifier {
+  color: var(--dbs-accent-primary-text);
+}
+.subject {
+  display: inline-block;
+  padding-block: var(--dbs-space-4);
+  color: var(--dbs-accent-primary-text);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+.subject:hover {
+  text-decoration: underline;
+}
+.subject:focus-visible,
+.fields input:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+.range {
+  margin-block-end: var(--dbs-space-16);
+}
+.fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-16);
+}
+.fields label {
+  display: flex;
+  flex: 1 1 0;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: var(--dbs-space-8);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+.fields input {
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-inline-size: 0;
+  min-block-size: 44px;
+  padding: var(--dbs-space-8);
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: var(--dbs-radius-sm);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+.helper {
+  margin: var(--dbs-space-12) 0 0;
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+.helper {
+  color: var(--dbs-text-secondary);
+}
+@media (max-width: 440px) {
+  .panel {
+    padding-inline: var(--dbs-space-16);
+  }
+  .fields {
+    flex-direction: column;
+  }
+}
