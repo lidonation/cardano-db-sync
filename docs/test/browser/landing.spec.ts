@@ -17,7 +17,14 @@ async function open(page: Page, width: number, palette = 'light') {
   await page.setViewportSize({width, height: 900});
   await page.goto(test.info().project.use.baseURL ?? SITE_URL);
   await page.locator('#landing-title').waitFor();
-  await page.evaluate((name) => document.documentElement.setAttribute('data-theme', name), palette);
+  await page.evaluate((name) => {
+    document.documentElement.setAttribute('data-dbs-palette', name);
+    document.documentElement.setAttribute(
+      'data-theme',
+      name === 'dark' || name === 'navy' ? 'dark' : 'light',
+    );
+  }, palette);
+  await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
   await page.evaluate(() => document.fonts.ready);
 }
 

@@ -77,7 +77,13 @@ describe('check:baseurl gate (ENV-1)', () => {
   });
 
   it('skips build output and dependencies', async () => {
-    for (const dir of ['build', 'node_modules', '.docusaurus']) {
+    for (const dir of [
+      'build',
+      'node_modules',
+      '.docusaurus',
+      'test-results',
+      'playwright-report',
+    ]) {
       await fs.mkdir(path.join(root, dir), {recursive: true});
       await fs.writeFile(path.join(root, dir, 'index.js'), "var u = '/cardano-db-sync/';");
     }
