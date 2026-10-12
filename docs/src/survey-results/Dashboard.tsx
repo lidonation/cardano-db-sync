@@ -55,10 +55,21 @@ const WIDTH_CLASS: Record<number, string> = {
 };
 
 export default function DashboardView({resolved, t}: DashboardViewProps): React.JSX.Element {
-  const basis = t({
-    id: 'results.basis.message',
-    message: `These counts use response-time validation only. They will be re-verified canonically at tally time, when epoch ${resolved.endEpoch} ends.`,
-  });
+  const message = (
+    entry: Parameters<DashboardTranslate>[0],
+    values: Record<string, string | number>,
+  ) =>
+    t(entry).replace(/\{(\w+)\}/g, (placeholder, key: string) =>
+      key in values ? String(values[key]) : placeholder,
+    );
+  const basis = message(
+    {
+      id: 'results.basis.message',
+      message:
+        'These counts use response-time validation only. They will be re-verified canonically at tally time, when epoch {epoch} ends.',
+    },
+    {epoch: resolved.endEpoch},
+  );
   const interim = t({
     id: 'results.interim.message',
     message:
@@ -97,7 +108,7 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
         React.createElement('p', {className: landing.intro}, interim),
       ),
     ),
-    resolved.questions.length === 0
+    resolved.questions.length === 0 && resolved.closed.length === 0
       ? React.createElement(
           'section',
           {className: landing.section, 'aria-labelledby': 'results-empty'},
@@ -123,10 +134,7 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
       : resolved.questions.map((question) => {
           const total = question.options.reduce((sum, option) => sum + option.count, 0);
           const sectionId = `results-question-${question.question}`;
-          const responses = total === 1 ? '1 response' : `${total} responses`;
-          const options =
-            question.options.length === 1 ? '1 option' : `${question.options.length} options`;
-          const summary = `${responses} counted across ${options}.`;
+
           return React.createElement(
             'section',
             {key: question.question, className: landing.section, 'aria-labelledby': sectionId},
@@ -159,40 +167,49 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
                 ),
               ),
               React.createElement(
-                'table',
-                null,
+                'div',
+                {
+                  className: dash.tableScroll,
+                  role: 'region',
+                  'aria-label': question.label,
+                  tabIndex: 0,
+                },
                 React.createElement(
-                  'caption',
-                  null,
-                  t({id: 'results.question.table.caption', message: 'Responses by option'}),
-                ),
-                React.createElement(
-                  'thead',
+                  'table',
                   null,
                   React.createElement(
-                    'tr',
+                    'caption',
+                    null,
+                    t({id: 'results.question.table.caption', message: 'Responses by option'}),
+                  ),
+                  React.createElement(
+                    'thead',
                     null,
                     React.createElement(
-                      'th',
-                      {scope: 'col'},
-                      t({id: 'results.question.table.option', message: 'Option'}),
-                    ),
-                    React.createElement(
-                      'th',
-                      {scope: 'col'},
-                      t({id: 'results.question.table.count', message: 'Count'}),
+                      'tr',
+                      null,
+                      React.createElement(
+                        'th',
+                        {scope: 'col'},
+                        t({id: 'results.question.table.option', message: 'Option'}),
+                      ),
+                      React.createElement(
+                        'th',
+                        {scope: 'col'},
+                        t({id: 'results.question.table.count', message: 'Count'}),
+                      ),
                     ),
                   ),
-                ),
-                React.createElement(
-                  'tbody',
-                  null,
-                  question.options.map((option) =>
-                    React.createElement(
-                      'tr',
-                      {key: option.option},
-                      React.createElement('th', {scope: 'row'}, option.label),
-                      React.createElement('td', null, option.count),
+                  React.createElement(
+                    'tbody',
+                    null,
+                    question.options.map((option) =>
+                      React.createElement(
+                        'tr',
+                        {key: option.option},
+                        React.createElement('th', {scope: 'row'}, option.label),
+                        React.createElement('td', null, option.count),
+                      ),
                     ),
                   ),
                 ),
@@ -200,7 +217,13 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
               React.createElement(
                 'p',
                 {className: landing.intro},
-                t({id: 'results.question.summary', message: summary}),
+                message(
+                  {
+                    id: 'results.question.summary',
+                    message: 'Selections counted: {count}. Options: {options}.',
+                  },
+                  {count: total, options: question.options.length},
+                ),
               ),
               question.history && question.history.length > 0
                 ? React.createElement(
@@ -220,30 +243,50 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
                       }),
                     ),
                     React.createElement(
-                      'table',
-                      null,
+                      'div',
+                      {
+                        className: dash.tableScroll,
+                        role: 'region',
+                        'aria-label': question.label + ' history',
+                        tabIndex: 0,
+                      },
                       React.createElement(
-                        'thead',
+                        'table',
                         null,
                         React.createElement(
-                          'tr',
+                          'thead',
                           null,
-                          React.createElement('th', {scope: 'col'}, 'Epoch'),
-                          ...(question.historyOptions ?? []).map((label, index) =>
-                            React.createElement('th', {scope: 'col', key: index}, label),
-                          ),
-                        ),
-                      ),
-                      React.createElement(
-                        'tbody',
-                        null,
-                        question.history.map((point) =>
                           React.createElement(
                             'tr',
-                            {key: point.epoch},
-                            React.createElement('th', {scope: 'row'}, `Epoch ${point.epoch}`),
-                            point.counts.map((count, index) =>
-                              React.createElement('td', {key: `${point.epoch}-${index}`}, count),
+                            null,
+                            React.createElement(
+                              'th',
+                              {scope: 'col'},
+                              t({id: 'results.history.epoch', message: 'Epoch'}),
+                            ),
+                            ...(question.historyOptions ?? []).map((label, index) =>
+                              React.createElement('th', {scope: 'col', key: index}, label),
+                            ),
+                          ),
+                        ),
+                        React.createElement(
+                          'tbody',
+                          null,
+                          question.history.map((point) =>
+                            React.createElement(
+                              'tr',
+                              {key: point.epoch},
+                              React.createElement(
+                                'th',
+                                {scope: 'row'},
+                                message(
+                                  {id: 'results.history.point', message: 'Epoch {epoch}'},
+                                  {epoch: point.epoch},
+                                ),
+                              ),
+                              point.counts.map((count, index) =>
+                                React.createElement('td', {key: `${point.epoch}-${index}`}, count),
+                              ),
                             ),
                           ),
                         ),
@@ -267,7 +310,7 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
               t({
                 id: 'results.merge.note',
                 message:
-                  'Merged counts are an editorial view: a newer option absorbs the counts of the older options it replaces. Each absorption is named below.',
+                  'Merged counts are an editorial view: newer answers take priority for each credential, with older answers filling gaps. Each absorption is named below.',
               }),
             ),
             React.createElement(
@@ -279,7 +322,22 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
                     React.createElement(
                       'li',
                       {key: `${absorbed.question}.${absorbed.option}`},
-                      `${absorbed.label} (question ${absorbed.question}, option ${absorbed.option}): ${absorbed.count} → ${option.label} (question ${item.question}, option ${option.option})`,
+                      message(
+                        {
+                          id: 'results.merge.item',
+                          message:
+                            '{older} (question {oldQuestion}, option {oldOption}): {count} → {newer} (question {newQuestion}, option {newOption})',
+                        },
+                        {
+                          older: absorbed.label,
+                          oldQuestion: absorbed.question,
+                          oldOption: absorbed.option,
+                          count: absorbed.count,
+                          newer: option.label,
+                          newQuestion: item.question,
+                          newOption: option.option,
+                        },
+                      ),
                     ),
                   ),
                 ),
@@ -316,9 +374,23 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
                 React.createElement(
                   'li',
                   {
-                    key: `${item.question}-${item.supersededBy.question}-${item.supersededBy.option}`,
+                    key: `${item.question}-${item.options[0].option}`,
                   },
-                  `${item.label} — ${item.options.map((option) => `${option.label}: ${option.count}`).join(', ')} — Superseded by question ${item.supersededBy.question}, option ${item.supersededBy.option}`,
+                  message(
+                    {
+                      id: 'results.closed.item',
+                      message:
+                        '{label}: {options}. Superseded by question {question}, option {option}',
+                    },
+                    {
+                      label: item.label,
+                      options: item.options
+                        .map((option) => `${option.label}: ${option.count}`)
+                        .join(', '),
+                      question: item.supersededBy.question,
+                      option: item.supersededBy.option,
+                    },
+                  ),
                 ),
               ),
             ),

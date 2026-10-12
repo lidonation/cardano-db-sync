@@ -64,6 +64,11 @@ export default function inventoryPlugin(context: LoadContext): Plugin {
         return;
       }
       actions.addRoute({
+        path: `${context.baseUrl}__survey-results`,
+        component: path.resolve(context.siteDir, 'src/survey-results/FixturePage.tsx'),
+        exact: true,
+      });
+      actions.addRoute({
         path: `${context.baseUrl}${INVENTORY_PATH}`,
         component: path.resolve(context.siteDir, 'src/inventory/InventoryPage.tsx'),
         exact: true,

@@ -5,6 +5,10 @@
  */
 export const DASHBOARD_IDS = [
   'results.basis.message',
+  'results.closed.item',
+  'results.history.epoch',
+  'results.history.point',
+  'results.merge.item',
   'results.closed.heading',
   'results.closed.note',
   'results.empty.body',

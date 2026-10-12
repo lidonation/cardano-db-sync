@@ -90,3 +90,25 @@ test.describe('axe, WCAG 2.2 AA', () => {
     }
   }
 });
+
+test.describe('populated dashboard', () => {
+  for (const width of [320, 768, 1440]) {
+    test(`real tables reflow at ${width}px`, async ({page}) => {
+      await page.setViewportSize({width, height: 900});
+      await page.goto(new URL('__survey-results', base()).toString());
+      await expect(page.locator('main table')).toHaveCount(3);
+      await expect(page.locator('main')).toContainText('Selections counted: 18');
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
+      ).toBeLessThanOrEqual(0);
+      for (const region of await page.getByRole('region').all()) {
+        await region.focus();
+        await expect(region).toBeFocused();
+      }
+      expect(
+        (await new AxeBuilder({page}).withTags(['wcag2a', 'wcag2aa', 'wcag22aa']).analyze())
+          .violations,
+      ).toEqual([]);
+    });
+  }
+});

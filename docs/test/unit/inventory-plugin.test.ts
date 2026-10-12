@@ -41,6 +41,11 @@ describe('component inventory route (B29, VER-5)', () => {
     vi.stubEnv('NODE_ENV', 'development');
     expect(await routes()).toEqual([
       {
+        path: '/base/__survey-results',
+        component: path.resolve('/site', 'src/survey-results/FixturePage.tsx'),
+        exact: true,
+      },
+      {
         path: `/base/${INVENTORY_PATH}`,
         component: path.resolve('/site', 'src/inventory/InventoryPage.tsx'),
         exact: true,

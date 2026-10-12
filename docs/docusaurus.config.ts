@@ -1,3 +1,4 @@
+import surveyResultsPlugin from './plugins/survey-results';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
@@ -94,6 +95,7 @@ const config: Config = {
   // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
+    surveyResultsPlugin,
     cnamePlugin,
     routeManifestPlugin,
     environmentPlugin,

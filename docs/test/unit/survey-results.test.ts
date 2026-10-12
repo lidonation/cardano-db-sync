@@ -127,7 +127,7 @@ describe('subsumption resolution (SUR-28)', () => {
             {
               option: 0,
               label: 'Docker',
-              count: 17,
+              count: 14,
               absorbedFrom: [{question: 0, option: 0, label: 'Docker', count: 12}],
             },
             {option: 1, label: 'Prebuilt binary', count: 4},
@@ -180,4 +180,116 @@ describe('committed artifacts', () => {
     );
     expect(JSON.parse(raw)).toEqual(fixture);
   });
+});
+
+describe('artifact integrity', () => {
+  it('rejects mismatched survey identities at resolution', () => {
+    expect(() => resolveAggregate(manifest, {...fixture, surveyRef: 'other'})).toThrow();
+  });
+  it('requires deduplicated counts for replacement edges', () => {
+    expect(() =>
+      resolveAggregate(manifest, {...fixture, replacements: undefined} as Aggregate),
+    ).toThrow();
+  });
+  it('rejects two absorbers for one older option', () => {
+    expect(
+      validateManifest({
+        ...manifest,
+        subsumptions: [
+          ...manifest.subsumptions,
+          {newer: {question: 1, option: 1}, older: {question: 0, option: 0}, kind: 'replaces'},
+        ],
+      }),
+    ).not.toEqual([]);
+  });
+  it('fails closed for non-boolean moderation approvals', () => {
+    expect(
+      moderatedFreeText({
+        ...fixture,
+        freeText: [{id: 'x', text: 'private', moderated: 'false'}],
+      } as unknown as Aggregate),
+    ).toEqual([]);
+  });
+  it('rejects malformed history columns and counts', () => {
+    expect(() =>
+      resolveAggregate(manifest, {
+        ...fixture,
+        questions: [{...fixture.questions[0], history: [{epoch: 1, counts: [-1]}]}],
+      }),
+    ).toThrow();
+  });
+});
+
+describe('invalid tallies fail the build', () => {
+  it.each([
+    {...fixture, endEpoch: 1999},
+    {...fixture, tallyBasis: 'canonical'},
+    {...fixture, interim: false},
+    {...fixture, questions: [fixture.questions[0], fixture.questions[0]]},
+    {...fixture, questions: [{...fixture.questions[0], question: -1}]},
+    {
+      ...fixture,
+      questions: [
+        {
+          ...fixture.questions[0],
+          options: [fixture.questions[0].options[0], fixture.questions[0].options[0]],
+        },
+      ],
+    },
+    {
+      ...fixture,
+      questions: [{...fixture.questions[0], options: [{option: 0, label: 'bad', count: -1}]}],
+    },
+    {
+      ...fixture,
+      questions: [
+        {
+          ...fixture.questions[0],
+          history: [
+            {epoch: 1, counts: [1, 2, 3]},
+            {epoch: 1, counts: [1, 2, 3]},
+          ],
+        },
+      ],
+    },
+    {...fixture, replacements: [...fixture.replacements!, ...fixture.replacements!]},
+    {...fixture, replacements: [{newer: {question: 1, option: 0}, count: -1}]},
+  ])('rejects corrupt artifact %#', (invalid) => {
+    expect(() => resolveAggregate(manifest, invalid as Aggregate)).toThrow();
+  });
+
+  it('rejects an invalid manifest before resolving it', () => {
+    expect(() => resolveAggregate({...manifest, endEpoch: 1999}, fixture)).toThrow();
+  });
+
+  it('uses the supplied deduplicated result, never raw marginal addition', () => {
+    // Twelve older answers and five newer answers overlap at three credentials.
+    // B26 has the credential set and supplies 14; the render half cannot infer overlap.
+    expect(resolveAggregate(manifest, fixture).questions[1].options[0].count).toBe(14);
+  });
+});
+
+it('accepts acyclic replacement chains independently of edge ordering', () => {
+  const edges: SurveyManifest['subsumptions'] = [
+    {newer: {question: 2, option: 0}, older: {question: 1, option: 0}, kind: 'replaces'},
+    {newer: {question: 1, option: 0}, older: {question: 0, option: 0}, kind: 'replaces'},
+  ];
+  const source: Aggregate = {
+    ...fixture,
+    questions: [0, 1, 2].map((question) => ({
+      question,
+      label: 'Q',
+      options: [{option: 0, label: 'O', count: 5}],
+    })),
+    replacements: [
+      {newer: {question: 1, option: 0}, count: 8},
+      {newer: {question: 2, option: 0}, count: 10},
+    ],
+  };
+  const forward = resolveAggregate({...manifest, subsumptions: edges}, source);
+  expect(validateManifest({...manifest, subsumptions: edges})).toEqual([]);
+  expect(forward).toEqual(
+    resolveAggregate({...manifest, subsumptions: [...edges].reverse()}, source),
+  );
+  expect(forward.questions[0].options[0].count).toBe(10);
 });

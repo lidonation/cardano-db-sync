@@ -14,7 +14,7 @@ import type {
 import {END_EPOCH} from './types';
 
 function isNonNegativeInt(value: unknown): value is number {
-  return typeof value === 'number' && Number.isInteger(value) && value >= 0;
+  return typeof value === 'number' && Number.isSafeInteger(value) && value >= 0;
 }
 
 function refKey(ref: IndexedRef): string {
@@ -42,15 +42,30 @@ export function validateManifest(manifest: SurveyManifest): string[] {
       problems.push(`SUR-28: unknown subsumption kind, got ${(edge as {kind: unknown}).kind}`);
     }
   }
-  // SUR-27 — the reverse direction is derived: an older end that is also a newer end
-  // elsewhere closes a cycle (A absorbs B absorbs A), which has no meaning to render.
-  const newerEnds = new Set(manifest.subsumptions.map((edge) => refKey(edge.newer)));
+  const graph = new Map<string, string[]>();
   for (const edge of manifest.subsumptions) {
-    if (newerEnds.has(refKey(edge.older))) {
-      problems.push(
-        `SUR-27: subsumption cycle through ${refKey(edge.older)}: an absorbed option cannot absorb another`,
-      );
+    const key = refKey(edge.newer);
+    graph.set(key, [...(graph.get(key) ?? []), refKey(edge.older)]);
+  }
+  const active = new Set<string>();
+  const visited = new Set<string>();
+  const visit = (key: string): void => {
+    if (active.has(key)) {
+      problems.push('SUR-27: subsumption cycle through ' + key);
+      return;
     }
+    if (visited.has(key)) return;
+    active.add(key);
+    for (const child of graph.get(key) ?? []) visit(child);
+    active.delete(key);
+    visited.add(key);
+  };
+  for (const key of graph.keys()) visit(key);
+  const olderEnds = new Set<string>();
+  for (const edge of manifest.subsumptions) {
+    const key = refKey(edge.older);
+    if (olderEnds.has(key)) problems.push('SUR-28: older option has multiple absorbers');
+    olderEnds.add(key);
   }
   return problems;
 }
@@ -62,20 +77,68 @@ export function isPreTally(aggregate: Aggregate): boolean {
 
 /** SUR-7 — the free-text items that passed review. Unreviewed items never reach the page. */
 export function moderatedFreeText(aggregate: Aggregate): FreeTextItem[] {
-  return aggregate.freeText.filter((item) => item.moderated);
+  return aggregate.freeText.filter((item) => item.moderated === true);
 }
 
 /**
- * Apply the manifest's subsumption edges to an aggregate (SUR-28): `replaces` folds the
- * older option's count into its absorber as a labelled editorial merge; `supersedes`
+ * Apply the manifest's subsumption edges to an aggregate (SUR-28): `replaces` uses B26's
+ * credential-deduplicated count for its absorber as a labelled editorial merge; `supersedes`
  * closes the older option for separate reporting. Pure: inputs are never mutated.
  * Edges naming options the aggregate does not carry are skipped: the page renders what
- * the tally produced, and `validateManifest` reports dangling edges at check time.
+ * the tally produced, so partial artifacts and the pre-tally state stay renderable.
  */
 export function resolveAggregate(
   manifest: SurveyManifest,
   aggregate: Aggregate,
 ): ResolvedAggregate {
+  const problems = validateManifest(manifest);
+  if (problems.length) throw new Error(problems.join('; '));
+  if (
+    aggregate.surveyRef !== manifest.surveyRef ||
+    aggregate.endEpoch !== manifest.endEpoch ||
+    aggregate.tallyBasis !== 'response-time-only' ||
+    aggregate.interim !== true
+  ) {
+    throw new Error('Survey artifact identity or tally basis does not match its manifest');
+  }
+  const seenQuestions = new Set<number>();
+  for (const question of aggregate.questions) {
+    if (!isNonNegativeInt(question.question) || seenQuestions.has(question.question)) {
+      throw new Error('Invalid or duplicate question index');
+    }
+    seenQuestions.add(question.question);
+    const seenOptions = new Set<number>();
+    for (const option of question.options) {
+      if (
+        !isNonNegativeInt(option.option) ||
+        !isNonNegativeInt(option.count) ||
+        seenOptions.has(option.option)
+      ) {
+        throw new Error('Invalid count or duplicate option index');
+      }
+      seenOptions.add(option.option);
+    }
+    const epochs = new Set<number>();
+    for (const point of question.history ?? []) {
+      if (
+        !isNonNegativeInt(point.epoch) ||
+        epochs.has(point.epoch) ||
+        point.counts.length !== question.options.length ||
+        !point.counts.every(isNonNegativeInt)
+      ) {
+        throw new Error('Invalid history epoch, count or column cardinality');
+      }
+      epochs.add(point.epoch);
+    }
+  }
+  const replacements = new Map<string, number>();
+  for (const item of aggregate.replacements ?? []) {
+    const key = refKey(item.newer);
+    if (!isNonNegativeInt(item.count) || replacements.has(key)) {
+      throw new Error('Invalid or duplicate replacement tally');
+    }
+    replacements.set(key, item.count);
+  }
   const optionsByQuestion = new Map<number, Map<number, {label: string; count: number}>>();
   const questionMeta = new Map<
     number,
@@ -110,8 +173,12 @@ export function resolveAggregate(
         label: source.label,
         count: source.count,
       });
+      list.push(...(absorbed.get(refKey(edge.older)) ?? []));
       absorbed.set(refKey(edge.newer), list);
-      target.count += source.count;
+      const count = replacements.get(refKey(edge.newer));
+      if (count === undefined)
+        throw new Error('B26 must supply credential-deduplicated replacement counts');
+      target.count = count;
       optionsByQuestion.get(edge.older.question)?.delete(edge.older.option);
       editorialMerge = true;
     } else {
@@ -119,7 +186,19 @@ export function resolveAggregate(
       optionsByQuestion.get(edge.older.question)?.delete(edge.older.option);
     }
   };
-  for (const edge of manifest.subsumptions) absorb(edge);
+  // Resolve older links first so a valid A -> B -> C chain is order-independent.
+  const ordered: SubsumptionEdge[] = [];
+  const added = new Set<SubsumptionEdge>();
+  const order = (edge: SubsumptionEdge): void => {
+    if (added.has(edge)) return;
+    for (const dependency of manifest.subsumptions) {
+      if (refKey(dependency.newer) === refKey(edge.older)) order(dependency);
+    }
+    added.add(edge);
+    ordered.push(edge);
+  };
+  for (const edge of manifest.subsumptions) order(edge);
+  for (const edge of ordered) absorb(edge);
 
   const questions = [...optionsByQuestion.entries()]
     .filter(([, options]) => options.size > 0)

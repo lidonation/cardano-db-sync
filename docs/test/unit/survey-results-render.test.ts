@@ -47,7 +47,7 @@ describe('survey results dashboard markup (B44-f slice B)', () => {
     ]) {
       expect(markup, label).toContain(label);
     }
-    expect(markup).toContain('>17<');
+    expect(markup).toContain('>14<');
     expect(markup).toContain('>7<');
     expect(markup).toContain('>4<');
     expect(markup).toContain('>3<');
@@ -62,8 +62,8 @@ describe('survey results dashboard markup (B44-f slice B)', () => {
 
   it('summarises each question from its data', () => {
     const markup = golden();
-    expect(markup).toContain('7 responses counted across 1 option.');
-    expect(markup).toContain('21 responses counted across 2 options.');
+    expect(markup).toContain('Selections counted: 7. Options: 1.');
+    expect(markup).toContain('Selections counted: 18. Options: 2.');
   });
 
   it('labels history derived, never a CIP-179 tally', () => {

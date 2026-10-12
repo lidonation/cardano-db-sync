@@ -79,12 +79,20 @@ export interface FreeTextItem {
  * B26's committed artifact, render half. SUR-30 — every published figure is an interim
  * tally permanently: `interim` is always true, and the page states it.
  */
+/** B26 computes these counts per credential: newer answers win, older fill gaps.
+ * Marginal counts cannot establish overlap, so the dashboard never adds them. */
+export interface ReplacementTally {
+  readonly newer: IndexedRef;
+  readonly count: number;
+}
+
 export interface Aggregate {
   readonly surveyRef: string;
   readonly tallyBasis: TallyBasis;
   readonly interim: true;
   readonly endEpoch: number;
   readonly questions: readonly QuestionTally[];
+  readonly replacements?: readonly ReplacementTally[];
   readonly freeText: readonly FreeTextItem[];
   readonly generatedAt: string;
 }

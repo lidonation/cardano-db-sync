@@ -105,3 +105,12 @@
 .w100 {
   width: 100%;
 }
+
+.tableScroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+.tableScroll table {
+  margin-block: var(--dbs-space-16);
+}

@@ -4,7 +4,7 @@
   "endEpoch": 2000,
   "subsumptions": [
     {
-      "$comment": "replaces: q1.o0 absorbs q0.o0 — newer answers supersede older ones per credential, older ones fill the gap (SUR-28). Counts merge as our labelled editorial view.",
+      "$comment": "replaces: q1.o0 absorbs q0.o0 — newer answers supersede older ones per credential, older ones fill the gap (SUR-28). B26 supplies credential-deduplicated replacement totals for our labelled editorial view.",
       "newer": {"question": 1, "option": 0},
       "older": {"question": 0, "option": 0},
       "kind": "replaces"
