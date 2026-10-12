@@ -9,7 +9,6 @@
   display: flex;
   flex-direction: column;
   gap: var(--dbs-space-8);
-  box-sizing: border-box;
   inline-size: 100%;
   max-inline-size: 384px;
   padding: var(--dbs-space-24);
@@ -277,7 +276,6 @@
   place-items: center;
   inline-size: 24px;
   block-size: 24px;
-  box-sizing: border-box;
   border: 1px solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-on-selected);
@@ -332,7 +330,6 @@
   display: block;
   inline-size: 38px;
   block-size: 22px;
-  box-sizing: border-box;
   border: 1px solid var(--dbs-border-interactive);
   background: var(--dbs-surface-sunken);
 }
@@ -342,7 +339,6 @@
   inset-inline-start: 2px;
   inline-size: 16px;
   block-size: 16px;
-  box-sizing: border-box;
   border: 1px solid var(--dbs-border-interactive);
   border-radius: 50%;
   background: var(--dbs-surface-base);

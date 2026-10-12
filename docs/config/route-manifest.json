@@ -7,7 +7,13 @@
     "/docs/intro": {
       "status": "live"
     },
+    "/ecosystem": {
+      "status": "live"
+    },
     "/faq": {
+      "status": "live"
+    },
+    "/updates": {
       "status": "live"
     }
   }

@@ -12,6 +12,7 @@ import palettePlugin from './plugins/palette';
 import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
 import {releaseFacts} from './src/data/release-facts';
+import {loadReleaseHistory} from './src/data/release-history';
 
 const profile = resolveProfile();
 
@@ -63,6 +64,8 @@ const config: Config = {
     // B44-a: the landing page's "in this build" figures, counted here at build time so the
     // schema artifact they come from never ships to the browser.
     releaseFacts: releaseFacts(),
+    // B44-b: the Ecosystem page's release history, counted from the committed changelog.
+    releaseHistory: loadReleaseHistory(),
   },
 
   // A11Y-18: `lang` and `dir` on <html> come from each locale's config (B40).
@@ -122,6 +125,8 @@ const config: Config = {
           position: 'left',
           label: 'Docs',
         },
+        // B44-b: the Ecosystem page, an app page beside the docs.
+        {to: '/ecosystem', label: 'Ecosystem', position: 'left'},
         // B30: the three global controls share one discipline (THM-1, A11Y-29, DF-7).
         // The theme switcher is the swizzled ColorModeToggle (four palettes); locale and
         // version ride on Docusaurus' own dropdowns so same-page navigation (hreflang
@@ -147,6 +152,7 @@ const config: Config = {
           items: [
             {label: 'GitHub', href: profile.repoUrl},
             {label: 'Releases', href: `${profile.repoUrl}/releases`},
+            {label: 'Updates', to: '/updates'},
           ],
         },
         {

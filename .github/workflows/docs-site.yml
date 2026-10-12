@@ -10,6 +10,8 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+      # B44-b release history is counted from this committed source.
+      - "cardano-db-sync/CHANGELOG.md"
       # read by check:config (CON-4)
       - "config/mainnet-config.yaml"
       - "config/preprod-config.yaml"
@@ -19,6 +21,8 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+      # B44-b release history is counted from this committed source.
+      - "cardano-db-sync/CHANGELOG.md"
       # read by check:config (CON-4)
       - "config/mainnet-config.yaml"
       - "config/preprod-config.yaml"

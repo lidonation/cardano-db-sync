@@ -1,0 +1,46 @@
+# External links on the Ecosystem page (B44-b). The site's link gate never fetches external URLs
+# (BLD-3), so this separate check fetches the ones the Ecosystem page lists: on pull requests that
+# change them, and weekly, ending in the ops alert (NUM-4) so a project that moves is noticed.
+name: Docs external links
+
+on:
+  pull_request:
+    paths:
+      - docs/src/ecosystem/**
+      - docs/src/data/links.ts
+      - docs/scripts/check-external-links.mjs
+      - docs/test/unit/ecosystem.test.ts
+      - .github/workflows/docs-external-links.yml
+  schedule:
+    - cron: "41 5 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Ecosystem links resolve
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: docs
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Fetch every listed link
+        working-directory: docs
+        run: node scripts/check-external-links.mjs
+
+  alert:
+    name: Ops alert
+    needs: check
+    if: always() && github.event_name != 'pull_request'
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/docs-ops-alert.yml
+    with:
+      result: ${{ needs.check.result }}

@@ -17,7 +17,6 @@
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   column-gap: var(--dbs-docs-gutter);
-  box-sizing: border-box;
   inline-size: 100%;
   padding-inline: max(var(--dbs-space-48), calc((100% - 1200px) / 2));
 }
@@ -30,7 +29,6 @@
   position: sticky;
   inset-block-start: var(--dbs-navbar-block-size, var(--ifm-navbar-height));
   align-self: start;
-  box-sizing: border-box;
   max-block-size: calc(100dvh - var(--dbs-navbar-block-size, var(--ifm-navbar-height)));
   overflow-y: auto;
   padding-block: var(--dbs-space-24);
@@ -73,7 +71,6 @@
   position: relative;
   display: flex;
   align-items: center;
-  box-sizing: border-box;
   min-block-size: 44px;
   padding: var(--dbs-space-8) var(--dbs-space-12) var(--dbs-space-8) var(--dbs-space-16);
   color: var(--dbs-text-primary);
@@ -127,7 +124,6 @@
   display: flex;
   align-items: center;
   gap: var(--dbs-space-8);
-  box-sizing: border-box;
   inline-size: 100%;
   min-block-size: 44px;
   margin: 0;
@@ -164,7 +160,6 @@
 }
 
 .panel {
-  box-sizing: border-box;
   padding: var(--dbs-space-8) 0;
   border: 1px solid var(--dbs-border-interactive);
   border-block-start: 0;
@@ -217,7 +212,6 @@
 .tocMobileLink {
   display: flex;
   align-items: center;
-  box-sizing: border-box;
   min-block-size: 44px;
   padding: var(--dbs-space-8) var(--dbs-space-12);
   color: var(--dbs-text-secondary);
@@ -259,7 +253,6 @@
     max-block-size: calc(
       100dvh - var(--dbs-navbar-block-size, var(--ifm-navbar-height)) - var(--dbs-space-48)
     );
-    box-sizing: border-box;
     padding: var(--dbs-space-4);
     scroll-padding-block: var(--dbs-space-8);
     overflow-y: auto;
@@ -318,7 +311,6 @@
 .main :global(.breadcrumbs__link) {
   display: inline-flex;
   align-items: center;
-  box-sizing: border-box;
   min-block-size: 44px;
   min-inline-size: 44px;
   padding-inline: var(--dbs-space-8);
@@ -343,7 +335,6 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  box-sizing: border-box;
   inline-size: 44px;
   block-size: 44px;
   margin-block: calc(-1 * var(--dbs-space-12));
