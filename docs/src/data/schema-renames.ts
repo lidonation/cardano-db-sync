@@ -82,11 +82,106 @@ export const RENAMES_SCHEMA_VERSION = 1;
  * each consumer.
  */
 export function loadRenames(map: RenameMap = artifact as RenameMap): RenameMap {
+  if (map === null || typeof map !== 'object') {
+    throw new Error('schema-renames.json must be an object');
+  }
   if (map.schemaVersion !== RENAMES_SCHEMA_VERSION) {
     throw new Error(
       `schema-renames.json is schema version ${map.schemaVersion}; ` +
         `this build understands ${RENAMES_SCHEMA_VERSION}. Regenerate it with the extractor.`,
     );
+  }
+  const text = (value: unknown): value is string =>
+    typeof value === 'string' && value.trim().length > 0;
+  const object = (value: unknown): value is Record<string, unknown> =>
+    value !== null && typeof value === 'object' && !Array.isArray(value);
+  const kinds = new Set([
+    'table',
+    'column',
+    'constraint',
+    'sequence',
+    'index',
+    'view',
+    'type',
+    'domain',
+  ]);
+  const migration = (value: unknown): boolean => {
+    if (!object(value) || !text(value.file)) return false;
+    const match = /^migration-(\d+)-(\d{4})-\d{8}\.sql$/.exec(value.file);
+    return (
+      match !== null &&
+      [1, 2, 3, 4].includes(Number(value.stage)) &&
+      Number(match[1]) === value.stage &&
+      Number(match[2]) === value.version
+    );
+  };
+  const entity = (value: unknown): value is Record<string, unknown> =>
+    object(value) &&
+    typeof value.kind === 'string' &&
+    kinds.has(value.kind) &&
+    (value.kind === 'column' || value.kind === 'constraint'
+      ? text(value.table)
+      : value.table === undefined);
+  if (
+    map.source !== 'schema' ||
+    !Array.isArray(map.renames) ||
+    !Array.isArray(map.entities) ||
+    !map.renames.every(
+      (value) =>
+        entity(value) &&
+        text(value.from) &&
+        text(value.to) &&
+        value.from !== value.to &&
+        migration(value.migration) &&
+        Number.isInteger(value.line) &&
+        Number(value.line) > 0,
+    ) ||
+    !map.entities.every(
+      (value) =>
+        entity(value) &&
+        text(value.name) &&
+        Array.isArray(value.formerNames) &&
+        value.formerNames.length > 0 &&
+        value.formerNames.every(
+          (former: unknown) => object(former) && text(former.name) && migration(former.until),
+        ),
+    )
+  ) {
+    throw new Error(
+      'schema-renames.json has malformed rename data. Regenerate it with the extractor.',
+    );
+  }
+  const compare = (a: number[], b: number[]): number => {
+    for (let index = 0; index < a.length; index += 1) {
+      if (a[index] !== b[index]) return a[index] < b[index] ? -1 : 1;
+    }
+    return 0;
+  };
+  if (
+    map.renames.some(
+      (rename, index) =>
+        index > 0 &&
+        compare(
+          [
+            map.renames[index - 1].migration.stage,
+            map.renames[index - 1].migration.version,
+            map.renames[index - 1].line,
+          ],
+          [rename.migration.stage, rename.migration.version, rename.line],
+        ) > 0,
+    ) ||
+    map.entities.some((item) =>
+      item.formerNames.some(
+        (former, index) =>
+          index > 0 &&
+          compare(
+            [item.formerNames[index - 1].until.stage, item.formerNames[index - 1].until.version],
+            [former.until.stage, former.until.version],
+          ) > 0,
+      ),
+    )
+  ) {
+    throw new Error('schema-renames.json must be in application order.');
   }
   return map;
 }
@@ -120,12 +215,16 @@ export function findRenamed(
 ): RenamedEntity | undefined {
   const renames = loadRenames(map);
   const owner = table === undefined ? undefined : currentName('table', table, undefined, renames);
-  return renames.entities.find(
+  const matches = renames.entities.filter(
     (entity) =>
       entity.kind === kind &&
       entity.table === owner &&
       (entity.name === name || entity.formerNames.some((former) => former.name === name)),
   );
+  if (matches.length > 1) {
+    throw new Error(`schema-renames.json: ambiguous ${kind} name ${name}`);
+  }
+  return matches[0];
 }
 
 /**

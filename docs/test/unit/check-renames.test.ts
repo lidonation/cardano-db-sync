@@ -155,6 +155,20 @@ describe('check:renames', () => {
     );
   });
 
+  it('rejects coercible migration filenames and unsupported stages without crashing', async () => {
+    expect(
+      await problemsOf((a) => {
+        a.renames[0].migration.file = [FILE_A] as never;
+      }),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/not a migration file name/)]));
+    await fs.writeFile(path.join(repo, 'schema', 'migration-5-0001-20200101.sql'), '');
+    expect(
+      await problemsOf((a) => {
+        a.renames[0].migration = at('migration-5-0001-20200101.sql');
+      }),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/unsupported migration stage/)]));
+  });
+
   it('fails on renames out of application order', async () => {
     expect(await problemsOf((a) => void a.renames.reverse())).toEqual([
       'renames[1]: renames must be in application order (stage, version, line)',
@@ -184,6 +198,75 @@ describe('check:renames', () => {
         `rename of column dep in ${FILE_B} belongs to no entity`,
         `rename of table old_t in ${FILE_A} belongs to no entity`,
       ]),
+    );
+  });
+
+  it('keeps equal column names in different tables as separate histories', async () => {
+    expect(
+      await problemsOf((a) => {
+        a.renames.push({...a.renames[1], table: 'other'});
+        a.entities.push({...a.entities[0], table: 'other'});
+      }),
+    ).toEqual([]);
+  });
+
+  it('checks chain order and follows renamed owners', async () => {
+    expect(
+      await problemsOf((a) => {
+        a.renames[1].table = 'new_t';
+        a.entities[0].table = 'new_t';
+      }),
+    ).toEqual([]);
+    expect(
+      await problemsOf((a) => {
+        a.renames[1] = {
+          ...a.renames[0],
+          from: 'new_t',
+          to: 'latest',
+          migration: at(FILE_B),
+          line: 15,
+        };
+        a.entities = [
+          {
+            kind: 'table',
+            name: 'latest',
+            formerNames: [
+              {name: 'new_t', until: at(FILE_B)},
+              {name: 'old_t', until: at(FILE_A)},
+            ],
+          },
+        ] as never;
+      }),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/history/)]));
+  });
+
+  it('rejects aliases reused by different renamed entities', async () => {
+    expect(
+      await problemsOf((a) => {
+        a.renames[1] = {...a.renames[0], to: 'other', migration: at(FILE_B), line: 15};
+        a.entities = [
+          a.entities[1],
+          {kind: 'table', name: 'other', formerNames: [{name: 'old_t', until: at(FILE_B)}]},
+        ] as never;
+      }),
+    ).toEqual(expect.arrayContaining([expect.stringMatching(/ambiguous table name old_t/)]));
+  });
+
+  it('rejects incorrect final names, owners and duplicated rename statements', async () => {
+    expect(await problemsOf((a) => void (a.entities[1].name = 'wrong'))).toEqual(
+      expect.arrayContaining([expect.stringMatching(/history/)]),
+    );
+    expect(await problemsOf((a) => void (a.entities[0].table = 'wrong'))).toEqual(
+      expect.arrayContaining([expect.stringMatching(/history/)]),
+    );
+    expect(await problemsOf((a) => void a.renames.splice(1, 0, {...a.renames[0]}))).toEqual(
+      expect.arrayContaining([expect.stringMatching(/duplicate rename/)]),
+    );
+  });
+
+  it('rejects malformed optional table fields', async () => {
+    expect(await problemsOf((a) => ({...a, renames: [{...a.renames[0], table: 42}]}))).toEqual(
+      expect.arrayContaining([expect.stringMatching(/only columns/)]),
     );
   });
 

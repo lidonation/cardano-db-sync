@@ -35,7 +35,7 @@ const OWNED = new Set(['column', 'constraint']);
 const MIGRATION_FILE = /^migration-(\d+)-(\d{4})-\d{8}\.sql$/;
 
 const isObject = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
-const hasText = (value) => typeof value === 'string' && value !== '';
+const hasText = (value) => typeof value === 'string' && value.trim() !== '';
 
 /** Application order: stage, then version, then source line. */
 const order = (rename) => [rename.migration.stage, rename.migration.version, rename.line];
@@ -89,12 +89,15 @@ export function findProblems(docsRoot) {
     if (!isObject(migration)) {
       return `${at}: migration must be an object`;
     }
-    const match = MIGRATION_FILE.exec(migration.file ?? '');
+    const match = typeof migration.file === 'string' ? MIGRATION_FILE.exec(migration.file) : null;
     if (!match) {
       return `${at}: ${JSON.stringify(migration.file)} is not a migration file name`;
     }
     if (Number(match[1]) !== migration.stage || Number(match[2]) !== migration.version) {
       return `${at}: stage/version ${migration.stage}/${migration.version} disagree with ${migration.file}`;
+    }
+    if (![1, 2, 3, 4].includes(migration.stage)) {
+      return `${at}: unsupported migration stage ${migration.stage}`;
     }
     if (!existsSync(path.join(schemaRoot, migration.file))) {
       return `${at}: schema/${migration.file} does not exist`;
@@ -112,7 +115,7 @@ export function findProblems(docsRoot) {
         found.push(`${at}: ${field} must be a non-empty string`);
       }
     }
-    if (OWNED.has(item.kind) !== hasText(item.table)) {
+    if (OWNED.has(item.kind) ? !hasText(item.table) : item.table !== undefined) {
       found.push(
         OWNED.has(item.kind)
           ? `${at}: a ${item.kind} must name its table`
@@ -153,13 +156,82 @@ export function findProblems(docsRoot) {
     sound.push(rename);
   });
 
+  // Rebuild identities in statement order. Owner names move with table renames.
+  const history = [];
+  const statements = new Set();
+  for (const rename of sound) {
+    const statement = JSON.stringify(rename);
+    if (statements.has(statement)) problems.push('duplicate rename statement');
+    statements.add(statement);
+    let entity = history.find(
+      (item) =>
+        item.kind === rename.kind && item.table === rename.table && item.name === rename.from,
+    );
+    if (!entity) {
+      entity = {
+        kind: rename.kind,
+        ...(rename.table === undefined ? {} : {table: rename.table}),
+        name: rename.from,
+        formerNames: [],
+      };
+      history.push(entity);
+    }
+    entity.formerNames.push({name: rename.from, until: rename.migration});
+    entity.name = rename.to;
+    if (rename.kind === 'table') {
+      for (const owned of history) {
+        if (owned.table === rename.from) owned.table = rename.to;
+      }
+    }
+  }
+  const signature = (entity) =>
+    JSON.stringify([
+      entity.kind,
+      entity.table,
+      entity.name,
+      (Array.isArray(entity.formerNames) ? entity.formerNames : []).map((former) => [
+        former?.name,
+        former?.until?.stage,
+        former?.until?.version,
+        former?.until?.file,
+      ]),
+    ]);
+  if (
+    artifact.entities.every(isObject) &&
+    JSON.stringify(history.map(signature).sort()) !==
+      JSON.stringify(artifact.entities.map(signature).sort())
+  ) {
+    problems.push(
+      'entities disagree with rename history (final name, owner or ordered former names)',
+    );
+  }
+
+  const aliases = new Map();
+  for (const entity of history) {
+    for (const name of new Set([entity.name, ...entity.formerNames.map((former) => former.name)])) {
+      const key = JSON.stringify([entity.kind, entity.table, name]);
+      if (aliases.has(key)) problems.push(`ambiguous ${entity.kind} name ${name}`);
+      aliases.set(key, entity);
+    }
+  }
+
   // Entities: every former name is accounted for by exactly one rename.
-  const unclaimed = new Map(
-    sound.map((rename) => [
-      `${rename.kind}\u0000${rename.from}\u0000${rename.migration.file}`,
-      rename,
-    ]),
-  );
+  const latestTable = (table) => {
+    let name = table;
+    for (const rename of sound) {
+      if (rename.kind === 'table' && rename.from === name) name = rename.to;
+    }
+    return name;
+  };
+  const claimKey = (kind, table, name, file) =>
+    JSON.stringify([kind, latestTable(table), name, file]);
+  const unclaimed = new Map();
+  for (const rename of sound) {
+    const key = claimKey(rename.kind, rename.table, rename.from, rename.migration.file);
+    const items = unclaimed.get(key) ?? [];
+    items.push(rename);
+    unclaimed.set(key, items);
+  }
   artifact.entities.forEach((entity, index) => {
     const at = `entities[${index}]`;
     if (!isObject(entity)) {
@@ -182,15 +254,18 @@ export function findProblems(docsRoot) {
         problems.push(migration);
         return;
       }
-      const key = `${entity.kind}\u0000${former.name}\u0000${former.until.file}`;
-      if (!unclaimed.delete(key)) {
+      const key = claimKey(entity.kind, entity.table, former.name, former.until.file);
+      const items = unclaimed.get(key);
+      if (!items?.length) {
         problems.push(
           `${atFormer}: no rename of ${entity.kind} ${former.name} in ${former.until.file}`,
         );
+      } else {
+        items.pop();
       }
     });
   });
-  for (const rename of unclaimed.values()) {
+  for (const rename of [...unclaimed.values()].flat()) {
     problems.push(
       `rename of ${rename.kind} ${rename.from} in ${rename.migration.file} belongs to no entity`,
     );

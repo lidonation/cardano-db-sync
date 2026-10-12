@@ -22,6 +22,53 @@ describe('schema rename map', () => {
     expect(() => loadRenames({...loadRenames(), schemaVersion: 2})).toThrow(/schema version 2/);
   });
 
+  it('rejects malformed runtime data before consumers use it', () => {
+    for (const map of [
+      null,
+      {schemaVersion: 1},
+      {...loadRenames(), entities: [null]},
+      {...loadRenames(), entities: [{...loadRenames().entities[0], kind: ['table']}]},
+    ]) {
+      expect(() => loadRenames(map as never)).toThrow(/schema-renames/);
+    }
+  });
+
+  it('does not silently resolve an alias shared by different entities', () => {
+    const map: RenameMap = {
+      ...loadRenames(),
+      entities: [
+        {
+          kind: 'table',
+          name: 'first',
+          formerNames: [
+            {name: 'old', until: {stage: 2, version: 1, file: 'migration-2-0001-20200101.sql'}},
+          ],
+        },
+        {
+          kind: 'table',
+          name: 'second',
+          formerNames: [
+            {name: 'old', until: {stage: 2, version: 2, file: 'migration-2-0002-20200101.sql'}},
+          ],
+        },
+      ],
+    };
+    expect(() => currentName('table', 'old', undefined, map)).toThrow(/ambiguous/);
+  });
+
+  it('rejects unsupported stages and unordered runtime histories', () => {
+    const map = structuredClone(loadRenames());
+    map.entities[0].formerNames[0].until = {
+      stage: 5,
+      version: 1,
+      file: 'migration-5-0001-20200101.sql',
+    };
+    expect(() => loadRenames(map)).toThrow(/malformed/);
+    const reversed = structuredClone(loadRenames());
+    reversed.renames.reverse();
+    expect(() => loadRenames(reversed)).toThrow(/application order/);
+  });
+
   it('resolves pool_offline_data -> off_chain_pool_data at stage_two 26', () => {
     expect(currentName('table', 'pool_offline_data')).toBe('off_chain_pool_data');
     expect(nameAt('table', 'off_chain_pool_data', {stageTwo: 25})).toBe('pool_offline_data');
@@ -66,7 +113,11 @@ describe('schema rename map', () => {
   });
 
   it('walks a chain of renames to the name in force at each version', () => {
-    const until = (version: number) => ({stage: 2, version, file: `migration-2-${version}.sql`});
+    const until = (version: number) => ({
+      stage: 2,
+      version,
+      file: `migration-2-${String(version).padStart(4, '0')}-20200101.sql`,
+    });
     const chain: RenameMap = {
       schemaVersion: 1,
       source: 'schema',
