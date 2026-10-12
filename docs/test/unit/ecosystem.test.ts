@@ -1,6 +1,7 @@
 import {readFileSync, readdirSync} from 'node:fs';
 import path from 'node:path';
 
+import yaml from 'js-yaml';
 import {afterEach, describe, expect, it, vi} from 'vitest';
 
 import {
@@ -40,6 +41,17 @@ describe('release history (B44-b)', () => {
     expect(history.releases).toBeGreaterThan(50);
     expect(history.latest).toMatch(/^\d+(?:\.\d+)+$/);
     expect(history.since).toBe(2019);
+  });
+
+  it('rebuilds and deploys when the release-history source changes', () => {
+    const workflow = yaml.load(
+      readFileSync(path.join(DOCS, '../.github/workflows/docs-site.yml'), 'utf8'),
+    ) as {
+      on: Record<string, {paths: string[]}>;
+    };
+    for (const event of ['push', 'pull_request']) {
+      expect(workflow.on[event].paths).toContain('cardano-db-sync/CHANGELOG.md');
+    }
   });
 
   it('counts released headings only, newest first, oldest dated year', () => {
