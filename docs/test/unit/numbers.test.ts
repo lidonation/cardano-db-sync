@@ -213,6 +213,12 @@ describe('Numbers snapshot boundary (NUM-1…NUM-5)', () => {
         'unavailable',
       );
   });
+  it('does not display positive sub-cent estimates as zero', () => {
+    for (const value of [0.001, 0.00001, Number.MIN_VALUE]) {
+      expect(formatNumber(value)).not.toBe('0');
+    }
+    expect(formatNumber(0)).toBe('0');
+  });
   it('uses stable SSR/client number and UTC date formatting', () => {
     expect(formatNumber(1234.5)).toBe('1,234.5');
     expect(formatUtc(snapshot.updatedAt)).toBe('2026-10-12 00:00 UTC');
