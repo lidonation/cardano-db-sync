@@ -42,7 +42,7 @@
     "extract:schema": "node scripts/extract-schema.mjs",
     "check:renames": "node scripts/check-renames.mjs",
     "test:switchers:built": "playwright test --config playwright.built.config.ts",
-    "test:chrome": "cross-env DBS_BUILT_PROFILE=dev DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/chrome.spec.ts --output=test-results/chrome-dev && cross-env DBS_BUILT_PROFILE=prod DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/chrome.spec.ts --output=test-results/chrome-prod",
+    "test:chrome": "cross-env PLAYWRIGHT_JSON_OUTPUT_FILE=test-results/chrome-dev.json DBS_BUILT_PROFILE=dev DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/chrome.spec.ts --output=test-results/chrome-dev --reporter=list,json && cross-env PLAYWRIGHT_JSON_OUTPUT_FILE=test-results/chrome-prod.json DBS_BUILT_PROFILE=prod DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/chrome.spec.ts --output=test-results/chrome-prod --reporter=list,json",
     "test:landing:built": "playwright test --config playwright.landing-built.config.ts"
   },
   "dependencies": {
