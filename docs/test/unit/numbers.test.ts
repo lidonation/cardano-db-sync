@@ -186,6 +186,33 @@ describe('Numbers snapshot boundary (NUM-1…NUM-5)', () => {
       }).status,
     ).toBe('unavailable');
   });
+  it('accepts decimal sums within rounding error, but not excessive table totals', () => {
+    const storage = {
+      ...snapshot.storage,
+      databaseGB: 0.3,
+      tables: [
+        {name: 'tx', gigabytes: 0.1},
+        {name: 'tx_out', gigabytes: 0.2},
+      ],
+    };
+    expect(state({...snapshot, storage}).status).toBe('ready');
+    expect(state({...snapshot, storage: {...storage, databaseGB: 0.299999}}).status).toBe(
+      'unavailable',
+    );
+  });
+  it('rejects unfinished epochs from completed history', () => {
+    expect(
+      state({...snapshot, recentEpochs: [{...snapshot.recentEpochs[0], epoch: snapshot.epoch}]})
+        .status,
+    ).toBe('unavailable');
+  });
+  it('rejects sparse collections that Array.every would skip', () => {
+    expect(state({...snapshot, recentEpochs: new Array(1)}).status).toBe('unavailable');
+    for (const key of ['tables', 'growth'])
+      expect(state({...snapshot, storage: {...snapshot.storage, [key]: new Array(1)}}).status).toBe(
+        'unavailable',
+      );
+  });
   it('uses stable SSR/client number and UTC date formatting', () => {
     expect(formatNumber(1234.5)).toBe('1,234.5');
     expect(formatUtc(snapshot.updatedAt)).toBe('2026-10-12 00:00 UTC');

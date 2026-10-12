@@ -20,7 +20,9 @@ const timestamp = (value: unknown): value is string => {
   return Number.isFinite(time) && new Date(time).toISOString() === value;
 };
 const collection = (value: unknown): value is unknown[] =>
-  Array.isArray(value) && value.length <= 12;
+  Array.isArray(value) &&
+  value.length <= 12 &&
+  Array.from({length: value.length}, (_, index) => Object.hasOwn(value, index)).every(Boolean);
 const unique = (items: readonly Record<string, unknown>[], key: string) =>
   new Set(items.map((item) => item[key])).size === items.length;
 
@@ -45,7 +47,7 @@ function isSnapshot(value: unknown): value is NumbersSnapshot {
       (item): item is Record<string, unknown> =>
         record(item) &&
         integer(item.epoch) &&
-        item.epoch <= epoch &&
+        item.epoch < epoch &&
         integer(item.blocks) &&
         integer(item.transactions) &&
         timestamp(item.boundary) &&
@@ -75,12 +77,11 @@ function isSnapshot(value: unknown): value is NumbersSnapshot {
     )
   )
     return false;
-  if (
-    !unique(storage.tables, 'name') ||
-    storage.tables.reduce((total, item) => total + (item.gigabytes as number), 0) >
-      storage.databaseGB
-  )
-    return false;
+  const total = storage.tables.reduce((sum, item) => sum + (item.gigabytes as number), 0);
+  // Addition of decimal GB can round upward (0.1 + 0.2). Allow only accumulated IEEE-754 error.
+  const tolerance = Number.EPSILON * Math.max(total, storage.databaseGB) * storage.tables.length;
+  if (!unique(storage.tables, 'name') || total - storage.databaseGB > tolerance) return false;
+
   return (
     storage.growth.every(
       (item): item is Record<string, unknown> =>
