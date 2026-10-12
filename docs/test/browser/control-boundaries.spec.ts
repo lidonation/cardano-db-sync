@@ -123,7 +123,6 @@ test.describe('disabled choices and tabs retain the interactive boundary (TOK-6)
 });
 
 /** The docs sidebar as B34 renders it; the current page's row carries aria-current. */
-const SIDEBAR = 'nav[aria-label="Docs"]';
 
 test.describe('active sidebar label (NAV-5)', () => {
   for (const palette of PALETTES) {
