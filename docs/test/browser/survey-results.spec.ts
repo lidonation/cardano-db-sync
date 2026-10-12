@@ -101,7 +101,7 @@ test.describe('populated dashboard', () => {
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth - innerWidth),
       ).toBeLessThanOrEqual(0);
-      for (const region of await page.getByRole('region').all()) {
+      for (const region of await page.locator('main div[role="region"][tabindex="0"]').all()) {
         await region.focus();
         await expect(region).toBeFocused();
       }

@@ -8,6 +8,25 @@ import type {Aggregate, SurveyManifest} from '../../src/survey-results/types';
 export default function surveyResultsPlugin(context: LoadContext): Plugin {
   return {
     name: 'survey-results',
+    configureWebpack(_config, isServer) {
+      if (isServer) return {};
+      return {
+        optimization: {
+          splitChunks: {
+            cacheGroups: {
+              resultsPageHelpers: {
+                test: /[\\/]src[\\/](?:i18n[\\/](?:pageTranslator|useFallbackLang)\.ts|landing[\\/]styles\.module\.css)$/,
+                chunks: 'async',
+                minChunks: 2,
+                minSize: 0,
+                priority: 20,
+                reuseExistingChunk: true,
+              },
+            },
+          },
+        },
+      };
+    },
     async contentLoaded({actions: {createData}}) {
       const root = path.join(context.siteDir, 'src/survey-results');
       const aggregate = JSON.parse(

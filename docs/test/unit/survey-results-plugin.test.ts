@@ -42,3 +42,18 @@ describe('SUR-7 generation boundary', () => {
     }
   });
 });
+
+it('extracts only reused local presentation helpers in client builds', () => {
+  const instance = plugin({siteDir: '/site'} as LoadContext);
+  expect(instance.configureWebpack!({} as never, true, {} as never)).toEqual({});
+  const client = instance.configureWebpack!({} as never, false, {} as never) as {
+    optimization: {
+      splitChunks: {cacheGroups: {resultsPageHelpers: {test: RegExp; minChunks: number}}};
+    };
+  };
+  const group = client.optimization.splitChunks.cacheGroups.resultsPageHelpers;
+  expect(group.minChunks).toBe(2);
+  expect(group.test.test('/site/src/i18n/pageTranslator.ts')).toBe(true);
+  expect(group.test.test('/site/src/landing/styles.module.css')).toBe(true);
+  expect(group.test.test('/site/src/survey-results/Dashboard.tsx')).toBe(false);
+});
