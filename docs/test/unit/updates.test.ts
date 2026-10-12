@@ -34,6 +34,16 @@ describe('Updates feed boundary', () => {
   ])('rejects malformed or unsafe input %#', (value) =>
     expect(() => validateFeed(value)).toThrow(),
   );
+  it('normalizes HTTPS sources so browser resolution matches validation', () => {
+    const entry = validateFeed({
+      ...feed,
+      entries: [{...feed.entries[0], url: 'https:example.com/change'}],
+    }).entries[0];
+    expect(entry.url).toBe('https://example.com/change');
+    expect(new URL(entry.url, 'https://dbsync.cardano.intersect.org/updates/').href).toBe(
+      entry.url,
+    );
+  });
   it('retains hostile titles as plain text data', () => {
     expect(
       validateFeed({...feed, entries: [{...feed.entries[0], title: '<script>alert(1)</script>'}]})

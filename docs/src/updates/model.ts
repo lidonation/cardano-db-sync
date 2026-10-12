@@ -41,7 +41,7 @@ export function validateFeed(value: unknown): UpdatesFeed {
     if (url.protocol !== 'https:' || url.username || url.password)
       throw new Error('Unsafe update URL.');
     ids.add(e.id);
-    return {id: e.id, date: e.date, kind: e.kind!, title: e.title, url: e.url};
+    return {id: e.id, date: e.date, kind: e.kind!, title: e.title, url: url.href};
   });
   return {asOf: feed.asOf, entries};
 }
