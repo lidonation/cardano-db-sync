@@ -1,11 +1,15 @@
-import {translate} from '@docusaurus/Translate';
+import {translate as defaultTranslate} from '@docusaurus/Translate';
+
+import type {PageMessage} from '../i18n/pageTranslator';
 
 /**
  * The FAQ as the landing page shows it. Figures come from the repository README's system
  * requirements (May 2025) and `doc/`, not from the design file, whose drafts predate them. The
  * FAQ page (B44-c) adds the rest and the FAQPage structured data.
  */
-export function faqItems(): readonly {readonly question: string; readonly answer: string}[] {
+export function faqItems(
+  translate: (message: PageMessage) => string = defaultTranslate,
+): readonly {readonly question: string; readonly answer: string}[] {
   return [
     {
       question: translate({
@@ -15,7 +19,7 @@ export function faqItems(): readonly {readonly question: string; readonly answer
       answer: translate({
         id: 'landing.faq.sync.a',
         message:
-          'Days from genesis on mainnet. Most operators restore a state snapshot and catch up from there.',
+          'Initial sync time depends on hardware, network and configuration. A compatible state snapshot lets you catch up from a recent point instead of starting at genesis.',
       }),
     },
     {
@@ -42,7 +46,7 @@ export function faqItems(): readonly {readonly question: string; readonly answer
       answer: translate({
         id: 'landing.faq.shrink.a',
         message:
-          'Yes. Presets and insert options (tx_out prune or consumed, leaving out unused data) cut it by hundreds of gigabytes. Some of these choices cannot be undone without a resync.',
+          'Yes. Presets and insert options can reduce storage by leaving out data you do not need. The tx_out prune mode deletes spent outputs; consumed marks them without deleting them. Some choices cannot be undone without a resync.',
       }),
     },
     {
@@ -79,7 +83,7 @@ export function faqItems(): readonly {readonly question: string; readonly answer
       answer: translate({
         id: 'landing.faq.upgrade.a',
         message:
-          'Read the release notes first. Minor releases migrate automatically; a major release may run long migrations or need a resync.',
+          'Read the release notes first and back up your database. db-sync runs pending migrations at startup. A release may require long migrations or a resync; the version number alone does not establish that.',
       }),
     },
     {
@@ -115,7 +119,7 @@ export function faqItems(): readonly {readonly question: string; readonly answer
       answer: translate({
         id: 'landing.faq.compare.a',
         message:
-          'db-sync gives you the whole chain as SQL you own and shape. Hosted APIs and UTxO indexers trade completeness for a smaller footprint.',
+          'db-sync gives you chain data in PostgreSQL, with the data included controlled by your configuration. Blockfrost provides a hosted API and manages the infrastructure for you. Kupo indexes UTxOs matched by your rules with a smaller operating footprint.',
       }),
     },
   ];

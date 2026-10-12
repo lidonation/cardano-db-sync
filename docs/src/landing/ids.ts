@@ -66,6 +66,7 @@ export const LANDING_IDS = [
   'landing.queries.tip',
   'landing.queries.title',
   'landing.quick.eyebrow',
+  'landing.quick.prerequisites',
   'landing.quick.query',
   'landing.quick.query.body',
   'landing.quick.restore',
