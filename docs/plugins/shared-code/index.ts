@@ -13,6 +13,7 @@ export default function sharedCode(): Plugin {
               splitChunks: {
                 cacheGroups: {
                   siteShared: {
+                    name: 'site-shared',
                     test: /[/\\]src[/\\].*\.[jt]sx?$/,
                     chunks: 'async',
                     minChunks: 2,

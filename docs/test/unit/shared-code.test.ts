@@ -15,6 +15,7 @@ it('deduplicates site modules reused by two async routes, without changing serve
     >
   ).cacheGroups!.siteShared as {test: RegExp};
   expect(group).toMatchObject({
+    name: 'site-shared',
     chunks: 'async',
     minChunks: 2,
     minSize: 0,
