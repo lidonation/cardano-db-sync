@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
+import {PROFILES} from '../../config/profiles';
+
 import {SITE_URL} from '../../playwright.config';
 import {ECOSYSTEM_TOOLS} from '../../src/ecosystem/tools';
 
@@ -83,6 +85,22 @@ test.describe('content', () => {
         tool.queries,
       );
     }
+  });
+
+  test('tool proposals go to this build repository', async ({page}) => {
+    await open(page, 1440);
+    const profile = test.info().project.name === 'built-prod' ? PROFILES.prod : PROFILES.dev;
+    await expect(page.getByRole('link', {name: 'Propose a tool'})).toHaveAttribute(
+      'href',
+      `${profile.repoUrl}/issues/new`,
+    );
+  });
+
+  test('untranslated locale marks tool content as English', async ({page}) => {
+    const base = test.info().project.use.baseURL ?? SITE_URL;
+    await page.goto(`${base}ja/ecosystem`);
+    await expect(page.locator('main')).toHaveAttribute('lang', 'en');
+    await expect(page.locator('main')).toContainText(ECOSYSTEM_TOOLS[0].description);
   });
 
   test('external links leave the site safely', async ({page}) => {

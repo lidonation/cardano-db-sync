@@ -5,9 +5,9 @@ import Link from '@docusaurus/Link';
 import Button from '../components/Button';
 import {ToolCard} from '../components/Card';
 import Icon from '../components/shared/Icon';
-import {REPO_URL} from '../landing/Landing';
+import useBuildEnvironment from '../lib/useBuildEnvironment';
 
-import {ECOSYSTEM_TOOLS, toolsView, type EcosystemTool} from './tools';
+import {ecosystemTools, toolsView, type EcosystemTool} from './tools';
 import useEcosystemTranslate from './useEcosystemTranslate';
 import styles from './styles.module.css';
 
@@ -52,12 +52,13 @@ function Tool({tool}: {readonly tool: EcosystemTool}): React.JSX.Element {
  * named empty state below is the B44 DoD's, shown when the list has nothing yet.
  */
 export default function Ecosystem({
-  tools = ECOSYSTEM_TOOLS,
+  tools,
 }: {
   readonly tools?: readonly EcosystemTool[];
 }): React.JSX.Element {
   const translate = useEcosystemTranslate();
-  const view = toolsView(tools);
+  const {profile} = useBuildEnvironment();
+  const view = toolsView(tools ?? ecosystemTools(translate));
   return (
     <div className={styles.ecosystem}>
       <section className={styles.section} aria-labelledby="ecosystem-title">
@@ -126,7 +127,7 @@ export default function Ecosystem({
             })}
           </p>
           <div className={styles.actions}>
-            <Button variant="primary" size="md" href={`${REPO_URL}/issues`}>
+            <Button variant="primary" size="md" href={`${profile.repoUrl}/issues/new`}>
               {translate({id: 'ecosystem.add.issues', message: 'Propose a tool'})}
             </Button>
           </div>

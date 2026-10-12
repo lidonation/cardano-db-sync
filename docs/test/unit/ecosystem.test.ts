@@ -4,9 +4,15 @@ import path from 'node:path';
 import {describe, expect, it} from 'vitest';
 
 import {ECOSYSTEM_IDS} from '../../src/ecosystem/ids';
-import {ECOSYSTEM_TOOLS, toolProblem, toolsView} from '../../src/ecosystem/tools';
+import {ECOSYSTEM_TOOLS, ecosystemTools, toolProblem, toolsView} from '../../src/ecosystem/tools';
 
 describe('ecosystem tools (B44-b)', () => {
+  it('links the published GovTool SQL source, not the removed develop directory', () => {
+    expect(ECOSYSTEM_TOOLS.find((tool) => tool.name === 'GovTool')?.queries).toBe(
+      'https://github.com/IntersectMBO/govtool/tree/main/govtool/backend/sql',
+    );
+  });
+
   it('lists every tool well-formed, with https links on known hosts', () => {
     expect(ECOSYSTEM_TOOLS.length).toBeGreaterThan(0);
     for (const tool of ECOSYSTEM_TOOLS) {
@@ -39,12 +45,35 @@ describe('ecosystem tools (B44-b)', () => {
 });
 
 describe('ecosystem language marking (A11Y-18)', () => {
+  it('translates tool descriptions and SQL link labels with the page translator', () => {
+    const calls: string[] = [];
+    const tools = ecosystemTools(({id, message}) => {
+      calls.push(id);
+      return `translated: ${message}`;
+    });
+    for (const tool of tools) {
+      expect(tool.description).toMatch(/^translated:/);
+      expect(tool.queriesLabel).toMatch(/^translated:/);
+    }
+    expect(calls.every((id) => ECOSYSTEM_IDS.includes(id as never))).toBe(true);
+  });
+
+  it('does not pull the landing surface into the ecosystem bundle', () => {
+    const source = readFileSync(
+      path.resolve(import.meta.dirname, '../../src/ecosystem/Ecosystem.tsx'),
+      'utf8',
+    );
+    expect(source).not.toMatch(/from ['"]\.\.\/landing\//);
+    expect(source).toContain('profile.repoUrl');
+  });
+
   it('lists exactly the string ids the ecosystem page renders', () => {
     const dir = path.resolve(import.meta.dirname, '../../src/ecosystem');
-    const source = readdirSync(dir)
-      .filter((file) => /\.tsx?$/.test(file))
-      .map((file) => readFileSync(path.join(dir, file), 'utf8'))
-      .join('\n');
+    const source =
+      readdirSync(dir)
+        .filter((file) => /\.tsx?$/.test(file))
+        .map((file) => readFileSync(path.join(dir, file), 'utf8'))
+        .join('\n') + readFileSync(path.resolve(dir, '../pages/ecosystem.tsx'), 'utf8');
     const used = new Set(
       [...source.matchAll(/id: '(ecosystem\.[^']+)'/g)].map((match) => match[1]),
     );

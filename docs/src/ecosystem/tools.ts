@@ -1,3 +1,5 @@
+import type {PageMessage} from '../i18n/pageTranslator';
+
 /**
  * The ecosystem page's tools (B44-b): downstream consumers and community tooling built on
  * db-sync, grounded in `doc/community-tools.md`'s territory and restructured as an app page
@@ -27,38 +29,60 @@ export interface EcosystemTool {
   readonly queriesLabel: string;
 }
 
-export const ECOSYSTEM_TOOLS: readonly EcosystemTool[] = [
-  {
-    name: 'Koios',
-    org: 'Cardano community',
-    description:
-      'A lightweight, open-source REST API over the Cardano chain. Its query layer is a library of SQL against the db-sync schema, free to read and reuse.',
-    website: 'https://koios.rest/',
-    repository: 'https://github.com/cardano-community/koios-artifacts',
-    queries: 'https://github.com/cardano-community/koios-artifacts/tree/main/files/grest/rpc',
-    queriesLabel: 'Koios SQL queries',
-  },
-  {
-    name: 'Blockfrost',
-    org: 'Blockfrost',
-    description:
-      'Managed Cardano APIs for developers who would rather not run their own nodes. Its backend reads the chain through db-sync and publishes the SQL it runs.',
-    website: 'https://blockfrost.io/',
-    repository: 'https://github.com/blockfrost/blockfrost-backend-ryo',
-    queries: 'https://github.com/blockfrost/blockfrost-backend-ryo/tree/master/src/sql',
-    queriesLabel: 'Blockfrost SQL queries',
-  },
-  {
-    name: 'GovTool',
-    org: 'Intersect',
-    description:
-      'The governance platform where ada holders create and vote on proposals. Its backend stores governance actions with SQL written against the db-sync schema.',
-    website: 'https://gov.tools/',
-    repository: 'https://github.com/IntersectMBO/govtool',
-    queries: 'https://github.com/IntersectMBO/govtool/tree/develop/govtool/backend/sql',
-    queriesLabel: 'GovTool SQL queries',
-  },
-];
+export function ecosystemTools(
+  translate: (message: PageMessage) => string,
+): readonly EcosystemTool[] {
+  return [
+    {
+      name: 'Koios',
+      org: translate({id: 'ecosystem.tool.koios.org', message: 'Cardano community'}),
+      description: translate({
+        id: 'ecosystem.tool.koios.description',
+        message:
+          'A lightweight, open-source REST API over the Cardano chain. Its query layer is a library of SQL against the db-sync schema, free to read and reuse.',
+      }),
+      website: 'https://koios.rest/',
+      repository: 'https://github.com/cardano-community/koios-artifacts',
+      queries: 'https://github.com/cardano-community/koios-artifacts/tree/main/files/grest/rpc',
+      queriesLabel: translate({id: 'ecosystem.tool.koios.queries', message: 'Koios SQL queries'}),
+    },
+    {
+      name: 'Blockfrost',
+      org: 'Blockfrost',
+      description: translate({
+        id: 'ecosystem.tool.blockfrost.description',
+        message:
+          'Managed Cardano APIs for developers who would rather not run their own nodes. Its backend reads the chain through db-sync and publishes the SQL it runs.',
+      }),
+      website: 'https://blockfrost.io/',
+      repository: 'https://github.com/blockfrost/blockfrost-backend-ryo',
+      queries: 'https://github.com/blockfrost/blockfrost-backend-ryo/tree/master/src/sql',
+      queriesLabel: translate({
+        id: 'ecosystem.tool.blockfrost.queries',
+        message: 'Blockfrost SQL queries',
+      }),
+    },
+    {
+      name: 'GovTool',
+      org: 'Intersect',
+      description: translate({
+        id: 'ecosystem.tool.govtool.description',
+        message:
+          'The governance platform where ada holders create and vote on proposals. Its published backend reads governance actions from db-sync. The linked SQL source is the Haskell backend on the main branch.',
+      }),
+      website: 'https://gov.tools/',
+      repository: 'https://github.com/IntersectMBO/govtool',
+      queries: 'https://github.com/IntersectMBO/govtool/tree/main/govtool/backend/sql',
+      queriesLabel: translate({
+        id: 'ecosystem.tool.govtool.queries',
+        message: 'GovTool SQL queries',
+      }),
+    },
+  ];
+}
+
+/** English content for validation and callers without a locale. */
+export const ECOSYSTEM_TOOLS = ecosystemTools(({message}) => message);
 
 /** The list view or its named empty state (B44 DoD): a page that says nothing when there is no data yet is a broken state, not a blank one. */
 export type ToolsView =
