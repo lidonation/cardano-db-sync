@@ -31,6 +31,16 @@ THM-6 ruling (2026-10-12):
 - `Metric / Dark` → `Metric` and `Avatar / Hexagon` → `Avatar`, both themed like everything else.
 - `Code / Copy` and `Footer` (the design's `Footer / Navy`) stay theme-invariant.
 
+## The switchers (B30)
+
+`ThemeSwitcher/` is the fourth global control alongside the inventory's `Navbar / Full` slot:
+the four palettes as a menu button writing `data-theme` + `data-dbs-palette` (THM-1, §14.2),
+with `keyboard.ts` holding the browser-free arrow-key movement. It follows every rule above
+and is audited with the locale and version dropdowns by `test/browser/switchers.spec.ts`
+(persistence across reload, same-page locale switches, equivalent-page version switches,
+keyboard with visible focus, axe in all four palettes). It is not one of the 27: the design
+never drew it, and `inventory.ts` does not list it.
+
 ## The inventory
 
 `src/inventory/` renders every definition in every shown state. It is served only by the

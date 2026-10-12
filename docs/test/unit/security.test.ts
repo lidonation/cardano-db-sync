@@ -102,6 +102,23 @@ describe('inline scripts (SEC-3)', () => {
     expect(isColourModeBootstrap('document.body.dataset.x=1')).toBe(false);
   });
 
+  it('recognises the palette bootstrap (THM-1, B30) as the same class of inline script', async () => {
+    const {PALETTE_BOOTSTRAP} = await import('../../src/lib/palette');
+    expect(isColourModeBootstrap(PALETTE_BOOTSTRAP)).toBe(true);
+  });
+
+  it('hashes both bootstraps into the policy when a page carries them', async () => {
+    const {PALETTE_BOOTSTRAP} = await import('../../src/lib/palette');
+    const html = applyPolicy(
+      page(`<script>${BOOTSTRAP}</script><script>${PALETTE_BOOTSTRAP}</script>`),
+      '/',
+      'index.html',
+    );
+    expect(html).toContain(
+      `script-src 'self' ${hashSource(BOOTSTRAP)} ${hashSource(PALETTE_BOOTSTRAP)};`,
+    );
+  });
+
   it('hashes the exact bytes', () => {
     expect(hashSource('alert(1)')).toBe("'sha256-bhHHL3z2vDgxUt0W3dWQOrprscmda2Y5pLsLg4GF+pI='");
   });

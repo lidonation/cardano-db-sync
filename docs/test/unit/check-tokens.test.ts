@@ -149,7 +149,7 @@ describe('tokens-to-css typography (DF-1)', () => {
   it('gives theme sets a selector that out-ranks :root, so rule order cannot undo them', async () => {
     await tree(SOURCE_FIXTURE);
     const css = await generate();
-    expect(css).toContain(':root[data-theme="dark"] {\n  --dbs-surface-base: #0f1117;\n}');
+    expect(css).toContain(':root[data-dbs-palette="dark"] {\n  --dbs-surface-base: #0f1117;\n}');
   });
 
   it('fails on a set that maps to no theme, instead of dropping it', async () => {

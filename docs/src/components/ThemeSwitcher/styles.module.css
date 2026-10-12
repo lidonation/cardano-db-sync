@@ -1,0 +1,142 @@
+/* Theme switcher (B30) — the four-palette menu. Token values only; the boundary is
+   border.interactive (FLOOR-3), the ring is the global focus ring (FLOOR-4), every row is
+   44px (DF-6/NAV-4). The checkmark pairs the colour cue so selection is never colour
+   alone (FLOOR-6). */
+.switcher {
+  position: relative;
+  display: inline-flex;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  padding: 0 var(--dbs-space-12);
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: var(--dbs-radius-md);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-primary);
+  cursor: pointer;
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+  white-space: nowrap;
+}
+
+.button:hover {
+  background: var(--dbs-surface-sunken);
+}
+
+.button:active {
+  background: var(--dbs-surface-accent-subtle);
+}
+
+.button:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+.dot {
+  inline-size: 12px;
+  block-size: 12px;
+  flex: none;
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: var(--dbs-radius-pill);
+  background: var(--dbs-surface-sunken);
+}
+
+.dot[data-palette='dark'] {
+  background: var(--dbs-code-surface);
+}
+
+.dot[data-palette='cream'] {
+  background: var(--dbs-surface-warm);
+}
+
+.dot[data-palette='navy'] {
+  background: var(--dbs-brand-intersect-navy);
+}
+
+.buttonText {
+  color: var(--dbs-text-primary);
+}
+
+.current {
+  color: var(--dbs-text-secondary);
+}
+
+.menu {
+  position: absolute;
+  inset-block-start: calc(100% + var(--dbs-space-8));
+  inset-inline-end: 0;
+  z-index: 10;
+  min-inline-size: 200px;
+  margin: 0;
+  padding: var(--dbs-space-8);
+  list-style: none;
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: var(--dbs-radius-md);
+  background: var(--dbs-surface-base);
+}
+
+.option {
+  display: flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+  min-block-size: 44px;
+  padding: 0 var(--dbs-space-12);
+  border-radius: var(--dbs-radius-sm);
+  color: var(--dbs-text-primary);
+  cursor: pointer;
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+
+.option:hover {
+  background: var(--dbs-surface-sunken);
+}
+
+.option:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+.check {
+  inline-size: 16px;
+  flex: none;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+  text-align: center;
+}
+
+.option[data-checked] {
+  color: var(--dbs-text-primary);
+}
+
+/* xs: the button collapses to its dot so the tools never overlap the wordmark (DF-7).
+   The words leave the screen but stay the button's name via aria-label (A11Y-17). */
+@media (max-width: 767px) {
+  .button {
+    justify-content: center;
+    min-inline-size: 44px;
+    padding: 0;
+  }
+
+  .buttonText,
+  .current {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .menu {
+    position: fixed;
+    inset-block-start: 72px;
+    inset-inline: var(--dbs-space-16);
+  }
+}

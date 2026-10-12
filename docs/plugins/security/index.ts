@@ -115,7 +115,17 @@ export function inlineScripts(html: string): string[] {
 
 /** Docusaurus' colour-mode bootstrap: reads the stored theme and sets `data-theme` before paint. */
 export function isColourModeBootstrap(code: string): boolean {
-  return code.includes('localStorage.getItem("theme")') && code.includes('"data-theme"');
+  if (code.includes('localStorage.getItem("theme")') && code.includes('"data-theme"')) {
+    return true;
+  }
+  // THM-1 (B30): the palette bootstrap runs after Docusaurus' own script and restores
+  // `data-dbs-palette` alongside `data-theme`. It is the same class of inline script —
+  // storage read before paint, no network, no tracking — so the SEC-3 gate allows it.
+  return (
+    code.includes('dbs-palette') &&
+    code.includes('data-dbs-palette') &&
+    code.includes('"data-theme"')
+  );
 }
 
 /**
