@@ -1,6 +1,6 @@
 name: Extract Haddock annotations
 
-# B07 (CON-2) — a path-filtered extraction workflow: it runs when the Haskell sources it
+# B07 (CON-2) and B10 (CON-4) — a path-filtered extraction workflow: it runs when the Haskell sources it
 # reads, the extractor itself, or the committed artifact change, and it fails on drift
 # between the committed artifact and a fresh extraction. The docs pipeline (docs-site.yml)
 # never runs a Haskell toolchain: it only consumes the committed JSON (CON-1), and
@@ -16,6 +16,7 @@ on:
     paths:
       - "cardano-db/src/**"
       - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
+      - "cardano-db-sync/src/Cardano/DbSync/Config.hs"
       - "docs/extractor/**"
       - "docs/generated/**"
       - ".github/workflows/extract-haddock.yml"
@@ -23,6 +24,7 @@ on:
     paths:
       - "cardano-db/src/**"
       - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
+      - "cardano-db-sync/src/Cardano/DbSync/Config.hs"
       - "docs/extractor/**"
       - "docs/generated/**"
       - ".github/workflows/extract-haddock.yml"
@@ -81,14 +83,25 @@ jobs:
             --input cardano-db-sync/src/Cardano/DbSync/Config/Types.hs \
             2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
-      - name: Drift gate (CON-2)
+      - name: Extract the config schema (B10)
+        working-directory: docs/extractor
+        # Fails when a source does not parse or any part of the schema cannot be read.
+        shell: bash
         run: |
-          git ls-files --error-unmatch docs/generated/haddock-annotations.json >/dev/null
-          if git diff --quiet -- docs/generated/haddock-annotations.json; then
-            echo "No drift: the committed artifact matches a fresh extraction."
+          extractor=$(cabal list-bin extract-config)
+          timeout 60s "$extractor" \
+            --repo-root ../.. \
+            --out ../generated/config-schema.json \
+            2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Drift gate (CON-2, CON-4)
+        run: |
+          git ls-files --error-unmatch docs/generated/haddock-annotations.json docs/generated/config-schema.json >/dev/null
+          if git diff --quiet -- docs/generated/haddock-annotations.json docs/generated/config-schema.json; then
+            echo "No drift: the committed artifacts match a fresh extraction."
             exit 0
           fi
-          echo "::error::The committed Haddock annotations artifact has drifted from a fresh extraction."
-          git --no-pager diff --stat -- docs/generated/haddock-annotations.json
-          git --no-pager diff -- docs/generated/haddock-annotations.json | sed -n '1,100p'
+          echo "::error::A committed extraction artifact has drifted from a fresh extraction."
+          git --no-pager diff --stat -- docs/generated/
+          git --no-pager diff -- docs/generated/ | sed -n '1,100p'
           exit 1
