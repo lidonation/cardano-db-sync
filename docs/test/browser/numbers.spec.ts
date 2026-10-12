@@ -1,6 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import {expect, test} from '@playwright/test';
 
+import {smallTargets} from './audits';
 import {SITE_URL} from '../../playwright.config';
 
 const fixture = (state: string) => `${SITE_URL}__numbers/${state}`;
@@ -15,10 +16,14 @@ test('synthetic estimates explain their configuration, methodology and chart alt
   await expect(main).toContainText('full');
   await expect(main).toContainText('120');
   await expect(main).toContainText('12');
+  await main.getByText('View the growth data', {exact: true}).click();
   const growth = main.getByRole('table', {name: /Modelled growth per epoch/});
   await expect(growth.locator('tbody tr')).toHaveCount(12);
   await expect(growth).toContainText('MODELLED ESTIMATES');
-  await expect(main.locator('#numbers-growth-summary')).not.toBeEmpty();
+  await expect(main.locator('#numbers-growth-summary')).toContainText('epoch 88 increased by 1 GB');
+  await expect(main.locator('#numbers-growth-summary')).toContainText(
+    'epoch 99 increased by 12 GB',
+  );
   await expect(main.getByRole('img')).toHaveAttribute('aria-labelledby', 'numbers-growth-summary');
   const sizes = main.getByRole('table', {name: /Modelled table sizes/});
   await expect(sizes.locator('tbody tr')).toHaveCount(2);
@@ -67,7 +72,19 @@ for (const palette of ['light', 'dark', 'cream', 'navy']) {
       }, palette);
       await page.goto(fixture('ready'));
       await expect(page.getByRole('main')).toContainText('MODELLED ESTIMATES');
+      await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
       await page.evaluate(() => document.fonts.ready);
+      expect(await smallTargets(page)).toEqual([]);
+      const wideCard = page.locator('main details').locator('..');
+      if (width >= 1024) expect((await wideCard.boundingBox())!.width).toBeGreaterThan(384);
+      if (
+        process.env.DBS_CAPTURE_DIR &&
+        ((width === 1440 && palette === 'light') || (width === 320 && palette === 'dark'))
+      )
+        await page.screenshot({
+          path: `${process.env.DBS_CAPTURE_DIR}/numbers-${palette}-${width}.png`,
+          fullPage: true,
+        });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );
@@ -103,3 +120,29 @@ test('chain facts remain available when the storage model is absent', async ({pa
   await expect(main).not.toContainText('tx_out');
   await expect(main).not.toContainText(/0 GB|\$0/);
 });
+
+for (const kind of ['empty', 'zero', 'single']) {
+  test(`${kind} model outputs retain truthful chart alternatives`, async ({page}) => {
+    await page.goto(fixture(kind));
+    const main = page.getByRole('main');
+    if (kind === 'empty') {
+      await expect(main).toContainText('Modelled growth unavailable');
+      await expect(main).toContainText('Modelled table sizes unavailable');
+      await expect(main).toContainText('Recent epochs unavailable');
+      await expect(main.getByRole('img')).toHaveCount(0);
+    } else {
+      const points = main.locator('svg circle');
+      await expect(points).toHaveCount(kind === 'single' ? 1 : 12);
+      expect(
+        await points.evaluateAll((nodes) =>
+          nodes.every(
+            (n) =>
+              Number.isFinite(Number(n.getAttribute('cx'))) &&
+              Number.isFinite(Number(n.getAttribute('cy'))),
+          ),
+        ),
+      ).toBe(true);
+      await expect(main.locator('#numbers-growth-summary')).toContainText('GB');
+    }
+  });
+}

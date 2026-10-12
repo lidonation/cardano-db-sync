@@ -1,7 +1,7 @@
 import type {PageMessage} from '../i18n/pageTranslator';
 
 export const messages = {
-  title: {id: 'numbers.title', message: 'Numbers'},
+  title: {id: 'numbers.title', message: 'DB Sync by the Numbers'},
   preview: {id: 'numbers.preview', message: 'Preview'},
   mainnet: {id: 'numbers.mainnet', message: 'Mainnet'},
   intro: {
@@ -13,7 +13,7 @@ export const messages = {
   cadenceMainnet: {id: 'numbers.cadenceMainnet', message: 'Mainnet epochs last five days.'},
   missing: {
     id: 'numbers.missing',
-    message: 'Numbers unavailable: the committed B23 snapshot is missing.',
+    message: 'Numbers unavailable: no committed chain snapshot is available yet.',
   },
   invalid: {
     id: 'numbers.invalid',
@@ -45,7 +45,7 @@ export const messages = {
   modelMissing: {
     id: 'numbers.modelMissing',
     message:
-      'Modelled storage and cost estimates unavailable. B23 model outputs have not been committed.',
+      'Modelled storage and cost estimates unavailable. No model outputs have been published yet.',
   },
   methodology: {id: 'numbers.methodology', message: 'Methodology'},
   configuration: {id: 'numbers.configuration', message: 'Configuration'},
@@ -59,10 +59,20 @@ export const messages = {
   growthCaption: {id: 'numbers.growthCaption', message: 'Modelled growth per epoch'},
   growthSummary: {
     id: 'numbers.growthSummary',
-    message: 'Modelled growth per epoch is shown in the chart and the equivalent table below.',
+    message:
+      'Modelled growth across {count} epochs: epoch {firstEpoch} increased by {firstGB} GB; epoch {lastEpoch} increased by {lastGB} GB. The table lists every value.',
   },
-  notWizard: {
-    id: 'numbers.notWizard',
-    message: 'These outputs are not yet connected to the configuration wizard (B33).',
+  growthData: {id: 'numbers.growthData', message: 'View the growth data'},
+  growthEmpty: {
+    id: 'numbers.growthEmpty',
+    message: 'Modelled growth unavailable: the snapshot has no per-epoch model outputs.',
+  },
+  tablesEmpty: {
+    id: 'numbers.tablesEmpty',
+    message: 'Modelled table sizes unavailable: the snapshot has no table model outputs.',
+  },
+  epochsEmpty: {
+    id: 'numbers.epochsEmpty',
+    message: 'Recent epochs unavailable: the provider snapshot has no completed epoch history.',
   },
 } satisfies Record<string, PageMessage>;

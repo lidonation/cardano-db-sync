@@ -1,4 +1,6 @@
 import React from 'react';
+import Metric from '../components/Metric';
+import Frame from '../components/Card/Frame';
 import Layout from '@theme/Layout';
 import {MAIN_CONTENT_ID} from '../lib/accessibility';
 import useBuildEnvironment from '../lib/useBuildEnvironment';
@@ -36,8 +38,8 @@ export default function NumbersPage({
     : [];
   return (
     <Layout title={title} description={t(messages.intro)}>
-      <main id={MAIN_CONTENT_ID} tabIndex={-1} className={styles.page}>
-        <div lang={lang}>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className={styles.page} lang={lang}>
+        <div>
           <header className={styles.hero}>
             <p className={styles.kicker}>{t(messages.facts)}</p>
             <h1>{title}</h1>
@@ -52,29 +54,39 @@ export default function NumbersPage({
             snapshot && (
               <>
                 {current.status === 'stale' && <p className={styles.notice}>{t(messages.stale)}</p>}
-                <dl className={styles.metrics}>
+                <ul className={styles.metrics}>
                   {metrics.map(([label, value]) => (
-                    <div className={styles.card} key={label}>
-                      <dt>{label}</dt>
-                      <dd>{value}</dd>
-                    </div>
+                    <li key={label}>
+                      <Metric
+                        label={label}
+                        value={
+                          <span
+                            className={
+                              label === t(messages.boundary) ? styles.dateValue : undefined
+                            }
+                          >
+                            {value}
+                          </span>
+                        }
+                      />
+                    </li>
                   ))}
-                </dl>
+                </ul>
                 <section className={styles.section} aria-labelledby="numbers-epoch-title">
                   <h2 id="numbers-epoch-title">{t(messages.facts)}</h2>
                   <dl className={styles.provenance}>
-                    <div className={styles.card}>
+                    <Frame kind="Stat" skeleton={null} className={styles.card}>
                       <dt>{t(messages.updated)}</dt>
                       <dd>{formatUtc(snapshot.updatedAt)}</dd>
-                    </div>
-                    <div className={styles.card}>
+                    </Frame>
+                    <Frame kind="Stat" skeleton={null} className={styles.card}>
                       <dt>{t(messages.source)}</dt>
                       <dd>{snapshot.source}</dd>
-                    </div>
-                    <div className={styles.card}>
+                    </Frame>
+                    <Frame kind="Stat" skeleton={null} className={styles.card}>
                       <dt>{t(messages.boundary)}</dt>
                       <dd>{formatUtc(snapshot.nextBoundary)}</dd>
-                    </div>
+                    </Frame>
                   </dl>
                 </section>
                 <section className={styles.section} aria-labelledby="numbers-storage-title">
@@ -91,53 +103,90 @@ export default function NumbersPage({
                         <strong>{t(messages.configuration)}:</strong>{' '}
                         <code>{storage.configuration}</code>
                       </p>
-                      <p>{t(messages.notWizard)}</p>
+
                       <div className={styles.storage}>
-                        <div className={styles.card}>
+                        <Frame kind="Stat" skeleton={null} className={styles.card}>
                           <h3>{t(messages.growth)}</h3>
                           <p>{t(messages.modelled)}</p>
-                          <p id="numbers-growth-summary">{t(messages.growthSummary)}</p>
-                          <svg
-                            className={styles.chart}
-                            viewBox="0 0 600 180"
-                            role="img"
-                            aria-labelledby="numbers-growth-summary"
-                          >
-                            {storage.growth.length > 0 && (
-                              <polyline
-                                className={styles.line}
-                                points={storage.growth
-                                  .map(
-                                    (point, index) =>
-                                      `${20 + (index * 560) / Math.max(1, storage.growth.length - 1)},${160 - (point.gigabytes / Math.max(1, ...storage.growth.map((item) => item.gigabytes))) * 140}`,
+                          <p id="numbers-growth-summary">
+                            {storage.growth.length === 0
+                              ? t(messages.growthEmpty)
+                              : t(messages.growthSummary)
+                                  .replace('{count}', formatNumber(storage.growth.length))
+                                  .replace('{firstEpoch}', formatNumber(storage.growth[0].epoch))
+                                  .replace('{firstGB}', formatNumber(storage.growth[0].gigabytes))
+                                  .replace(
+                                    '{lastEpoch}',
+                                    formatNumber(storage.growth.at(-1)!.epoch),
                                   )
-                                  .join(' ')}
-                              />
-                            )}
-                          </svg>
-                          <div className={styles.tableWrap}>
-                            <table>
-                              <caption>
-                                {t(messages.growthCaption)} · {t(messages.modelled)}
-                              </caption>
-                              <thead>
-                                <tr>
-                                  <th scope="col">{t(messages.epoch)}</th>
-                                  <th scope="col">{t(messages.growthSize)}</th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {storage.growth.map((point) => (
-                                  <tr key={point.epoch}>
-                                    <th scope="row">{formatNumber(point.epoch)}</th>
-                                    <td>{formatNumber(point.gigabytes)}</td>
+                                  .replace(
+                                    '{lastGB}',
+                                    formatNumber(storage.growth.at(-1)!.gigabytes),
+                                  )}
+                          </p>
+                          {storage.growth.length > 0 && (
+                            <svg
+                              className={styles.chart}
+                              viewBox="0 0 600 180"
+                              role="img"
+                              aria-labelledby="numbers-growth-summary"
+                            >
+                              {storage.growth.length > 0 && (
+                                <polyline
+                                  className={styles.line}
+                                  points={storage.growth
+                                    .map(
+                                      (point, index) =>
+                                        `${20 + (index * 560) / Math.max(1, storage.growth.length - 1)},${160 - (point.gigabytes / Math.max(1, ...storage.growth.map((item) => item.gigabytes))) * 140}`,
+                                    )
+                                    .join(' ')}
+                                />
+                              )}
+                              {storage.growth.map((point, index) => (
+                                <circle
+                                  key={point.epoch}
+                                  className={styles.point}
+                                  cx={20 + (index * 560) / Math.max(1, storage.growth.length - 1)}
+                                  cy={
+                                    160 -
+                                    (point.gigabytes /
+                                      Math.max(
+                                        1,
+                                        ...storage.growth.map((item) => item.gigabytes),
+                                      )) *
+                                      140
+                                  }
+                                  r="4"
+                                />
+                              ))}
+                            </svg>
+                          )}
+                          <details className={styles.alternative}>
+                            <summary>{t(messages.growthData)}</summary>
+                            <div className={styles.tableWrap}>
+                              <table>
+                                <caption>
+                                  {t(messages.growthCaption)} · {t(messages.modelled)}
+                                </caption>
+                                <thead>
+                                  <tr>
+                                    <th scope="col">{t(messages.epoch)}</th>
+                                    <th scope="col">{t(messages.growthSize)}</th>
                                   </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          </div>
-                        </div>
-                        <div className={styles.card}>
+                                </thead>
+                                <tbody>
+                                  {storage.growth.map((point) => (
+                                    <tr key={point.epoch}>
+                                      <th scope="row">{formatNumber(point.epoch)}</th>
+                                      <td>{formatNumber(point.gigabytes)}</td>
+                                    </tr>
+                                  ))}
+                                </tbody>
+                              </table>
+                            </div>
+                          </details>
+                        </Frame>
+                        <Frame kind="Stat" skeleton={null} className={styles.card}>
                           <p className={styles.kicker}>{t(messages.modelled)}</p>
                           <dl>
                             <dt>{t(messages.database)}</dt>
@@ -145,6 +194,7 @@ export default function NumbersPage({
                             <dt>{t(messages.cost)}</dt>
                             <dd className={styles.value}>{formatNumber(storage.monthlyCostUSD)}</dd>
                           </dl>
+                          {storage.tables.length === 0 && <p>{t(messages.tablesEmpty)}</p>}
                           <div className={styles.tableWrap}>
                             <table>
                               <caption>
@@ -168,13 +218,14 @@ export default function NumbersPage({
                               </tbody>
                             </table>
                           </div>
-                        </div>
+                        </Frame>
                       </div>
                     </>
                   )}
                 </section>
                 <section className={styles.section} aria-labelledby="numbers-recent-title">
                   <h2 id="numbers-recent-title">{t(messages.recent)}</h2>
+                  {snapshot.recentEpochs.length === 0 && <p>{t(messages.epochsEmpty)}</p>}
                   <div className={styles.tableWrap}>
                     <table>
                       <caption>{t(messages.recentCaption)}</caption>

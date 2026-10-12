@@ -74,6 +74,9 @@ export default function inventoryPlugin(context: LoadContext): Plugin {
         'invalid',
         'network',
         'no-model',
+        'empty',
+        'zero',
+        'single',
       ]) {
         actions.addRoute({
           path: `${context.baseUrl}__numbers/${state}`,

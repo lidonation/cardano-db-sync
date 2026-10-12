@@ -41,7 +41,26 @@ export default function NumbersFixture(): React.ReactElement {
       ? 'ready'
       : window.location.pathname.split('/').filter(Boolean).at(-1);
   const network: CardanoNetwork = kind === 'mainnet' ? 'mainnet' : 'preview';
-  const snapshot = syntheticNumbersSnapshot(network);
+  let snapshot = syntheticNumbersSnapshot(network);
+  if (kind === 'empty')
+    snapshot = {
+      ...snapshot,
+      recentEpochs: [],
+      storage: {...snapshot.storage!, tables: [], growth: []},
+    };
+  if (kind === 'zero')
+    snapshot = {
+      ...snapshot,
+      storage: {
+        ...snapshot.storage!,
+        growth: snapshot.storage!.growth.map((row) => ({...row, gigabytes: 0})),
+      },
+    };
+  if (kind === 'single')
+    snapshot = {
+      ...snapshot,
+      storage: {...snapshot.storage!, growth: snapshot.storage!.growth.slice(0, 1)},
+    };
   const raw =
     kind === 'missing'
       ? null
