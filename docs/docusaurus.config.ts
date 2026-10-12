@@ -4,6 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 import {I18N} from './config/i18n';
 import {PROFILES, resolveProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
+import sharedCodePlugin from './plugins/shared-code';
 import cssPrunePlugin from './plugins/css-prune';
 import environmentPlugin from './plugins/environment';
 import i18nPlugin from './plugins/i18n';
@@ -112,6 +113,7 @@ const config: Config = {
     inventoryPlugin,
     palettePlugin,
     cssPrunePlugin,
+    sharedCodePlugin,
     ...layoutFixturePlugins(),
   ],
 
