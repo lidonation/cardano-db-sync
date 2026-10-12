@@ -35,6 +35,9 @@ export default defineConfig({
         // B44-c: the FAQ questions and their FAQPage JSON-LD.
         'src/faq/questions.ts',
         'src/faq/jsonld.ts',
+        // B44-b: the Ecosystem page's entries and the changelog it counts.
+        'src/data/release-history.ts',
+        'src/ecosystem/entries.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

@@ -12,7 +12,6 @@
   justify-content: center;
   gap: var(--dbs-space-4);
   min-block-size: 72px;
-  box-sizing: border-box;
   padding: var(--dbs-space-12) var(--dbs-space-24);
   border: 1px solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);

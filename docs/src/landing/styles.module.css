@@ -13,7 +13,6 @@
 }
 
 .inner {
-  box-sizing: border-box;
   inline-size: 100%;
   padding-inline: var(--dbs-landing-margin);
 }
@@ -124,7 +123,6 @@
   grid-template-columns: minmax(0, 1fr);
   gap: var(--dbs-landing-gutter);
   align-items: center;
-  box-sizing: border-box;
   padding: var(--dbs-space-64) var(--dbs-landing-margin) 0;
 }
 
@@ -161,7 +159,6 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--dbs-space-12);
-  box-sizing: border-box;
   max-inline-size: 560px;
   margin-block-start: var(--dbs-space-32);
   padding: var(--dbs-space-8) var(--dbs-space-8) var(--dbs-space-8) var(--dbs-space-16);
@@ -214,7 +211,6 @@
 .gOutlineAccent {
   fill: none;
   stroke-width: 4;
-  stroke-linejoin: miter;
 }
 .gOutlineElectric {
   stroke: var(--dbs-brand-electric-blue);
@@ -228,7 +224,6 @@
 .gDbBody {
   fill: var(--dbs-brand-intersect-navy);
   stroke: var(--dbs-border-interactive);
-  stroke-width: 1;
 }
 .gDbTop {
   fill: var(--dbs-brand-electric-blue);
@@ -267,7 +262,6 @@
   flex-direction: column;
   justify-content: flex-end;
   gap: var(--dbs-space-8);
-  box-sizing: border-box;
   min-block-size: 170px;
   padding: var(--dbs-space-24);
   border: 1px solid var(--dbs-border-default);
@@ -309,7 +303,7 @@
   display: flex;
 }
 
-.cards > li > * {
+.cards > li > [data-kind] {
   max-inline-size: none;
 }
 

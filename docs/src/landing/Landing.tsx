@@ -8,6 +8,7 @@ import {QueryCard, UseCaseCard} from '../components/Card';
 import CodeCopy from '../components/CodeCopy';
 import Metric from '../components/Metric';
 import Icon from '../components/shared/Icon';
+import {DISCORD_URL, REPO_URL} from '../data/links';
 import type {ReleaseFacts} from '../data/release-facts';
 import {QUICKSTART_COMMANDS} from '../data/quickstart';
 import {SAMPLE_QUERIES} from '../data/sample-queries';
@@ -15,23 +16,12 @@ import {SURFACES} from '../data/surfaces';
 
 import {faqItems} from './faq';
 import HeroGraphic from './HeroGraphic';
+import Eyebrow from './Eyebrow';
 import useSurface from './useSurface';
 import useLandingTranslate from './useLandingTranslate';
 import styles from './styles.module.css';
 
-export const REPO_URL = 'https://github.com/IntersectMBO/cardano-db-sync';
-export const DISCORD_URL = 'https://discord.com/invite/inter-sect';
 const DOCKER = 'docker compose up -d && docker compose logs -f';
-
-/** The `// section` label above a heading. The slashes are decoration. */
-function Eyebrow({children}: {readonly children: ReactNode}): React.JSX.Element {
-  return (
-    <p className={styles.eyebrow}>
-      <span aria-hidden="true">//{' '}</span>
-      {children}
-    </p>
-  );
-}
 
 /** A text link with a trailing arrow, rendered only when it has somewhere to go. */
 function MoreLink({href, children}: {readonly href?: string; readonly children: ReactNode}) {
