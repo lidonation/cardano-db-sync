@@ -5,9 +5,11 @@ import {promisify} from 'node:util';
 
 import {beforeAll, describe, expect, it} from 'vitest';
 
+import {DEFAULT_LOCALE, LOCALES} from '../../config/i18n';
 import {PROFILES} from '../../config/profiles';
 import {PALETTE_BOOTSTRAP} from '../../src/lib/palette';
 import {inlineScripts} from '../../plugins/security';
+import {faqPageProblems} from '../../scripts/lib/faq-jsonld.mjs';
 
 const run = promisify(execFile);
 const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -282,4 +284,16 @@ describe('palette bootstrap ordering (THM-1)', () => {
       }
     }
   });
+});
+
+describe('the FAQ page carries FAQPage JSON-LD that matches it (META-2, B44-c)', () => {
+  for (const profile of ['dev', 'prod'] as const) {
+    for (const locale of LOCALES) {
+      it(`in the ${profile} ${locale} build`, async () => {
+        const prefix = locale === DEFAULT_LOCALE ? '' : locale;
+        const html = await fs.readFile(path.join(OUT[profile], prefix, 'faq', 'index.html'), 'utf8');
+        expect(faqPageProblems(html)).toEqual([]);
+      });
+    }
+  }
 });

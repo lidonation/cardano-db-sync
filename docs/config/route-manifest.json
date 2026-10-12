@@ -6,6 +6,9 @@
     },
     "/docs/intro": {
       "status": "live"
+    },
+    "/faq": {
+      "status": "live"
     }
   }
 }

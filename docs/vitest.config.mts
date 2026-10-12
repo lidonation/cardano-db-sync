@@ -33,6 +33,9 @@ export default defineConfig({
         'src/data/release-facts.ts',
         'src/data/surfaces.ts',
         'src/updates/model.ts',
+        // B44-c: the FAQ questions and their FAQPage JSON-LD.
+        'src/faq/questions.ts',
+        'src/faq/jsonld.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],
