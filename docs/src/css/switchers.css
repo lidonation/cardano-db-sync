@@ -1,0 +1,99 @@
+/*
+ * B30 — the three global controls, one discipline (THM-1, A11Y-29, DF-7).
+ *
+ * The theme switcher is the swizzled ColorModeToggle (four palettes, own module CSS).
+ * Locale and version ride on Docusaurus' own dropdowns so same-page navigation is
+ * preserved; this sheet restyles those dropdowns onto the tokens: 44px rows (DF-6/NAV-4),
+ * the global focus ring on every keyboard stop (FLOOR-4), control boundaries in
+ * border.interactive (FLOOR-3), and an underline bar — never colour alone — on the
+ * current locale/version (FLOOR-6). Token values only (TOK-1, TOK-5).
+ */
+
+/* Every navbar stop is at least 44px and shows the ring. */
+.navbar__link,
+.navbar__item.dropdown > .navbar__link {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+}
+
+.navbar__link:focus-visible,
+.dropdown__link:focus-visible,
+.navbar__item.dropdown > .navbar__link:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+/* The locale/version toggles read as controls, like the theme switcher. */
+.navbar__item.dropdown > .navbar__link {
+  gap: var(--dbs-space-8);
+  margin-inline-start: var(--dbs-space-8);
+  padding: 0 var(--dbs-space-12);
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: var(--dbs-radius-md);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+  text-decoration: none;
+}
+
+.navbar__item.dropdown > .navbar__link:hover {
+  background: var(--dbs-surface-sunken);
+  color: var(--dbs-text-primary);
+}
+
+/* The menus: token surface, control boundary, no shadow (the design has none). */
+.dropdown__menu {
+  min-inline-size: 200px;
+  padding: var(--dbs-space-8);
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: var(--dbs-radius-md);
+  background: var(--dbs-surface-base);
+  box-shadow: none;
+}
+
+.dropdown__link {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  border-radius: var(--dbs-radius-sm);
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+
+.dropdown__link:hover {
+  background: var(--dbs-surface-sunken);
+  color: var(--dbs-text-primary);
+  text-decoration: none;
+}
+
+/* The current locale/version: an underline bar plus the label, never colour alone. */
+.dropdown__link--active,
+.dropdown__link--active:hover {
+  position: relative;
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+
+.dropdown__link--active::after {
+  content: '';
+  position: absolute;
+  inset: auto var(--dbs-space-12) 6px;
+  block-size: 2px;
+  background: var(--dbs-accent-primary);
+}
+
+/* Mobile sidebar (Docusaurus renders the same items there): 44px rows and the ring. */
+.menu__link {
+  min-block-size: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.menu__link:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}

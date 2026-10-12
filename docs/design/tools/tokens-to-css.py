@@ -7,12 +7,16 @@ Usage (from docs/):
 `npm run tokens` runs exactly that, and `npm run check:tokens` fails CI when the committed
 tokens.css differs from a fresh run. Reads design/tokens.source.json (the single origin; also
 handles the W3C export shape Penpot writes: one top-level object per set, tokens carrying
-{"$value": ..., "$type": ...}). Set names map to themes:
+{"$value": ..., "$type": ...}). Set names map to palettes (THM-1):
 
     base      -> :root
-    dark      -> :root[data-theme="dark"]
-    cream     -> :root[data-theme="cream"]
-    navy      -> :root[data-theme="navy"]
+    dark      -> :root[data-dbs-palette="dark"]
+    cream     -> :root[data-dbs-palette="cream"]
+    navy      -> :root[data-dbs-palette="navy"]
+
+`data-theme` (light/dark) drives Infima alone; our tokens key off `data-dbs-palette` (§14.2).
+Cream maps to light Infima and navy to dark Infima via the switcher, so a dark palette never
+renders light Docusaurus-owned surfaces.
 
 Theme selectors out-rank :root (0,2,0 against 0,1,0) on purpose. With equal specificity the theme
 only won by coming later, and the production CSS minifier does not keep that order: it merged the
@@ -28,10 +32,10 @@ import json, sys, re
 THEME_SELECTOR = {
     "base": ":root",
     "light": ":root",
-    "dark": ':root[data-theme="dark"]',
-    "cream": ':root[data-theme="cream"]',
-    "navy": ':root[data-theme="navy"]',
-    "intersect-navy": ':root[data-theme="navy"]',
+    "dark": ':root[data-dbs-palette="dark"]',
+    "cream": ':root[data-dbs-palette="cream"]',
+    "navy": ':root[data-dbs-palette="navy"]',
+    "intersect-navy": ':root[data-dbs-palette="navy"]',
 }
 
 def flatten(node, prefix=()):

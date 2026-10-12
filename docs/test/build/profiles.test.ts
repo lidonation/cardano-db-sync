@@ -6,6 +6,8 @@ import {promisify} from 'node:util';
 import {beforeAll, describe, expect, it} from 'vitest';
 
 import {PROFILES} from '../../config/profiles';
+import {PALETTE_BOOTSTRAP} from '../../src/lib/palette';
+import {inlineScripts} from '../../plugins/security';
 
 const run = promisify(execFile);
 const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -84,7 +86,12 @@ describe('baseUrl reaches the emitted HTML (ENV-1)', () => {
       expect(text, file).not.toContain('/cardano-db-sync/assets/');
     }
     const css = await fs.readFile(
-      path.join(OUT.dev, 'assets', 'css', (await fs.readdir(path.join(OUT.dev, 'assets', 'css')))[0]),
+      path.join(
+        OUT.dev,
+        'assets',
+        'css',
+        (await fs.readdir(path.join(OUT.dev, 'assets', 'css')))[0],
+      ),
       'utf8',
     );
     expect(css).toContain('/cardano-db-sync/assets/fonts/');
@@ -106,23 +113,31 @@ describe('the build carries no secrets and needs none (ENV-5)', () => {
   }, 900_000);
 });
 
-describe('theme tokens reach the built CSS with their precedence intact (TOK-1)', () => {
+describe('theme tokens reach the built CSS with their precedence intact (TOK-1, THM-1)', () => {
   /**
    * The minifier reorders and merges rules, so a theme block that only beat `:root` by coming
    * later can land above it and lose. Every theme rule must out-rank `:root` on specificity.
+   * THM-1: tokens key off `data-dbs-palette`, never `data-theme` (which drives Infima alone).
    */
-  it('scopes every themed token rule as :root[data-theme=...]', async () => {
+  it('scopes every themed token rule as :root[data-dbs-palette=...]', async () => {
     const dir = path.join(OUT.prod, 'assets', 'css');
-    const css = (await Promise.all((await fs.readdir(dir)).map((f) => fs.readFile(path.join(dir, f), 'utf8')))).join('');
-    const themed = [...css.matchAll(/([^{}]*data-theme[^{}]*)\{([^{}]*)\}/g)]
+    const css = (
+      await Promise.all((await fs.readdir(dir)).map((f) => fs.readFile(path.join(dir, f), 'utf8')))
+    ).join('');
+    const themed = [...css.matchAll(/([^{}]*data-dbs-palette[^{}]*)\{([^{}]*)\}/g)]
       .filter(([, , body]) => body.includes('--dbs-'))
       .map(([, selector]) => selector.trim());
     expect(themed.length).toBeGreaterThanOrEqual(3);
     for (const selector of themed) {
       for (const part of selector.split(',')) {
-        expect(part, selector).toMatch(/^:root\[data-theme=/);
+        expect(part, selector).toMatch(/^:root\[data-dbs-palette=/);
       }
     }
+    // No token rule keys off data-theme: that attribute belongs to Infima (§14.2).
+    const stray = [...css.matchAll(/([^{}]*data-theme[^{}]*)\{([^{}]*)\}/g)]
+      .filter(([, , body]) => body.includes('--dbs-'))
+      .map(([, selector]) => selector.trim());
+    expect(stray).toEqual([]);
   });
 });
 
@@ -205,7 +220,8 @@ describe('five locales (A11Y-18, META-4, META-8)', () => {
   });
 
   it("points an untranslated doc's canonical at the English page; others are self-canonical", async () => {
-    const canonical = (html: string) => html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/)?.[1];
+    const canonical = (html: string) =>
+      html.match(/<link[^>]*rel="canonical"[^>]*href="([^"]+)"/)?.[1];
     const en = canonical(await fs.readFile(page(OUT.prod, 'en', 'docs/intro'), 'utf8'));
     expect(en).toMatch(/\/docs\/intro\/?$/);
     expect(en).not.toMatch(/\/(ja|es|de|vi)\//);
@@ -237,6 +253,33 @@ describe('five locales (A11Y-18, META-4, META-8)', () => {
     for (const locale of Object.keys(LOCALE_DIRS)) {
       const html = await fs.readFile(page(OUT.prod, locale, 'docs/intro'), 'utf8');
       expect(html, locale).toMatch(/<code lang="en" translate="no">cardano-db-sync<\/code>/);
+    }
+  });
+});
+
+describe('palette bootstrap ordering (THM-1)', () => {
+  it('ships exact palette bytes after the framework bootstrap and before rendered content', async () => {
+    for (const out of [OUT.dev, OUT.prod]) {
+      for (const page of await htmlFiles(out)) {
+        const html = await fs.readFile(path.join(out, page), 'utf8');
+        const scripts = inlineScripts(html);
+        const palette = scripts.indexOf(PALETTE_BOOTSTRAP);
+        const framework = scripts.findIndex(
+          (code) =>
+            !code.includes('dbs-palette') &&
+            code.includes('localStorage.getItem("theme")') &&
+            code.includes('"data-theme"'),
+        );
+        expect(framework, `${out}/${page}`).toBeGreaterThanOrEqual(0);
+        expect(palette, `${out}/${page}`).toBeGreaterThan(framework);
+        expect(
+          scripts.filter((code) => code.includes('dbs-palette')),
+          `${out}/${page}`,
+        ).toEqual([PALETTE_BOOTSTRAP]);
+        expect(html.indexOf(PALETTE_BOOTSTRAP), `${out}/${page}`).toBeLessThan(
+          html.indexOf('id="__docusaurus"'),
+        );
+      }
     }
   });
 });

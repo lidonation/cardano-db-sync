@@ -106,6 +106,13 @@ describe('TOK-1 - tokens.css is imported once, at the root', () => {
     expect(css[0]).toBe('./src/css/tokens.css');
     expect(css.filter((f) => f.endsWith('tokens.css'))).toHaveLength(1);
   });
+
+  it('loads the switcher discipline last so it wins over Infima (B30)', async () => {
+    const config = await loadConfig('dev');
+    const [, options] = (config.presets ?? [])[0] as [string, {theme?: {customCss?: string[]}}];
+    const css = options.theme?.customCss ?? [];
+    expect(css[css.length - 1]).toBe('./src/css/switchers.css');
+  });
 });
 
 describe('build hygiene', () => {
@@ -124,6 +131,7 @@ describe('build hygiene', () => {
     const {default: securityPlugin} = await import('../../plugins/security');
     const {default: i18nPlugin} = await import('../../plugins/i18n');
     const {default: inventoryPlugin} = await import('../../plugins/inventory');
+    const {default: palettePlugin} = await import('../../plugins/palette');
     expect(config.plugins).toEqual([
       cnamePlugin,
       routeManifestPlugin,
@@ -131,10 +139,37 @@ describe('build hygiene', () => {
       securityPlugin,
       i18nPlugin,
       inventoryPlugin,
+      palettePlugin,
     ]);
   });
 
   it('turns off the base-URL banner, an inline script the CSP would refuse (SEC-3)', async () => {
     expect((await loadConfig('dev')).baseUrlIssueBanner).toBe(false);
+  });
+});
+
+describe('B30 - the three global controls share the navbar (THM-1, A11Y-29, DF-7)', () => {
+  interface NavbarItem {
+    readonly type?: string;
+    readonly position?: string;
+  }
+
+  async function navbarItems(): Promise<NavbarItem[]> {
+    const config = await loadConfig('dev');
+    const themeConfig = config.themeConfig as {navbar?: {items?: NavbarItem[]}} | undefined;
+    return themeConfig?.navbar?.items ?? [];
+  }
+
+  it('keeps the locale switcher and adds the version selector on the right', async () => {
+    const right = (await navbarItems())
+      .filter((item) => item.position === 'right')
+      .map((item) => item.type);
+    expect(right).toContain('localeDropdown');
+    expect(right).toContain('docsVersionDropdown');
+  });
+
+  it('leaves the theme switcher to the swizzled ColorModeToggle, not the navbar config', async () => {
+    const items = await navbarItems();
+    expect(items.map((item) => item.type)).not.toContain('colorModeToggle');
   });
 });

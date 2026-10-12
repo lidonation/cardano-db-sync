@@ -4,7 +4,8 @@
  *
  * The Penpot file holds 96 components that are 27 definitions — 23 drawn four times, once per
  * palette, plus 4 drawn once (THM-6). Here there is one entry per definition and no palette in any
- * name: themes are token values on `data-theme`, not component copies.
+ * name: themes are token values on `data-dbs-palette` (with `data-theme` for Infima), not
+ * component copies.
  *
  * Every entry accounts for all nine drawn states (B47 `DF-2 · States`). A state is either `shown`
  * — the inventory page renders the component in it, and the browser suite audits it in all four

@@ -27,6 +27,7 @@ import SearchResult, {
 import {SectionCross, SectionDivider} from '../components/Section';
 import Tabs from '../components/Tabs';
 import Tag from '../components/Tag';
+import ThemeSwitcher from '../components/ThemeSwitcher';
 import type {InteractionState, State} from '../components/shared/states';
 
 /**
@@ -127,6 +128,7 @@ export const RENDER: Readonly<Record<string, Render>> = {
       onSearch={() => undefined}
       defaultMenuOpen={state === 'selected'}
       demo={pinned(state) && {href: '/docs/schema', state: pinned(state) as InteractionState}}
+      actions={<ThemeSwitcher />}
     />
   ),
   'Navbar / Minimal': (state) => (
