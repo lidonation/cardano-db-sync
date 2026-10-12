@@ -8,6 +8,7 @@ import cssPrunePlugin from './plugins/css-prune';
 import environmentPlugin from './plugins/environment';
 import i18nPlugin from './plugins/i18n';
 import inventoryPlugin, {layoutFixturePlugins} from './plugins/inventory';
+import palettePlugin from './plugins/palette';
 import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
 import {releaseFacts} from './src/data/release-facts';
@@ -69,7 +70,13 @@ const config: Config = {
         blog: false,
         theme: {
           // TOK-1: the generated tokens are imported once, here, ahead of everything that uses them.
-          customCss: ['./src/css/tokens.css', './src/css/fonts.css', './src/css/custom.css'],
+          // B30: the switcher discipline rides last so it wins over Infima on equal specificity.
+          customCss: [
+            './src/css/tokens.css',
+            './src/css/fonts.css',
+            './src/css/custom.css',
+            './src/css/switchers.css',
+          ],
         },
       } satisfies Preset.Options,
     ],
@@ -80,7 +87,9 @@ const config: Config = {
   // SEC-1..3, SEC-8: a per-route meta CSP in every page, the colour-mode bootstrap hashed (B06).
   // META-4, A11Y-18: which locales each page exists in, for hreflang and fallback marking (B40).
   // B29: the component inventory, on the development server only (DBS_INVENTORY=1); B34's layout
-  // fixture docs behind the same flag. PERF-1: the stylesheet keeps only rules the build can match.
+  // fixture docs behind the same flag.
+  // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
+  // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
     cnamePlugin,
     routeManifestPlugin,
@@ -88,6 +97,7 @@ const config: Config = {
     securityPlugin,
     i18nPlugin,
     inventoryPlugin,
+    palettePlugin,
     cssPrunePlugin,
     ...layoutFixturePlugins(),
   ],
@@ -102,7 +112,12 @@ const config: Config = {
           position: 'left',
           label: 'Docs',
         },
+        // B30: the three global controls share one discipline (THM-1, A11Y-29, DF-7).
+        // The theme switcher is the swizzled ColorModeToggle (four palettes); locale and
+        // version ride on Docusaurus' own dropdowns so same-page navigation (hreflang
+        // alternates, equivalent version pages) is preserved, restyled in switchers.css.
         {type: 'localeDropdown', position: 'right'},
+        {type: 'docsVersionDropdown', position: 'right'},
         {
           href: profile.repoUrl,
           label: 'GitHub',

@@ -11,6 +11,7 @@ export default defineConfig({
         'config/**/*.ts',
         'plugins/**/*.ts',
         'scripts/**/*.mjs',
+        'src/lib/palette.ts',
         'src/wallet/**/*.ts',
         // The browser-free i18n helpers. The hooks and theme components that use them need a
         // Docusaurus build and are covered by test:build.
