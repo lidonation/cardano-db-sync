@@ -25,7 +25,17 @@ const profile = resolveProfile();
 const config: Config = {
   title: 'Cardano DB Sync',
   tagline: 'The Cardano chain, as a Postgres database you can query',
+  // Docusaurus resolves `favicon` through the active locale baseUrl, but static assets
+  // are global. Emit both icon links directly from the profile baseUrl to avoid locale
+  // prefixes and absolute asset URLs (SEC-2). The navbar logo stays with B47.
   favicon: undefined,
+  headTags: [
+    ['icon', 'brand/png/mark-badge-32.png'],
+    ['apple-touch-icon', 'brand/png/mark-badge-180.png'],
+  ].map(([rel, file]) => ({
+    tagName: 'link',
+    attributes: {rel, href: `${profile.baseUrl}${file}`},
+  })),
 
   // ENV-1 — both values come from the profile. Nothing here is environment-specific.
   url: profile.url,
