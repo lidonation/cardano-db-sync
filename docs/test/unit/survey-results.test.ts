@@ -57,6 +57,13 @@ describe('survey manifest (SUR-3, SUR-15, SUR-26)', () => {
       ],
     };
     expect(validateManifest(negative).length).toBeGreaterThan(0);
+    const olderNegative: SurveyManifest = {
+      ...manifest,
+      subsumptions: [
+        {newer: {question: 1, option: 0}, older: {question: 0, option: -2}, kind: 'supersedes'},
+      ],
+    };
+    expect(validateManifest(olderNegative).length).toBeGreaterThan(0);
   });
 
   it('skips edges the aggregate does not carry: the page renders what the tally produced', () => {
