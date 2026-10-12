@@ -19,7 +19,14 @@ async function open(page: Page, palette: string = 'light', width = 1440) {
   await page.setViewportSize({width, height: 900});
   await page.goto(INVENTORY_URL);
   await page.locator('#inventory').waitFor();
-  await page.evaluate((name) => document.documentElement.setAttribute('data-theme', name), palette);
+  // Both attributes, like the switcher (THM-1).
+  await page.evaluate((name) => {
+    document.documentElement.setAttribute(
+      'data-theme',
+      name === 'dark' || name === 'navy' ? 'dark' : 'light',
+    );
+    document.documentElement.setAttribute('data-dbs-palette', name);
+  }, palette);
   await page.evaluate(() => document.fonts.ready);
 }
 

@@ -1,7 +1,7 @@
 import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
-import {INVENTORY_URL, ORIGIN} from '../../playwright.config';
+import {INVENTORY_URL, BROWSER_ORIGIN} from '../../playwright.config';
 import {PROFILES} from '../../config/profiles';
 import {contrast, paintedBackground} from './contrast';
 
@@ -23,13 +23,24 @@ const ACTIVE_LABEL: Record<string, string> = {
   navy: 'rgb(121, 184, 255)',
 };
 
-const DOCS = `${ORIGIN}${PROFILES.dev.baseUrl}docs/intro`;
+const DOCS = `${BROWSER_ORIGIN}${PROFILES.dev.baseUrl}docs/intro`;
+
+/** Palette tokens and Infima's light/dark surfaces are separate attributes (THM-1). */
+async function applyPalette(page: Page, palette: string) {
+  await page.evaluate((name) => {
+    document.documentElement.setAttribute(
+      'data-theme',
+      name === 'dark' || name === 'navy' ? 'dark' : 'light',
+    );
+    document.documentElement.setAttribute('data-dbs-palette', name);
+  }, palette);
+}
 
 async function openInventory(page: Page, palette: string = 'light', width = 1440) {
   await page.setViewportSize({width, height: 900});
   await page.goto(INVENTORY_URL);
   await page.locator('#inventory').waitFor();
-  await page.evaluate((name) => document.documentElement.setAttribute('data-theme', name), palette);
+  await applyPalette(page, palette);
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -107,10 +118,7 @@ test.describe('active sidebar label (NAV-5)', () => {
       await page.setViewportSize({width: 1440, height: 900});
       await page.goto(DOCS);
       await page.locator('.theme-doc-sidebar-container').waitFor();
-      await page.evaluate(
-        (name) => document.documentElement.setAttribute('data-theme', name),
-        palette,
-      );
+      await applyPalette(page, palette);
       const active = page.locator('.theme-doc-sidebar-container .menu__link--active').first();
       await expect(active).toBeVisible();
       const colour = await active.evaluate((element) => getComputedStyle(element).color);
@@ -133,10 +141,7 @@ test.describe('active sidebar label (NAV-5)', () => {
       await page.setViewportSize({width: 1440, height: 900});
       await page.goto(DOCS);
       await page.locator('.theme-doc-sidebar-container').waitFor();
-      await page.evaluate(
-        (name) => document.documentElement.setAttribute('data-theme', name),
-        palette,
-      );
+      await applyPalette(page, palette);
       const results = await new AxeBuilder({page})
         .include('.theme-doc-sidebar-container')
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])

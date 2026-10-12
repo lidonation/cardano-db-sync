@@ -9,12 +9,12 @@ import {INVENTORY_ENV_VAR, INVENTORY_PATH} from './plugins/inventory';
  * at three widths, every state rendered, keyboard behaviour. Run with `npm run test:components`.
  */
 const PORT = Number(process.env.DBS_TEST_PORT ?? 3100);
-if (!Number.isInteger(PORT) || PORT < 1 || PORT > 65535) {
-  throw new Error('DBS_TEST_PORT must be a valid TCP port');
+if (!Number.isInteger(PORT) || PORT < 1024 || PORT > 65535) {
+  throw new Error('DBS_TEST_PORT must be an integer from 1024 to 65535.');
 }
-export const ORIGIN = `http://127.0.0.1:${PORT}`;
+export const BROWSER_ORIGIN = `http://127.0.0.1:${PORT}`;
 
-export const INVENTORY_URL = `${ORIGIN}${PROFILES.dev.baseUrl}${INVENTORY_PATH}`;
+export const INVENTORY_URL = `${BROWSER_ORIGIN}${PROFILES.dev.baseUrl}${INVENTORY_PATH}`;
 
 export default defineConfig({
   testDir: 'test/browser',
@@ -30,7 +30,6 @@ export default defineConfig({
   webServer: {
     command: `npx cross-env ${INVENTORY_ENV_VAR}=1 DOCS_PROFILE=dev docusaurus start --port ${PORT} --host 127.0.0.1 --no-open`,
     url: INVENTORY_URL,
-    // Never audit a server that may belong to a different checkout.
     reuseExistingServer: false,
     timeout: 240_000,
     stdout: 'ignore',
