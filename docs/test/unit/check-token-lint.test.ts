@@ -149,6 +149,22 @@ describe('check:token-lint over a tree', () => {
 });
 
 describe('TOK-6: control boundaries bind border.interactive (B35)', () => {
+  it('allows only the static landing pipeline frame, never a FAQ control', () => {
+    const file = 'src/landing/styles.module.css';
+    expect(
+      findBorderProblems(file, '.stage { border: 1px solid var(--dbs-border-default); }'),
+    ).toEqual([]);
+    expect(
+      findBorderProblems(file, '.faqItem { border: 1px solid var(--dbs-border-default); }'),
+    ).toHaveLength(1);
+    expect(
+      findBorderProblems(
+        'src/other/styles.module.css',
+        '.stage { border: 1px solid var(--dbs-border-default); }',
+      ),
+    ).toHaveLength(1);
+  });
+
   it('flags a non-interactive border token on a control, naming the selector', () => {
     expect(
       findBorderProblems('src/x.css', '.field { border: 1px solid var(--dbs-border-default); }'),

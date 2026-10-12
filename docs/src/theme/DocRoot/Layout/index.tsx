@@ -12,6 +12,8 @@ import SidebarList from '../../DocLayout/SidebarList';
 
 import styles from '../../DocLayout/styles.module.css';
 
+import {MAIN_CONTENT_ID} from '../../../lib/accessibility';
+
 /**
  * B34 — the docs page frame, per DF-7: the sidebar column (240px at 1024 and up, 200px from 768)
  * beside the main column, on the tier's grid margins; below 768px the sidebar is not a column at
@@ -38,7 +40,7 @@ export default function DocRootLayout({children}: Props): ReactNode {
           <SidebarList items={sidebar.items} />
         </nav>
       )}
-      <main className={styles.main}>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} className={styles.main}>
         {sidebar && section && (
           <Disclosure
             key={pathname}

@@ -145,6 +145,8 @@ export function NavbarFull({
     return () => wide.removeEventListener('change', closeOnWide);
   }, [open]);
   const onDrawerKey = (event: KeyboardEvent<HTMLElement>) => {
+    // A nested menu gets first refusal: its Escape returns to its own trigger.
+    if (event.defaultPrevented) return;
     if (event.key === 'Escape') {
       setOpen(false);
       menuButton.current?.focus();
@@ -177,7 +179,17 @@ export function NavbarFull({
     </ul>
   );
   return (
-    <header className={styles.navbar} data-dbs-component="Navbar / Full">
+    <header
+      className={styles.navbar}
+      data-dbs-component="Navbar / Full"
+      onBlur={(event) => {
+        // Close for a real move into the page. A null target can be CSS hiding a control
+        // during a breakpoint change; the media listeners still need the open drawer to
+        // hand focus to its replacement.
+        if (open && event.relatedTarget && !event.currentTarget.contains(event.relatedTarget))
+          setOpen(false);
+      }}
+    >
       <div className={styles.bar}>
         <Link ref={home} className={styles.home} to={homeHref}>
           <Wordmark />

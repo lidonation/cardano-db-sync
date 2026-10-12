@@ -3,6 +3,7 @@ import React from 'react';
 import Layout from '@theme/Layout';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
+import {MAIN_CONTENT_ID} from '../lib/accessibility';
 import useFallbackLang from '../i18n/useFallbackLang';
 import Landing from '../landing/Landing';
 import {LANDING_IDS} from '../landing/ids';
@@ -17,7 +18,7 @@ export default function Home(): React.JSX.Element {
   const lang = useFallbackLang(LANDING_IDS);
   return (
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
-      <main lang={lang}>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} lang={lang}>
         <Landing />
       </main>
     </Layout>

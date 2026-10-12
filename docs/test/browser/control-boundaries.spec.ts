@@ -34,6 +34,16 @@ async function applyPalette(page: Page, palette: string) {
     );
     document.documentElement.setAttribute('data-dbs-palette', name);
   }, palette);
+  // Measure the chosen palette after its legible color transitions have finished.
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation instanceof CSSTransition)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
 }
 
 async function openInventory(page: Page, palette: string = 'light', width = 1440) {

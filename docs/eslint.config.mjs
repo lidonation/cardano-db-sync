@@ -3,7 +3,15 @@ import tseslint from 'typescript-eslint';
 
 export default tseslint.config(
   {
-    ignores: ['build/**', '.docusaurus/**', 'node_modules/**', 'coverage/**', 'test/fixtures/**'],
+    ignores: [
+      'build/**',
+      '.docusaurus/**',
+      'node_modules/**',
+      'coverage/**',
+      'test/fixtures/**',
+      'test-results/**',
+      'playwright-report/**',
+    ],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

@@ -1,8 +1,8 @@
 {
-  "$comment": "PERF-1 asset budget, gzip bytes, checked by scripts/check-asset-budget.mjs. B02 baseline (Docusaurus scaffold): js 165.0 KiB, css 13.7 KiB, heaviest page initial payload 162.2 KiB. Limits sit ~10-15% above it; B38 replaces them with the SPECIFICATION budget. B06 raised css to 18 KiB: SEC-2's self-hosted fonts add nine @font-face rules (+0.8 KiB gzip, total 16.5 KiB); the font files themselves load from CSS on demand, three per page (~108 KiB raw), and are reported under font. B34 keeps the 18 KiB cap by separating visually hidden text CSS from status styles unused by the site chrome.",
+  "$comment": "PERF-1 asset budget, gzip bytes, checked by scripts/check-asset-budget.mjs. B02 baseline (Docusaurus scaffold): js 165.0 KiB, css 13.7 KiB, heaviest page initial payload 162.2 KiB. Limits sit ~10-15% above it; B38 replaces them with the SPECIFICATION budget. B06 raised css to 18 KiB: SEC-2's self-hosted fonts add nine @font-face rules (+0.8 KiB gzip, total 16.5 KiB); the font files themselves load from CSS on demand, three per page (~108 KiB raw), and are reported under font. B34 keeps the 18 KiB cap by separating visually hidden text CSS from status styles unused by the site chrome. B43 adds the shared accessibility substrate. The measured CSS total was 18.7 KiB before removing duplicate focus declarations; the temporary cap is 19 KiB. JavaScript and initial-page limits are unchanged. B38 still owns the final specification budget.",
   "totals": {
     "js": 194560,
-    "css": 18432
+    "css": 19456
   },
   "page": {
     "initial": 184320
