@@ -2,11 +2,13 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 
-import {afterEach, describe, expect, it} from 'vitest';
+import webpack from 'webpack';
+
+import {describe, expect, it} from 'vitest';
 
 import cssPrunePlugin, {
   contentTokens,
-  pruneBuild,
+  cssPruneOptimization,
   pruneCss,
   selectorKept,
   usedBy,
@@ -20,6 +22,14 @@ describe('selectorKept (PERF-1)', () => {
     expect(selectorKept('.card_Ab12 > .navbar__link', used)).toBe(true);
     expect(selectorKept('.pagination-nav__link', used)).toBe(false);
     expect(selectorKept('.navbar__link .pagination', used)).toBe(false);
+  });
+
+  it('does not mistake dots in attribute values for classes', () => {
+    expect(selectorKept('.navbar__link[href$=".pdf"]', used)).toBe(true);
+  });
+
+  it('keeps escaped class selectors mentioned by their actual class name', () => {
+    expect(selectorKept('.sm\\:block', usedBy(new Set(['sm:block'])))).toBe(true);
   });
 
   it('keeps names built by concatenation from a mentioned prefix', () => {
@@ -55,26 +65,47 @@ describe('pruneCss', () => {
   });
 });
 
-describe('pruneBuild', () => {
-  let dir = '';
-  afterEach(async () => {
-    if (dir) await fs.rm(dir, {recursive: true, force: true});
-  });
-
-  it('prunes the build stylesheets against its own pages and scripts', async () => {
-    dir = await fs.mkdtemp(path.join(os.tmpdir(), 'css-prune-'));
-    await fs.mkdir(path.join(dir, 'assets', 'css'), {recursive: true});
-    await fs.mkdir(path.join(dir, 'assets', 'js'), {recursive: true});
-    await fs.writeFile(path.join(dir, 'index.html'), '<main class="hero_x1Y2"></main>');
-    await fs.writeFile(path.join(dir, 'assets', 'js', 'main.js'), 'c("button_Zz99")');
-    await fs.writeFile(
-      path.join(dir, 'assets', 'css', 'styles.css'),
-      '.hero_x1Y2{a:b}.button_Zz99{c:d}.menu__list{e:f}',
-    );
-    await cssPrunePlugin().postBuild?.({outDir: dir} as never);
-    expect(await fs.readFile(path.join(dir, 'assets', 'css', 'styles.css'), 'utf8')).toBe(
-      '.hero_x1Y2{a:b}.button_Zz99{c:d}',
-    );
-    expect(await pruneBuild(dir)).toBe(0);
+describe('CSS cache identity', () => {
+  it('changes the CSS asset URL when pruning changes its bytes', async () => {
+    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'css-cache-'));
+    try {
+      await fs.writeFile(path.join(dir, 'theme.css'), '.one{color:red}.two{color:blue}');
+      const names: string[] = [];
+      for (const name of ['one', 'two']) {
+        await fs.writeFile(
+          path.join(dir, 'entry.js'),
+          `import asset from './theme.css'; console.log(asset, '${name}');`,
+        );
+        await new Promise<void>((resolve, reject) => {
+          const compiler = webpack({
+            mode: 'production',
+            entry: path.join(dir, 'entry.js'),
+            output: {
+              path: path.join(dir, name),
+              filename: 'main.js',
+              assetModuleFilename: 'assets/css/[name].[contenthash].css',
+            },
+            module: {rules: [{test: /\.css$/, type: 'asset/resource'}]},
+            plugins: [cssPruneOptimization],
+          });
+          compiler.run((error, stats) =>
+            compiler.close(() => {
+              if (error || stats?.hasErrors()) reject(error ?? new Error(stats?.toString()));
+              else resolve();
+            }),
+          );
+        });
+        const [asset] = await fs.readdir(path.join(dir, name, 'assets', 'css'));
+        names.push(asset);
+        expect(await fs.readFile(path.join(dir, name, 'assets', 'css', asset), 'utf8')).toBe(
+          name === 'one' ? '.one{color:red}' : '.two{color:blue}',
+        );
+        expect(await fs.readFile(path.join(dir, name, 'main.js'), 'utf8')).toContain(asset);
+      }
+      expect(names[0]).not.toBe(names[1]);
+      expect(cssPrunePlugin().postBuild).toBeUndefined();
+    } finally {
+      await fs.rm(dir, {recursive: true, force: true});
+    }
   });
 });

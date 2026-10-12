@@ -1,15 +1,14 @@
-import fs from 'node:fs/promises';
-import path from 'node:path';
-
 import postcss from 'postcss';
+import selectorParser from 'postcss-selector-parser';
+import type {Compiler} from 'webpack';
 import type {Plugin} from '@docusaurus/types';
 
 /**
  * PERF-1 — the site stylesheet ships only rules the built site can match.
  *
  * Docusaurus bundles every stylesheet into one file: all of Infima, every theme component's CSS
- * module (including the ones B34 swizzled away) and every component the site might render. After
- * each build this pass removes, from the stylesheets under `assets/css/`:
+ * module (including the ones B34 swizzled away) and every component the site might render. During
+ * client asset optimization this pass removes, from the stylesheets under `assets/css/`:
  *
  *   - selectors naming a class that no built page or script mentions. A class counts as mentioned
  *     when it appears as a token in any HTML or JS file, or when a token ending in `-` or `_` is a
@@ -19,14 +18,13 @@ import type {Plugin} from '@docusaurus/types';
  *   - selectors pinning an interaction state for the component inventory (`[data-dbs-demo]`),
  *     which exists on the development server only (B29) and never in a build.
  *
+ * Pruning runs before webpack computes real content hashes, so a CSS change receives a new
+ * asset URL and the HTML/runtime references remain consistent.
  * A rule left with no selectors goes, and so does an at-rule left empty. Nothing else changes:
  * the pass cannot rename, reorder or alter a declaration. The development server is untouched.
  */
 
 const TOKEN = /[A-Za-z0-9_-]+/g;
-const CLASS = /\.(-?[_a-zA-Z][\w-]*)/g;
-const OPTIONAL = /:(?:not|is|where)\((?:[^()]|\([^()]*\))*\)/g;
-const DEMO = /\[data-dbs-demo/;
 
 /** The tokens a built page or script could use as class names. */
 export function contentTokens(texts: Iterable<string>): Set<string> {
@@ -40,14 +38,35 @@ export function contentTokens(texts: Iterable<string>): Set<string> {
 /** Whether a class is mentioned by the content, directly or by a concatenation prefix. */
 export function usedBy(tokens: ReadonlySet<string>): (name: string) => boolean {
   const prefixes = [...tokens].filter((token) => token.length > 2 && /[-_]$/.test(token));
-  return (name) => tokens.has(name) || prefixes.some((prefix) => name.startsWith(prefix));
+  return (name) =>
+    !/^[\w-]+$/.test(name) ||
+    tokens.has(name) ||
+    prefixes.some((prefix) => name.startsWith(prefix));
 }
 
 /** Whether a selector can match the built site. */
 export function selectorKept(selector: string, used: (name: string) => boolean): boolean {
-  if (DEMO.test(selector)) return false;
-  const required = selector.replace(OPTIONAL, '');
-  return [...required.matchAll(CLASS)].every((match) => used(match[1]));
+  let kept = true;
+  try {
+    selectorParser((root) => {
+      root.walkAttributes((attribute) => {
+        if (attribute.attribute === 'data-dbs-demo') kept = false;
+      });
+      root.walkClasses((className) => {
+        let parent = className.parent;
+        while (parent) {
+          // Negation and selector alternatives cannot prove that a class is required.
+          if (parent.type === 'pseudo' && [':not', ':is', ':where'].includes(parent.value)) return;
+          parent = parent.parent;
+        }
+        if (!used(className.value)) kept = false;
+      });
+    }).processSync(selector);
+  } catch {
+    // Unrecognized syntax is not evidence that a selector is unused.
+    return true;
+  }
+  return kept;
 }
 
 /** The stylesheet with every unmatched selector, rule and empty at-rule removed. */
@@ -78,35 +97,38 @@ export function pruneCss(
   return {css: root.toString(), removed};
 }
 
-async function files(dir: string): Promise<string[]> {
-  const entries = await fs.readdir(dir, {withFileTypes: true, recursive: true});
-  return entries
-    .filter((entry) => entry.isFile())
-    .map((entry) => path.join(entry.parentPath, entry.name));
-}
-
-/** Prune every stylesheet under `outDir/assets/css` against the HTML and JS under `outDir`. */
-export async function pruneBuild(outDir: string): Promise<number> {
-  const all = await files(outDir);
-  const content = await Promise.all(
-    all.filter((file) => /\.(html|js)$/.test(file)).map((file) => fs.readFile(file, 'utf8')),
-  );
-  const used = usedBy(contentTokens(content));
-  const cssDir = path.join(outDir, 'assets', 'css');
-  let removed = 0;
-  for (const file of all.filter((file) => path.dirname(file) === cssDir && file.endsWith('.css'))) {
-    const result = pruneCss(await fs.readFile(file, 'utf8'), used);
-    removed += result.removed;
-    await fs.writeFile(file, result.css, 'utf8');
-  }
-  return removed;
-}
+/** Optimize emitted client CSS before webpack updates content hashes and asset references. */
+export const cssPruneOptimization = {
+  apply(compiler: Compiler): void {
+    const {Compilation, sources} = compiler.webpack;
+    compiler.hooks.thisCompilation.tap('dbsync-css-prune', (compilation) => {
+      compilation.hooks.processAssets.tap(
+        {name: 'dbsync-css-prune', stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1},
+        () => {
+          const assets = compilation.getAssets();
+          const used = usedBy(
+            contentTokens(
+              assets
+                .filter(({name}) => /\.(html|js)$/.test(name))
+                .map(({source}) => source.source().toString()),
+            ),
+          );
+          for (const {name, source} of assets) {
+            if (!name.startsWith('assets/css/') || !name.endsWith('.css')) continue;
+            const result = pruneCss(source.source().toString(), used);
+            compilation.updateAsset(name, new sources.RawSource(result.css));
+          }
+        },
+      );
+    });
+  },
+};
 
 export default function cssPrunePlugin(): Plugin {
   return {
     name: 'dbsync-css-prune',
-    async postBuild({outDir}) {
-      await pruneBuild(outDir);
+    configureWebpack(_config, isServer) {
+      return isServer ? {} : {plugins: [cssPruneOptimization]};
     },
   };
 }

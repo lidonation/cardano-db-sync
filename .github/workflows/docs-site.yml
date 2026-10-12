@@ -127,6 +127,12 @@ jobs:
       # published route the committed manifest does not account for (VER-5).
       - name: Build and profile assertions
         run: npm run test:build
+      # Landing CSS is pruned only in production builds. The development-server suite cannot
+      # catch a selector removed from shipped CSS, so exercise both emitted profiles here.
+      - name: Install Chromium for built landing audits
+        run: npx playwright install --with-deps chromium
+      - name: Landing on shipped assets (B44-a, PERF-1, A11Y-18)
+        run: npm run test:landing:built
       - uses: actions/upload-artifact@v4
         with:
           name: docs-build
