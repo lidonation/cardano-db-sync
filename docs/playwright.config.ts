@@ -9,7 +9,7 @@ import {INVENTORY_ENV_VAR, INVENTORY_PATH, LAYOUT_FIXTURE_PATH} from './plugins/
  * at three widths, every state rendered, keyboard behaviour. B34 adds the responsive docs layout,
  * run against fixture docs behind the same flag. Run with `npm run test:components`.
  */
-const PORT = 3100;
+const PORT = Number(process.env.DBS_TEST_PORT ?? 3100);
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 
 export const SITE_URL = `${ORIGIN}${PROFILES.dev.baseUrl}`;

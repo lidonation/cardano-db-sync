@@ -23,10 +23,41 @@ export interface DocsState {
   readonly sidebarLinks: Readonly<Record<string, string | undefined>>;
   /** Path of each doc in the active version, by doc id. */
   readonly docPaths: Readonly<Record<string, string | undefined>>;
+  /** The sidebar destination label supplied by the docs plugin. */
+  readonly sidebarLabels?: Readonly<Record<string, string | undefined>>;
   /** The sidebar the current page belongs to, if it is a doc. */
   readonly activeSidebar?: string;
   /** The current page's doc id, if it is a doc. */
   readonly activeDocId?: string;
+}
+
+/** Resolve each item across active, preferred, then latest versions, as the stock navbar does. */
+export function resolveDocsState(
+  versions: readonly {
+    readonly sidebars?: Readonly<
+      Record<string, {readonly link?: {readonly path: string; readonly label?: string}}>
+    >;
+    readonly docs: readonly {readonly id: string; readonly path: string}[];
+  }[],
+  activeDoc?: {readonly id: string; readonly sidebar?: string},
+): DocsState {
+  const sidebarLinks: Record<string, string | undefined> = {};
+  const docPaths: Record<string, string | undefined> = {};
+  const sidebarLabels: Record<string, string | undefined> = {};
+  for (const version of versions) {
+    for (const [id, sidebar] of Object.entries(version.sidebars ?? {})) {
+      sidebarLinks[id] ??= sidebar.link?.path;
+      if (sidebar.link?.label) sidebarLabels[id] ??= sidebar.link.label;
+    }
+    for (const doc of version.docs) docPaths[doc.id] ??= doc.path;
+  }
+  return {
+    sidebarLinks,
+    sidebarLabels,
+    docPaths,
+    activeSidebar: activeDoc?.sidebar,
+    activeDocId: activeDoc?.id,
+  };
 }
 
 export interface DerivedNav {
@@ -66,7 +97,7 @@ export function deriveNav(
         const href = item.sidebarId ? docs.sidebarLinks[item.sidebarId] : undefined;
         if (href) {
           links.push({
-            label: item.label ?? '',
+            label: item.label || docs.sidebarLabels?.[item.sidebarId!] || item.sidebarId!,
             href,
             active: docs.activeSidebar !== undefined && docs.activeSidebar === item.sidebarId,
           });
@@ -77,7 +108,7 @@ export function deriveNav(
         const href = item.docId ? docs.docPaths[item.docId] : undefined;
         if (href) {
           links.push({
-            label: item.label ?? '',
+            label: item.label || item.docId!,
             href,
             active: docs.activeDocId === item.docId,
           });
@@ -92,9 +123,11 @@ export function deriveNav(
         if (item.href) {
           github = github ?? item.href;
         } else if (item.to) {
-          const site = baseUrl.replace(/\/$/, '');
-          const base = `${site}/${(item.activeBasePath ?? item.to).replace(/^\//, '')}`;
-          links.push({label: item.label ?? '', href: item.to, active: isUnder(pathname, base)});
+          const path = (value: string) =>
+            value.startsWith(baseUrl) ? value : `${baseUrl}${value.replace(/^\//, '')}`;
+          const href = path(item.to);
+          const base = path(item.activeBasePath ?? item.to).split(/[?#]/)[0]!;
+          links.push({label: item.label || item.to, href, active: isUnder(pathname, base)});
         }
     }
   }

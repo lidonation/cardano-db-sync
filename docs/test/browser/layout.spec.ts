@@ -145,7 +145,7 @@ test.describe('disclosures and the drawer (NAV-2)', () => {
     await expect(panel).toBeHidden();
     await button.click();
     await expect(button).toHaveAttribute('aria-expanded', 'true');
-    await expect(panel.getByRole('link')).toHaveText(['Installation', 'Configuration']);
+    await expect(panel.getByRole('link', {name: 'Tuning'})).toBeVisible();
     await expect(panel.locator('[aria-current="page"]')).toHaveText(['Installation']);
     await panel.getByRole('link', {name: 'Configuration'}).click();
     await expect(page).toHaveURL(/getting-started\/configuration$/);
@@ -231,5 +231,84 @@ test.describe('axe, WCAG 2.2 AA', () => {
         expect(found).toEqual([]);
       });
     }
+  }
+});
+
+test.describe('review regressions', () => {
+  test('mobile navigation keeps the other sections reachable', async ({page}) => {
+    await open(page, PAGE, 375);
+    const button = sectionButton(page);
+    await button.click();
+    const panel = page.locator(`[id="${await button.getAttribute('aria-controls')}"]`);
+    await panel.getByRole('link', {name: 'Tuning'}).click();
+    await expect(page).toHaveURL(/operations\/tuning$/);
+    await expect(sectionButton(page)).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('generated category pages retain mobile sidebar navigation', async ({page}) => {
+    await page.setViewportSize({width: 375, height: 900});
+    await page.goto(`${LAYOUT_URL}/category/operations`);
+    await expect(sectionButton(page)).toBeVisible();
+    await sectionButton(page).click();
+    const panel = page.locator(`[id="${await sectionButton(page).getAttribute('aria-controls')}"]`);
+    await panel.getByRole('link', {name: 'Installation'}).click();
+    await expect(page).toHaveURL(/getting-started\/installation$/);
+  });
+
+  test('the desktop TOC highlights the visible current heading', async ({page}) => {
+    await open(page, PAGE, 1440);
+    await page.locator('h2#install').evaluate((heading) => {
+      window.scrollTo(0, heading.getBoundingClientRect().top + window.scrollY - 120);
+    });
+    await expect(tocColumn(page).getByRole('link', {name: 'Install', exact: true})).toHaveClass(
+      /tocLinkActive/,
+    );
+  });
+
+  test('a short viewport can scroll the Menu drawer to its controls', async ({page}) => {
+    await page.setViewportSize({width: 375, height: 180});
+    await page.goto(PAGE);
+    await menuButton(page).click();
+    const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
+    const control = drawer.getByRole('button', {name: /dark mode|light mode|system mode/i});
+    await control.scrollIntoViewIfNeeded();
+    const box = (await control.boundingBox())!;
+    expect(box.y + box.height).toBeLessThanOrEqual(180);
+  });
+});
+
+test('resizing closes the drawer without leaving focus on hidden content', async ({page}) => {
+  await open(page, PAGE, 375);
+  await menuButton(page).click();
+  await page.setViewportSize({width: 1440, height: 900});
+  await expect(page.locator('header[data-dbs-component="Navbar / Full"] a').first()).toBeFocused();
+  await page.setViewportSize({width: 375, height: 900});
+  await expect(menuButton(page)).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('all language choices remain reachable in a landscape-phone drawer', async ({page}) => {
+  await page.setViewportSize({width: 568, height: 320});
+  await page.goto(PAGE);
+  await menuButton(page).click();
+  const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
+  const language = drawer.locator('.dropdown > [role="button"]');
+  await language.focus();
+  await page.keyboard.press('Enter');
+  const choices = drawer.locator('.dropdown__menu a');
+  await expect(choices).toHaveCount(5);
+  for (const choice of await choices.all()) {
+    await choice.scrollIntoViewIfNeeded();
+    await expect(choice).toBeVisible();
+    const box = (await choice.boundingBox())!;
+    expect(box.y).toBeGreaterThanOrEqual(73);
+    expect(box.y + box.height).toBeLessThanOrEqual(320);
+  }
+});
+
+test('headings outside the configured levels do not reserve an empty TOC', async ({page}) => {
+  for (const width of [375, 1440]) {
+    await open(page, `${LAYOUT_URL}/reference/filtered-toc`, width);
+    await expect(pageButton(page)).toHaveCount(0);
+    await expect(tocColumn(page)).toHaveCount(0);
   }
 });

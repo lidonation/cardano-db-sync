@@ -7,7 +7,7 @@ import {translate} from '@docusaurus/Translate';
 
 import KeyCap from '../KeyCap';
 import Icon from '../shared/Icon';
-import {VisuallyHidden} from '../shared/Status';
+import {VisuallyHidden} from '../shared/VisuallyHidden';
 import Wordmark from '../shared/Wordmark';
 import {demoAttributes, type InteractionState} from '../shared/states';
 
@@ -65,14 +65,33 @@ export function NavbarFull({
   const menuId = useId();
   const [open, setOpen] = useState(defaultMenuOpen);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const home = useRef<HTMLAnchorElement>(null);
   const drawer = useRef<HTMLElement>(null);
   const opened = useRef(false);
   // Opening moves focus into the drawer; the first open from the inventory's pinned state does not.
   useEffect(() => {
     if (open && opened.current) {
-      drawer.current?.querySelector<HTMLElement>('a, button, select, input')?.focus();
+      Array.from(drawer.current?.querySelectorAll<HTMLElement>('a, button, select, input') ?? [])
+        .find((element) => element.getClientRects().length > 0 && !element.matches(':disabled'))
+        ?.focus();
     }
     opened.current = true;
+  }, [open]);
+  useEffect(() => {
+    const wide = window.matchMedia('(min-width: 1280px)');
+    const closeOnWide = () => {
+      if (wide.matches && open) {
+        if (
+          drawer.current?.contains(document.activeElement) ||
+          document.activeElement === menuButton.current
+        )
+          home.current?.focus();
+        setOpen(false);
+      }
+    };
+    closeOnWide();
+    wide.addEventListener('change', closeOnWide);
+    return () => wide.removeEventListener('change', closeOnWide);
   }, [open]);
   const onDrawerKey = (event: KeyboardEvent<HTMLElement>) => {
     if (event.key === 'Escape') {
@@ -109,7 +128,7 @@ export function NavbarFull({
   return (
     <header className={styles.navbar} data-dbs-component="Navbar / Full">
       <div className={styles.bar}>
-        <Link className={styles.home} to={homeHref}>
+        <Link ref={home} className={styles.home} to={homeHref}>
           <Wordmark />
         </Link>
         <nav className={styles.wide} aria-label={sections}>
