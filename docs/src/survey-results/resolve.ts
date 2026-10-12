@@ -128,6 +128,11 @@ export function resolveAggregate(
         label: `Question ${question}`,
         history: undefined,
       };
+      const source = aggregate.questions.find((item) => item.question === question);
+      const historyOptions = source?.options
+        .slice()
+        .sort((a, b) => a.option - b.option)
+        .map((item) => item.label);
       return {
         question,
         label: meta.label,
@@ -137,7 +142,7 @@ export function resolveAggregate(
             ? {option, label: entry.label, count: entry.count, absorbedFrom: from}
             : {option, label: entry.label, count: entry.count};
         }),
-        ...(meta.history ? {history: meta.history} : {}),
+        ...(meta.history ? {history: meta.history, historyOptions} : {}),
       };
     });
 

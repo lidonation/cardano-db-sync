@@ -110,6 +110,12 @@ export interface ResolvedQuestion {
   readonly label: string;
   readonly options: readonly ResolvedOption[];
   readonly history?: readonly HistoryPoint[];
+  /**
+   * Labels of the options each history count column belongs to, in counts order:
+   * history is tallied in original option order, which subsumption may have folded.
+   * Present exactly when `history` is present.
+   */
+  readonly historyOptions?: readonly string[];
 }
 
 /**

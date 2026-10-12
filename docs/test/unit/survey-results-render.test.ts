@@ -77,6 +77,18 @@ describe('survey results dashboard markup (B44-f slice B)', () => {
     expect(golden()).toContain('editorial');
   });
 
+  it('names every absorbed option beside its absorber (SUR-28)', () => {
+    const markup = golden();
+    expect(markup).toContain('question 0, option 0');
+    expect(markup).toContain('question 1, option 0');
+  });
+
+  it('heads every table, history columns with their original options', () => {
+    const markup = golden();
+    expect(markup.match(/<thead/g)).toHaveLength(3);
+    expect(markup).toContain('From source</th>');
+  });
+
   it('reports superseded options separately, never merged', () => {
     const markup = golden();
     expect(markup).toContain('Superseded by question 1, option 1');

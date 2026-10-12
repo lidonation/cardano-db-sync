@@ -111,6 +111,7 @@ describe('subsumption resolution (SUR-28)', () => {
             {epoch: 540, counts: [8, 5, 2]},
             {epoch: 541, counts: [12, 7, 3]},
           ],
+          historyOptions: ['Docker', 'From source', 'Nix'],
         },
         {
           question: 1,

@@ -223,6 +223,18 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
                       'table',
                       null,
                       React.createElement(
+                        'thead',
+                        null,
+                        React.createElement(
+                          'tr',
+                          null,
+                          React.createElement('th', {scope: 'col'}, 'Epoch'),
+                          ...(question.historyOptions ?? []).map((label) =>
+                            React.createElement('th', {scope: 'col', key: label}, label),
+                          ),
+                        ),
+                      ),
+                      React.createElement(
                         'tbody',
                         null,
                         question.history.map((point) =>
@@ -255,8 +267,23 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
               t({
                 id: 'results.merge.note',
                 message:
-                  'Merged counts are an editorial view: a newer option absorbs the counts of the older options it replaces. The absorbed options stay named in the tables.',
+                  'Merged counts are an editorial view: a newer option absorbs the counts of the older options it replaces. Each absorption is named below.',
               }),
+            ),
+            React.createElement(
+              'ul',
+              null,
+              resolved.questions.flatMap((item) =>
+                item.options.flatMap((option) =>
+                  (option.absorbedFrom ?? []).map((absorbed) =>
+                    React.createElement(
+                      'li',
+                      {key: `${absorbed.question}.${absorbed.option}`},
+                      `${absorbed.label} (question ${absorbed.question}, option ${absorbed.option}): ${absorbed.count} → ${option.label} (question ${item.question}, option ${option.option})`,
+                    ),
+                  ),
+                ),
+              ),
             ),
           ),
         )
