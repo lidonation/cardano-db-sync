@@ -2,6 +2,7 @@ import React, {useState} from 'react';
 
 import Layout from '@theme/Layout';
 
+import {MAIN_CONTENT_ID} from '../../../src/lib/accessibility';
 import Updates from '../../../src/updates/Updates';
 import type {UpdatesFeed} from '../../../src/updates/types';
 
@@ -29,7 +30,7 @@ export default function UpdatesFixture(): React.JSX.Element {
         <button type="button" onClick={() => setFeed({asOf: '2026-10-12', entries: []})}>Empty feed</button>
         <button type="button" onClick={() => setFeed(POPULATED_FEED)}>Populated feed</button>
       </nav>
-      <main>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1}>
         <h1>Updates test fixture</h1>
         <Updates feed={feed} />
       </main>

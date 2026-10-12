@@ -164,3 +164,11 @@ test('real Updates route reports unavailable source without invented entries', a
   await expect(main.getByRole('link')).toHaveCount(0);
   await expect(main).not.toContainText(/first release|0\s*updates/i);
 });
+
+test('the first skip link focuses the Updates main landmark', async ({page}) => {
+  await page.goto(`${SITE_URL}updates`);
+  await page.keyboard.press('Tab');
+  await expect(page.locator('a.dbs-skip-link')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.getByRole('main')).toBeFocused();
+});
