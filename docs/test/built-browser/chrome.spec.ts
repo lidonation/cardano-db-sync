@@ -428,6 +428,18 @@ test('native skip anchor works without JavaScript on docs', async ({browser, bas
   await context.close();
 });
 
+test('native skip anchor works without JavaScript on the FAQ', async ({browser, baseURL}) => {
+  const context = await browser.newContext({javaScriptEnabled: false, baseURL});
+  const page = await context.newPage();
+  await page.goto('faq/');
+  await page.keyboard.press('Tab');
+  await expect(page.locator('a.dbs-skip-link')).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
+  await expect(page).toHaveURL(/#dbs-main-content$/);
+  await context.close();
+});
+
 test('client navigation restores the first skip stop', async ({page}) => {
   await open(page);
   await page.locator('main a[href*="docs/intro"]').first().click();
