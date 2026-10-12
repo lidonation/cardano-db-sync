@@ -89,6 +89,7 @@ describe('deriveNav (NAV-1)', () => {
       ),
     ).toEqual({
       sidebarLinks: {docs: '/docs/current', guides: '/guides'},
+      sidebarLabels: {},
       docPaths: {intro: '/docs/current', schema: '/schema'},
       activeSidebar: 'docs',
       activeDocId: 'intro',
@@ -124,14 +125,14 @@ describe('deriveNav (NAV-1)', () => {
 });
 
 describe('deriveNav labels', () => {
-  it('renders an unlabelled item with an empty label rather than dropping it', () => {
+  it('gives unlabelled links an accessible fallback from their route data', () => {
     const nav = deriveNav(
       [{type: 'docSidebar', sidebarId: 'docsSidebar'}, {type: 'doc', docId: 'schema'}, {to: '/x'}],
       '/',
       '/',
       DOCS,
     );
-    expect(nav.links.map((link) => link.label)).toEqual(['', '', '']);
+    expect(nav.links.map((link) => link.label)).toEqual(['docsSidebar', 'schema', '/x']);
   });
 });
 
