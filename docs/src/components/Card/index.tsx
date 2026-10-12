@@ -2,6 +2,7 @@ import React, {type ReactNode} from 'react';
 
 import Link from '@docusaurus/Link';
 
+import CodeCopy from '../CodeCopy';
 import Icon from '../shared/Icon';
 import {Skeleton} from '../shared/Status';
 
@@ -84,12 +85,16 @@ export function QueryCard({
   sql,
   linkLabel,
   href,
+  copyable = false,
   ...data
 }: CardDataProps & {
   readonly question: ReactNode;
   readonly sql: string;
-  readonly linkLabel: ReactNode;
-  readonly href: string;
+  readonly linkLabel?: ReactNode;
+  /** Where to read more; without it the card has no link. */
+  readonly href?: string;
+  /** Offers the SQL to the clipboard from the band. */
+  readonly copyable?: boolean;
 }): React.JSX.Element {
   return (
     <Frame
@@ -103,14 +108,19 @@ export function QueryCard({
       }
       {...data}
     >
-      <span className={styles.band}>{question}</span>
+      <span className={styles.band}>
+        {question}
+        {copyable && <CodeCopy text={sql} />}
+      </span>
       <pre className={styles.sql}>
         <code>{sql}</code>
       </pre>
-      <Link className={styles.inlineLink} to={href}>
-        {linkLabel}
-        <Icon name="arrow-right" size={12} className={styles.directional} />
-      </Link>
+      {href && (
+        <Link className={styles.inlineLink} to={href}>
+          {linkLabel}
+          <Icon name="arrow-right" size={12} className={styles.directional} />
+        </Link>
+      )}
     </Frame>
   );
 }

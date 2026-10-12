@@ -177,6 +177,7 @@ export const RENDER: Readonly<Record<string, Render>> = {
       linkLabel="Run against the schema docs"
       href="/docs/schema"
       {...data(state)}
+      copyable
     />
   ),
   'Card / Sample query': (state) => (

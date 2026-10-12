@@ -9,6 +9,7 @@ import i18nPlugin from './plugins/i18n';
 import inventoryPlugin, {layoutFixturePlugins} from './plugins/inventory';
 import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
+import {releaseFacts} from './src/data/release-facts';
 
 const profile = resolveProfile();
 
@@ -47,6 +48,9 @@ const config: Config = {
     profile,
     // ENV-4: the environment banner's way out to the real site.
     productionUrl: `${PROFILES.prod.url}${PROFILES.prod.baseUrl}`,
+    // B44-a: the landing page's "in this build" figures, counted here at build time so the
+    // schema artifact they come from never ships to the browser.
+    releaseFacts: releaseFacts(),
   },
 
   // A11Y-18: `lang` and `dir` on <html> come from each locale's config (B40).
@@ -115,8 +119,14 @@ const config: Config = {
           title: 'Project',
           items: [
             {label: 'GitHub', href: profile.repoUrl},
-            {label: 'Issues', href: `${profile.repoUrl}/issues`},
             {label: 'Releases', href: `${profile.repoUrl}/releases`},
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {label: 'Discord #db-sync', href: 'https://discord.com/invite/inter-sect'},
+            {label: 'Issues', href: `${profile.repoUrl}/issues`},
           ],
         },
       ],

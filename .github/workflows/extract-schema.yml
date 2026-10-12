@@ -23,6 +23,7 @@ on:
       - "docs/scripts/extract-schema.mjs"
       - "docs/scripts/lib/schema-*.mjs"
       - "docs/test/db/**"
+      - "docs/src/data/sample-queries.ts"
       - "docs/generated/schema.json"
       # The artifact is serialised with the repo's prettier config and pinned prettier version.
       - "docs/.prettierrc"
@@ -39,6 +40,7 @@ on:
       - "docs/scripts/extract-schema.mjs"
       - "docs/scripts/lib/schema-*.mjs"
       - "docs/test/db/**"
+      - "docs/src/data/sample-queries.ts"
       - "docs/generated/schema.json"
       # The artifact is serialised with the repo's prettier config and pinned prettier version.
       - "docs/.prettierrc"

@@ -191,7 +191,7 @@ export const INVENTORY: readonly InventoryEntry[] = [
     design: 'Card / Query',
     marker: 'Card / Query',
     module: 'Card',
-    usage: '<QueryCard question sql linkLabel href />',
+    usage: '<QueryCard question sql linkLabel? href? copyable? />',
     interactive: false,
     states: all(QUERY_CARD),
   },

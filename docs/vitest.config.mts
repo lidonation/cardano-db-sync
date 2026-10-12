@@ -28,6 +28,9 @@ export default defineConfig({
         // audited per tier in a real browser by test:components.
         'src/theme/Navbar/items.ts',
         'src/theme/DocLayout/sections.ts',
+        // B44-a: the landing page's build facts and route-gated surfaces.
+        'src/data/release-facts.ts',
+        'src/data/surfaces.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

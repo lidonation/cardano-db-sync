@@ -61,6 +61,12 @@ describe('docusaurus.config (ENV-1)', () => {
     expect(config.customFields?.profile).toEqual(PROFILES.dev);
   });
 
+  it('counts the landing page facts at build time (B44-a)', async () => {
+    const config = await loadConfig('dev');
+    const {releaseFacts} = await import('../../src/data/release-facts');
+    expect(config.customFields?.releaseFacts).toEqual(releaseFacts());
+  });
+
   it('gives every profile the production address for the environment banner (ENV-4)', async () => {
     for (const name of ['dev', 'prod']) {
       const config = await loadConfig(name);

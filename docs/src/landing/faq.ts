@@ -1,0 +1,122 @@
+import {translate} from '@docusaurus/Translate';
+
+/**
+ * The FAQ as the landing page shows it. Figures come from the repository README's system
+ * requirements (May 2025) and `doc/`, not from the design file, whose drafts predate them. The
+ * FAQ page (B44-c) adds the rest and the FAQPage structured data.
+ */
+export function faqItems(): readonly {readonly question: string; readonly answer: string}[] {
+  return [
+    {
+      question: translate({
+        id: 'landing.faq.sync.q',
+        message: 'How long does the initial sync take?',
+      }),
+      answer: translate({
+        id: 'landing.faq.sync.a',
+        message:
+          'Days from genesis on mainnet. Most operators restore a state snapshot and catch up from there.',
+      }),
+    },
+    {
+      question: translate({id: 'landing.faq.disk.q', message: 'How much disk space do I need?'}),
+      answer: translate({
+        id: 'landing.faq.disk.a',
+        message:
+          '700 GB or more for mainnet with the default configuration, preferably on SSD. Configuration presets that leave out data you do not need make it much smaller.',
+      }),
+    },
+    {
+      question: translate({
+        id: 'landing.faq.genesis.q',
+        message: 'Can I skip syncing from genesis?',
+      }),
+      answer: translate({
+        id: 'landing.faq.genesis.a',
+        message:
+          'Yes. Restore a state snapshot, which bundles the database and the ledger state; db-sync then follows the chain from that point.',
+      }),
+    },
+    {
+      question: translate({id: 'landing.faq.shrink.q', message: 'Can I shrink the database?'}),
+      answer: translate({
+        id: 'landing.faq.shrink.a',
+        message:
+          'Yes. Presets and insert options (tx_out prune or consumed, leaving out unused data) cut it by hundreds of gigabytes. Some of these choices cannot be undone without a resync.',
+      }),
+    },
+    {
+      question: translate({id: 'landing.faq.node.q', message: 'Do I need to run a cardano-node?'}),
+      answer: translate({
+        id: 'landing.faq.node.a',
+        message: 'Yes. db-sync reads blocks from a local node through its socket.',
+      }),
+    },
+    {
+      question: translate({id: 'landing.faq.hardware.q', message: 'What hardware is recommended?'}),
+      answer: translate({
+        id: 'landing.faq.hardware.a',
+        message:
+          'For mainnet, with the node on the same machine: 64 GB of RAM or more, 4 CPU cores or more, and storage that sustains 60k IOPS or better.',
+      }),
+    },
+    {
+      question: translate({
+        id: 'landing.faq.postgres.q',
+        message: 'Which PostgreSQL versions work?',
+      }),
+      answer: translate({
+        id: 'landing.faq.postgres.a',
+        message:
+          'The versions listed in each release’s notes. Check them before moving to a new PostgreSQL major version.',
+      }),
+    },
+    {
+      question: translate({
+        id: 'landing.faq.upgrade.q',
+        message: 'How do I avoid a painful upgrade?',
+      }),
+      answer: translate({
+        id: 'landing.faq.upgrade.a',
+        message:
+          'Read the release notes first. Minor releases migrate automatically; a major release may run long migrations or need a resync.',
+      }),
+    },
+    {
+      question: translate({id: 'landing.faq.progress.q', message: 'How do I check sync progress?'}),
+      answer: translate({
+        id: 'landing.faq.progress.a',
+        message: 'Compare the time of the newest block with the current time, or watch the logs.',
+      }),
+    },
+    {
+      question: translate({
+        id: 'landing.faq.share.q',
+        message: 'Can two instances share one database?',
+      }),
+      answer: translate({
+        id: 'landing.faq.share.a',
+        message: 'No. Give each db-sync instance its own database.',
+      }),
+    },
+    {
+      question: translate({id: 'landing.faq.read.q', message: 'Can I query while it is syncing?'}),
+      answer: translate({
+        id: 'landing.faq.read.a',
+        message:
+          'Yes. The database is meant to be read by other applications while db-sync writes to it, though heavy queries slow the catch-up.',
+      }),
+    },
+    {
+      question: translate({
+        id: 'landing.faq.compare.q',
+        message: 'How does this differ from Blockfrost or Kupo?',
+      }),
+      answer: translate({
+        id: 'landing.faq.compare.a',
+        message:
+          'db-sync gives you the whole chain as SQL you own and shape. Hosted APIs and UTxO indexers trade completeness for a smaller footprint.',
+      }),
+    },
+  ];
+}
