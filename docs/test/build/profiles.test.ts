@@ -292,7 +292,10 @@ describe('the FAQ page carries FAQPage JSON-LD that matches it (META-2, B44-c)',
     for (const locale of LOCALES) {
       it(`in the ${profile} ${locale} build`, async () => {
         const prefix = locale === DEFAULT_LOCALE ? '' : locale;
-        const html = await fs.readFile(path.join(OUT[profile], prefix, 'faq', 'index.html'), 'utf8');
+        const html = await fs.readFile(
+          path.join(OUT[profile], prefix, 'faq', 'index.html'),
+          'utf8',
+        );
         expect(faqPageProblems(html)).toEqual([]);
       });
     }
@@ -352,17 +355,29 @@ describe('global brand icons survive localized builds (#63)', () => {
 
 describe('Numbers production isolation (NUM-5)', () => {
   it('excludes synthetic fixtures from routes, manifests and bundles in both profiles', async () => {
-    const forbidden=/__numbers|Synthetic browser test fixture, not a provider measurement|Synthetic estimates for browser test only/;
-    const walk=async (dir:string):Promise<string[]>=>{
-      const entries=await fs.readdir(dir,{withFileTypes:true});
-      return (await Promise.all(entries.map(e=>e.isDirectory()?walk(path.join(dir,e.name)):Promise.resolve([path.join(dir,e.name)])))).flat();
+    const forbidden =
+      /__numbers|Synthetic browser test fixture, not a provider measurement|Synthetic estimates for browser test only/;
+    const walk = async (dir: string): Promise<string[]> => {
+      const entries = await fs.readdir(dir, {withFileTypes: true});
+      return (
+        await Promise.all(
+          entries.map((e) =>
+            e.isDirectory()
+              ? walk(path.join(dir, e.name))
+              : Promise.resolve([path.join(dir, e.name)]),
+          ),
+        )
+      ).flat();
     };
-    for(const root of Object.values(OUT)) {
-      for(const file of await walk(root)) {
+    for (const root of Object.values(OUT)) {
+      for (const file of await walk(root)) {
         expect(file).not.toContain('__numbers');
-        if(/\.(?:html|js|json)$/.test(file)) expect(await fs.readFile(file,'utf8'),file).not.toMatch(forbidden);
+        if (/\.(?:html|js|json)$/.test(file))
+          expect(await fs.readFile(file, 'utf8'), file).not.toMatch(forbidden);
       }
     }
-    expect(await fs.readFile(path.join(DOCS_ROOT,'config/route-manifest.json'),'utf8')).not.toContain('__numbers');
+    expect(
+      await fs.readFile(path.join(DOCS_ROOT, 'config/route-manifest.json'), 'utf8'),
+    ).not.toContain('__numbers');
   });
 });
