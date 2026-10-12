@@ -9,6 +9,9 @@
     },
     "/faq": {
       "status": "live"
+    },
+    "/updates": {
+      "status": "live"
     }
   }
 }
