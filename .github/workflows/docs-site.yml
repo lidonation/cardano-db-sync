@@ -87,6 +87,19 @@ jobs:
       - uses: ./.github/actions/docs-setup
       - name: Unit tests with coverage thresholds
         run: npm test
+      # B29: the component inventory in a browser — served by the development server only, audited
+      # with axe in four palettes at three widths, every manifest state rendered, keyboard behaviour.
+      # The Chromium build is the one @playwright/test pins, not the runner's browser.
+      - name: Install Chromium for Playwright
+        run: npx playwright install --with-deps chromium
+      - name: Components (THM-5, THM-6, FLOOR-4, FLOOR-5, DF-2, DF-4, A11Y-28, NAV-3)
+        run: npm run test:components
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: component-test-results
+          path: docs/test-results/
+          retention-days: 7
 
   build:
     name: Build both profiles

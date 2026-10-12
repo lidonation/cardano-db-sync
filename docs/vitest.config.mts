@@ -17,6 +17,11 @@ export default defineConfig({
         'src/i18n/pages.ts',
         'src/i18n/identifier.ts',
         'src/survey/labelIds.ts',
+        // B29: the component manifest and the browser-free component logic. The components
+        // themselves are audited in a real browser by test:components.
+        'src/components/inventory.ts',
+        'src/components/shared/states.ts',
+        'src/components/Tabs/keyboard.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

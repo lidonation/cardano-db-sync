@@ -1,0 +1,120 @@
+/* The inventory's own layout — a development tool, still held to the token rules. */
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-32);
+  padding: var(--dbs-space-32) var(--dbs-space-16);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-primary);
+}
+
+.title {
+  margin: 0;
+  font: var(--dbs-font-heading-lg);
+  letter-spacing: var(--dbs-font-heading-lg-tracking);
+}
+
+.intro,
+.usage {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--dbs-space-8);
+  margin: 0;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+
+.palette {
+  min-block-size: 32px;
+  padding: 0 var(--dbs-space-12);
+  border: 1px solid var(--dbs-border-interactive);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-primary);
+  cursor: pointer;
+  font: var(--dbs-font-caption);
+  letter-spacing: var(--dbs-font-caption-tracking);
+}
+
+.palette[aria-pressed='true'] {
+  border-width: 2px;
+  border-color: var(--dbs-border-selected);
+}
+
+.palette:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+.entry {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-12);
+  padding-block-start: var(--dbs-space-24);
+  border-block-start: 1px solid var(--dbs-border-default);
+}
+
+.name {
+  margin: 0;
+  font: var(--dbs-font-title);
+  letter-spacing: var(--dbs-font-title-tracking);
+}
+
+.usage code {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+
+.was {
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  gap: var(--dbs-space-24);
+}
+
+.wide {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-24);
+}
+
+.cell {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--dbs-space-8);
+  min-inline-size: 0;
+}
+
+.wide .cell {
+  align-items: stretch;
+}
+
+.state {
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-eyebrow);
+  letter-spacing: var(--dbs-font-eyebrow-tracking);
+}
+
+.page :global(.inventory-row) {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-8);
+}
+
+.page :global(.inventory-list) {
+  inline-size: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}

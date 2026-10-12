@@ -6,6 +6,7 @@ import {PROFILES, resolveProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
 import environmentPlugin from './plugins/environment';
 import i18nPlugin from './plugins/i18n';
+import inventoryPlugin from './plugins/inventory';
 import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
 
@@ -73,7 +74,15 @@ const config: Config = {
   // robots.txt per profile (B05).
   // SEC-1..3, SEC-8: a per-route meta CSP in every page, the colour-mode bootstrap hashed (B06).
   // META-4, A11Y-18: which locales each page exists in, for hreflang and fallback marking (B40).
-  plugins: [cnamePlugin, routeManifestPlugin, environmentPlugin, securityPlugin, i18nPlugin],
+  // B29: the component inventory, on the development server only (DBS_INVENTORY=1).
+  plugins: [
+    cnamePlugin,
+    routeManifestPlugin,
+    environmentPlugin,
+    securityPlugin,
+    i18nPlugin,
+    inventoryPlugin,
+  ],
 
   themeConfig: {
     navbar: {

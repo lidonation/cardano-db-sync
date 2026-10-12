@@ -1,0 +1,61 @@
+/* Avatar — a pointy-top hexagon, h = 2w/√3 (never a squashed square box). */
+.avatar {
+  display: inline-grid;
+  inline-size: 92px;
+  aspect-ratio: 92 / 106.2;
+  text-decoration: none;
+}
+
+.avatar[data-size='core'] {
+  inline-size: 88px;
+}
+
+.avatar[data-size='meta'] {
+  inline-size: 32px;
+}
+
+.image,
+.fallback,
+.avatar > [aria-hidden='true'] {
+  grid-area: 1 / 1;
+  inline-size: 100%;
+  block-size: 100%;
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+.image {
+  object-fit: cover;
+  background: var(--dbs-accent-primary-tint);
+}
+
+.fallback {
+  display: grid;
+  place-items: center;
+  background: var(--dbs-accent-primary-tint);
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+
+.avatar[data-size='meta'] .fallback {
+  font: var(--dbs-font-label-sm);
+  letter-spacing: var(--dbs-font-label-sm-tracking);
+}
+
+a.avatar:hover .image,
+a.avatar:hover .fallback,
+a.avatar[data-dbs-demo='hover'] .image,
+a.avatar[data-dbs-demo='hover'] .fallback {
+  opacity: 0.85;
+}
+
+a.avatar:active,
+a.avatar[data-dbs-demo='pressed'] {
+  transform: translateY(1px);
+}
+
+a.avatar:focus-visible,
+a.avatar[data-dbs-demo='focus'] {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}

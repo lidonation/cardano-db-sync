@@ -30,6 +30,7 @@
       "on-navy": "#8fa3d9",
       "warm-tertiary": "#6e6656",
       "on-selected": "#1a1a2e",
+      "on-accent": "#ffffff",
       "disabled": "#9aa4b2"
     },
     "accent": {
@@ -212,6 +213,7 @@
       "tertiary": "#8b949e",
       "placeholder": "#8b949e",
       "on-selected": "#0f1117",
+      "on-accent": "#0f1117",
       "warm-tertiary": "#8b949e",
       "disabled": "#59616a"
     },
@@ -279,6 +281,7 @@
       "tertiary": "#748dd0",
       "placeholder": "#748dd0",
       "on-selected": "#0f1117",
+      "on-accent": "#011555",
       "warm-tertiary": "#8fa3d9",
       "disabled": "#4364bf"
     },

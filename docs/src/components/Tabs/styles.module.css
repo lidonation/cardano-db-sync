@@ -1,0 +1,105 @@
+/* Chip / Filter and the underline tabs — one tab pattern, two appearances (A11Y-28). */
+.tabs {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-16);
+  min-inline-size: 0;
+}
+
+.list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-8);
+}
+
+.tab {
+  min-block-size: 32px;
+  padding: 0 var(--dbs-space-12);
+  border: 1px solid var(--dbs-border-interactive);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-secondary);
+  cursor: pointer;
+  font: var(--dbs-font-caption);
+  letter-spacing: var(--dbs-font-caption-tracking);
+}
+
+.tab:hover,
+.tab[data-dbs-demo='hover'] {
+  background: var(--dbs-surface-sunken);
+  color: var(--dbs-text-primary);
+}
+
+.tab:active,
+.tab[data-dbs-demo='pressed'] {
+  background: var(--dbs-surface-accent-subtle);
+  color: var(--dbs-text-primary);
+}
+
+.tab:focus-visible,
+.tab[data-dbs-demo='focus'] {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+/* chip: selected is a filled chip */
+.tab[aria-selected='true'] {
+  border-color: var(--dbs-accent-primary);
+  background: var(--dbs-accent-primary);
+  color: var(--dbs-text-on-accent);
+}
+
+.tab[aria-disabled='true'] {
+  border-color: var(--dbs-border-default);
+  background: var(--dbs-surface-sunken);
+  color: var(--dbs-text-disabled);
+  cursor: not-allowed;
+}
+
+/* underline: a rule under the list, selected is a 3px bar under the label */
+.tabs[data-appearance='underline'] .list {
+  gap: 0;
+  border-block-end: 1px solid var(--dbs-border-default);
+}
+
+.tabs[data-appearance='underline'] .tab {
+  position: relative;
+  min-block-size: 44px;
+  padding: 0 var(--dbs-space-16);
+  border: 0;
+  background: none;
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+
+.tabs[data-appearance='underline'] .tab:hover,
+.tabs[data-appearance='underline'] .tab[data-dbs-demo='hover'] {
+  background: var(--dbs-surface-sunken);
+}
+
+.tabs[data-appearance='underline'] .tab:active,
+.tabs[data-appearance='underline'] .tab[data-dbs-demo='pressed'] {
+  background: var(--dbs-surface-accent-subtle);
+}
+
+.tabs[data-appearance='underline'] .tab[aria-selected='true'] {
+  background: none;
+  color: var(--dbs-text-primary);
+}
+
+.tabs[data-appearance='underline'] .tab[aria-selected='true']::after {
+  content: '';
+  position: absolute;
+  inset: auto 0 -1px;
+  block-size: 3px;
+  background: var(--dbs-accent-primary);
+}
+
+.tabs[data-appearance='underline'] .tab[aria-disabled='true'] {
+  background: none;
+  color: var(--dbs-text-disabled);
+}
+
+.panel:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}

@@ -33,8 +33,9 @@
     "check:budget": "node scripts/check-asset-budget.mjs",
     "test": "vitest run --coverage",
     "test:build": "vitest run --config vitest.build.config.mts",
+    "test:components": "playwright test",
     "test:schema-db": "vitest run --config vitest.db.config.mts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run check:schema && npm run check:tokens && npm run check:token-lint && npm run check:deps && npm run check:audit && npm run check:i18n && npm run check:manifest && npm run test && npm run test:build && npm run check:links && npm run check:csp && npm run check:budget",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run check:schema && npm run check:tokens && npm run check:token-lint && npm run check:deps && npm run check:audit && npm run check:i18n && npm run check:manifest && npm run test && npm run test:components && npm run test:build && npm run check:links && npm run check:csp && npm run check:budget",
     "check:annotations": "node scripts/check-annotations.mjs",
     "check:schema": "node scripts/check-schema.mjs",
     "extract:schema": "node scripts/extract-schema.mjs"
@@ -55,10 +56,12 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.13.0",
     "@docusaurus/module-type-aliases": "3.10.2",
     "@docusaurus/tsconfig": "3.10.2",
     "@docusaurus/types": "3.10.2",
     "@eslint/js": "9.39.5",
+    "@playwright/test": "1.56.1",
     "@types/js-yaml": "4.0.9",
     "@types/node": "22.20.2",
     "@types/react": "19.3.0",
@@ -66,6 +69,7 @@
     "cross-env": "7.0.3",
     "eslint": "9.39.5",
     "js-yaml": "4.3.2",
+    "playwright-core": "1.56.1",
     "prettier": "3.9.6",
     "typescript": "5.6.3",
     "typescript-eslint": "8.70.0",

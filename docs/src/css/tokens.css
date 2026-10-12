@@ -25,6 +25,7 @@
   --dbs-text-on-navy: #8fa3d9;
   --dbs-text-warm-tertiary: #6e6656;
   --dbs-text-on-selected: #1a1a2e;
+  --dbs-text-on-accent: #ffffff;
   --dbs-text-disabled: #9aa4b2;
   --dbs-accent-primary: #0e6ff7;
   --dbs-accent-primary-hover: #0b57c4;
@@ -151,6 +152,7 @@
   --dbs-text-tertiary: #8b949e;
   --dbs-text-placeholder: #8b949e;
   --dbs-text-on-selected: #0f1117;
+  --dbs-text-on-accent: #0f1117;
   --dbs-text-warm-tertiary: #8b949e;
   --dbs-text-disabled: #59616a;
   --dbs-accent-primary: #4493f8;
@@ -200,6 +202,7 @@
   --dbs-text-tertiary: #748dd0;
   --dbs-text-placeholder: #748dd0;
   --dbs-text-on-selected: #0f1117;
+  --dbs-text-on-accent: #011555;
   --dbs-text-warm-tertiary: #8fa3d9;
   --dbs-text-disabled: #4364bf;
   --dbs-accent-primary: #4493f8;

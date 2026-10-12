@@ -1,0 +1,21 @@
+.retry {
+  min-block-size: 24px;
+  padding: 0 var(--dbs-space-4);
+  border: 0;
+  background: none;
+  color: var(--dbs-accent-primary-text);
+  cursor: pointer;
+  font: var(--dbs-font-label-sm);
+  letter-spacing: var(--dbs-font-label-sm-tracking);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.retry:hover {
+  text-decoration-thickness: 2px;
+}
+
+.retry:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}

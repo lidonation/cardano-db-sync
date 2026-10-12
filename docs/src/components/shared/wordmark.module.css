@@ -1,0 +1,24 @@
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbs-space-12);
+  font: var(--dbs-font-wordmark);
+  letter-spacing: var(--dbs-font-wordmark-tracking);
+  white-space: nowrap;
+}
+
+.mark {
+  flex: none;
+  color: var(--dbs-accent-primary-text);
+}
+
+.strong {
+  font-weight: 700;
+}
+
+/* the 320px reflow floor (NAV-3): let the name wrap rather than push the page sideways */
+@media (max-width: 400px) {
+  .wordmark {
+    white-space: normal;
+  }
+}

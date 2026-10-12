@@ -1,0 +1,87 @@
+/* Shared state building blocks (DF-4). Square corners everywhere; no shadows. */
+.visuallyHidden {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.skeleton {
+  display: block;
+  max-inline-size: 100%;
+  background: var(--dbs-surface-sunken);
+}
+
+.skeleton[data-size='icon'] {
+  inline-size: 24px;
+  block-size: 24px;
+}
+
+.skeleton[data-size='avatar'] {
+  inline-size: 100%;
+  block-size: 100%;
+}
+
+.skeleton[data-size='title'] {
+  inline-size: 60%;
+  block-size: 20px;
+}
+
+.skeleton[data-size='line'] {
+  inline-size: 90%;
+  block-size: 12px;
+}
+
+.skeleton[data-size='line-short'] {
+  inline-size: 40%;
+  block-size: 12px;
+}
+
+.skeleton[data-size='value'] {
+  inline-size: 55%;
+  block-size: 40px;
+}
+
+.skeleton[data-size='block'] {
+  inline-size: 100%;
+  block-size: 48px;
+}
+
+.hexagon {
+  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
+}
+
+.error {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--dbs-space-4) var(--dbs-space-8);
+  margin: var(--dbs-space-8) 0 0;
+  color: var(--dbs-status-danger-text);
+  font: var(--dbs-font-caption);
+  letter-spacing: var(--dbs-font-caption-tracking);
+}
+
+.errorIcon {
+  margin-block-start: 2px;
+}
+
+/* the recovery control sits under the words */
+.error > :nth-child(3) {
+  grid-column: 2;
+  justify-self: start;
+}
+
+.empty {
+  margin: 0;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-caption);
+  letter-spacing: var(--dbs-font-caption-tracking);
+}
+
+.framed {
+  padding: var(--dbs-space-12) var(--dbs-space-16);
+  border: 1px dashed var(--dbs-border-strong);
+}

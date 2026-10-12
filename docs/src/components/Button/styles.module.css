@@ -1,0 +1,185 @@
+/* Button / Primary · Secondary · Ghost · Danger · Disabled — the geometric hexagon buttons.
+   The silhouette is two clipped layers behind the label: ::before is the boundary colour, ::after
+   the fill inset by 1px. The element itself is a plain box, so the focus ring is the square ring
+   DF-3 draws, outside a 2px offset. */
+.button {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: 44px;
+  min-inline-size: 130px;
+  padding: 0 var(--dbs-space-32);
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: transform 150ms ease-out;
+}
+
+.button[data-size='md'] {
+  min-inline-size: 190px;
+}
+
+.button[data-size='lg'] {
+  min-inline-size: 230px;
+}
+
+.button::before,
+.button::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  clip-path: polygon(
+    12px 0,
+    calc(100% - 12px) 0,
+    100% 50%,
+    calc(100% - 12px) 100%,
+    12px 100%,
+    0 50%
+  );
+}
+
+.button::before {
+  inset: 0;
+}
+
+.button::after {
+  inset: 1px;
+}
+
+.label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+}
+
+.button:focus-visible,
+.button[data-dbs-demo='focus'] {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+
+/* primary — accent fill, on-accent label */
+.button[data-variant='primary'] {
+  color: var(--dbs-text-on-accent);
+}
+.button[data-variant='primary']::before,
+.button[data-variant='primary']::after {
+  background: var(--dbs-accent-primary);
+}
+.button[data-variant='primary']:hover::before,
+.button[data-variant='primary']:hover::after,
+.button[data-variant='primary'][data-dbs-demo='hover']::before,
+.button[data-variant='primary'][data-dbs-demo='hover']::after {
+  background: var(--dbs-accent-primary-hover);
+}
+.button[data-variant='primary']:active::before,
+.button[data-variant='primary']:active::after,
+.button[data-variant='primary'][data-dbs-demo='pressed']::before,
+.button[data-variant='primary'][data-dbs-demo='pressed']::after {
+  background: var(--dbs-accent-primary-active);
+}
+
+/* secondary — surface fill, interactive boundary */
+.button[data-variant='secondary'] {
+  color: var(--dbs-text-primary);
+}
+.button[data-variant='secondary']::before {
+  background: var(--dbs-border-interactive);
+}
+.button[data-variant='secondary']::after {
+  background: var(--dbs-surface-base);
+}
+.button[data-variant='secondary']:hover::after,
+.button[data-variant='secondary'][data-dbs-demo='hover']::after {
+  background: var(--dbs-surface-sunken);
+}
+.button[data-variant='secondary']:active::after,
+.button[data-variant='secondary'][data-dbs-demo='pressed']::after {
+  background: var(--dbs-surface-accent-subtle);
+}
+
+/* ghost — surface fill, accent boundary and label */
+.button[data-variant='ghost'] {
+  color: var(--dbs-accent-primary-text);
+}
+.button[data-variant='ghost']::before {
+  background: var(--dbs-accent-primary);
+}
+.button[data-variant='ghost']::after {
+  background: var(--dbs-surface-base);
+}
+.button[data-variant='ghost']:hover::after,
+.button[data-variant='ghost'][data-dbs-demo='hover']::after {
+  background: var(--dbs-surface-accent-subtle);
+}
+.button[data-variant='ghost']:active::before,
+.button[data-variant='ghost'][data-dbs-demo='pressed']::before {
+  background: var(--dbs-accent-primary-active);
+}
+.button[data-variant='ghost']:active::after,
+.button[data-variant='ghost'][data-dbs-demo='pressed']::after {
+  background: var(--dbs-surface-accent-subtle);
+}
+
+/* danger — the danger text role as a fill keeps on-accent labels above 4.5:1 in every palette;
+   hover and press have no darker danger token, so they underline the label and nudge it down */
+.button[data-variant='danger'] {
+  color: var(--dbs-text-on-accent);
+}
+.button[data-variant='danger']::before,
+.button[data-variant='danger']::after {
+  background: var(--dbs-status-danger-text);
+}
+.button[data-variant='danger']:hover .label,
+.button[data-variant='danger'][data-dbs-demo='hover'] .label {
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.button[data-variant='danger']:active,
+.button[data-variant='danger'][data-dbs-demo='pressed'] {
+  transform: translateY(1px);
+}
+
+/* error — the action failed; the boundary says so too, next to the message */
+.button[data-error]::before {
+  background: var(--dbs-status-danger-text);
+}
+
+/* disabled and loading — inert; the label stays readable as the disabled role */
+.button[aria-disabled='true'] {
+  cursor: not-allowed;
+  color: var(--dbs-text-disabled);
+}
+.button[aria-disabled='true']::before,
+.button[aria-disabled='true']::after {
+  background: var(--dbs-surface-sunken);
+}
+.button[aria-busy='true'] {
+  cursor: progress;
+  color: var(--dbs-text-secondary);
+}
+.button[aria-busy='true']::before {
+  background: var(--dbs-border-interactive);
+}
+
+.spinner {
+  flex: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .spinner {
+    animation: spin 900ms linear infinite;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
