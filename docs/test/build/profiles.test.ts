@@ -297,3 +297,21 @@ describe('the FAQ page carries FAQPage JSON-LD that matches it (META-2, B44-c)',
     }
   }
 });
+
+describe('Updates page and fixture isolation (B44-d, VER-5, A11Y-18)', () => {
+  for (const profile of ['dev', 'prod'] as const) {
+    for (const locale of LOCALES) {
+      it(`emits an honest Updates fallback in ${profile} ${locale}`, async () => {
+        const prefix = locale === DEFAULT_LOCALE ? '' : locale;
+        const html = await fs.readFile(path.join(OUT[profile], prefix, 'updates', 'index.html'), 'utf8');
+        expect(html).toContain('The Updates feed is not available yet.');
+        expect(html).toMatch(locale === DEFAULT_LOCALE ? /<html[^>]*lang="en"/ : /<main[^>]*lang="en"/);
+        expect(html).toMatch(/<main[^>]*id="dbs-main-content"[^>]*tabindex="-1"/);
+        expect(html).toContain('role="tablist"');
+        expect(html).toContain('role="status"');
+        expect(html).not.toContain('example.com/current');
+        expect(await exists(path.join(OUT[profile], prefix, '__updates', 'index.html'))).toBe(false);
+      });
+    }
+  }
+});

@@ -142,6 +142,7 @@ const config: Config = {
           items: [
             {label: 'GitHub', href: profile.repoUrl},
             {label: 'Releases', href: `${profile.repoUrl}/releases`},
+            {label: 'Updates', to: '/updates'},
           ],
         },
         {
