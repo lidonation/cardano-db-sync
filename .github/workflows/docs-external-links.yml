@@ -9,6 +9,7 @@ on:
       - docs/src/ecosystem/**
       - docs/src/data/links.ts
       - docs/scripts/check-external-links.mjs
+      - docs/test/unit/ecosystem.test.ts
       - .github/workflows/docs-external-links.yml
   schedule:
     - cron: "41 5 * * 1"
@@ -21,6 +22,7 @@ jobs:
   check:
     name: Ecosystem links resolve
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:

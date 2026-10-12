@@ -10,6 +10,7 @@ import {
   main,
   status,
 } from '../../scripts/check-external-links.mjs';
+import {DISCORD_URL, REPO_URL} from '../../src/data/links';
 import {loadReleaseHistory, releaseHistory} from '../../src/data/release-history';
 import {teams, tools} from '../../src/ecosystem/entries';
 import {ECOSYSTEM_IDS} from '../../src/ecosystem/ids';
@@ -37,7 +38,7 @@ describe('release history (B44-b)', () => {
   it('counts the committed changelog', () => {
     const history = loadReleaseHistory(path.join(DOCS, '../cardano-db-sync/CHANGELOG.md'));
     expect(history.releases).toBeGreaterThan(50);
-    expect(history.latest).toMatch(/^13\.\d+\.\d+/);
+    expect(history.latest).toMatch(/^\d+(?:\.\d+)+$/);
     expect(history.since).toBe(2019);
   });
 
@@ -75,9 +76,13 @@ describe('ecosystem entries', () => {
         externalUrls(readFileSync(path.join(DOCS, file), 'utf8'), constants),
       ),
     );
-    for (const entry of [...tools(english), ...teams(english)]) {
-      expect(checked.has(entry.url), entry.url).toBe(true);
-    }
+    const rendered = [
+      ...[...tools(english), ...teams(english)].map((entry) => entry.url),
+      DISCORD_URL,
+      `${REPO_URL}/issues/new/choose`,
+      `${REPO_URL}/issues?q=is%3Aopen+label%3A%22good+first+issue%22`,
+    ];
+    for (const url of rendered) expect(checked.has(url), url).toBe(true);
   });
 
   it('lists exactly the string ids the page renders (A11Y-18)', () => {
@@ -149,6 +154,39 @@ describe('check:external-links', () => {
   afterEach(() => {
     vi.useRealTimers();
     vi.unstubAllGlobals();
+  });
+
+  it('does not report rate-limited links as verified', async () => {
+    const logs: string[] = [];
+    const out = {log: (line: string) => logs.push(line), error: quiet.error};
+    const http = fakeFetch(new Proxy({}, {get: () => [429, 429]})).http;
+    expect(await main([], {http, wait: noWait, out})).toBe(0);
+    expect(logs.join('\n')).not.toContain('all');
+    expect(logs.at(-1)).toMatch(/unverified/);
+  });
+
+  it('releases GET response bodies before returning or retrying', async () => {
+    const cancel = vi.fn(async () => {});
+    const http = vi
+      .fn()
+      .mockResolvedValueOnce({status: 405, ok: false})
+      .mockResolvedValueOnce({status: 503, ok: false, body: {cancel}})
+      .mockResolvedValueOnce({status: 405, ok: false})
+      .mockResolvedValueOnce({status: 200, ok: true, body: {cancel}}) as unknown as typeof fetch;
+    expect(await status('u', http, noWait)).toBe(200);
+    expect(cancel).toHaveBeenCalledTimes(2);
+  });
+
+  it('rejects a source set with no external URLs', async () => {
+    const errors: string[] = [];
+    expect(
+      await main([path.join(DOCS, 'src/ecosystem/ids.ts')], {
+        http: fakeFetch({}).http,
+        wait: noWait,
+        out: {log: quiet.log, error: (line: string) => errors.push(line)},
+      }),
+    ).toBe(1);
+    expect(errors.join('\n')).toMatch(/no external links/);
   });
 
   it('waits five seconds before its one retry', async () => {

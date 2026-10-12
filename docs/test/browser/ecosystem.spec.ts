@@ -64,6 +64,17 @@ test.describe('content', () => {
     expect(hrefs.sort()).toEqual(expected.sort());
   });
 
+  test('does not infer production deployments from project participation', async ({page}) => {
+    await open(page, 1440);
+    await expect(page.locator('#ecosystem-teams')).toHaveText('Teams building with db-sync');
+    await expect(page.locator('section[aria-labelledby="ecosystem-teams"]')).toContainText(
+      'These sources do not establish where or how it deploys it.',
+    );
+    await expect(page.locator('section[aria-labelledby="ecosystem-title"]')).toContainText(
+      'Other indexers can also serve Cardano data in SQL.',
+    );
+  });
+
   test('the facts strip shows the committed changelog', async ({page}) => {
     await open(page, 1440);
     const history = loadReleaseHistory();

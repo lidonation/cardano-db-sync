@@ -1,4 +1,4 @@
-import React, {type ReactNode} from 'react';
+import React from 'react';
 
 import codeTranslations from '@generated/codeTranslations';
 import Link from '@docusaurus/Link';
@@ -13,6 +13,7 @@ import {DISCORD_URL, REPO_URL} from '../data/links';
 import type {ReleaseHistory} from '../data/release-history';
 import {SURFACES} from '../data/surfaces';
 import {pageTranslator} from '../i18n/pageTranslator';
+import Eyebrow from '../landing/Eyebrow';
 import useSurface from '../landing/useSurface';
 import styles from '../landing/styles.module.css';
 
@@ -28,15 +29,6 @@ function useEcosystemTranslate() {
     i18n: {currentLocale, defaultLocale},
   } = useDocusaurusContext();
   return pageTranslator(ECOSYSTEM_IDS, codeTranslations, currentLocale, defaultLocale, translate);
-}
-
-function Eyebrow({children}: {readonly children: ReactNode}): React.JSX.Element {
-  return (
-    <p className={styles.eyebrow}>
-      <span aria-hidden="true">// </span>
-      {children}
-    </p>
-  );
 }
 
 /** A grid of tool cards; `tag` marks every card in it (the alternatives). */
@@ -107,7 +99,7 @@ export default function Ecosystem(): React.JSX.Element {
             {t({
               id: 'ecosystem.intro',
               message:
-                'Cardano DB Sync is the bridge between the live chain and relational data. Explorers, APIs, wallets and governance tools that read Cardano in SQL read it through db-sync.',
+                'Cardano DB Sync is the bridge between the live chain and relational data. The projects listed below use its database for explorers, APIs and governance tools. Other indexers can also serve Cardano data in SQL.',
             })}
           </p>
         </div>
@@ -183,12 +175,13 @@ export default function Ecosystem(): React.JSX.Element {
             {t({id: 'ecosystem.teams.eyebrow', message: 'teams building with db sync'})}
           </Eyebrow>
           <h2 id="ecosystem-teams" className={styles.heading}>
-            {t({id: 'ecosystem.teams.title', message: 'Who runs it in production'})}
+            {t({id: 'ecosystem.teams.title', message: 'Teams building with db-sync'})}
           </h2>
           <p className={styles.intro}>
             {t({
               id: 'ecosystem.teams.intro',
-              message: 'Each team is linked to the public record that shows it runs db-sync.',
+              message:
+                'Each team is linked to a public record of its work with db-sync. These sources do not establish where or how it deploys it.',
             })}
           </p>
           <ul className={styles.cards}>

@@ -17,7 +17,7 @@ export default function EcosystemPage(): React.JSX.Element {
       description={translate({
         id: 'ecosystem.meta.description',
         message:
-          'The tools built on Cardano DB Sync and the teams that run it in production, each linked to its source.',
+          'The tools built on Cardano DB Sync and the teams building with it, each linked to its source.',
       })}
     >
       <main id={MAIN_CONTENT_ID} tabIndex={-1} lang={lang}>

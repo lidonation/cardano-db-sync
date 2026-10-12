@@ -16,21 +16,12 @@ import {SURFACES} from '../data/surfaces';
 
 import {faqItems} from './faq';
 import HeroGraphic from './HeroGraphic';
+import Eyebrow from './Eyebrow';
 import useSurface from './useSurface';
 import useLandingTranslate from './useLandingTranslate';
 import styles from './styles.module.css';
 
 const DOCKER = 'docker compose up -d && docker compose logs -f';
-
-/** The `// section` label above a heading. The slashes are decoration. */
-function Eyebrow({children}: {readonly children: ReactNode}): React.JSX.Element {
-  return (
-    <p className={styles.eyebrow}>
-      <span aria-hidden="true">//{' '}</span>
-      {children}
-    </p>
-  );
-}
 
 /** A text link with a trailing arrow, rendered only when it has somewhere to go. */
 function MoreLink({href, children}: {readonly href?: string; readonly children: ReactNode}) {
