@@ -1,0 +1,19 @@
+{
+  "$comment": "B27 render-half sample: the reviewed survey_ref manifest the dashboard reads (SUR-3). Authoritative for the build; endEpoch is locked at 2000 (SUR-15). The full lifecycle manifest lands with B27 — this file carries only what B44-f renders.",
+  "surveyRef": "core-1",
+  "endEpoch": 2000,
+  "subsumptions": [
+    {
+      "$comment": "replaces: q1.o0 absorbs q0.o0 — newer answers supersede older ones per credential, older ones fill the gap (SUR-28). Counts merge as our labelled editorial view.",
+      "newer": {"question": 1, "option": 0},
+      "older": {"question": 0, "option": 0},
+      "kind": "replaces"
+    },
+    {
+      "$comment": "supersedes: q1.o1 closes q0.o2 — a different question, never merged, reported separately (SUR-28).",
+      "newer": {"question": 1, "option": 1},
+      "older": {"question": 0, "option": 2},
+      "kind": "supersedes"
+    }
+  ]
+}

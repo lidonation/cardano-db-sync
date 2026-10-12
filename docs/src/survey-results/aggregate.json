@@ -1,0 +1,10 @@
+{
+  "$comment": "B26 render-half artifact, pre-tally state: no tally has run yet, so the dashboard renders its named empty state (pre-tally). B26 replaces this file with real aggregates; the shape is locked by src/survey-results/types.ts.",
+  "surveyRef": "core-1",
+  "tallyBasis": "response-time-only",
+  "interim": true,
+  "endEpoch": 2000,
+  "questions": [],
+  "freeText": [],
+  "generatedAt": "2026-10-13T00:00:00Z"
+}
