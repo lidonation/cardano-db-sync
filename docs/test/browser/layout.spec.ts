@@ -317,3 +317,56 @@ test('headings outside the configured levels do not reserve an empty TOC', async
     await expect(tocColumn(page)).toHaveCount(0);
   }
 });
+
+test('grown navbar leaves sidebar and TOC focus rings inside their scrollports', async ({page}) => {
+  await open(page, PAGE, 1440);
+  await page.setViewportSize({width: 1440, height: 400});
+  await page.evaluate(() => {
+    const sheet = Array.from(document.styleSheets).find((style) =>
+      style.href?.startsWith(location.origin),
+    )!;
+    sheet.insertRule('.navbar {min-block-size: 180px !important;}', sheet.cssRules.length);
+    for (const selector of ['nav[aria-label="Docs"]', 'aside[aria-label="On this page"]']) {
+      const nav = document.querySelector(selector)!;
+      const source = nav.querySelector('li')!;
+      for (let count = 0; count < 20; count++) source.parentElement!.append(source.cloneNode(true));
+    }
+  });
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--dbs-navbar-block-size'),
+        ),
+      ),
+    )
+    .toBe(180);
+  await page.evaluate(() => scrollTo(0, 400));
+  for (const navigation of [sidebar(page), tocColumn(page)]) {
+    await expect(navigation).toBeVisible();
+    const links = navigation.getByRole('link');
+    for (const link of [links.last(), links.first()]) {
+      await link.focus();
+      await expect
+        .poll(() =>
+          link.evaluate((node) => {
+            const box = node.getBoundingClientRect();
+            const parent = node.closest('nav, aside')!;
+            const viewport = parent.getBoundingClientRect();
+            const style = getComputedStyle(node);
+            const reach = parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth);
+            const header = document.querySelector('.navbar')!.getBoundingClientRect();
+            return (
+              box.top - reach >= viewport.top + parent.clientTop - 1 &&
+              box.bottom + reach <= viewport.top + parent.clientTop + parent.clientHeight + 1 &&
+              box.left - reach >= viewport.left + parent.clientLeft - 1 &&
+              box.right + reach <= viewport.left + parent.clientLeft + parent.clientWidth + 1 &&
+              viewport.top >= header.bottom &&
+              viewport.bottom <= innerHeight
+            );
+          }),
+        )
+        .toBe(true);
+    }
+  }
+});

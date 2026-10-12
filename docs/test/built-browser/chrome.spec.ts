@@ -62,6 +62,28 @@ async function focusMeasurement(page: Page) {
     const expectedColor = /^#[a-f0-9]{6}$/i.test(accent)
       ? `rgb(${[1, 3, 5].map((index) => parseInt(accent.slice(index, index + 2), 16)).join(', ')})`
       : accent;
+    // Client dimensions and outlines are layout pixels; rectangles include CSS zoom.
+    const scale = element.offsetWidth ? rect.width / element.offsetWidth : 1;
+    const reach =
+      Math.max(0, parseFloat(style.outlineOffset) + parseFloat(style.outlineWidth)) * scale;
+    const ringClipped: string[] = [];
+    for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      const parentStyle = getComputedStyle(ancestor);
+      const box = ancestor.getBoundingClientRect();
+      const scaleX = ancestor.offsetWidth ? box.width / ancestor.offsetWidth : 1;
+      const scaleY = ancestor.offsetHeight ? box.height / ancestor.offsetHeight : 1;
+      const left = box.left + ancestor.clientLeft * scaleX;
+      const top = box.top + ancestor.clientTop * scaleY;
+      const right = left + ancestor.clientWidth * scaleX;
+      const bottom = top + ancestor.clientHeight * scaleY;
+      if (
+        (/^(auto|scroll|hidden|clip)$/.test(parentStyle.overflowX) &&
+          (rect.left - reach < left - 1 || rect.right + reach > right + 1)) ||
+        (/^(auto|scroll|hidden|clip)$/.test(parentStyle.overflowY) &&
+          (rect.top - reach < top - 1 || rect.bottom + reach > bottom + 1))
+      )
+        ringClipped.push(ancestor.tagName + '.' + ancestor.className);
+    }
     const navbar = document.querySelector('.navbar');
     const header = navbar?.getBoundingClientRect();
     const hit = document.elementFromPoint(
@@ -75,6 +97,7 @@ async function focusMeasurement(page: Page) {
       color: style.outlineColor,
       expectedColor,
       keyboard: element.matches(':focus-visible'),
+      ringClipped,
       inView:
         rect.x >= -1 &&
         rect.right <= innerWidth + 1 &&
@@ -115,6 +138,7 @@ async function tabThrough(page: Page) {
     const measurement = await focusMeasurement(page);
     expect(measurement.marker, JSON.stringify(measurement)).toBe(String(index));
     expect(measurement.keyboard).toBe(true);
+    expect(measurement.ringClipped, JSON.stringify(measurement)).toEqual([]);
     expect(measurement.color).toBe(measurement.expectedColor);
     expect(measurement.ring).toEqual({style: 'solid', width: '2px', offset: '2px'});
     expect(measurement.inView, JSON.stringify(measurement)).toBe(true);
@@ -131,9 +155,67 @@ async function tabThrough(page: Page) {
   });
 }
 
-async function noContentLoss(page: Page) {
+async function noContentLoss(page: Page, baseline?: readonly string[]) {
   const measurements = await page.evaluate(() => {
-    const main = document.querySelector('main')!;
+    // Stable DOM identity distinguishes duplicate labels without counting hidden copies.
+    const identity = (element: Element): string => {
+      const segments: string[] = [];
+      for (let node: Element | null = element; node; node = node.parentElement) {
+        segments.unshift(
+          `${node.tagName}:${Array.from(node.parentElement?.children ?? []).indexOf(node)}`,
+        );
+      }
+      return segments.join('/');
+    };
+    const visible = (element: HTMLElement): boolean => {
+      if (
+        !element.getClientRects().length ||
+        element.closest('[inert], [hidden], [aria-hidden="true"]')
+      )
+        return false;
+      for (let node: HTMLElement | null = element; node; node = node.parentElement) {
+        const style = getComputedStyle(node);
+        if (
+          style.display === 'none' ||
+          style.visibility === 'hidden' ||
+          style.visibility === 'collapse' ||
+          Number(style.opacity) === 0 ||
+          style.clip !== 'auto' ||
+          style.clipPath !== 'none'
+        )
+          return false;
+        if (
+          node instanceof HTMLDetailsElement &&
+          !node.open &&
+          !node.querySelector('summary')?.contains(element)
+        )
+          return false;
+      }
+      return true;
+    };
+    const content: string[] = [];
+    for (const root of Array.from(
+      document.querySelectorAll<HTMLElement>('main, .navbar, footer'),
+    )) {
+      const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const node = walker.currentNode;
+        const text = node.textContent?.replace(/\s+/g, ' ').trim();
+        const parent = node.parentElement!;
+        if (!text || parent.closest('script, style, svg') || !visible(parent)) continue;
+        content.push(
+          `text:${identity(parent)}:${Array.from(parent.childNodes).indexOf(node as ChildNode)}:${text}`,
+        );
+      }
+      for (const control of Array.from(
+        root.querySelectorAll<HTMLElement>(
+          'a[href], button, input, select, textarea, summary, [role="button"], [role="menuitemradio"]',
+        ),
+      )) {
+        if (visible(control))
+          content.push(`control:${identity(control)}:${control.getAttribute('aria-label') ?? ''}`);
+      }
+    }
     const clipped = Array.from(
       document.querySelectorAll<HTMLElement>('main *, .navbar *, footer *'),
     )
@@ -159,13 +241,31 @@ async function noContentLoss(page: Page) {
     return {
       horizontalOverflow: document.documentElement.scrollWidth - innerWidth,
       clipped,
-      content: main.textContent?.replace(/\s+/g, ' ').trim(),
+      content,
     };
   });
   expect(measurements.horizontalOverflow).toBeLessThanOrEqual(2);
   expect(measurements.clipped).toEqual([]);
   await expect(page.locator('main h1')).toBeVisible();
+  if (baseline) expect(measurements.content).toEqual(baseline);
   return measurements.content;
+}
+
+// A lossless layout must preserve rendered content, not merely DOM textContent.
+for (const target of ['text', 'control'] as const) {
+  for (const hiding of ['display: none', 'clip-path: inset(50%)'] as const) {
+    test(`content-loss oracle rejects newly hidden ${target}: ${hiding}`, async ({page}) => {
+      await open(page, 'docs/intro/');
+      const selector = target === 'text' ? 'main p' : 'footer a[href]';
+      await page
+        .locator(selector)
+        .first()
+        .evaluate((node) => node.setAttribute('data-loss-seed', ''));
+      const baseline = await noContentLoss(page);
+      await overrideStyles(page, [`[data-loss-seed] {${hiding} !important;}`]);
+      await expect(noContentLoss(page, baseline)).rejects.toThrow();
+    });
+  }
 }
 
 async function labelInName(page: Page) {
@@ -264,7 +364,7 @@ for (const route of ROUTES) {
       expect(spacing.letter).toBeCloseTo(0.12, 2);
       expect(spacing.word).toBeCloseTo(0.16, 2);
       expect(spacing.paragraph).toBeCloseTo(2, 2);
-      expect(await noContentLoss(page)).toBe(original);
+      expect(await noContentLoss(page)).toEqual(original);
       const header = await page.evaluate(() => ({
         padding: parseFloat(getComputedStyle(document.documentElement).scrollPaddingBlockStart),
         height: document.querySelector<HTMLElement>('.navbar')!.offsetHeight,
@@ -308,7 +408,7 @@ for (const route of ROUTES) {
       ),
       contentType: 'application/json',
     });
-    expect(await noContentLoss(page)).toBe(original);
+    expect(await noContentLoss(page)).toEqual(original);
     await page.keyboard.press('Tab');
     await expect(page.locator('a.dbs-skip-link')).toBeFocused();
     await page.keyboard.press('Enter');
@@ -440,4 +540,43 @@ test('reduced motion keeps short state feedback and disables smooth scrolling', 
   await expect(page.getByRole('menu')).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(theme).toBeFocused();
+});
+
+test('focus measurement rejects an outline clipped by a scrollport', async ({page}) => {
+  await open(page, 'docs/intro/');
+  const link = page.getByRole('navigation', {name: 'Docs', exact: true}).getByRole('link').first();
+  await link.focus();
+  await overrideStyles(page, ['nav[aria-label="Docs"] {padding-inline: 0 !important;}']);
+  expect((await focusMeasurement(page)).ringClipped.length).toBeGreaterThan(0);
+});
+
+test('sticky docs navigation follows an enlarged measured navbar', async ({page}) => {
+  await page.setViewportSize({width: 1440, height: 400});
+  await open(page, 'docs/intro/');
+  await overrideStyles(page, [
+    '.navbar {min-block-size: 180px !important;}',
+    'main {min-block-size: 2000px;}',
+  ]);
+  await expect
+    .poll(() =>
+      page.evaluate(() =>
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue('--dbs-navbar-block-size'),
+        ),
+      ),
+    )
+    .toBe(180);
+  await page.evaluate(() => scrollTo(0, 400));
+  const nav = page.getByRole('navigation', {name: 'Docs', exact: true});
+  await expect
+    .poll(() =>
+      nav.evaluate((node) => {
+        const header = document.querySelector('.navbar')!.getBoundingClientRect();
+        const box = node.getBoundingClientRect();
+        return box.top >= header.bottom && box.bottom <= innerHeight;
+      }),
+    )
+    .toBe(true);
+  await nav.getByRole('link').first().focus();
+  expect((await focusMeasurement(page)).belowHeader).toBe(true);
 });
