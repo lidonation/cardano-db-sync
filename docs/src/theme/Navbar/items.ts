@@ -51,7 +51,13 @@ export function resolveDocsState(
     }
     for (const doc of version.docs) docPaths[doc.id] ??= doc.path;
   }
-  return {sidebarLinks, docPaths, activeSidebar: activeDoc?.sidebar, activeDocId: activeDoc?.id};
+  return {
+    sidebarLinks,
+    sidebarLabels,
+    docPaths,
+    activeSidebar: activeDoc?.sidebar,
+    activeDocId: activeDoc?.id,
+  };
 }
 
 export interface DerivedNav {

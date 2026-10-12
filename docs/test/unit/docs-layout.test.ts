@@ -74,7 +74,7 @@ describe('deriveNav (NAV-1)', () => {
       resolveDocsState(
         [
           {
-            sidebars: {docs: {link: {path: '/docs/current'}}},
+            sidebars: {docs: {link: {path: '/docs/current', label: 'Current docs'}}},
             docs: [{id: 'intro', path: '/docs/current'}],
           },
           {
@@ -89,7 +89,7 @@ describe('deriveNav (NAV-1)', () => {
       ),
     ).toEqual({
       sidebarLinks: {docs: '/docs/current', guides: '/guides'},
-      sidebarLabels: {},
+      sidebarLabels: {docs: 'Current docs'},
       docPaths: {intro: '/docs/current', schema: '/schema'},
       activeSidebar: 'docs',
       activeDocId: 'intro',
