@@ -60,6 +60,7 @@ function SelectFrame({
     return (
       <Frame
         kind={kind}
+        className={selectStyles.card}
         skeleton={kind === 'Option' ? <CardSkeleton icon /> : <CardSkeleton />}
         {...data}
       >
