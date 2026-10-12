@@ -13,6 +13,7 @@
 }
 
 .tab {
+  position: relative;
   min-block-size: 32px;
   padding: 0 var(--dbs-space-12);
   border: 1px solid var(--dbs-border-interactive);
@@ -21,6 +22,18 @@
   cursor: pointer;
   font: var(--dbs-font-caption);
   letter-spacing: var(--dbs-font-caption-tracking);
+}
+
+/* the chip is drawn 32px tall; its hit area is 46 (DF-6, 44 with a pixel to spare), and wrapped rows sit 16px apart so
+   the hit areas never overlap */
+.tabs[data-appearance='chip'] .list {
+  row-gap: var(--dbs-space-16);
+}
+
+.tabs[data-appearance='chip'] .tab::before {
+  content: '';
+  position: absolute;
+  inset: -7px 0;
 }
 
 .tab:hover,

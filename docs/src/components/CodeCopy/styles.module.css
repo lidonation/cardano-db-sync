@@ -8,6 +8,7 @@
 }
 
 .copy {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
@@ -19,6 +20,13 @@
   cursor: pointer;
   font: var(--dbs-font-mono-sm);
   letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+
+/* drawn 32px tall, with a hit area of at least 44 (DF-6) */
+.copy::before {
+  content: '';
+  position: absolute;
+  inset: -7px 0;
 }
 
 .copy:hover,

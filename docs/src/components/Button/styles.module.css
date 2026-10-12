@@ -151,20 +151,26 @@
   background: var(--dbs-status-danger-text);
 }
 
-/* disabled and loading — inert; the label stays readable as the disabled role */
-.button[aria-disabled='true'] {
+/* disabled and loading — inert; the label stays readable as the disabled role. The extra
+   [data-variant] lifts these above the variants' hover and press rules, so an inert button does
+   not light up under the pointer or a pinned state. */
+.button[data-variant][aria-disabled='true'] {
   cursor: not-allowed;
   color: var(--dbs-text-disabled);
+  transform: none;
 }
-.button[aria-disabled='true']::before,
-.button[aria-disabled='true']::after {
+.button[data-variant][aria-disabled='true'] .label {
+  text-decoration: none;
+}
+.button[data-variant][aria-disabled='true']::before,
+.button[data-variant][aria-disabled='true']::after {
   background: var(--dbs-surface-sunken);
 }
-.button[aria-busy='true'] {
+.button[data-variant][aria-busy='true'] {
   cursor: progress;
   color: var(--dbs-text-secondary);
 }
-.button[aria-busy='true']::before {
+.button[data-variant][aria-busy='true']::before {
   background: var(--dbs-border-interactive);
 }
 
