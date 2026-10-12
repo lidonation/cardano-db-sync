@@ -4,6 +4,7 @@ import path from 'node:path';
 import {describe, expect, it} from 'vitest';
 
 import {faqPageProblems} from '../../scripts/lib/faq-jsonld.mjs';
+import {faqItems} from '../../src/landing/faq';
 import {FAQ_IDS} from '../../src/faq/ids';
 import {faqPageJsonLd, serializeJsonLd} from '../../src/faq/jsonld';
 import {faqSections, guideUrl} from '../../src/faq/questions';
@@ -18,16 +19,27 @@ function page(blocks: string[], shown = entries): string {
   const body = shown.map(
     (item) => `<details><summary>${item.question}</summary><p>${item.answer}</p></details>`,
   );
-  return `<html><head>${head.join('')}</head><body>${body.join('')}</body></html>`;
+  return `<html><head>${head.join('')}</head><body><main>${body.join('')}</main></body></html>`;
 }
 
 describe('FAQ questions (B44-c)', () => {
   it('carries every landing question and no question twice', () => {
     const keys = entries.map((item) => item.key);
     expect(new Set(keys).size).toBe(keys.length);
-    for (const key of ['sync', 'disk', 'genesis', 'shrink', 'node', 'hardware']) {
+    for (const {key} of faqItems(english)) {
       expect(keys).toContain(key);
     }
+  });
+
+  it('keeps operational limits beside the instructions', () => {
+    const answer = (key: string) => entries.find((item) => item.key === key)!.answer;
+    expect(answer('docker')).toContain('local development');
+    expect(answer('docker')).toContain('not recommended for production');
+    expect(answer('versions')).toContain('13.1.0.0');
+    expect(answer('resync')).toContain('release notes');
+    expect(answer('pgupgrade')).toContain('example');
+    expect(answer('pgupgrade')).toContain('database size');
+    expect(answer('portability')).not.toMatch(/^No\./);
   });
 
   it('links only guides the repository has', () => {
@@ -79,10 +91,52 @@ describe('FAQPage JSON-LD (META-2)', () => {
     expect(faqPageProblems(page([serializeJsonLd(faqPageJsonLd(sections))]))).toEqual([]);
   });
 
+  it('rejects malformed JSON roots without throwing', () => {
+    for (const root of ['null', '[]', '42', '"FAQPage"', 'true']) {
+      expect(faqPageProblems(page([root]))).toEqual(['JSON-LD must be an object']);
+    }
+  });
+
+  it('requires exact question and answer pairs, in both directions', () => {
+    const swapped = entries.map((item, index) => ({
+      ...item,
+      answer: entries[(index + 1) % entries.length].answer,
+    }));
+    expect(
+      faqPageProblems(page([serializeJsonLd(faqPageJsonLd(sections))], swapped)).length,
+    ).toBeGreaterThan(0);
+    const subset = faqPageJsonLd([{...sections[0], items: [entries[0]]}]);
+    expect(faqPageProblems(page([serializeJsonLd(subset)])).join(' ')).toContain(
+      'missing from JSON-LD',
+    );
+  });
+
+  it('does not count comments, hidden nodes, head or footer as shown FAQ answers', () => {
+    const block = serializeJsonLd(faqPageJsonLd(sections));
+    for (const body of [
+      '<!--' + page([], entries) + '-->',
+      '<div hidden>' + page([], entries) + '</div>',
+      '<div aria-hidden="true">' + page([], entries) + '</div>',
+      '<footer>' + page([], entries).replaceAll('main', 'div') + '</footer>',
+    ]) {
+      expect(faqPageProblems(page([block], []) + body).length).toBeGreaterThan(0);
+    }
+  });
+
+  it('handles ordinary HTML attribute quoting and whitespace', () => {
+    const html = page([serializeJsonLd(faqPageJsonLd(sections))])
+      .replace('type="application/ld+json"', "type='application/ld+json'")
+      .replace(
+        `<summary>${entries[0].question}</summary>`,
+        `<summary>${entries[0].question.replaceAll(' ', '\n')}</summary>`,
+      );
+    expect(faqPageProblems(html)).toEqual([]);
+  });
+
   it('decodes the entities React writes before comparing', () => {
     const item = {key: 'x', question: 'Why "it" & <that>?', answer: "It's fine"};
     const block = serializeJsonLd(faqPageJsonLd([{id: 's', title: 's', items: [item]}]));
-    const html = `<script type="application/ld+json">${block}</script><p>Why &quot;it&quot; &amp; &lt;that&gt;?</p><p>It&#x27;s fine</p>`;
+    const html = `<script type="application/ld+json">${block}</script><main><details><summary>Why &quot;it&quot; &amp; &lt;that&gt;?</summary><p>It&#x27;s fine</p></details></main>`;
     expect(faqPageProblems(html)).toEqual([]);
   });
 
@@ -120,7 +174,9 @@ describe('FAQPage JSON-LD (META-2)', () => {
       ],
     });
     expect(
-      faqPageProblems(`<script type="application/ld+json">${block}</script><p>Shown? answer</p>`),
+      faqPageProblems(
+        `<script type="application/ld+json">${block}</script><main><details><summary>Shown?</summary><p>answer</p></details></main>`,
+      ),
     ).toEqual([
       'mainEntity[0]: @type must be Question',
       'mainEntity[1]: name must be a non-empty string',
@@ -134,7 +190,7 @@ describe('FAQPage JSON-LD (META-2)', () => {
   it('flags an answer the page does not show', () => {
     const shown = entries.map((item, index) => (index ? item : {...item, answer: 'Changed.'}));
     expect(faqPageProblems(page([serializeJsonLd(faqPageJsonLd(sections))], shown))).toEqual([
-      `mainEntity[0]: the answer to "${entries[0].question}" is not on the page`,
+      `mainEntity[0]: the answer to "${entries[0].question}" does not match its visible answer`,
     ]);
   });
 });

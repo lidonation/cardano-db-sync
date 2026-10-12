@@ -43,7 +43,7 @@ function extraItems(translate: Translate): Record<string, FaqItem> {
       answer: translate({
         id: 'faq.docker.a',
         message:
-          'Yes. The repository’s Docker Compose setup starts cardano-node, PostgreSQL and db-sync together with docker compose up -d. Set NETWORK to choose another network, such as preprod or preview.',
+          'Yes, for local development. The example Compose setup is not recommended for production. It starts cardano-node, PostgreSQL and db-sync together with docker compose up -d. Set NETWORK to choose another network, such as preprod or preview.',
       }),
     },
     snapshots: {
@@ -64,7 +64,7 @@ function extraItems(translate: Translate): Record<string, FaqItem> {
       answer: translate({
         id: 'faq.portability.a',
         message:
-          'No. Snapshots are not portable across schema versions, and possibly not across CPU architectures. Restore one made for the release you are running, on a node that is already ahead of the snapshot point.',
+          'Compatibility depends on the schema version, ledger snapshot format and possibly CPU architecture. Snapshots are not portable across schema versions. Use one documented as compatible with your release, on a node ahead of the snapshot point.',
       }),
     },
     versions: {
@@ -76,7 +76,7 @@ function extraItems(translate: Translate): Record<string, FaqItem> {
       answer: translate({
         id: 'faq.versions.a',
         message:
-          'Releases are numbered a.b.c.d. A change to a needs a resync from genesis; b brings a schema migration; c changes values without changing the schema; d leaves the database unchanged.',
+          'Since 13.1.0.0, releases use a.b.c.d: a signals a schema-breaking change; b a schema migration; c a change in stored values without a schema change; d no semantic database change. Read the release notes for the actual upgrade steps and resync requirements.',
       }),
     },
     resync: {
@@ -85,7 +85,7 @@ function extraItems(translate: Translate): Record<string, FaqItem> {
       answer: translate({
         id: 'faq.resync.a',
         message:
-          'No. Only a schema-breaking release needs a resync from genesis. Others run their migrations on start, and some replay the ledger rules, which can take hours but deletes no data.',
+          'No. Read the release notes for your source and target versions before upgrading. Some upgrades run migrations at startup; others need a resync. A ledger replay can take hours without deleting database data, as documented for the 13.1.1 and 13.2 upgrade paths.',
       }),
     },
     pgupgrade: {
@@ -97,7 +97,7 @@ function extraItems(translate: Translate): Record<string, FaqItem> {
       answer: translate({
         id: 'faq.pgupgrade.a',
         message:
-          'A major PostgreSQL release usually changes its storage format, so the database has to be migrated with the new version installed alongside the old one. Allow about 350 GiB of free space.',
+          'A major PostgreSQL release usually changes its storage format. Stop db-sync and follow the migration steps with the new PostgreSQL version installed alongside the old one. The repository guide lists 350 GiB of free space for its example; plan for your actual database size and upgrade method, and back up first.',
       }),
     },
     rollback: {

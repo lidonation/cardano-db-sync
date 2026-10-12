@@ -1,27 +1,16 @@
-import React, {useEffect} from 'react';
+import React, {useEffect, useRef} from 'react';
 
-import codeTranslations from '@generated/codeTranslations';
 import Head from '@docusaurus/Head';
 import Link from '@docusaurus/Link';
-import {translate} from '@docusaurus/Translate';
-import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import {useLocation} from '@docusaurus/router';
 
 import Icon from '../components/shared/Icon';
-import {pageTranslator} from '../i18n/pageTranslator';
 import useBuildEnvironment from '../lib/useBuildEnvironment';
 import styles from '../landing/styles.module.css';
 
-import {FAQ_IDS} from './ids';
+import useFaqTranslate from './useFaqTranslate';
 import {faqPageJsonLd, serializeJsonLd} from './jsonld';
 import {faqSections, guideUrl} from './questions';
-
-/** The translate function for this page: English throughout when a string is missing (A11Y-18). */
-function useFaqTranslate() {
-  const {
-    i18n: {currentLocale, defaultLocale},
-  } = useDocusaurusContext();
-  return pageTranslator(FAQ_IDS, codeTranslations, currentLocale, defaultLocale, translate);
-}
 
 /**
  * B44-c — the FAQ page: every question, grouped by task, each answer linking the guide that covers
@@ -30,6 +19,8 @@ function useFaqTranslate() {
  */
 export default function FaqPage(): React.JSX.Element {
   const t = useFaqTranslate();
+  const root = useRef<HTMLDivElement>(null);
+  const {hash} = useLocation();
   const {profile} = useBuildEnvironment();
   const sections = faqSections(t);
   const readGuide = t({
@@ -38,12 +29,25 @@ export default function FaqPage(): React.JSX.Element {
     description: 'Link from an FAQ answer to the documentation guide that covers it in full',
   });
   useEffect(() => {
-    const target = window.location.hash.slice(1);
-    const item = target ? document.getElementById(target) : null;
-    if (item instanceof HTMLDetailsElement) item.open = true;
-  }, []);
+    const openAnchor = () => {
+      let target: string;
+      try {
+        target = decodeURIComponent(window.location.hash.slice(1));
+      } catch {
+        return;
+      }
+      const item = target ? document.getElementById(target) : null;
+      if (item instanceof HTMLDetailsElement && root.current?.contains(item)) {
+        item.open = true;
+        item.scrollIntoView({block: 'start'});
+      }
+    };
+    openAnchor();
+    window.addEventListener('hashchange', openAnchor);
+    return () => window.removeEventListener('hashchange', openAnchor);
+  }, [hash]);
   return (
-    <div className={styles.landing}>
+    <div ref={root} className={styles.landing}>
       <Head>
         <script type="application/ld+json">{serializeJsonLd(faqPageJsonLd(sections))}</script>
       </Head>

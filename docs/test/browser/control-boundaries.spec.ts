@@ -147,6 +147,10 @@ test.describe('active sidebar label (NAV-5)', () => {
       await page.goto(DOCS);
       await page.locator(SIDEBAR).waitFor();
       await applyPalette(page, palette);
+      await expect(page.locator(`${SIDEBAR} [aria-current="page"]`).first()).toHaveCSS(
+        'color',
+        ACTIVE_LABEL[palette],
+      );
       const results = await new AxeBuilder({page})
         .include(SIDEBAR)
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])

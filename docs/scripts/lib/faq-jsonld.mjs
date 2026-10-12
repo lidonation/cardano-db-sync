@@ -6,28 +6,10 @@
  * Pure: given the page's HTML, returns readable problems; an empty array means the page is sound.
  */
 
-const LD_JSON = /<script[^>]*type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi;
+import {load} from 'cheerio';
 
 const nonEmpty = (value) => typeof value === 'string' && value.trim() !== '';
-
-/** Decode the HTML entities React writes into text nodes. */
-function decode(text) {
-  return text
-    .replace(/&#x27;|&#39;/g, "'")
-    .replace(/&quot;/g, '"')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&amp;/g, '&');
-}
-
-/** Visible text of the page: tags stripped, entities decoded, whitespace collapsed. */
-function visibleText(html) {
-  const body = html
-    .replace(/<script[\s\S]*?<\/script>/gi, ' ')
-    .replace(/<style[\s\S]*?<\/style>/gi, ' ')
-    .replace(/<[^>]+>/g, ' ');
-  return decode(body).replace(/\s+/g, ' ');
-}
+const normalize = (text) => text.replace(/\s+/g, ' ').trim();
 
 /**
  * Every reason the page's FAQPage structured data is invalid or does not match the page.
@@ -36,7 +18,10 @@ function visibleText(html) {
  * @returns {string[]}
  */
 export function faqPageProblems(html) {
-  const blocks = [...html.matchAll(LD_JSON)].map((match) => match[1]);
+  const $ = load(html);
+  const blocks = $('script[type="application/ld+json"]')
+    .map((_, node) => $(node).text())
+    .get();
   if (blocks.length !== 1) {
     return [`expected exactly one JSON-LD block, found ${blocks.length} (META-2)`];
   }
@@ -45,6 +30,9 @@ export function faqPageProblems(html) {
     data = JSON.parse(blocks[0]);
   } catch (error) {
     return [`JSON-LD is not valid JSON: ${error.message}`];
+  }
+  if (data === null || typeof data !== 'object' || Array.isArray(data)) {
+    return ['JSON-LD must be an object'];
   }
   const problems = [];
   if (data['@context'] !== 'https://schema.org') {
@@ -57,7 +45,17 @@ export function faqPageProblems(html) {
     problems.push('mainEntity must be a non-empty array of Question');
     return problems;
   }
-  const text = visibleText(html);
+  // Closed details are user-expandable content. Hidden nodes and non-FAQ text do not count.
+  $('script, style, template, [hidden], [aria-hidden="true"]').remove();
+  const shown = new Map();
+  $('main details').each((_, node) => {
+    const detail = $(node);
+    const name = normalize(detail.children('summary').text());
+    const answer = normalize(detail.children('p').first().text());
+    if (!name || !answer) problems.push('visible FAQ entry must have a question and answer');
+    if (shown.has(name)) problems.push(`duplicate visible question "${name}"`);
+    shown.set(name, answer);
+  });
   const seen = new Set();
   data.mainEntity.forEach((question, index) => {
     const at = `mainEntity[${index}]`;
@@ -66,18 +64,22 @@ export function faqPageProblems(html) {
       problems.push(`${at}: name must be a non-empty string`);
       return;
     }
-    if (seen.has(question.name)) problems.push(`${at}: duplicate question "${question.name}"`);
-    seen.add(question.name);
+    const name = normalize(question.name);
+    if (seen.has(name)) problems.push(`${at}: duplicate question "${question.name}"`);
+    seen.add(name);
     const answer = question.acceptedAnswer;
     if (answer?.['@type'] !== 'Answer' || !nonEmpty(answer?.text)) {
       problems.push(`${at}: acceptedAnswer must be an Answer with non-empty text`);
       return;
     }
-    if (!text.includes(question.name))
+    if (!shown.has(name)) {
       problems.push(`${at}: "${question.name}" is not on the page`);
-    if (!text.includes(answer.text)) {
-      problems.push(`${at}: the answer to "${question.name}" is not on the page`);
+    } else if (shown.get(name) !== normalize(answer.text)) {
+      problems.push(`${at}: the answer to "${question.name}" does not match its visible answer`);
     }
   });
+  for (const name of shown.keys()) {
+    if (!seen.has(name)) problems.push(`visible question "${name}" is missing from JSON-LD`);
+  }
   return problems;
 }

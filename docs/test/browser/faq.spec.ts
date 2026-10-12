@@ -74,6 +74,33 @@ test.describe('content', () => {
     await expect(page.locator('main details[open]')).toHaveCount(1);
   });
 
+  test('changing anchors opens the new answer and scrolls it into view', async ({page}) => {
+    await open(page, 1440);
+    await page.evaluate(() => {
+      window.location.hash = '#%72ollback';
+    });
+    await expect(page.locator('main details#rollback')).toHaveAttribute('open');
+    await expect(page.locator('main details#rollback')).toBeInViewport();
+    const summary = page.locator('main details#rollback summary');
+    const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+    await expect
+      .poll(async () => {
+        const question = await summary.boundingBox();
+        const bar = await header.boundingBox();
+        return question!.y - (bar!.y + bar!.height);
+      })
+      .toBeGreaterThanOrEqual(0);
+    await page.evaluate(() => {
+      window.location.hash = '#socket';
+    });
+    await expect(page.locator('main details#socket')).toHaveAttribute('open');
+    await expect(page.locator('main details#socket')).toBeInViewport();
+    await page.evaluate(() => {
+      window.location.hash = '#unknown-question';
+    });
+    await expect(page.locator('#faq-title')).toHaveCount(1);
+  });
+
   test('the landing page links here', async ({page}) => {
     await page.goto(base());
     const link = page.getByRole('link', {name: 'All questions'});
