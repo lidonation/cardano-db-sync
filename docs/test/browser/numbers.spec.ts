@@ -35,7 +35,7 @@ test('synthetic estimates explain their configuration, methodology and chart alt
   await expect(main).toContainText('tx_out');
   await expect(main).toContainText('tx');
   await expect(main).toContainText('1,234');
-  await expect(main).toContainText('5,678');
+  await expect(main).toContainText('120,000,000');
   await expect(main).not.toContainText(/sync duration|sync time|healthy/i);
 });
 
@@ -125,7 +125,7 @@ test('chain facts remain available when the storage model is absent', async ({pa
   await page.goto(fixture('no-model'));
   const main = page.getByRole('main');
   await expect(main).toContainText('1,234');
-  await expect(main).toContainText('5,678');
+  await expect(main).toContainText('120,000,000');
   await expect(main).not.toContainText('tx_out');
   await expect(main).not.toContainText(/0 GB|\$0/);
 });

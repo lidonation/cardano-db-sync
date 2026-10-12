@@ -134,9 +134,13 @@
   cursor: pointer;
 }
 
-@media (max-width: 1279px) {
-  .metricValue {
-    font: var(--dbs-font-heading-md);
-    letter-spacing: var(--dbs-font-heading-md-tracking);
+.metricValue {
+  font: var(--dbs-font-heading-md);
+  letter-spacing: var(--dbs-font-heading-md-tracking);
+}
+
+@media (max-width: 479px) {
+  .metrics {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

@@ -13,7 +13,7 @@ export function syntheticNumbersSnapshot(network: CardanoNetwork = 'preview'): N
     source: 'Synthetic browser test fixture, not a provider measurement',
     blockHeight: 1000000,
     epoch: 100,
-    transactions: 5678,
+    transactions: 120000000,
     blocksThisEpoch: 1234,
     recentEpochs: Array.from({length: 12}, (_, index) => ({
       epoch: 88 + index,
