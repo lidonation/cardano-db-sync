@@ -78,7 +78,8 @@ test.describe('reflow (NAV-3, CONTENT-3)', () => {
     });
   }
 
-  for (const width of [1024, 1440]) {
+  // 1279 is the widest column, where the measure cap rather than the grid sets the width
+  for (const width of [1024, 1279, 1440]) {
     test(`the reading measure is 65–75ch at ${width}px`, async ({page}) => {
       await open(page, PAGE, width);
       const measure = await page

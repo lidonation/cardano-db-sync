@@ -79,6 +79,18 @@ describe('deriveNav (NAV-1)', () => {
   });
 });
 
+describe('deriveNav labels', () => {
+  it('renders an unlabelled item with an empty label rather than dropping it', () => {
+    const nav = deriveNav(
+      [{type: 'docSidebar', sidebarId: 'docsSidebar'}, {type: 'doc', docId: 'schema'}, {to: '/x'}],
+      '/',
+      '/',
+      DOCS,
+    );
+    expect(nav.links.map((link) => link.label)).toEqual(['', '', '']);
+  });
+});
+
 describe('currentSection', () => {
   const link = (label: string): PropSidebarItem => ({type: 'link', label, href: `/${label}`});
   const category = (label: string, items: PropSidebarItem[]): PropSidebarItem => ({

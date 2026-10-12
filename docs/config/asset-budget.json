@@ -1,8 +1,8 @@
 {
-  "$comment": "PERF-1 asset budget, gzip bytes, checked by scripts/check-asset-budget.mjs. B02 baseline (Docusaurus scaffold): js 165.0 KiB, css 13.7 KiB, heaviest page initial payload 162.2 KiB. Limits sit ~10-15% above it; B38 replaces them with the SPECIFICATION budget. B06 raised css to 18 KiB: SEC-2's self-hosted fonts add nine @font-face rules (+0.8 KiB gzip, total 16.5 KiB); the font files themselves load from CSS on demand, three per page (~108 KiB raw), and are reported under font.",
+  "$comment": "PERF-1 asset budget, gzip bytes, checked by scripts/check-asset-budget.mjs. B02 baseline (Docusaurus scaffold): js 165.0 KiB, css 13.7 KiB, heaviest page initial payload 162.2 KiB. Limits sit ~10-15% above it; B38 replaces them with the SPECIFICATION budget. B06 raised css to 18 KiB: SEC-2's self-hosted fonts add nine @font-face rules (+0.8 KiB gzip, total 16.5 KiB); the font files themselves load from CSS on demand, three per page (~108 KiB raw), and are reported under font. B34 raised css to 19 KiB: the site chrome and docs layout now ship the B29 navbar, footer, pagination and icon styles and the DF-7 docs layout on every page (total 18.2 KiB).",
   "totals": {
     "js": 194560,
-    "css": 18432
+    "css": 19456
   },
   "page": {
     "initial": 184320
