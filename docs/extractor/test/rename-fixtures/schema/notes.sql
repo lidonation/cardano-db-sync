@@ -1,0 +1,1 @@
+-- Not a migration (the name does not parse), so it is never read: ALTER x RENAME garbage
