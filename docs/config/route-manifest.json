@@ -12,6 +12,9 @@
     },
     "/faq": {
       "status": "live"
+    },
+    "/survey/results": {
+      "status": "live"
     }
   }
 }

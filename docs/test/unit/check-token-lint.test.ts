@@ -250,6 +250,7 @@ describe('TOK-6: control boundaries bind border.interactive (B35)', () => {
     ['src/components/Navbar/styles.module.css', '.drawerActions,\n.drawerPreferences'],
     ['src/theme/DocLayout/styles.module.css', '.panel'],
     ['src/landing/styles.module.css', '.stage'],
+    ['src/survey-results/styles.module.css', '.bar'],
   ])('keeps the integration hairline allowance scoped to %s', (file, selector) => {
     const css = `${selector} { border: 1px solid var(--dbs-border-default); }`;
     expect(findBorderProblems(file, css)).toEqual([]);
