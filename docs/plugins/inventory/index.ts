@@ -8,6 +8,9 @@ export const INVENTORY_ENV_VAR = 'DBS_INVENTORY';
 /** Where the inventory is served, relative to `baseUrl`. */
 export const INVENTORY_PATH = '__inventory';
 
+/** B44-d feed-state fixture, subject to the same development-only gate. */
+export const UPDATES_FIXTURE_PATH = '__updates';
+
 /**
  * B29 — the component inventory route, for development and the browser suite only.
  *
@@ -63,6 +66,11 @@ export default function inventoryPlugin(context: LoadContext): Plugin {
       if (!inventoryEnabled()) {
         return;
       }
+      actions.addRoute({
+        path: `${context.baseUrl}${UPDATES_FIXTURE_PATH}`,
+        component: path.resolve(context.siteDir, 'test/fixtures/updates/UpdatesFixture.tsx'),
+        exact: true,
+      });
       actions.addRoute({
         path: `${context.baseUrl}${INVENTORY_PATH}`,
         component: path.resolve(context.siteDir, 'src/inventory/InventoryPage.tsx'),
