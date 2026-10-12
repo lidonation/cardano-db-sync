@@ -1,0 +1,2 @@
+ALTER TABLE a RENAME TO target;
+ALTER TABLE b RENAME TO target;

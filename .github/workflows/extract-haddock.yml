@@ -1,10 +1,11 @@
 name: Extract Haddock annotations
 
-# B07 (CON-2) and B10 (CON-4) — a path-filtered extraction workflow: it runs when the Haskell sources it
-# reads, the extractor itself, or the committed artifact change, and it fails on drift
-# between the committed artifact and a fresh extraction. The docs pipeline (docs-site.yml)
-# never runs a Haskell toolchain: it only consumes the committed JSON (CON-1), and
-# `check:annotations` guards that the committed artifact stays structurally consumable.
+# B07 (CON-2), B09 (GDE-9) and B10 (CON-4) — a path-filtered extraction workflow: it runs when the
+# Haskell sources it reads, the migration SQL (B09's rename map), the extractor itself, or the
+# committed artifacts change, and it fails on drift between each committed artifact and a fresh
+# extraction. The docs pipeline (docs-site.yml) never runs a Haskell toolchain: it only consumes the
+# committed JSON (CON-1), and `check:annotations` / `check:renames` guard that the committed
+# artifacts stay structurally consumable.
 #
 # The first run on a cold cache pays for building ghc-lib-parser once (several minutes);
 # after that the build cache makes the extraction itself the whole cost — well under the
@@ -18,6 +19,8 @@ on:
       - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
       - "cardano-db-sync/src/Cardano/DbSync/Config.hs"
       - "docs/extractor/**"
+      # the migration SQL the rename map is scanned from (B09)
+      - "schema/**"
       - "docs/generated/**"
       - ".github/workflows/extract-haddock.yml"
   pull_request:
@@ -26,6 +29,8 @@ on:
       - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
       - "cardano-db-sync/src/Cardano/DbSync/Config.hs"
       - "docs/extractor/**"
+      # the migration SQL the rename map is scanned from (B09)
+      - "schema/**"
       - "docs/generated/**"
       - ".github/workflows/extract-haddock.yml"
   workflow_dispatch:
@@ -68,6 +73,7 @@ jobs:
           cabal build all
           cabal test
           sh test/cli.sh "$(cabal list-bin extract-haddock)"
+          sh test/renames-cli.sh "$(cabal list-bin extract-renames)"
 
       - name: Extract schema and config annotations
         working-directory: docs/extractor
@@ -81,6 +87,17 @@ jobs:
             --out ../generated/haddock-annotations.json \
             --input cardano-db/src \
             --input cardano-db-sync/src/Cardano/DbSync/Config/Types.hs \
+            2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Extract the schema rename map (B09, GDE-9)
+        working-directory: docs/extractor
+        # Fails on any RENAME in schema/ the scanner cannot read, naming file and line.
+        shell: bash
+        run: |
+          extractor=$(cabal list-bin extract-renames)
+          timeout 60s "$extractor" \
+            --repo-root ../.. \
+            --out ../generated/schema-renames.json \
             2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Extract the config schema (B10)
@@ -104,4 +121,15 @@ jobs:
           echo "::error::A committed extraction artifact has drifted from a fresh extraction."
           git --no-pager diff --stat -- docs/generated/
           git --no-pager diff -- docs/generated/ | sed -n '1,100p'
+          exit 1
+
+      - name: Rename map drift gate (CON-2)
+        run: |
+          git ls-files --error-unmatch docs/generated/schema-renames.json >/dev/null
+          if git diff --quiet -- docs/generated/schema-renames.json; then
+            echo "No drift: the committed rename map matches a fresh extraction."
+            exit 0
+          fi
+          echo "::error::The committed schema rename map has drifted from a fresh extraction."
+          git --no-pager diff -- docs/generated/schema-renames.json | sed -n '1,100p'
           exit 1

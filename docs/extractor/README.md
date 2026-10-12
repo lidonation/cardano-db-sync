@@ -67,6 +67,54 @@ and never commits a repair after deployment has started.
 | `app/ExtractConfig.hs`        | the `extract-config` CLI                                                                                                         |
 | `test/ConfigGolden.hs`        | B10 golden test: `test/config-fixtures/ConfigSample.hs` → `test/golden/config-schema.json`, plus the real module reads in full   |
 | `test/Golden.hs`              | golden test: `test/fixtures/Sample.hs` → `test/golden/haddock-annotations.json`, byte-identical, plus the association assertions |
+| `src/RenameExtract.hs`        | B09: migration SQL → rename map (tokeniser, RENAME forms, entity chains)                                                         |
+| `app/ExtractRenames.hs`       | the `extract-renames` CLI                                                                                                        |
+| `test/Renames.hs`             | `test/rename-fixtures/` → `test/golden/schema-renames.json`, the failure modes, and the real `schema/` renames                   |
+
+## The rename map (B09)
+
+`extract-renames` scans every `schema/migration-<stage>-<version>-<date>.sql`
+for `RENAME TO`, `RENAME [COLUMN]` and `RENAME CONSTRAINT` and writes
+[`docs/generated/schema-renames.json`](../generated/schema-renames.json), so a
+rename reads as continuity rather than remove-plus-add (GDE-9):
+
+```sh
+cabal run extract-renames -- --repo-root ../.. --out ../generated/schema-renames.json
+```
+
+- The SQL is tokenised, not executed. Comments are skipped, dollar-quoted
+  function bodies are read like top-level SQL, and an `EXECUTE '…'` literal is
+  scanned as the statement it runs. Unquoted identifiers fold to lower case. Nested block comments are skipped.
+  Only unqualified or `public`-qualified names are supported. Other schemas
+  and domain-owned constraint renames fail because the artifact has no schema
+  or domain-owner field.
+- Each rename is keyed by the migration that ran it: `{stage, version, file}`.
+  For a versioned migration the `IF next_version = N` guard must match the
+  filename's version, or the run fails. All guards are checked, including
+  uppercase identifiers. On the schema axis (SPECIFICATION
+  §8.3), a stage-two rename has happened once `stage_two >= version`. Stage
+  one and stage three run in full on every start, so their renames have
+  always happened.
+- `entities` folds chains (`a → b → c`) into one entity per object, holding
+  its latest name and its former names, oldest first. A column or constraint
+  is keyed by its table's latest name, even when the column was renamed before
+  the table was.
+- **Loud failure.** If a `RENAME` is not one of the forms above, the run
+  fails and names its file and line. That includes `ALTER TYPE … RENAME VALUE`
+  and any rename assembled at run time. No rename is ever silently dropped.
+- The map records renames only. Some renamed objects were dropped later
+  (`unique_reward_rest` in `0034`). Existence is B08's schema extraction, not
+  this map's.
+
+The site reads the map through `src/data/schema-renames.ts`:
+
+- `currentName` gives an entity's latest name, for GDE-2 checks.
+- `nameAt` gives the name an entity had at a given schema version.
+- `formerNames` gives its earlier names, used as the SRCH-5 search aliases.
+
+`check:renames` guards that the committed map stays consumable.
+`sh test/renames-cli.sh "$(cabal list-bin extract-renames)"` checks the CLI,
+including help, invalid arguments, filesystem failures and invalid UTF-8.
 
 ## The config schema (B10)
 

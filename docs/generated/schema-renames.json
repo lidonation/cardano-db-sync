@@ -1,0 +1,345 @@
+{
+  "entities": [
+    {
+      "formerNames": [
+        {
+          "name": "pool_offline_data",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "table",
+      "name": "off_chain_pool_data"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "pool_offline_fetch_error",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "table",
+      "name": "off_chain_pool_fetch_error"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "instant_reward",
+          "until": {
+            "file": "migration-2-0034-20240301.sql",
+            "stage": 2,
+            "version": 34
+          }
+        }
+      ],
+      "kind": "table",
+      "name": "reward_rest"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "deposits",
+          "until": {
+            "file": "migration-2-0034-20240301.sql",
+            "stage": 2,
+            "version": 34
+          }
+        }
+      ],
+      "kind": "column",
+      "name": "deposits_stake",
+      "table": "ada_pots"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "pool_offline_data_pkey",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "constraint",
+      "name": "off_chain_pool_data_pkey",
+      "table": "off_chain_pool_data"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "unique_pool_offline_data",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "constraint",
+      "name": "unique_off_chain_pool_data",
+      "table": "off_chain_pool_data"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "pool_offline_fetch_error_pkey",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "constraint",
+      "name": "off_chain_pool_fetch_error_pkey",
+      "table": "off_chain_pool_fetch_error"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "unique_pool_offline_fetch_error",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "constraint",
+      "name": "unique_off_chain_pool_fetch_error",
+      "table": "off_chain_pool_fetch_error"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "unique_instant_reward",
+          "until": {
+            "file": "migration-2-0034-20240301.sql",
+            "stage": 2,
+            "version": 34
+          }
+        }
+      ],
+      "kind": "constraint",
+      "name": "unique_reward_rest",
+      "table": "reward_rest"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "pool_offline_data_id_seq",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "sequence",
+      "name": "off_chain_pool_data_id_seq"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "pool_offline_fetch_error_id_seq",
+          "until": {
+            "file": "migration-2-0026-20231017.sql",
+            "stage": 2,
+            "version": 26
+          }
+        }
+      ],
+      "kind": "sequence",
+      "name": "off_chain_pool_fetch_error_id_seq"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "idx_pool_offline_data_pmr_id",
+          "until": {
+            "file": "migration-3-0003-20240121.sql",
+            "stage": 3,
+            "version": 3
+          }
+        }
+      ],
+      "kind": "index",
+      "name": "idx_off_chain_pool_data_pmr_id"
+    },
+    {
+      "formerNames": [
+        {
+          "name": "idx_pool_offline_fetch_error_pmr_id",
+          "until": {
+            "file": "migration-3-0003-20240121.sql",
+            "stage": 3,
+            "version": 3
+          }
+        }
+      ],
+      "kind": "index",
+      "name": "idx_off_chain_pool_fetch_error_pmr_id"
+    }
+  ],
+  "renames": [
+    {
+      "from": "pool_offline_data",
+      "kind": "table",
+      "line": 9,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "to": "off_chain_pool_data"
+    },
+    {
+      "from": "pool_offline_data_id_seq",
+      "kind": "sequence",
+      "line": 10,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "to": "off_chain_pool_data_id_seq"
+    },
+    {
+      "from": "unique_pool_offline_data",
+      "kind": "constraint",
+      "line": 11,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "table": "off_chain_pool_data",
+      "to": "unique_off_chain_pool_data"
+    },
+    {
+      "from": "pool_offline_data_pkey",
+      "kind": "constraint",
+      "line": 12,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "table": "off_chain_pool_data",
+      "to": "off_chain_pool_data_pkey"
+    },
+    {
+      "from": "pool_offline_fetch_error",
+      "kind": "table",
+      "line": 14,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "to": "off_chain_pool_fetch_error"
+    },
+    {
+      "from": "pool_offline_fetch_error_id_seq",
+      "kind": "sequence",
+      "line": 15,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "to": "off_chain_pool_fetch_error_id_seq"
+    },
+    {
+      "from": "unique_pool_offline_fetch_error",
+      "kind": "constraint",
+      "line": 16,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "table": "off_chain_pool_fetch_error",
+      "to": "unique_off_chain_pool_fetch_error"
+    },
+    {
+      "from": "pool_offline_fetch_error_pkey",
+      "kind": "constraint",
+      "line": 17,
+      "migration": {
+        "file": "migration-2-0026-20231017.sql",
+        "stage": 2,
+        "version": 26
+      },
+      "table": "off_chain_pool_fetch_error",
+      "to": "off_chain_pool_fetch_error_pkey"
+    },
+    {
+      "from": "deposits",
+      "kind": "column",
+      "line": 15,
+      "migration": {
+        "file": "migration-2-0034-20240301.sql",
+        "stage": 2,
+        "version": 34
+      },
+      "table": "ada_pots",
+      "to": "deposits_stake"
+    },
+    {
+      "from": "instant_reward",
+      "kind": "table",
+      "line": 18,
+      "migration": {
+        "file": "migration-2-0034-20240301.sql",
+        "stage": 2,
+        "version": 34
+      },
+      "to": "reward_rest"
+    },
+    {
+      "from": "unique_instant_reward",
+      "kind": "constraint",
+      "line": 19,
+      "migration": {
+        "file": "migration-2-0034-20240301.sql",
+        "stage": 2,
+        "version": 34
+      },
+      "table": "reward_rest",
+      "to": "unique_reward_rest"
+    },
+    {
+      "from": "idx_pool_offline_data_pmr_id",
+      "kind": "index",
+      "line": 3,
+      "migration": {
+        "file": "migration-3-0003-20240121.sql",
+        "stage": 3,
+        "version": 3
+      },
+      "to": "idx_off_chain_pool_data_pmr_id"
+    },
+    {
+      "from": "idx_pool_offline_fetch_error_pmr_id",
+      "kind": "index",
+      "line": 4,
+      "migration": {
+        "file": "migration-3-0003-20240121.sql",
+        "stage": 3,
+        "version": 3
+      },
+      "to": "idx_off_chain_pool_fetch_error_pmr_id"
+    }
+  ],
+  "schemaVersion": 1,
+  "source": "schema"
+}
