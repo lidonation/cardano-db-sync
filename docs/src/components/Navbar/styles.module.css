@@ -191,6 +191,9 @@
 
   .drawer:not([hidden]) {
     display: block;
+    box-sizing: border-box;
+    max-block-size: calc(100dvh - 73px);
+    overflow-y: auto;
     padding: var(--dbs-space-8) var(--dbs-space-32) var(--dbs-space-16);
     border-block-start: 1px solid var(--dbs-border-default);
   }
@@ -274,4 +277,16 @@
   .drawer:not([hidden]) {
     padding-inline: var(--dbs-space-16);
   }
+}
+
+/* In the drawer, language options join its scroll area instead of floating beyond it. */
+.drawer :global(.dropdown__menu) {
+  position: static;
+  display: none;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.drawer :global(.dropdown--show .dropdown__menu),
+.drawer :global(.dropdown--hoverable:hover .dropdown__menu) {
+  display: block;
 }

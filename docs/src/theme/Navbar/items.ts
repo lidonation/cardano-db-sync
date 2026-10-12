@@ -29,6 +29,25 @@ export interface DocsState {
   readonly activeDocId?: string;
 }
 
+/** Resolve each item across active, preferred, then latest versions, as the stock navbar does. */
+export function resolveDocsState(
+  versions: readonly {
+    readonly sidebars?: Readonly<Record<string, {readonly link?: {readonly path: string}}>>;
+    readonly docs: readonly {readonly id: string; readonly path: string}[];
+  }[],
+  activeDoc?: {readonly id: string; readonly sidebar?: string},
+): DocsState {
+  const sidebarLinks: Record<string, string | undefined> = {};
+  const docPaths: Record<string, string | undefined> = {};
+  for (const version of versions) {
+    for (const [id, sidebar] of Object.entries(version.sidebars ?? {})) {
+      sidebarLinks[id] ??= sidebar.link?.path;
+    }
+    for (const doc of version.docs) docPaths[doc.id] ??= doc.path;
+  }
+  return {sidebarLinks, docPaths, activeSidebar: activeDoc?.sidebar, activeDocId: activeDoc?.id};
+}
+
 export interface DerivedNav {
   readonly links: readonly {
     readonly label: string;
@@ -92,9 +111,11 @@ export function deriveNav(
         if (item.href) {
           github = github ?? item.href;
         } else if (item.to) {
-          const site = baseUrl.replace(/\/$/, '');
-          const base = `${site}/${(item.activeBasePath ?? item.to).replace(/^\//, '')}`;
-          links.push({label: item.label ?? '', href: item.to, active: isUnder(pathname, base)});
+          const path = (value: string) =>
+            value.startsWith(baseUrl) ? value : `${baseUrl}${value.replace(/^\//, '')}`;
+          const href = path(item.to);
+          const base = path(item.activeBasePath ?? item.to).split(/[?#]/)[0]!;
+          links.push({label: item.label ?? '', href, active: isUnder(pathname, base)});
         }
     }
   }

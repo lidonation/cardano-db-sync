@@ -12,7 +12,7 @@ import NavbarItem from '@theme/NavbarItem';
 
 import {NavbarFull} from '../../components/Navbar';
 
-import {deriveNav, type NavbarItemConfig} from './items';
+import {deriveNav, resolveDocsState, type NavbarItemConfig} from './items';
 import styles from './styles.module.css';
 
 /**
@@ -32,16 +32,14 @@ export default function Navbar(): ReactNode {
   const {pathname} = useLocation();
   const baseUrl = useBaseUrl('/');
   // The version the stock navbar items link into: the active one, else the preferred, else latest.
-  const [version] = useDocsVersionCandidates(undefined);
+  const versions = useDocsVersionCandidates(undefined);
   const {activeDoc} = useActiveDocContext(undefined);
-  const nav = deriveNav(items as NavbarItemConfig[], pathname, baseUrl, {
-    sidebarLinks: Object.fromEntries(
-      Object.entries(version.sidebars ?? {}).map(([id, sidebar]) => [id, sidebar.link?.path]),
-    ),
-    docPaths: Object.fromEntries(version.docs.map((doc) => [doc.id, doc.path])),
-    activeSidebar: activeDoc?.sidebar,
-    activeDocId: activeDoc?.id,
-  });
+  const nav = deriveNav(
+    items as NavbarItemConfig[],
+    pathname,
+    baseUrl,
+    resolveDocsState(versions, activeDoc),
+  );
   const preferences: ReactNode = (
     <>
       {nav.preferences.map((item, index) => (

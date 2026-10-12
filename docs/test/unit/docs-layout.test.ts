@@ -2,7 +2,7 @@ import {describe, expect, it} from 'vitest';
 import type {PropSidebarItem} from '@docusaurus/plugin-content-docs';
 
 import {currentSection} from '../../src/theme/DocLayout/sections';
-import {deriveNav, isUnder, type DocsState} from '../../src/theme/Navbar/items';
+import {deriveNav, isUnder, resolveDocsState, type DocsState} from '../../src/theme/Navbar/items';
 
 const DOCS: DocsState = {
   sidebarLinks: {docsSidebar: '/cardano-db-sync/docs/intro', guides: undefined},
@@ -40,8 +40,8 @@ describe('deriveNav (NAV-1)', () => {
     expect(nav.links.map((link) => [link.label, link.href])).toEqual([
       ['Docs', '/cardano-db-sync/docs/intro'],
       ['Schema', '/cardano-db-sync/docs/schema'],
-      ['Survey', '/survey'],
-      ['Numbers', 'numbers'],
+      ['Survey', '/cardano-db-sync/survey'],
+      ['Numbers', '/cardano-db-sync/numbers'],
     ]);
     expect(nav.links.every((link) => !link.active)).toBe(true);
     expect(nav.github).toBe('https://github.com/IntersectMBO/cardano-db-sync');
@@ -49,6 +49,50 @@ describe('deriveNav (NAV-1)', () => {
       'localeDropdown',
       'docsVersionDropdown',
     ]);
+  });
+
+  it('normalizes destinations and active paths alike, without a doubled base URL', () => {
+    const nav = deriveNav(
+      [
+        {to: '/cardano-db-sync/de/survey', label: 'Survey'},
+        {to: 'numbers', label: 'Numbers'},
+      ],
+      '/cardano-db-sync/de/survey',
+      '/cardano-db-sync/de/',
+      DOCS,
+    );
+    expect(nav.links[0]).toEqual({
+      label: 'Survey',
+      href: '/cardano-db-sync/de/survey',
+      active: true,
+    });
+    expect(nav.links[1].href).toBe('/cardano-db-sync/de/numbers');
+  });
+
+  it('looks for missing docs and sidebars in later version candidates', () => {
+    expect(
+      resolveDocsState(
+        [
+          {
+            sidebars: {docs: {link: {path: '/docs/current'}}},
+            docs: [{id: 'intro', path: '/docs/current'}],
+          },
+          {
+            sidebars: {docs: {link: {path: '/docs/latest'}}, guides: {link: {path: '/guides'}}},
+            docs: [
+              {id: 'intro', path: '/docs/latest'},
+              {id: 'schema', path: '/schema'},
+            ],
+          },
+        ],
+        {id: 'intro', sidebar: 'docs'},
+      ),
+    ).toEqual({
+      sidebarLinks: {docs: '/docs/current', guides: '/guides'},
+      docPaths: {intro: '/docs/current', schema: '/schema'},
+      activeSidebar: 'docs',
+      activeDocId: 'intro',
+    });
   });
 
   it('marks a sidebar section active for any doc in that sidebar, with no slug list', () => {

@@ -94,6 +94,7 @@
 .row:focus-visible,
 .groupLink:focus-visible,
 .tocLink:focus-visible,
+.tocMobileLink:focus-visible,
 .disclosureButton:focus-visible {
   outline: var(--dbs-focus-ring);
   outline-offset: calc(-1 * var(--dbs-focus-offset));
@@ -214,11 +215,12 @@
   list-style: none;
 }
 
-.tocList ul .tocLink {
+.tocList ul :is(.tocLink, .tocMobileLink) {
   padding-inline-start: var(--dbs-space-24);
 }
 
-.tocLink {
+.tocLink,
+.tocMobileLink {
   display: flex;
   align-items: center;
   box-sizing: border-box;
@@ -230,7 +232,8 @@
   text-decoration: none;
 }
 
-.tocLink:hover {
+.tocLink:hover,
+.tocMobileLink:hover {
   background: var(--dbs-surface-sunken);
   color: var(--dbs-text-primary);
   text-decoration: none;
@@ -299,19 +302,19 @@
 
 /* ---- the stock doc furniture, held to the 44px floor and square corners ---- */
 
-.article :global(.breadcrumbs) {
+.main :global(.breadcrumbs) {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   margin-block-end: var(--dbs-space-16);
 }
 
-.article :global(.breadcrumbs__item) {
+.main :global(.breadcrumbs__item) {
   display: inline-flex;
   align-items: center;
 }
 
-.article :global(.breadcrumbs__link) {
+.main :global(.breadcrumbs__link) {
   display: inline-flex;
   align-items: center;
   box-sizing: border-box;
@@ -321,7 +324,7 @@
   border-radius: 0;
 }
 
-.article :global(.breadcrumbs__item--active .breadcrumbs__link) {
+.main :global(.breadcrumbs__item--active .breadcrumbs__link) {
   background: var(--dbs-surface-accent-subtle);
   color: var(--dbs-accent-primary-text);
 }
