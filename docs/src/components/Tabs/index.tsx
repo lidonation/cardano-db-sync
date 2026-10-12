@@ -2,11 +2,11 @@ import React, {useId, useRef, useState, type KeyboardEvent, type ReactNode} from
 
 import {translate} from '@docusaurus/Translate';
 
-import Retry, {loadingLabel} from '../shared/Retry';
-import {EmptyState, ErrorMessage, Skeleton, VisuallyHidden} from '../shared/Status';
+import Retry from '../shared/Retry';
+import {EmptyState, ErrorMessage, Skeleton, VisuallyHidden, loadingLabel} from '../shared/Status';
 import {demoAttributes, type DataStatus, type InteractionState} from '../shared/states';
 
-import {nextTab} from './keyboard';
+import {nextTab, resolveSelected} from './keyboard';
 import styles from './styles.module.css';
 
 export interface TabItem {
@@ -54,8 +54,8 @@ export default function Tabs({
   demo,
 }: TabsProps): React.JSX.Element {
   const base = useId();
-  const firstEnabled = items.find((item) => !item.disabled)?.id;
-  const [selected, setSelected] = useState(defaultSelected ?? firstEnabled);
+  const [requested, setSelected] = useState(defaultSelected);
+  const selected = resolveSelected(items, requested);
   const tabs = useRef<(HTMLButtonElement | null)[]>([]);
   // The chip appearance is the `Chip / Filter` definition; the underline appearance is the DF-2
   // "tab" control, the same component in another dress.

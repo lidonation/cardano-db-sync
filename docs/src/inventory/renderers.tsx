@@ -243,7 +243,7 @@ export const RENDER: Readonly<Record<string, Render>> = {
     state === 'loading' ? (
       <SearchResultsLoading />
     ) : state === 'error' ? (
-      <SearchResultsError />
+      <SearchResultsError onRetry={() => undefined} />
     ) : state === 'empty' ? (
       <SearchResultsEmpty query="txo" />
     ) : (

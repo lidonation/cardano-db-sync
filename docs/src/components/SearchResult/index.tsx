@@ -2,9 +2,9 @@ import React, {type ReactNode} from 'react';
 
 import {translate} from '@docusaurus/Translate';
 
-import Retry, {loadingLabel} from '../shared/Retry';
 import Icon from '../shared/Icon';
-import {ErrorMessage, Skeleton, VisuallyHidden} from '../shared/Status';
+import Retry from '../shared/Retry';
+import {ErrorMessage, Skeleton, VisuallyHidden, loadingLabel} from '../shared/Status';
 import {demoAttributes, type InteractionState} from '../shared/states';
 
 import styles from './styles.module.css';
@@ -77,7 +77,7 @@ export function SearchResultsLoading(): React.JSX.Element {
 export function SearchResultsError({onRetry}: {readonly onRetry?: () => void}): React.JSX.Element {
   return (
     <div className={styles.state} data-dbs-component="Search / Result" data-status="error">
-      <ErrorMessage action={<Retry onClick={onRetry} />} live>
+      <ErrorMessage action={onRetry ? <Retry onClick={onRetry} /> : undefined} live>
         {translate({
           id: 'components.search.error',
           message: 'Search could not load its index. Check your connection, then retry.',

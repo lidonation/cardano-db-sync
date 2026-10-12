@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {nextTab} from '../../src/components/Tabs/keyboard';
+import {nextTab, resolveSelected} from '../../src/components/Tabs/keyboard';
 
 describe('tab keyboard movement (A11Y-28)', () => {
   const all = [true, true, true, true];
@@ -40,5 +40,25 @@ describe('tab keyboard movement (A11Y-28)', () => {
     expect(nextTab('Enter', 0, all)).toBeNull();
     expect(nextTab('ArrowRight', 0, [])).toBeNull();
     expect(nextTab('ArrowRight', 0, [false, false])).toBeNull();
+  });
+});
+
+describe('the selected tab always holds the tab stop (A11Y-28)', () => {
+  const items = [{id: 'week'}, {id: 'month'}, {id: 'custom', disabled: true}];
+
+  it('keeps a requested tab that exists and is enabled', () => {
+    expect(resolveSelected(items, 'month')).toBe('month');
+  });
+
+  it('falls back to the first enabled tab for a disabled, unknown or missing request', () => {
+    expect(resolveSelected(items, 'custom')).toBe('week');
+    expect(resolveSelected(items, 'gone')).toBe('week');
+    expect(resolveSelected(items, undefined)).toBe('week');
+    expect(resolveSelected([{id: 'a', disabled: true}, {id: 'b'}], undefined)).toBe('b');
+  });
+
+  it('has nothing to select when every tab is disabled', () => {
+    expect(resolveSelected([{id: 'a', disabled: true}], 'a')).toBeUndefined();
+    expect(resolveSelected([], 'a')).toBeUndefined();
   });
 });

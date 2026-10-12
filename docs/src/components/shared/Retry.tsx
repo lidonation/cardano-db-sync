@@ -16,12 +16,3 @@ export default function Retry({onClick}: {readonly onClick?: () => void}): React
     </button>
   );
 }
-
-/** "Loading <what>…" for the visually hidden busy announcement. */
-export function loadingLabel(): string {
-  return translate({
-    id: 'components.loading',
-    message: 'Loading…',
-    description: 'Announced while a component waits for its data',
-  });
-}
