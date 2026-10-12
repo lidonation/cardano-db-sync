@@ -221,19 +221,16 @@ parserShape env t scope ex = case ex of
   ELam [PVar v] (ECase (EVar v') alts) | v == v' -> case [s | Alt (PCon "String" [PStr s]) _ <- alts] of
     [] -> unknown
     _
-      | all
-          ( \(Alt p body) -> case p of
-              PCon "String" [PStr _] -> not (unsupportedBody body)
-              _ -> isFail body
-          )
-          alts ->
-          pure (SEnum [s | Alt (PCon "String" [PStr s]) body <- alts, not (isFail body)])
+      | textComplete scope (ELamCase (map textAlt alts))
+      , vals@(_ : _) <- [s | Alt (PCon "String" [PStr s]) body <- alts, not (isFail body)] ->
+          pure (SEnum vals)
       | otherwise -> unknown
   ELam [PVar v] (EApp f (EVar v')) | v == v' -> parserShape env t scope f
   EVar fn | Just b <- lookupBind scope fn -> parserShape env t scope (lambda (bParams b) (bBody b))
   _ -> unknown
   where
-    unsupportedBody body = any (\e -> case e of EIf {} -> True; ELet {} -> True; EOther -> True; _ -> False) (universe body)
+    textAlt (Alt (PCon "String" [PStr s]) body) = Alt (PStr s) body
+    textAlt other = other
     unknown = do
       unresolved ("parser for " <> t <> ": unrecognised form")
       pure (SOpaque t)

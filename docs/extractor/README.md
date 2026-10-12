@@ -107,6 +107,25 @@ from the schema. `test/ConfigGolden.hs` pins every rule against
 `test/config-fixtures/ConfigSample.hs` and checks the real module extracts
 with nothing unresolved.
 
+### Schema version 2
+
+Integer shapes retain the Haskell type and inclusive `minimum` and `maximum`
+as decimal strings. `Word` and `Int` use the supported 64-bit runtime limits.
+`NonEmpty` arrays carry `minItems: 1`. Optional `.:?` reads accept explicit
+`null` as absence, including when the parser supplies a default. Object
+defaults are included alongside scalar defaults.
+
+The JavaScript validator rejects integers outside the safe range
+(-9007199254740991 to 9007199254740991), even when a Haskell `Word64` can hold
+them. This prevents rounded config values from passing validation. Wizard
+output must stay in that safe range until it has a lossless numeric path.
+
+The loader, gate and validator share structural checks. Unknown shapes,
+empty enums, duplicate keys and malformed defaults or presets fail before
+config values are checked. Unsupported parser callbacks, guards, multiple
+function equations and local bindings fail extraction. The interpreter and
+syntax regression suites pin these failures alongside the successful golden.
+
 ## Notes
 
 - **CPP.** One source file uses `#if`. Compiling to preprocess is out of the

@@ -60,6 +60,14 @@ main = do
             , "  parseJSON = Aeson.withBool \"root\" $ \\b -> if b then pure (Root b) else fail \"disabled\""
             ]
   check "withBool callback cannot bypass extraction checks" (bad restrictedBool)
+  let stringCallback =
+        schema $
+          Text.unlines
+            [ "data Root = Root"
+            , "instance FromJSON Root where"
+            , "  parseJSON v = case v of { String \"x\" -> validateBackend True; _ -> fail \"no\" }"
+            ]
+  check "String alternative cannot bypass callback checks" (bad stringCallback)
   real <- extractConfig "../.." configSources configRoot
   case real of
     Left errs -> fail (show errs)
