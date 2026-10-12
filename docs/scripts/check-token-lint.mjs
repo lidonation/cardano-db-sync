@@ -117,7 +117,16 @@ const DECORATIVE_BORDERS = new Map([
     new Map([
       ['.navbar', 'navbar hairline'],
       ['.drawer:not([hidden])', 'nav drawer container rule'],
+      ['.drawerActions,\n.drawerPreferences', 'drawer section rule between groups'],
     ]),
+  ],
+  [
+    'src/theme/DocLayout/styles.module.css',
+    new Map([['.panel', 'disclosure panel frame; its button carries the control boundary']]),
+  ],
+  [
+    'src/landing/styles.module.css',
+    new Map([['.stage', 'static "how it works" step, not interactive']]),
   ],
   ['src/inventory/styles.module.css', new Map([['.entry', 'inventory section rule']])],
 ]);

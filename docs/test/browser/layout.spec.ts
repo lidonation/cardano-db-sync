@@ -74,6 +74,25 @@ test.describe('tiers (DF-7, NAV-2, NAV-3)', () => {
   }
 });
 
+test.describe('version selector placement (DF-7)', () => {
+  // DF-7 keeps the version selector on the bar down to 768; below that it moves into Menu.
+  for (const width of [1440, 1024, 768, 375]) {
+    test(`${width}px`, async ({page}) => {
+      await open(page, INTRO, width);
+      const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+      const bar = header.locator(':scope > div').first();
+      await expect(bar.getByRole('link', {name: 'Next'})).toBeVisible({visible: width >= 768});
+      if (width < 768) {
+        await menuButton(page).click();
+        const drawer = page.locator(
+          `[id="${await menuButton(page).getAttribute('aria-controls')}"]`,
+        );
+        await expect(drawer.getByRole('link', {name: 'Next'})).toBeVisible();
+      }
+    });
+  }
+});
+
 test.describe('reflow (NAV-3, CONTENT-3)', () => {
   for (const width of [320, 375, 768, 1024, 1440]) {
     test(`nothing scrolls sideways at ${width}px`, async ({page}) => {
@@ -289,6 +308,17 @@ test('resizing closes the drawer without leaving focus on hidden content', async
   await expect(page.locator('header[data-dbs-component="Navbar / Full"] a').first()).toBeFocused();
   await page.setViewportSize({width: 375, height: 900});
   await expect(menuButton(page)).toHaveAttribute('aria-expanded', 'false');
+});
+
+test('focus the browser drops while the drawer hides still lands on the home link', async ({
+  page,
+}) => {
+  await open(page, PAGE, 375);
+  await menuButton(page).click();
+  // Chrome's focus fixup can blur the hidden drawer's link before the media listener runs
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.setViewportSize({width: 1440, height: 900});
+  await expect(page.locator('header[data-dbs-component="Navbar / Full"] a').first()).toBeFocused();
 });
 
 test('all language choices remain reachable in a landscape-phone drawer', async ({page}) => {

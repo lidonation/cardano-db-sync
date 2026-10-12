@@ -68,7 +68,9 @@ export interface DerivedNav {
   }[];
   /** The repository link, shown as the GitHub control. */
   readonly github?: string;
-  /** Items handed to the stock renderer: the locale dropdown until B30 replaces it. */
+  /** Items on the bar down to 768px, in the drawer below (DF-7): the version selector. */
+  readonly actions: readonly NavbarItemConfig[];
+  /** Items on the bar from 1280px, in the drawer below (DF-7): the locale selector. */
   readonly preferences: readonly NavbarItemConfig[];
 }
 
@@ -89,6 +91,7 @@ export function deriveNav(
   docs: DocsState,
 ): DerivedNav {
   const links: {label: string; href: string; active: boolean}[] = [];
+  const actions: NavbarItemConfig[] = [];
   const preferences: NavbarItemConfig[] = [];
   let github: string | undefined;
   for (const item of items) {
@@ -115,8 +118,10 @@ export function deriveNav(
         }
         break;
       }
-      case 'localeDropdown':
       case 'docsVersionDropdown':
+        actions.push(item);
+        break;
+      case 'localeDropdown':
         preferences.push(item);
         break;
       default:
@@ -131,5 +136,5 @@ export function deriveNav(
         }
     }
   }
-  return {links, github, preferences};
+  return {links, github, actions, preferences};
 }

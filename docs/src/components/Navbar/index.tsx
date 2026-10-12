@@ -81,9 +81,14 @@ export function NavbarFull({
     const wide = window.matchMedia('(min-width: 1280px)');
     const closeOnWide = () => {
       if (wide.matches && open) {
+        // At 1280 the open drawer is hidden by CSS before this listener runs, and the browser may
+        // already have dropped focus from inside it to <body>: that counts as focus in the drawer.
+        const active = document.activeElement;
         if (
-          drawer.current?.contains(document.activeElement) ||
-          document.activeElement === menuButton.current
+          active === null ||
+          active === document.body ||
+          drawer.current?.contains(active) ||
+          active === menuButton.current
         )
           home.current?.focus();
         setOpen(false);
