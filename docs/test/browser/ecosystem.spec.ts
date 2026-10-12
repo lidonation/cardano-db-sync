@@ -97,6 +97,10 @@ test.describe('content', () => {
   });
 
   test('untranslated locale marks tool content as English', async ({page}) => {
+    test.skip(
+      !test.info().project.use.baseURL,
+      'The development server serves only the default locale; built profiles cover Japanese.',
+    );
     const base = test.info().project.use.baseURL ?? SITE_URL;
     await page.goto(`${base}ja/ecosystem`);
     await expect(page.locator('main')).toHaveAttribute('lang', 'en');
