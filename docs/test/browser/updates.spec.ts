@@ -73,6 +73,34 @@ test('week and month use inclusive UTC boundaries and announce result counts', a
   await expect(page.getByRole('status')).toContainText(/5\s+updates?/i);
 });
 
+test('inactive panels do not render duplicate entry lists', async ({page}) => {
+  await open(page);
+  await expect(page.locator('[role="tabpanel"]')).toHaveCount(4);
+  await expect(page.locator('[role="tabpanel"] li')).toHaveCount(2);
+  await page.getByRole('tab', {name: 'Total', exact: true}).click();
+  await expect(page.locator('[role="tabpanel"] li')).toHaveCount(5);
+  await range(page, '2026-10-06', '2026-10-06');
+  await expect(page.locator('[role="tabpanel"] li')).toHaveCount(1);
+  await page.getByRole('tab', {name: 'Week', exact: true}).click();
+  await page.getByRole('tab', {name: 'Custom', exact: true}).click();
+  await expect(page.getByLabel('From', {exact: true})).toHaveValue('2026-10-06');
+  await expect(page.locator('[role="tabpanel"] li')).toHaveCount(1);
+});
+
+test('incomplete and reversed custom ranges announce validation, not zero results', async ({
+  page,
+}) => {
+  await open(page);
+  await page.getByRole('tab', {name: 'Custom', exact: true}).click();
+  await expect(page.getByRole('status')).toContainText('Choose both a From date and a To date.');
+  await expect(page.getByRole('status')).not.toContainText(/0\s+updates?/i);
+  await range(page, '2026-10-12', '2026-09-12');
+  await expect(page.getByRole('status')).toContainText(
+    'The To date must be on or after the From date.',
+  );
+  await expect(page.getByRole('status')).not.toContainText(/0\s+updates?/i);
+});
+
 test('custom dates include both endpoints and reject a reversed range', async ({page}) => {
   await open(page);
   await range(page, '2026-09-13', '2026-10-05');

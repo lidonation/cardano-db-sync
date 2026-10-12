@@ -20,10 +20,17 @@ export default function Updates({feed}: {readonly feed: UpdatesFeed | null}): Re
   const [range, setRange] = useState<DateRange>({from: '', to: ''});
   const error = rangeError(range);
   const entries = feed ? selectEntries(feed, period, range) : [];
-  const metric = feed === null ? messages.unavailable : String(entries.length);
+  const selectionError = feed !== null && period === 'custom' ? error : null;
+  const metric =
+    feed === null
+      ? messages.unavailable
+      : selectionError
+        ? messages[selectionError]
+        : String(entries.length);
 
   const content = (selected: Period) => {
-    const rows = feed ? selectEntries(feed, selected, range) : [];
+    if (selected !== period) return null;
+    const rows = entries;
     return (
       <>
         {selected === 'custom' && (
@@ -89,9 +96,9 @@ export default function Updates({feed}: {readonly feed: UpdatesFeed | null}): Re
   return (
     <section className={styles.panel} aria-label={messages.title} lang={lang}>
       <div className={styles.metric} role="status" aria-live="polite" aria-atomic="true">
-        <span className={styles.count}>{metric}</span>{' '}
+        <span className={selectionError ? styles.label : styles.count}>{metric}</span>{' '}
         <span className={styles.label}>
-          {messages.count} · {messages[period]}
+          {selectionError ? messages[period] : `${messages.count} · ${messages[period]}`}
         </span>
       </div>
       <Tabs
