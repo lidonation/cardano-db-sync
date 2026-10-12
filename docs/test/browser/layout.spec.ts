@@ -3,6 +3,8 @@ import {expect, test, type Page} from '@playwright/test';
 
 import {LAYOUT_URL, SITE_URL} from '../../playwright.config';
 
+import {smallTargets} from './audits';
+
 /**
  * B34 — the responsive chrome and docs layout (NAV-1..4, CONTENT-3, DF-6, DF-7), run against the
  * fixture docs (sections and a long page with a table of contents) and the real docs.
@@ -25,7 +27,14 @@ async function open(page: Page, url: string, width: number, palette = 'light') {
   await page.setViewportSize({width, height: 900});
   await page.goto(url);
   await page.locator('main article').waitFor();
-  await page.evaluate((name) => document.documentElement.setAttribute('data-theme', name), palette);
+  await page.evaluate((name) => {
+    document.documentElement.setAttribute('data-dbs-palette', name);
+    document.documentElement.setAttribute(
+      'data-theme',
+      name === 'dark' || name === 'navy' ? 'dark' : 'light',
+    );
+  }, palette);
+  await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -96,36 +105,6 @@ test.describe('reflow (NAV-3, CONTENT-3)', () => {
     });
   }
 });
-
-/**
- * Every interactive element outside running prose, at least 44×44 CSS px (NAV-4, DF-6). Inline
- * links in a sentence are exempt (WCAG 2.5.8 "inline"); hidden and off-screen controls (the skip
- * link before it is focused, a collapsed panel) are not on screen to hit.
- */
-async function smallTargets(page: Page): Promise<string[]> {
-  return page.evaluate(() => {
-    const small: string[] = [];
-    const selector =
-      'a[href], button, input, select, textarea, summary, [role="button"], [tabindex]';
-    for (const element of Array.from(document.querySelectorAll<HTMLElement>(selector))) {
-      if (element.closest('.markdown p, .markdown li, .markdown td')) continue;
-      const box = element.getBoundingClientRect();
-      if (box.width === 0 || box.height === 0) continue;
-      const style = getComputedStyle(element);
-      if (style.visibility === 'hidden' || element.closest('[hidden], [aria-hidden="true"]')) {
-        continue;
-      }
-      if (box.right <= 0 || box.bottom <= 0 || box.width <= 1 || box.height <= 1) continue;
-      if (Math.round(box.width) < 44 || Math.round(box.height) < 44) {
-        const name = (element.getAttribute('aria-label') ?? element.textContent ?? '').trim();
-        small.push(
-          `${element.tagName.toLowerCase()} "${name.slice(0, 30)}" ${Math.round(box.width)}×${Math.round(box.height)}`,
-        );
-      }
-    }
-    return small;
-  });
-}
 
 test.describe('44px targets (NAV-4, DF-6)', () => {
   for (const width of [320, 375, 768, 1024, 1440]) {
@@ -207,9 +186,7 @@ test.describe('disclosures and the drawer (NAV-2)', () => {
     await expect(drawer).toBeVisible();
     expect(await drawer.evaluate((element) => element.contains(document.activeElement))).toBe(true);
     // the preferences that sit in the bar at 1280 are in the drawer below it
-    await expect(
-      drawer.getByRole('button', {name: /dark mode|light mode|system mode/i}),
-    ).toBeVisible();
+    await expect(drawer.getByRole('button', {name: /^Theme: /})).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(menu).toHaveAttribute('aria-expanded', 'false');
     await expect(drawer).toBeHidden();
@@ -298,7 +275,7 @@ test.describe('review regressions', () => {
     await page.goto(PAGE);
     await menuButton(page).click();
     const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
-    const control = drawer.getByRole('button', {name: /dark mode|light mode|system mode/i});
+    const control = drawer.getByRole('button', {name: /^Theme: /});
     await control.scrollIntoViewIfNeeded();
     const box = (await control.boundingBox())!;
     expect(box.y + box.height).toBeLessThanOrEqual(180);

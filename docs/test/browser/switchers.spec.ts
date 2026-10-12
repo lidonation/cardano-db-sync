@@ -29,6 +29,10 @@ async function goto(page: Page, url: string, width = 1440) {
   await page.evaluate(() => document.fonts.ready);
 }
 
+function menuButton(page: Page) {
+  return page.getByRole('button', {name: 'Menu'});
+}
+
 function themeButton(page: Page) {
   return page.getByRole('button', {name: /^Theme: /});
 }
@@ -170,6 +174,8 @@ test.describe('responsive and focus discipline (DF-7, FLOOR-4, NAV-4)', () => {
 
   test('the switcher keeps a 44px target at phone width', async ({page}) => {
     await goto(page, HOME, 375);
+    // DF-7: below 1280 the theme control lives in the Menu drawer (B34).
+    await menuButton(page).click();
     const box = await themeButton(page).boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(44);
@@ -178,7 +184,7 @@ test.describe('responsive and focus discipline (DF-7, FLOOR-4, NAV-4)', () => {
 
   test('every navbar keyboard stop shows the focus ring', async ({page}) => {
     await goto(page, HOME);
-    await page.locator('.navbar .navbar__brand').click();
+    await page.locator('header[data-dbs-component="Navbar / Full"] a').first().focus();
     const unringed: string[] = [];
     let seen = 0;
     for (let step = 0; step < 40; step += 1) {
@@ -295,11 +301,14 @@ test.describe('palette regressions', () => {
   });
 
   test('desktop and mobile controls announce the same palette', async ({page}) => {
-    await goto(page, HOME, 375);
+    await goto(page, HOME);
     await themeButton(page).click();
     await page.getByRole('menuitemradio', {name: 'Navy', exact: true}).click();
-    await page.getByRole('button', {name: 'Toggle navigation bar'}).click();
-    const mobile = page.locator('.navbar-sidebar').getByRole('button', {name: /^Theme:/});
+    // below 1280 the control moves into the Menu drawer (DF-7, B34); it must announce the same
+    await page.setViewportSize({width: 375, height: 900});
+    await menuButton(page).click();
+    const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
+    const mobile = drawer.getByRole('button', {name: /^Theme:/});
     await expect(mobile).toHaveAccessibleName('Theme: Navy. Change theme');
   });
 });
