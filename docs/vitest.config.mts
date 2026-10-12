@@ -39,6 +39,7 @@ export default defineConfig({
         // B44-b: the Ecosystem page's entries and the changelog it counts.
         'src/data/release-history.ts',
         'src/ecosystem/entries.ts',
+        'src/numbers/data.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],
