@@ -33,8 +33,11 @@
     "check:budget": "node scripts/check-asset-budget.mjs",
     "test": "vitest run --coverage",
     "test:build": "vitest run --config vitest.build.config.mts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run check:tokens && npm run check:token-lint && npm run check:deps && npm run check:audit && npm run check:i18n && npm run check:manifest && npm run test && npm run test:build && npm run check:links && npm run check:csp && npm run check:budget",
-    "check:annotations": "node scripts/check-annotations.mjs"
+    "test:schema-db": "vitest run --config vitest.db.config.mts",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run check:schema && npm run check:tokens && npm run check:token-lint && npm run check:deps && npm run check:audit && npm run check:i18n && npm run check:manifest && npm run test && npm run test:build && npm run check:links && npm run check:csp && npm run check:budget",
+    "check:annotations": "node scripts/check-annotations.mjs",
+    "check:schema": "node scripts/check-schema.mjs",
+    "extract:schema": "node scripts/extract-schema.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
