@@ -9,7 +9,7 @@ import {ErrorMessage} from '../shared/Status';
 import {demoAttributes} from '../shared/states';
 
 import Frame, {CardSkeleton, type CardDataProps} from './Frame';
-import styles from './styles.module.css';
+import selectStyles from './select.module.css';
 
 interface SelectCardProps extends CardDataProps {
   readonly label: ReactNode;
@@ -68,16 +68,16 @@ function SelectFrame({
     );
   }
   return (
-    <div className={styles.selectWrap}>
+    <div className={selectStyles.selectWrap}>
       <label
-        className={clsx(styles.card, styles.select, layout)}
+        className={clsx(selectStyles.card, selectStyles.select, layout)}
         data-kind={kind}
         data-dbs-component={`Card / ${kind}`}
         {...demoAttributes(data.demo)}
         data-error={error ? '' : undefined}
       >
         <input
-          className={styles.input}
+          className={selectStyles.input}
           type={type}
           role={role}
           name={name}
@@ -90,9 +90,9 @@ function SelectFrame({
           aria-describedby={error ? errorId : undefined}
         />
         {indicator}
-        <span className={styles.selectText}>
-          <span className={styles.title}>{label}</span>
-          {description && <span className={styles.body}>{description}</span>}
+        <span className={selectStyles.selectText}>
+          <span className={selectStyles.title}>{label}</span>
+          {description && <span className={selectStyles.body}>{description}</span>}
         </span>
       </label>
       {error && <ErrorMessage id={errorId}>{error}</ErrorMessage>}
@@ -107,9 +107,9 @@ export function ChoiceCard(props: SelectCardProps): React.JSX.Element {
       {...props}
       kind="Choice"
       type="checkbox"
-      layout={styles.choice}
+      layout={selectStyles.choice}
       indicator={
-        <span className={styles.tick} aria-hidden="true">
+        <span className={selectStyles.tick} aria-hidden="true">
           <Icon name="check" size={16} />
         </span>
       }
@@ -127,13 +127,13 @@ export function OptionCard({
       {...props}
       kind="Option"
       type="radio"
-      layout={styles.option}
+      layout={selectStyles.option}
       indicator={
         <>
-          <span className={styles.optionIcon} aria-hidden="true">
+          <span className={selectStyles.optionIcon} aria-hidden="true">
             {icon ?? <Icon name="hexagon" size={32} />}
           </span>
-          <span className={styles.tick} aria-hidden="true">
+          <span className={selectStyles.tick} aria-hidden="true">
             <Icon name="check" size={16} />
           </span>
         </>
@@ -161,22 +161,22 @@ export function DataOptionCard({
       kind="Data option"
       type="checkbox"
       role="switch"
-      layout={styles.dataOption}
+      layout={selectStyles.dataOption}
       description={
         <>
-          <code className={styles.configKey}>{configKey}</code>
-          <code className={styles.tables}>{tables}</code>
+          <code className={selectStyles.configKey}>{configKey}</code>
+          <code className={selectStyles.tables}>{tables}</code>
         </>
       }
       indicator={
-        <span className={styles.switch} aria-hidden="true">
-          <span className={styles.track}>
-            <span className={styles.knob} />
+        <span className={selectStyles.switch} aria-hidden="true">
+          <span className={selectStyles.track}>
+            <span className={selectStyles.knob} />
           </span>
-          <span className={styles.switchWord} data-word="on">
+          <span className={selectStyles.switchWord} data-word="on">
             {translate({id: 'components.switch.on', message: 'On', description: 'Switch state'})}
           </span>
-          <span className={styles.switchWord} data-word="off">
+          <span className={selectStyles.switchWord} data-word="off">
             {translate({id: 'components.switch.off', message: 'Off', description: 'Switch state'})}
           </span>
         </span>
