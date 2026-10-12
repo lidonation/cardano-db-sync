@@ -66,6 +66,21 @@ export default function inventoryPlugin(context: LoadContext): Plugin {
       if (!inventoryEnabled()) {
         return;
       }
+      for (const state of [
+        'ready',
+        'mainnet',
+        'missing',
+        'stale',
+        'invalid',
+        'network',
+        'no-model',
+      ]) {
+        actions.addRoute({
+          path: `${context.baseUrl}__numbers/${state}`,
+          component: path.resolve(context.siteDir, 'src/numbers/fixtures.ts'),
+          exact: true,
+        });
+      }
       actions.addRoute({
         path: `${context.baseUrl}${UPDATES_FIXTURE_PATH}`,
         component: path.resolve(context.siteDir, 'test/fixtures/updates/UpdatesFixture.tsx'),
