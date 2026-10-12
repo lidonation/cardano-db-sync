@@ -1,0 +1,249 @@
+{
+  "config": {
+    "haskell": "Root",
+    "keys": [
+      {
+        "name": "Name",
+        "required": true,
+        "shape": {
+          "type": "string"
+        }
+      },
+      {
+        "name": "Logging",
+        "required": true,
+        "shape": {
+          "type": "boolean"
+        }
+      },
+      {
+        "default": 8080,
+        "name": "Port",
+        "required": false,
+        "shape": {
+          "haskell": "Int",
+          "maximum": "9223372036854775807",
+          "minimum": "-9223372036854775808",
+          "nullable": true,
+          "type": "integer"
+        }
+      },
+      {
+        "default": true,
+        "name": "Future",
+        "required": false,
+        "shape": {
+          "nullable": true,
+          "type": "boolean"
+        }
+      },
+      {
+        "default": ["https://ipfs.io/ipfs"],
+        "name": "gateways",
+        "required": false,
+        "shape": {
+          "items": {
+            "type": "string"
+          },
+          "nullable": true,
+          "type": "array"
+        }
+      },
+      {
+        "default": "memory",
+        "name": "backend",
+        "required": false,
+        "shape": {
+          "nullable": true,
+          "type": "enum",
+          "values": ["memory", "disk"]
+        }
+      },
+      {
+        "default": {
+          "assets": {
+            "enable": true
+          },
+          "ledger": "enable",
+          "out": {
+            "address": false,
+            "value": "enable"
+          },
+          "preset": null,
+          "stop": null,
+          "toggle": "off"
+        },
+        "name": "insert",
+        "required": false,
+        "shape": {
+          "haskell": "InsertConfig",
+          "keys": [
+            {
+              "name": "preset",
+              "required": false,
+              "shape": {
+                "nullable": true,
+                "type": "enum",
+                "values": ["full", "minimal"]
+              }
+            },
+            {
+              "default": "off",
+              "name": "toggle",
+              "required": false,
+              "shape": {
+                "nullable": true,
+                "type": "enum",
+                "values": ["on", "off"]
+              }
+            },
+            {
+              "default": "enable",
+              "name": "ledger",
+              "required": false,
+              "shape": {
+                "nullable": true,
+                "type": "enum",
+                "values": ["enable", "disable", "ignore"]
+              }
+            },
+            {
+              "default": {
+                "address": false,
+                "value": "enable"
+              },
+              "name": "out",
+              "required": false,
+              "shape": {
+                "haskell": "Out",
+                "keys": [
+                  {
+                    "name": "value",
+                    "required": true,
+                    "shape": {
+                      "type": "enum",
+                      "values": ["enable", "disable", "prune"]
+                    }
+                  },
+                  {
+                    "default": false,
+                    "name": "force",
+                    "required": false,
+                    "shape": {
+                      "nullable": true,
+                      "type": "boolean"
+                    }
+                  },
+                  {
+                    "default": false,
+                    "name": "address",
+                    "required": false,
+                    "shape": {
+                      "nullable": true,
+                      "type": "boolean"
+                    }
+                  }
+                ],
+                "line": 86,
+                "nullable": true,
+                "type": "object"
+              }
+            },
+            {
+              "default": {
+                "enable": true
+              },
+              "name": "assets",
+              "required": false,
+              "shape": {
+                "haskell": "Assets",
+                "keys": [
+                  {
+                    "name": "enable",
+                    "required": true,
+                    "shape": {
+                      "type": "boolean"
+                    }
+                  },
+                  {
+                    "name": "policies",
+                    "required": false,
+                    "shape": {
+                      "items": {
+                        "type": "string"
+                      },
+                      "nullable": true,
+                      "type": "array"
+                    }
+                  }
+                ],
+                "line": 97,
+                "nullable": true,
+                "type": "object"
+              }
+            },
+            {
+              "default": null,
+              "name": "stop",
+              "required": false,
+              "shape": {
+                "haskell": "Word64",
+                "maximum": "18446744073709551615",
+                "minimum": "0",
+                "nullable": true,
+                "type": "integer"
+              }
+            }
+          ],
+          "line": 113,
+          "nullable": true,
+          "presets": [
+            {
+              "key": "preset",
+              "values": {
+                "full": {
+                  "assets": {
+                    "enable": true
+                  },
+                  "ledger": "enable",
+                  "out": {
+                    "address": false,
+                    "value": "enable"
+                  },
+                  "stop": null,
+                  "toggle": "on"
+                },
+                "minimal": {
+                  "assets": {
+                    "enable": false
+                  },
+                  "ledger": "ignore",
+                  "out": {
+                    "address": false,
+                    "force": true,
+                    "value": "prune"
+                  },
+                  "stop": 100,
+                  "toggle": "off"
+                }
+              }
+            }
+          ],
+          "type": "object"
+        }
+      }
+    ],
+    "line": 53,
+    "type": "object"
+  },
+  "passthrough": [
+    {
+      "keys": ["TraceOptions", "Options"],
+      "reader": "readTrace"
+    }
+  ],
+  "root": "Root",
+  "schemaVersion": 2,
+  "sources": ["test/config-fixtures/ConfigSample.hs"],
+  "unresolved": []
+}

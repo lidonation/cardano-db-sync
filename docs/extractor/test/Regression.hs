@@ -1,11 +1,12 @@
 module Main (main) where
 
 import Control.Monad (unless)
-import Data.Aeson (decodeStrict', toJSON)
+import Data.Aeson (Value (Number), decodeStrict', toJSON)
 import Data.List (find)
 import qualified Data.Text as Text
 import GHC.Types.SrcLoc (unLoc)
 import HaddockExtract
+import HaddockExtract.Model (encodeJson)
 
 main :: IO ()
 main = do
@@ -45,4 +46,5 @@ main = do
   check "unsupported declarations do not transfer docs" (all ((/= "f") . annName) barrier)
   let value = Artifact [ModuleAnnotations "Regression.hs" (Just "Regression") (Just (Text.pack ['\0', '\1', '\31', 'é'])) False []]
   check "JSON control characters round trip" (decodeStrict' (encodeArtifact value) == Just (toJSON value))
+  mapM_ (\n -> check "JSON numbers preserve fractions" (decodeStrict' (encodeJson (Number n)) == Just (Number n))) [1.5, -2.25, 0.00000001, 8080]
   putStrLn "regression-test: all extraction cases passed"

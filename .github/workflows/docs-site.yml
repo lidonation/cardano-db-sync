@@ -10,12 +10,18 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+      # read by check:config (CON-4)
+      - "config/mainnet-config.yaml"
+      - "config/preprod-config.yaml"
       # check:renames verifies the rename map against these files (GDE-9)
       - "schema/**"
   pull_request:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+      # read by check:config (CON-4)
+      - "config/mainnet-config.yaml"
+      - "config/preprod-config.yaml"
       # check:renames verifies the rename map against these files (GDE-9)
       - "schema/**"
   # docs-i18n.yml dispatches this on the Crowdin translations branch, whose pull request is opened
@@ -59,6 +65,8 @@ jobs:
         run: npm run check:css
       - name: Annotation artifact is consumable (CON-1)
         run: npm run check:annotations
+      - name: Config the site hands out is config db-sync reads (CON-4)
+        run: npm run check:config
       - name: Rename map is consumable (CON-1, GDE-9)
         run: npm run check:renames
       - name: Schema artifact is sound (SCH-1, GDE-6)
