@@ -1,8 +1,9 @@
 import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
-import {INVENTORY_URL} from '../../playwright.config';
+import {INVENTORY_URL, ORIGIN} from '../../playwright.config';
 import {PROFILES} from '../../config/profiles';
+import {contrast, paintedBackground} from './contrast';
 
 /**
  * B35 — control-boundary binding (TOK-6, FLOOR-3) and the active sidebar label (NAV-5).
@@ -22,7 +23,6 @@ const ACTIVE_LABEL: Record<string, string> = {
   navy: 'rgb(121, 184, 255)',
 };
 
-const ORIGIN = 'http://127.0.0.1:3100';
 const DOCS = `${ORIGIN}${PROFILES.dev.baseUrl}docs/intro`;
 
 async function openInventory(page: Page, palette: string = 'light', width = 1440) {
@@ -33,50 +33,70 @@ async function openInventory(page: Page, palette: string = 'light', width = 1440
   await page.evaluate(() => document.fonts.ready);
 }
 
-/** WCAG relative luminance contrast between two computed `rgb()` colours. */
-function contrast(a: string, b: string): number {
-  const luminance = (colour: string) => {
-    const [r, g, bl] = (colour.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
-    const channel = (value: number) => {
-      const c = value / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    };
-    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(bl);
-  };
-  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (light + 0.05) / (dark + 0.05);
-}
-
 test.describe('enabled control boundaries clear 3:1 (TOK-6, FLOOR-3)', () => {
   for (const palette of PALETTES) {
     test(palette, async ({page}) => {
       await openInventory(page, palette);
-      const pairs = await page.evaluate(() => {
-        const page = getComputedStyle(document.querySelector('#inventory')!).backgroundColor;
-        const probe = (selector: string) => {
-          const element = document.querySelector(selector) as HTMLElement | null;
-          if (!element) {
-            return null;
-          }
-          return {where: selector, boundary: getComputedStyle(element).borderColor, page};
-        };
-        return [
-          probe('[data-inventory-entry="Card / Tool"] [data-inventory-state="default"] a'),
-          probe(
-            '[data-inventory-entry="Chip / Filter"] [data-inventory-state="default"] [role="tab"]',
-          ),
-          probe('[data-inventory-entry="Card / Choice"] [data-inventory-state="default"] label'),
-        ];
-      });
-      expect(pairs.filter(Boolean)).toHaveLength(3);
-      const failures = (
-        pairs.filter(Boolean) as {where: string; boundary: string; page: string}[]
-      ).flatMap((pair) =>
-        contrast(pair.boundary, pair.page) < 3
-          ? [`${pair.where}: ${contrast(pair.boundary, pair.page).toFixed(2)}:1`]
-          : [],
-      );
-      expect(failures).toEqual([]);
+      const probes = [
+        ['Card / Tool', 'a'],
+        ['Card / Team', 'a'],
+        ['Card / Use case', 'a'],
+        ['Card / Choice', 'label'],
+        ['Card / Option', 'label'],
+        ['Card / Data option', 'label'],
+        ['Chip / Filter', '[role="tab"][aria-selected="false"]'],
+      ];
+      for (const [entry, target] of probes) {
+        const control = page
+          .locator(`[data-inventory-entry="${entry}"] [data-inventory-state="default"] ${target}`)
+          .first();
+        await expect(control).toBeVisible();
+        const border = await control.evaluate((element) => ({
+          colour: getComputedStyle(element).borderTopColor,
+          width: getComputedStyle(element).borderTopWidth,
+          style: getComputedStyle(element).borderTopStyle,
+        }));
+        expect(parseFloat(border.width), entry).toBeGreaterThan(0);
+        expect(border.style, entry).not.toBe('none');
+        const backdrop = await control.locator('..').evaluate(paintedBackground);
+        expect(contrast(border.colour, backdrop), entry).toBeGreaterThanOrEqual(3);
+      }
+    });
+  }
+});
+
+test.describe('disabled choices and tabs retain the interactive boundary (TOK-6)', () => {
+  for (const palette of PALETTES) {
+    test(palette, async ({page}) => {
+      await openInventory(page, palette);
+      for (const entry of [
+        'Card / Choice',
+        'Card / Option',
+        'Card / Data option',
+        'Chip / Filter',
+      ]) {
+        const target = entry === 'Chip / Filter' ? '[role="tab"][aria-disabled="true"]' : 'label';
+        const control = page
+          .locator(`[data-inventory-entry="${entry}"] [data-inventory-state="disabled"] ${target}`)
+          .first();
+        await expect(control).toBeVisible();
+        const expected = await page.evaluate(() => {
+          const probe = document.createElement('span');
+          probe.style.borderColor = 'var(--dbs-border-interactive)';
+          document.body.append(probe);
+          const value = getComputedStyle(probe).borderTopColor;
+          probe.remove();
+          return value;
+        });
+        const border = await control.evaluate(
+          (element) => getComputedStyle(element).borderTopColor,
+        );
+        expect(border, entry).toBe(expected);
+        expect(
+          contrast(border, await control.locator('..').evaluate(paintedBackground)),
+          entry,
+        ).toBeGreaterThanOrEqual(3);
+      }
     });
   }
 });
@@ -93,29 +113,18 @@ test.describe('active sidebar label (NAV-5)', () => {
       );
       const active = page.locator('.theme-doc-sidebar-container .menu__link--active').first();
       await expect(active).toBeVisible();
-      const measured = await active.evaluate((element) => {
-        // The opaque surface behind the link: the link itself wears Infima's translucent
-        // active wash, and every container up to <html> is transparent, so walk past any
-        // non-opaque layer. (The wash is also present in the axe pass, which audits the
-        // full rendering.)
-        const opaque = (node: Element | null): string => {
-          let current: Element | null = node?.parentElement ?? null;
-          while (current) {
-            const background = getComputedStyle(current).backgroundColor;
-            if (/^rgb\(/.test(background)) {
-              return background;
-            }
-            current = current.parentElement;
-          }
-          return 'rgb(255, 255, 255)';
-        };
-        return {
-          color: getComputedStyle(element).color,
-          surface: opaque(element),
-        };
-      });
+      const colour = await active.evaluate((element) => getComputedStyle(element).color);
+      const surface = await active.evaluate(paintedBackground);
+      const measured = {color: colour, surface};
       expect(measured.color).toBe(ACTIVE_LABEL[palette]);
       expect(contrast(measured.color, measured.surface)).toBeGreaterThanOrEqual(4.5);
+      await active.hover();
+      expect(await active.evaluate((element) => getComputedStyle(element).color)).toBe(
+        ACTIVE_LABEL[palette],
+      );
+      expect(contrast(colour, await active.evaluate(paintedBackground))).toBeGreaterThanOrEqual(
+        4.5,
+      );
     });
   }
 
