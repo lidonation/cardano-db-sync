@@ -9,6 +9,8 @@ for (const locale of LOCALES) {
     await expect(main).toContainText(/unavailable/i);
     await expect(main).not.toContainText(/0 GB|\$0|healthy|sync time/i);
     await expect(main.getByRole('table')).toHaveCount(0);
-    await expect(page.locator('main[lang="en"], main [lang="en"]')).not.toHaveCount(0);
+    // English inherits html[lang=en]; incomplete non-English pages need an explicit marker.
+    await expect(main).toHaveJSProperty('lang', locale === 'en' ? '' : 'en');
+    if (locale === 'en') await expect(page.locator('html')).toHaveAttribute('lang', 'en');
   });
 }
