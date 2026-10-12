@@ -122,7 +122,7 @@ describe('build hygiene', () => {
     expect(config.markdown?.hooks?.onBrokenMarkdownLinks).toBe('throw');
   });
 
-  it('registers the CNAME, route-manifest, environment, security, i18n and inventory plugins', async () => {
+  it('registers the CNAME, route-manifest, environment, security, i18n, inventory and CSS-prune plugins', async () => {
     const config = await loadConfig('prod');
     const {default: cnamePlugin} = await import('../../plugins/cname');
     const {default: routeManifestPlugin} = await import('../../plugins/route-manifest');
@@ -130,6 +130,7 @@ describe('build hygiene', () => {
     const {default: securityPlugin} = await import('../../plugins/security');
     const {default: i18nPlugin} = await import('../../plugins/i18n');
     const {default: inventoryPlugin} = await import('../../plugins/inventory');
+    const {default: cssPrunePlugin} = await import('../../plugins/css-prune');
     expect(config.plugins).toEqual([
       cnamePlugin,
       routeManifestPlugin,
@@ -137,6 +138,7 @@ describe('build hygiene', () => {
       securityPlugin,
       i18nPlugin,
       inventoryPlugin,
+      cssPrunePlugin,
     ]);
   });
 

@@ -4,6 +4,7 @@ import type * as Preset from '@docusaurus/preset-classic';
 import {I18N} from './config/i18n';
 import {PROFILES, resolveProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
+import cssPrunePlugin from './plugins/css-prune';
 import environmentPlugin from './plugins/environment';
 import i18nPlugin from './plugins/i18n';
 import inventoryPlugin, {layoutFixturePlugins} from './plugins/inventory';
@@ -79,7 +80,7 @@ const config: Config = {
   // SEC-1..3, SEC-8: a per-route meta CSP in every page, the colour-mode bootstrap hashed (B06).
   // META-4, A11Y-18: which locales each page exists in, for hreflang and fallback marking (B40).
   // B29: the component inventory, on the development server only (DBS_INVENTORY=1); B34's layout
-  // fixture docs behind the same flag.
+  // fixture docs behind the same flag. PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
     cnamePlugin,
     routeManifestPlugin,
@@ -87,6 +88,7 @@ const config: Config = {
     securityPlugin,
     i18nPlugin,
     inventoryPlugin,
+    cssPrunePlugin,
     ...layoutFixturePlugins(),
   ],
 
