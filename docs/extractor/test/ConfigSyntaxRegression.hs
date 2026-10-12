@@ -10,7 +10,8 @@ import HaddockExtract.Parse (ParseOutcome (..), parseSource)
 
 main :: IO ()
 main = do
-  rejects "multiple helper equations"
+  rejects
+    "multiple helper equations"
     [ "instance FromJSON Backend where"
     , "  parseJSON = withText \"Backend\" $ \\v -> case onOff v of"
     , "    Just b -> pure (Backend b)"
@@ -19,26 +20,30 @@ main = do
     , "onOff \"off\" = Just False"
     , "onOff _ = Nothing"
     ]
-  rejects "boolean guarded text alternative"
+  rejects
+    "boolean guarded text alternative"
     [ "instance FromJSON Backend where"
     , "  parseJSON = withText \"Backend\" $ \\case"
     , "    \"on\" | False -> pure (Backend True)"
     , "    _ -> fail \"bad\""
     ]
-  rejects "pattern guarded text alternative"
+  rejects
+    "pattern guarded text alternative"
     [ "instance FromJSON Backend where"
     , "  parseJSON = withText \"Backend\" $ \\case"
     , "    \"on\" | Just b <- Nothing -> pure (Backend b)"
     , "    _ -> fail \"bad\""
     ]
-  rejects "multiple guarded right hand sides"
+  rejects
+    "multiple guarded right hand sides"
     [ "instance FromJSON Backend where"
     , "  parseJSON = withText \"Backend\" $ \\case"
     , "    \"on\" | False -> fail \"bad\""
     , "         | otherwise -> pure (Backend True)"
     , "    _ -> fail \"bad\""
     ]
-  rejects "case alternative local bindings"
+  rejects
+    "case alternative local bindings"
     [ "instance FromJSON Backend where"
     , "  parseJSON = withText \"Backend\" $ \\case"
     , "    \"on\" -> pure value where value = Backend True"
@@ -60,21 +65,24 @@ rejects name parser = case parseSource source "SyntaxRegression.hs" of
     unless (not (null (schemaUnresolved schema))) $
       fail (name <> ": unsupported syntax extracted without an unresolved error")
   where
-    source = Text.unlines $
-      [ "module SyntaxRegression where"
-      , "data Root = Root Backend"
-      , "data Backend = Backend Bool"
-      , "instance FromJSON Root where"
-      , "  parseJSON = withObject \"Root\" $ \\o -> Root <$> o .: \"backend\""
-      ] ++ parser
+    source =
+      Text.unlines $
+        [ "module SyntaxRegression where"
+        , "data Root = Root Backend"
+        , "data Backend = Backend Bool"
+        , "instance FromJSON Root where"
+        , "  parseJSON = withObject \"Root\" $ \\o -> Root <$> o .: \"backend\""
+        ]
+          ++ parser
 
 traceSource :: Text.Text
-traceSource = Text.unlines
-  [ "module TraceRegression where"
-  , "data Root = Root Bool"
-  , "instance FromJSON Root where"
-  , "  parseJSON = withObject \"Root\" $ \\o -> Root <$> o .: \"enabled\""
-  , "readTrace v = case v of"
-  , "  Object o | any (`KeyMap.member` o) [\"TraceOptions\", \"Options\"] -> readOther o"
-  , "  _ -> pure defaultTrace"
-  ]
+traceSource =
+  Text.unlines
+    [ "module TraceRegression where"
+    , "data Root = Root Bool"
+    , "instance FromJSON Root where"
+    , "  parseJSON = withObject \"Root\" $ \\o -> Root <$> o .: \"enabled\""
+    , "readTrace v = case v of"
+    , "  Object o | any (`KeyMap.member` o) [\"TraceOptions\", \"Options\"] -> readOther o"
+    , "  _ -> pure defaultTrace"
+    ]

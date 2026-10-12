@@ -21,6 +21,16 @@ main = do
   check "Word64 bounds retain full precision" (shapeAt "n" (numeric "Word64") == Just (SInt "Word64" (Just "0") (Just "18446744073709551615")))
   check "integer type mutation changes the artifact" (schemaJson [] "Root" (numeric "Word8") /= schemaJson [] "Root" (numeric "Word64"))
   check "NonEmpty constraint" (shapeAt "n" (numeric "(NonEmpty Word)") == Just (SArray 1 (SInt "Word" (Just "0") (Just "18446744073709551615"))))
+  let doNumeric =
+        schema $
+          Text.unlines
+            [ "data Root = Root Word64"
+            , "instance FromJSON Root where"
+            , "  parseJSON = Aeson.withObject \"root\" $ \\o -> do"
+            , "    n <- o .:? \"n\" .!= 580"
+            , "    pure (Root n)"
+            ]
+  check "do-bound numeric default keeps constructor type" (shapeAt "n" doNumeric == Just (SNullable (SInt "Word64" (Just "0") (Just "18446744073709551615"))))
   let optional body =
         schema $
           Text.unlines

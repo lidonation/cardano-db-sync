@@ -21,6 +21,7 @@
         "name": "EnableFutureGenesis",
         "required": false,
         "shape": {
+          "nullable": true,
           "type": "boolean"
         }
       },
@@ -43,10 +44,43 @@
         "name": "PrometheusPort",
         "required": false,
         "shape": {
+          "haskell": "Int",
+          "maximum": "9223372036854775807",
+          "minimum": "-9223372036854775808",
+          "nullable": true,
           "type": "integer"
         }
       },
       {
+        "default": {
+          "disable_epoch": false,
+          "governance": "enable",
+          "json_type": "text",
+          "ledger": "enable",
+          "metadata": {
+            "enable": true
+          },
+          "multi_asset": {
+            "enable": true
+          },
+          "offchain_pool_data": "disable",
+          "offchain_vote_data": "disable",
+          "plutus": {
+            "enable": true
+          },
+          "pool_stat": "disable",
+          "preset": null,
+          "remove_jsonb_from_schema": "disable",
+          "shelley": {
+            "enable": true
+          },
+          "stop_at_block": null,
+          "tx_cbor": "disable",
+          "tx_out": {
+            "use_address_table": false,
+            "value": "enable"
+          }
+        },
         "name": "insert_options",
         "required": false,
         "shape": {
@@ -56,6 +90,7 @@
               "name": "preset",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["full", "only_utxo", "only_governance", "disable_all"]
               }
@@ -65,11 +100,16 @@
               "name": "tx_cbor",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable"]
               }
             },
             {
+              "default": {
+                "use_address_table": false,
+                "value": "enable"
+              },
               "name": "tx_out",
               "required": false,
               "shape": {
@@ -88,6 +128,7 @@
                     "name": "force_tx_in",
                     "required": false,
                     "shape": {
+                      "nullable": true,
                       "type": "boolean"
                     }
                   },
@@ -96,11 +137,13 @@
                     "name": "use_address_table",
                     "required": false,
                     "shape": {
+                      "nullable": true,
                       "type": "boolean"
                     }
                   }
                 ],
                 "line": 630,
+                "nullable": true,
                 "type": "object"
               }
             },
@@ -109,11 +152,15 @@
               "name": "ledger",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable", "ignore"]
               }
             },
             {
+              "default": {
+                "enable": true
+              },
               "name": "shelley",
               "required": false,
               "shape": {
@@ -133,15 +180,21 @@
                       "items": {
                         "type": "string"
                       },
+                      "minItems": 1,
+                      "nullable": true,
                       "type": "array"
                     }
                   }
                 ],
                 "line": 666,
+                "nullable": true,
                 "type": "object"
               }
             },
             {
+              "default": {
+                "enable": true
+              },
               "name": "multi_asset",
               "required": false,
               "shape": {
@@ -161,15 +214,21 @@
                       "items": {
                         "type": "string"
                       },
+                      "minItems": 1,
+                      "nullable": true,
                       "type": "array"
                     }
                   }
                 ],
                 "line": 687,
+                "nullable": true,
                 "type": "object"
               }
             },
             {
+              "default": {
+                "enable": true
+              },
               "name": "metadata",
               "required": false,
               "shape": {
@@ -187,17 +246,26 @@
                     "required": false,
                     "shape": {
                       "items": {
+                        "haskell": "Word",
+                        "maximum": "18446744073709551615",
+                        "minimum": "0",
                         "type": "integer"
                       },
+                      "minItems": 1,
+                      "nullable": true,
                       "type": "array"
                     }
                   }
                 ],
                 "line": 708,
+                "nullable": true,
                 "type": "object"
               }
             },
             {
+              "default": {
+                "enable": true
+              },
               "name": "plutus",
               "required": false,
               "shape": {
@@ -217,11 +285,14 @@
                       "items": {
                         "type": "string"
                       },
+                      "minItems": 1,
+                      "nullable": true,
                       "type": "array"
                     }
                   }
                 ],
                 "line": 729,
+                "nullable": true,
                 "type": "object"
               }
             },
@@ -230,6 +301,7 @@
               "name": "governance",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable"]
               }
@@ -239,6 +311,7 @@
               "name": "offchain_pool_data",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable"]
               }
@@ -248,6 +321,7 @@
               "name": "offchain_vote_data",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable"]
               }
@@ -257,6 +331,7 @@
               "name": "pool_stat",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable"]
               }
@@ -266,6 +341,7 @@
               "name": "json_type",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["text", "jsonb", "disable"]
               }
@@ -275,6 +351,7 @@
               "name": "remove_jsonb_from_schema",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable"]
               }
@@ -284,6 +361,7 @@
               "name": "disable_epoch",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "boolean"
               }
             },
@@ -292,12 +370,16 @@
               "name": "stop_at_block",
               "required": false,
               "shape": {
+                "haskell": "Word64",
+                "maximum": "18446744073709551615",
+                "minimum": "0",
                 "nullable": true,
                 "type": "integer"
               }
             }
           ],
           "line": 480,
+          "nullable": true,
           "presets": [
             {
               "key": "preset",
@@ -427,10 +509,14 @@
           "items": {
             "type": "string"
           },
+          "nullable": true,
           "type": "array"
         }
       },
       {
+        "default": {
+          "near_tip_epoch": 580
+        },
         "name": "snapshot_interval",
         "required": false,
         "shape": {
@@ -441,11 +527,16 @@
               "name": "near_tip_epoch",
               "required": false,
               "shape": {
+                "haskell": "Word64",
+                "maximum": "18446744073709551615",
+                "minimum": "0",
+                "nullable": true,
                 "type": "integer"
               }
             }
           ],
           "line": 803,
+          "nullable": true,
           "type": "object"
         }
       },
@@ -454,6 +545,7 @@
         "name": "ledger_backend",
         "required": false,
         "shape": {
+          "nullable": true,
           "type": "enum",
           "values": ["inmemory", "lsm"]
         }
@@ -469,7 +561,7 @@
     }
   ],
   "root": "SyncPreConfig",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "sources": [
     "cardano-db-sync/src/Cardano/DbSync/Config.hs",
     "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"

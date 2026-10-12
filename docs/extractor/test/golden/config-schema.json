@@ -21,6 +21,10 @@
         "name": "Port",
         "required": false,
         "shape": {
+          "haskell": "Int",
+          "maximum": "9223372036854775807",
+          "minimum": "-9223372036854775808",
+          "nullable": true,
           "type": "integer"
         }
       },
@@ -29,6 +33,7 @@
         "name": "Future",
         "required": false,
         "shape": {
+          "nullable": true,
           "type": "boolean"
         }
       },
@@ -40,6 +45,7 @@
           "items": {
             "type": "string"
           },
+          "nullable": true,
           "type": "array"
         }
       },
@@ -48,11 +54,25 @@
         "name": "backend",
         "required": false,
         "shape": {
+          "nullable": true,
           "type": "enum",
           "values": ["memory", "disk"]
         }
       },
       {
+        "default": {
+          "assets": {
+            "enable": true
+          },
+          "ledger": "enable",
+          "out": {
+            "address": false,
+            "value": "enable"
+          },
+          "preset": null,
+          "stop": null,
+          "toggle": "off"
+        },
         "name": "insert",
         "required": false,
         "shape": {
@@ -62,6 +82,7 @@
               "name": "preset",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["full", "minimal"]
               }
@@ -71,6 +92,7 @@
               "name": "toggle",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["on", "off"]
               }
@@ -80,11 +102,16 @@
               "name": "ledger",
               "required": false,
               "shape": {
+                "nullable": true,
                 "type": "enum",
                 "values": ["enable", "disable", "ignore"]
               }
             },
             {
+              "default": {
+                "address": false,
+                "value": "enable"
+              },
               "name": "out",
               "required": false,
               "shape": {
@@ -103,6 +130,7 @@
                     "name": "force",
                     "required": false,
                     "shape": {
+                      "nullable": true,
                       "type": "boolean"
                     }
                   },
@@ -111,15 +139,20 @@
                     "name": "address",
                     "required": false,
                     "shape": {
+                      "nullable": true,
                       "type": "boolean"
                     }
                   }
                 ],
                 "line": 86,
+                "nullable": true,
                 "type": "object"
               }
             },
             {
+              "default": {
+                "enable": true
+              },
               "name": "assets",
               "required": false,
               "shape": {
@@ -139,11 +172,13 @@
                       "items": {
                         "type": "string"
                       },
+                      "nullable": true,
                       "type": "array"
                     }
                   }
                 ],
                 "line": 97,
+                "nullable": true,
                 "type": "object"
               }
             },
@@ -152,12 +187,16 @@
               "name": "stop",
               "required": false,
               "shape": {
+                "haskell": "Word64",
+                "maximum": "18446744073709551615",
+                "minimum": "0",
                 "nullable": true,
                 "type": "integer"
               }
             }
           ],
           "line": 113,
+          "nullable": true,
           "presets": [
             {
               "key": "preset",
@@ -204,7 +243,7 @@
     }
   ],
   "root": "Root",
-  "schemaVersion": 1,
+  "schemaVersion": 2,
   "sources": ["test/config-fixtures/ConfigSample.hs"],
   "unresolved": []
 }

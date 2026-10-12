@@ -51,7 +51,7 @@ main = do
   check "real config: the tracing keys are passed through" (not (null (schemaPassthrough real)))
   check "real config: insert_options carries its presets" $ case schemaRoot real of
     SObject _ _ keys _ ->
-      or [not (null ps) | Key "insert_options" _ (SObject _ _ _ ps) _ <- keys]
+      or [not (null ps) | Key "insert_options" _ (SNullable (SObject _ _ _ ps)) _ <- keys]
     _ -> False
   putStrLn "config-golden-test: all checks passed"
   where

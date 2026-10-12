@@ -155,6 +155,7 @@ integerShape t = SInt t lo hi
       "Natural" -> (Just "0", Nothing)
       _ -> (Nothing, Nothing)
     unsigned n = (Just "0", dec (2 ^ (n :: Int) - 1 :: Integer))
+    signed :: Int -> (Maybe Text, Maybe Text)
     signed n = (dec (negate (2 ^ (n - 1) :: Integer)), dec (2 ^ (n - 1) - 1 :: Integer))
 
 typeShape :: Env -> Ty -> M Shape
@@ -219,7 +220,7 @@ parserShape env t scope ex = case ex of
   EApp (EApp (EVar "withScientific") _) _ -> unknown
   ELam [PVar v] (ECase (EVar v') alts) | v == v' -> case [s | Alt (PCon "String" [PStr s]) _ <- alts] of
     [] -> unknown
-    strs
+    _
       | all
           ( \(Alt p body) -> case p of
               PCon "String" [PStr _] -> not (unsupportedBody body)
@@ -516,7 +517,7 @@ analyseObject env scope o body = case body of
           enumAlts = listToMaybe [[s | Alt (PStr s) b <- alts, not (isFail b)] | ECase (ESig (EVar v) _) alts <- universe final, v == x]
           fromSwitch = listToMaybe [TApp (TCon "Maybe") (TCon cty) | (_, pv, alts) <- switches, pv == x, (PCon "Just" [PCon c []], _) <- alts, Just cty <- [Map.lookup c (envConType env)]]
           fromTuple = tupleUse final x
-          ty = listToMaybe (catMaybes [fromSig, fromDefault, fromSwitch, fst fromTuple])
+          ty = listToMaybe (catMaybes [fromSig, usageTy x final, fromSwitch, fst fromTuple, fromDefault])
        in (x, ki {kiTy = ty, kiEnum = enumAlts, kiShape = snd fromTuple})
 
     defaultTy d = case spine d of
