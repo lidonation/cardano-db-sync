@@ -6,7 +6,12 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 
 import {EXAMPLE_CONFIGS, WIZARD_DIR, findProblems, main} from '../../scripts/check-config.mjs';
 import type {ConfigSchema} from '../../src/data/config-schema.mjs';
-import {listOptions, presetValues, validateConfig} from '../../src/data/config-schema.mjs';
+import {
+  findSchemaProblems,
+  listOptions,
+  presetValues,
+  validateConfig,
+} from '../../src/data/config-schema.mjs';
 import {
   configOptions,
   insertPreset,
@@ -23,7 +28,7 @@ const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
  */
 function schema(overrides: Partial<ConfigSchema> = {}): ConfigSchema {
   return {
-    schemaVersion: 1,
+    schemaVersion: 2,
     sources: ['cardano-db-sync/src/Cardano/DbSync/Config/Types.hs'],
     root: 'SyncPreConfig',
     config: {
@@ -82,15 +87,12 @@ function schema(overrides: Partial<ConfigSchema> = {}): ConfigSchema {
                 shape: {type: 'integer', nullable: true},
                 default: null,
               },
-              {name: 'genesis_hash', required: false, shape: {type: 'opaque', haskell: 'Hash'}},
+              {name: 'genesis_hash', required: false, shape: {type: 'string'}},
             ],
             presets: [
               {
                 key: 'preset',
-                values: {
-                  full: {governance: 'enable'},
-                  only_utxo: {governance: 'enable', disable_epoch: true},
-                },
+                values: {full: {stop_at_block: null}, only_utxo: {stop_at_block: 123}},
               },
             ],
           },
@@ -160,7 +162,7 @@ describe('validateConfig (CON-4)', () => {
     expect(problems).toEqual([
       'NetworkName: expected a string, got 7',
       'EnableLogging: expected true or false, got "yes"',
-      'PrometheusPort: expected an integer, got 80.5',
+      'PrometheusPort: expected a safe integer, got 80.5',
       'ipfs_gateway[1]: expected a string, got 3',
       'ledger_backend: null is not accepted',
       'insert_options.tx_out: expected an object (TxOutConfig), got "prune"',
@@ -184,7 +186,7 @@ describe('validateConfig (CON-4)', () => {
     const odd = schema();
     odd.config.keys.push({name: 'x', required: false, shape: {type: 'tuple'} as never});
     expect(validateConfig(odd, {...FULL, x: 1})).toEqual([
-      'x: the schema has an unknown shape type "tuple"',
+      'config.x: unsupported shape type "tuple"',
     ]);
   });
 });
@@ -209,8 +211,7 @@ describe('listOptions and presetValues', () => {
 
   it('returns what a preset switches on, and nothing for a non-preset path or value', () => {
     expect(presetValues(schema(), 'insert_options.preset', 'only_utxo')).toEqual({
-      governance: 'enable',
-      disable_epoch: true,
+      stop_at_block: 123,
     });
     expect(presetValues(schema(), 'insert_options.preset', 'nope')).toBeUndefined();
     expect(presetValues(schema(), 'insert_options.tx_out', 'x')).toBeUndefined();
@@ -240,7 +241,7 @@ describe('the committed schema', () => {
   });
 
   it('refuses an artifact of another version', () => {
-    expect(() => loadConfigSchema({...schema(), schemaVersion: 2})).toThrow(/version 2/);
+    expect(() => loadConfigSchema({...schema(), schemaVersion: 3})).toThrow(/version 3/);
   });
 
   it('exposes the insert_options presets and validates wizard output against them', () => {
@@ -249,6 +250,107 @@ describe('the committed schema', () => {
     }
     expect(validateWizardOutput({insert_options: {preset: 'full'}})).toEqual([]);
     expect(validateWizardOutput({insert_options: {preset: 'everything'}})).toHaveLength(1);
+  });
+});
+
+describe('config schema safety regressions', () => {
+  it('rejects malformed schemas before config values are inspected', () => {
+    for (const invalid of [
+      null,
+      [],
+      {},
+      {...schema(), sources: []},
+      {...schema(), sources: ['../outside.hs']},
+      {...schema(), config: {...schema().config, keys: []}},
+      {...schema(), passthrough: [{keys: [null], reader: 'reader'}]},
+    ]) {
+      expect(findSchemaProblems(invalid).length).toBeGreaterThan(0);
+      expect(() => loadConfigSchema(invalid)).toThrow(/schema/);
+    }
+    const duplicate = schema();
+    duplicate.config.keys.push(duplicate.config.keys[0]);
+    expect(findSchemaProblems(duplicate).join('\n')).toContain('duplicate key NetworkName');
+    const emptyEnum = schema();
+    emptyEnum.config.keys.push({name: 'empty', required: false, shape: {type: 'enum', values: []}});
+    expect(findSchemaProblems(emptyEnum).join('\n')).toContain('enum values');
+  });
+
+  it('checks bounded numbers and does not round unsafe integers', () => {
+    const s = schema();
+    s.config.keys.push({
+      name: 'word',
+      required: false,
+      shape: {type: 'integer', haskell: 'Word8', minimum: '0', maximum: '255'},
+    });
+    expect(validateConfig(s, {...FULL, word: 0})).toEqual([]);
+    expect(validateConfig(s, {...FULL, word: 255})).toEqual([]);
+    for (const word of [-1, 256])
+      expect(validateConfig(s, {...FULL, word})[0]).toContain('outside Word8 bounds');
+    expect(validateConfig(s, {...FULL, word: Number.MAX_SAFE_INTEGER + 1})[0]).toContain(
+      'safe integer',
+    );
+  });
+
+  it('rejects empty NonEmpty config lists and unsigned negatives in the real schema', () => {
+    for (const name of ['metadata', 'shelley', 'multi_asset', 'plutus']) {
+      const key = {
+        metadata: 'keys',
+        shelley: 'stake_addresses',
+        multi_asset: 'policies',
+        plutus: 'script_hashes',
+      }[name];
+      const errors = validateWizardOutput({insert_options: {[name]: {enable: true, [key!]: []}}});
+      expect(errors[0]).toContain('expected at least 1');
+    }
+    expect(validateWizardOutput({insert_options: {stop_at_block: -1}})[0]).toContain(
+      'outside Word64 bounds',
+    );
+    expect(validateWizardOutput({snapshot_interval: {near_tip_epoch: -1}})[0]).toContain(
+      'outside Word64 bounds',
+    );
+  });
+
+  it('accepts explicit null for optional .:? keys, including defaulted ones', () => {
+    for (const output of [
+      {insert_options: null},
+      {insert_options: {preset: null}},
+      {insert_options: {tx_out: {value: 'enable', force_tx_in: null}}},
+      {insert_options: {metadata: {enable: true, keys: null}}},
+      {PrometheusPort: null},
+    ])
+      expect(validateWizardOutput(output)).toEqual([]);
+    expect(validateWizardOutput({insert_options: {metadata: {enable: null}}})[0]).toContain(
+      'null is not accepted',
+    );
+  });
+
+  it('does not use inherited values as presets or mutate preset defaults through its result', () => {
+    for (const name of ['toString', '__proto__', 'constructor'])
+      expect(insertPreset(name)).toBeUndefined();
+    const preset = insertPreset('full')!;
+    preset.governance = 'disable';
+    (preset.tx_out as Record<string, unknown>).value = 'disable';
+    expect(insertPreset('full')!.governance).toBe('enable');
+    expect((insertPreset('full')!.tx_out as Record<string, unknown>).value).toBe('enable');
+  });
+
+  it('requires own required config keys', () => {
+    const inherited = Object.create(FULL) as Record<string, unknown>;
+    expect(validateConfig(schema(), inherited)).toEqual([
+      'NetworkName: required by SyncPreConfig',
+      'EnableLogging: required by SyncPreConfig',
+    ]);
+  });
+
+  it('validates preset entries and defaults against their option shapes', () => {
+    const s = schema();
+    s.config.keys[2].default = 'not a number';
+    expect(findSchemaProblems(s).join('\n')).toContain('PrometheusPort default');
+    const invalid = schema();
+    const insert = invalid.config.keys.find((k) => k.name === 'insert_options')!
+      .shape as import('../../src/data/config-schema.mjs').ConfigObjectShape;
+    insert.presets![0].values.full = {unknown: true};
+    expect(findSchemaProblems(invalid).join('\n')).toContain('unknown sibling unknown');
   });
 });
 
@@ -291,7 +393,7 @@ describe('check:config gate (CON-4)', () => {
     expect(findProblems(DOCS_ROOT)).toEqual([]);
     const lines: string[] = [];
     expect(await main(DOCS_ROOT, {log: (l: string) => lines.push(l), error: () => {}})).toBe(0);
-    expect(lines[0]).toMatch(/^check:config — schema 1 \(SyncPreConfig\)/);
+    expect(lines[0]).toMatch(/^check:config — schema 2 \(SyncPreConfig\)/);
   });
 
   it('passes over a sound synthetic tree', async () => {
@@ -341,15 +443,18 @@ describe('check:config gate (CON-4)', () => {
       wizard: {'bad.json': '{'},
     });
     const problems = findProblems(docs);
-    expect(problems.slice(0, 3)).toEqual([
-      'schema version 9 is not 1',
+    expect(problems).toEqual([
+      'schema version 9 is not 2',
       'the schema has parts the extractor could not read: ["key x"]',
-      'schema source nope.hs does not exist in the repository',
     ]);
-    expect(problems.some((p) => p.startsWith('config/mainnet-config.yaml: not valid YAML'))).toBe(
+    await writeTree({examples: ': : :\n  - [', wizard: {'bad.json': '{'}});
+    const inputProblems = findProblems(docs);
+    expect(
+      inputProblems.some((p) => p.startsWith('config/mainnet-config.yaml: not valid YAML')),
+    ).toBe(true);
+    expect(inputProblems.some((p) => p.startsWith(`${WIZARD_DIR}/bad.json: not valid JSON`))).toBe(
       true,
     );
-    expect(problems.some((p) => p.startsWith(`${WIZARD_DIR}/bad.json: not valid JSON`))).toBe(true);
   });
 
   it('fails when the schema root or passthrough list is malformed', async () => {

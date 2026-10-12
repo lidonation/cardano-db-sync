@@ -2,10 +2,10 @@
 
 export type ConfigShape =
   | {type: 'boolean'; nullable?: true}
-  | {type: 'integer'; nullable?: true}
+  | {type: 'integer'; haskell?: string; minimum?: string; maximum?: string; nullable?: true}
   | {type: 'string'; nullable?: true}
   | {type: 'enum'; values: string[]; nullable?: true}
-  | {type: 'array'; items: ConfigShape; nullable?: true}
+  | {type: 'array'; items: ConfigShape; minItems?: number; nullable?: true}
   | {type: 'opaque'; haskell: string; nullable?: true}
   | ConfigObjectShape;
 
@@ -24,7 +24,7 @@ export interface ConfigKey {
   name: string;
   required: boolean;
   shape: ConfigShape;
-  /** What the binary uses when the key is absent (scalar keys only). */
+  /** What the binary uses when the key is absent (including object defaults). */
   default?: unknown;
 }
 
@@ -71,3 +71,5 @@ export function presetValues(
   presetPath: string,
   value: string,
 ): Record<string, unknown> | undefined;
+
+export function findSchemaProblems(schema: unknown): string[];

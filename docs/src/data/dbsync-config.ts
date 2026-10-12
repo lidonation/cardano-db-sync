@@ -14,24 +14,15 @@
  */
 import artifact from '../../generated/config-schema.json';
 import type {ConfigOption, ConfigSchema} from './config-schema.mjs';
-import {
-  CONFIG_SCHEMA_VERSION,
-  listOptions,
-  presetValues,
-  validateConfig,
-} from './config-schema.mjs';
+import {findSchemaProblems, listOptions, presetValues, validateConfig} from './config-schema.mjs';
 
 export type {ConfigKey, ConfigOption, ConfigSchema, ConfigShape} from './config-schema.mjs';
 
 /** The committed schema, refused if its version is not the one this code understands. */
 export function loadConfigSchema(source: unknown = artifact): ConfigSchema {
-  const schema = source as ConfigSchema;
-  if (schema.schemaVersion !== CONFIG_SCHEMA_VERSION) {
-    throw new Error(
-      `config schema version ${schema.schemaVersion} is not ${CONFIG_SCHEMA_VERSION}; regenerate it`,
-    );
-  }
-  return schema;
+  const problems = findSchemaProblems(source);
+  if (problems.length > 0) throw new Error(`invalid config schema: ${problems.join('; ')}`);
+  return source as ConfigSchema;
 }
 
 /** Every option db-sync reads, as dotted paths in source order. */

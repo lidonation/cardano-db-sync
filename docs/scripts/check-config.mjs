@@ -15,13 +15,13 @@
  *
  * Run by `npm run check:config` and by CI.
  */
-import {existsSync, readFileSync, readdirSync} from 'node:fs';
+import {existsSync, readFileSync, readdirSync, realpathSync, statSync} from 'node:fs';
 import path from 'node:path';
 import process from 'node:process';
 
 import yaml from 'js-yaml';
 
-import {CONFIG_SCHEMA_VERSION, validateConfig} from '../src/data/config-schema.mjs';
+import {findSchemaProblems, validateConfig} from '../src/data/config-schema.mjs';
 
 /** Example configs shipped in the repository, repository-relative. */
 export const EXAMPLE_CONFIGS = ['config/mainnet-config.yaml', 'config/preprod-config.yaml'];
@@ -48,27 +48,15 @@ export function findProblems(docsRoot) {
     return [`generated/config-schema.json is not valid JSON: ${error.message}`];
   }
 
-  const problems = [];
-  if (schema.schemaVersion !== CONFIG_SCHEMA_VERSION) {
-    problems.push(`schema version ${schema.schemaVersion} is not ${CONFIG_SCHEMA_VERSION}`);
-  }
-  if (!Array.isArray(schema.unresolved) || schema.unresolved.length > 0) {
-    problems.push(
-      `the schema has parts the extractor could not read: ${JSON.stringify(schema.unresolved)}`,
-    );
-  }
-  for (const source of schema.sources ?? []) {
-    if (!existsSync(path.join(repoRoot, source))) {
-      problems.push(`schema source ${source} does not exist in the repository`);
+  const problems = findSchemaProblems(schema);
+  if (problems.length > 0) return problems;
+  for (const source of schema.sources) {
+    const full = path.join(repoRoot, source);
+    if (!existsSync(full) || !statSync(full).isFile()) {
+      problems.push(`schema source ${source} does not exist as a file in the repository`);
+    } else if (path.relative(realpathSync(repoRoot), realpathSync(full)).startsWith('..')) {
+      problems.push(`schema source ${source} resolves outside the repository`);
     }
-  }
-  if (schema.config?.type !== 'object' || !Array.isArray(schema.config.keys)) {
-    problems.push('the schema root must be an object with keys');
-    return problems;
-  }
-  if (!Array.isArray(schema.passthrough)) {
-    problems.push('passthrough must be an array');
-    return problems;
   }
 
   for (const file of EXAMPLE_CONFIGS) {
