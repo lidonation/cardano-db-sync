@@ -30,7 +30,7 @@ import qualified Data.ByteString as BS
 import Data.ByteString.Builder (Builder, byteString, stringUtf8, toLazyByteString)
 import qualified Data.ByteString.Lazy as BL
 import Data.List (sortOn)
-import Data.Scientific (Scientific)
+import Data.Scientific (FPFormat (Generic), Scientific, floatingOrInteger, formatScientific)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TE
@@ -322,8 +322,9 @@ hex4 n =
   where
     hexD d = byteString (BS.singleton (toEnum (fromEnum '0' + d + (if d < 10 then 0 else fromEnum 'a' - fromEnum '0' - 10))))
 
--- | Every number in the artifact is an @Int@ (line numbers, schema version,
--- section levels); integral scientifics render without an exponent or a
--- trailing @.0@, exactly as prettier prints JSON numbers.
+-- | Integral scientifics render without an exponent or a trailing @.0@.
+-- The shared encoder also preserves fractional JSON numbers exactly.
 renderNumber :: Scientific -> Builder
-renderNumber n = stringUtf8 (show (round n :: Integer))
+renderNumber n = case floatingOrInteger n :: Either Double Integer of
+  Right i -> stringUtf8 (show i)
+  Left _ -> stringUtf8 (formatScientific Generic Nothing n)
