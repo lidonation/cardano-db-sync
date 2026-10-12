@@ -71,6 +71,7 @@ jobs:
           cabal build all
           cabal test
           sh test/cli.sh "$(cabal list-bin extract-haddock)"
+          sh test/renames-cli.sh "$(cabal list-bin extract-renames)"
 
       - name: Extract schema and config annotations
         working-directory: docs/extractor
