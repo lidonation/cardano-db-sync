@@ -6,7 +6,9 @@ import {afterEach, describe, expect, it, vi} from 'vitest';
 import inventoryPlugin, {
   INVENTORY_ENV_VAR,
   INVENTORY_PATH,
+  LAYOUT_FIXTURE_PATH,
   inventoryEnabled,
+  layoutFixturePlugins,
 } from '../../plugins/inventory';
 
 const context = {baseUrl: '/base/', siteDir: '/site'} as LoadContext;
@@ -50,5 +52,20 @@ describe('component inventory route (B29, VER-5)', () => {
     expect(() => inventoryEnabled({[INVENTORY_ENV_VAR]: '1', NODE_ENV: 'production'})).toThrow(
       /docusaurus start/,
     );
+  });
+});
+
+describe('layout fixture docs (B34)', () => {
+  it('are added on the development server only, behind the inventory flag', () => {
+    expect(layoutFixturePlugins({})).toEqual([]);
+    expect(layoutFixturePlugins({[INVENTORY_ENV_VAR]: '1', NODE_ENV: 'development'})).toEqual([
+      [
+        '@docusaurus/plugin-content-docs',
+        expect.objectContaining({id: 'layout-fixture', routeBasePath: LAYOUT_FIXTURE_PATH}),
+      ],
+    ]);
+    expect(() =>
+      layoutFixturePlugins({[INVENTORY_ENV_VAR]: '1', NODE_ENV: 'production'}),
+    ).toThrow();
   });
 });

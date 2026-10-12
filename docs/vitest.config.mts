@@ -25,6 +25,10 @@ export default defineConfig({
         'src/components/inventory.ts',
         'src/components/shared/states.ts',
         'src/components/Tabs/keyboard.ts',
+        // B34: the navbar's derived sections and the docs section lookup. The layout itself is
+        // audited per tier in a real browser by test:components.
+        'src/theme/Navbar/items.ts',
+        'src/theme/DocLayout/sections.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

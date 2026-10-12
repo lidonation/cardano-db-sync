@@ -1,12 +1,4 @@
 /* Shared state building blocks (DF-4). Square corners everywhere; no shadows. */
-.visuallyHidden {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-}
 
 .skeleton {
   display: block;

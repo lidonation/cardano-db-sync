@@ -29,6 +29,33 @@ export function inventoryEnabled(env: NodeJS.ProcessEnv = process.env): boolean 
   return true;
 }
 
+/** Where the B34 layout fixture docs are served, relative to `baseUrl`. */
+export const LAYOUT_FIXTURE_PATH = '__layout';
+
+/**
+ * B34 — a second docs instance holding fixture pages (sections, a long page with a table of
+ * contents) for the responsive-layout browser suite. The real docs are one short page, which
+ * exercises none of the sidebar groups, disclosures or TOC. Same gate as the inventory: the
+ * development server with `DBS_INVENTORY=1` only, never a build.
+ */
+export function layoutFixturePlugins(
+  env: NodeJS.ProcessEnv = process.env,
+): [string, Record<string, unknown>][] {
+  if (!inventoryEnabled(env)) {
+    return [];
+  }
+  return [
+    [
+      '@docusaurus/plugin-content-docs',
+      {
+        id: 'layout-fixture',
+        path: 'test/fixtures/layout-docs',
+        routeBasePath: LAYOUT_FIXTURE_PATH,
+      },
+    ],
+  ];
+}
+
 export default function inventoryPlugin(context: LoadContext): Plugin {
   return {
     name: 'dbs-inventory',

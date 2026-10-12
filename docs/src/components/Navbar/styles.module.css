@@ -131,14 +131,49 @@
   text-decoration: none;
 }
 
-.menu,
-.drawer,
-.drawerGithub {
+.actions,
+.preferences {
+  display: flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+}
+
+.drawerActions,
+.drawerPreferences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-8);
+  margin-block-start: var(--dbs-space-12);
+  padding-block-start: var(--dbs-space-12);
+  border-block-start: 1px solid var(--dbs-border-default);
+}
+
+.drawer {
   display: none;
+}
+
+/* Controls that only some tiers show are hidden by a min-width query, never by a top-level rule
+   that must outrank their shared `display`: the production minifier merges same-declaration rules
+   and can reorder them, which put Menu on the bar at 1440. A query is never merged across. */
+@media (min-width: 1280px) {
+  .menu {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .drawerGithub,
+  .drawerActions {
+    display: none;
+  }
 }
 
 /* md and sm (below 1280): the sections move into the disclosure, as DF-7 draws them */
 @media (max-width: 1279px) {
+  .preferences {
+    display: none;
+  }
+
   .wide {
     display: none;
   }
@@ -159,16 +194,15 @@
     padding: 0;
   }
 
-  .menu {
-    display: inline-flex;
-  }
-
   .search {
     min-inline-size: 240px;
   }
 
   .drawer:not([hidden]) {
     display: block;
+    box-sizing: border-box;
+    max-block-size: calc(100dvh - 73px);
+    overflow-y: auto;
     padding: var(--dbs-space-8) var(--dbs-space-32) var(--dbs-space-16);
     border-block-start: 1px solid var(--dbs-border-default);
   }
@@ -231,8 +265,8 @@
     display: none;
   }
 
-  .drawerGithub {
-    display: inline-flex;
+  .actions {
+    display: none;
   }
 
   .menu {
@@ -244,4 +278,16 @@
   .drawer:not([hidden]) {
     padding-inline: var(--dbs-space-16);
   }
+}
+
+/* In the drawer, language options join its scroll area instead of floating beyond it. */
+.drawer :global(.dropdown__menu) {
+  position: static;
+  display: none;
+  min-inline-size: 0;
+  max-inline-size: 100%;
+}
+.drawer :global(.dropdown--show .dropdown__menu),
+.drawer :global(.dropdown--hoverable:hover .dropdown__menu) {
+  display: block;
 }
