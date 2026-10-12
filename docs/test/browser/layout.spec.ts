@@ -93,6 +93,67 @@ test.describe('version selector placement (DF-7)', () => {
   }
 });
 
+test.describe('version selector focus across 768px (DF-7)', () => {
+  test('the bar hands focus to Menu when the drawer is closed', async ({page}) => {
+    await open(page, INTRO, 768);
+    const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+    const bar = header.locator(':scope > div').first();
+    await bar.getByRole('link', {name: 'Next', exact: true}).focus();
+    await page.setViewportSize({width: 767, height: 900});
+    await expect(menuButton(page)).toBeFocused();
+  });
+
+  test('the drawer hands version focus back to the bar', async ({page}) => {
+    await open(page, INTRO, 767);
+    await menuButton(page).click();
+    const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
+    await drawer.getByRole('link', {name: 'Next', exact: true}).focus();
+    await page.setViewportSize({width: 768, height: 900});
+    const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+    await expect(
+      header.locator(':scope > div').first().getByRole('link', {name: 'Next', exact: true}),
+    ).toBeFocused();
+  });
+});
+
+test('a hidden version control keeps focus after the browser blurs it', async ({page}) => {
+  await open(page, INTRO, 768);
+  const bar = page.locator('header[data-dbs-component="Navbar / Full"] > div').first();
+  await bar.getByRole('link', {name: 'Next', exact: true}).focus();
+  await page.evaluate(() => (document.activeElement as HTMLElement)?.blur());
+  await page.setViewportSize({width: 767, height: 900});
+  await expect(menuButton(page)).toBeFocused();
+});
+
+test('resizing the version slot does not take focus from page content', async ({page}) => {
+  await open(page, INTRO, 768);
+  const bar = page.locator('header[data-dbs-component="Navbar / Full"] > div').first();
+  await bar.getByRole('link', {name: 'Next', exact: true}).focus();
+  const contentLink = page.locator('main article a').first();
+  await contentLink.focus();
+  await page.setViewportSize({width: 767, height: 900});
+  await expect(contentLink).toBeFocused();
+});
+
+test('an open drawer receives the version control when it leaves the bar', async ({page}) => {
+  await open(page, INTRO, 768);
+  await menuButton(page).click();
+  const bar = page.locator('header[data-dbs-component="Navbar / Full"] > div').first();
+  await bar.getByRole('link', {name: 'Next', exact: true}).focus();
+  await page.setViewportSize({width: 767, height: 900});
+  const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
+  await expect(drawer.getByRole('link', {name: 'Next', exact: true})).toBeFocused();
+});
+
+test('clicking page text leaves version focus behind before resizing', async ({page}) => {
+  await open(page, INTRO, 768);
+  const bar = page.locator('header[data-dbs-component="Navbar / Full"] > div').first();
+  await bar.getByRole('link', {name: 'Next', exact: true}).focus();
+  await page.locator('main article p').first().click();
+  await page.setViewportSize({width: 767, height: 900});
+  await expect(menuButton(page)).not.toBeFocused();
+});
+
 test.describe('reflow (NAV-3, CONTENT-3)', () => {
   for (const width of [320, 375, 768, 1024, 1440]) {
     test(`nothing scrolls sideways at ${width}px`, async ({page}) => {
@@ -346,4 +407,16 @@ test('headings outside the configured levels do not reserve an empty TOC', async
     await expect(pageButton(page)).toHaveCount(0);
     await expect(tocColumn(page)).toHaveCount(0);
   }
+});
+
+test('clicking page text before widening does not send focus home', async ({page}) => {
+  await open(page, PAGE, 1024);
+  await menuButton(page).click();
+  await page.locator('main article p').first().click();
+  await page.setViewportSize({width: 1280, height: 900});
+  await expect(
+    page.locator('header[data-dbs-component="Navbar / Full"] a').first(),
+  ).not.toBeFocused();
+  await page.setViewportSize({width: 1024, height: 900});
+  await expect(menuButton(page)).toHaveAttribute('aria-expanded', 'false');
 });
