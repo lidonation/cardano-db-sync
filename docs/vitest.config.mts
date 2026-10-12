@@ -32,6 +32,9 @@ export default defineConfig({
         // B44-a: the landing page's build facts and route-gated surfaces.
         'src/data/release-facts.ts',
         'src/data/surfaces.ts',
+        // B44-b: the Ecosystem page's entries and the changelog it counts.
+        'src/data/release-history.ts',
+        'src/ecosystem/entries.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

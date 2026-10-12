@@ -2,10 +2,10 @@ import {defineConfig, devices} from '@playwright/test';
 
 import {PROFILES} from './config/profiles';
 
-/** Runs the landing contract on shipped CSS, which is optimized only in builds. */
+/** Runs the landing and Ecosystem contracts on shipped CSS, which is optimized only in builds. */
 export default defineConfig({
   testDir: 'test/browser',
-  testMatch: 'landing.spec.ts',
+  testMatch: ['landing.spec.ts', 'ecosystem.spec.ts'],
   fullyParallel: true,
   workers: 4,
   timeout: 60_000,

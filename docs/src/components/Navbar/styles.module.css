@@ -11,7 +11,6 @@
   justify-content: space-between;
   gap: var(--dbs-space-24);
   min-block-size: 72px;
-  box-sizing: border-box;
   padding: 0 var(--dbs-space-48);
 }
 
@@ -200,7 +199,6 @@
 
   .drawer:not([hidden]) {
     display: block;
-    box-sizing: border-box;
     max-block-size: calc(100dvh - 73px);
     overflow-y: auto;
     padding: var(--dbs-space-8) var(--dbs-space-32) var(--dbs-space-16);

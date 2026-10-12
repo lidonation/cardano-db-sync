@@ -29,6 +29,7 @@
     "i18n:sources": "cross-env DOCS_PROFILE=prod docusaurus write-translations --locale en",
     "check:manifest": "node scripts/check-route-manifest.mjs",
     "check:links": "node scripts/check-links.mjs",
+    "check:external-links": "node scripts/check-external-links.mjs",
     "check:csp": "node scripts/check-csp.mjs",
     "check:budget": "node scripts/check-asset-budget.mjs",
     "test": "vitest run --coverage",
