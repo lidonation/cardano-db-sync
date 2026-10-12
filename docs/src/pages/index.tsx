@@ -4,6 +4,7 @@ import Layout from '@theme/Layout';
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
+import {MAIN_CONTENT_ID} from '../lib/accessibility';
 import useBuildEnvironment from '../lib/useBuildEnvironment';
 
 /**
@@ -23,7 +24,7 @@ export default function Home(): React.JSX.Element {
   return (
     <Layout title={siteConfig.title} description={siteConfig.tagline}>
       {/* A11Y-18: placeholder copy, English in every locale until the designed page (B47). */}
-      <main lang="en">
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} lang="en">
         <h1>{siteConfig.title}</h1>
         <p>{siteConfig.tagline}</p>
         <p>

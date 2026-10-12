@@ -25,7 +25,13 @@ async function open(page: Page, url: string, width: number, palette = 'light') {
   await page.setViewportSize({width, height: 900});
   await page.goto(url);
   await page.locator('main article').waitFor();
-  await page.evaluate((name) => document.documentElement.setAttribute('data-theme', name), palette);
+  await page.evaluate((name) => {
+    document.documentElement.setAttribute('data-dbs-palette', name);
+    document.documentElement.setAttribute(
+      'data-theme',
+      name === 'dark' || name === 'navy' ? 'dark' : 'light',
+    );
+  }, palette);
   await page.evaluate(() => document.fonts.ready);
 }
 
@@ -207,9 +213,7 @@ test.describe('disclosures and the drawer (NAV-2)', () => {
     await expect(drawer).toBeVisible();
     expect(await drawer.evaluate((element) => element.contains(document.activeElement))).toBe(true);
     // the preferences that sit in the bar at 1280 are in the drawer below it
-    await expect(
-      drawer.getByRole('button', {name: /dark mode|light mode|system mode/i}),
-    ).toBeVisible();
+    await expect(drawer.getByRole('button', {name: /^Theme:/})).toBeVisible();
     await page.keyboard.press('Escape');
     await expect(menu).toHaveAttribute('aria-expanded', 'false');
     await expect(drawer).toBeHidden();
@@ -298,7 +302,7 @@ test.describe('review regressions', () => {
     await page.goto(PAGE);
     await menuButton(page).click();
     const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
-    const control = drawer.getByRole('button', {name: /dark mode|light mode|system mode/i});
+    const control = drawer.getByRole('button', {name: /^Theme:/});
     await control.scrollIntoViewIfNeeded();
     const box = (await control.boundingBox())!;
     expect(box.y + box.height).toBeLessThanOrEqual(180);

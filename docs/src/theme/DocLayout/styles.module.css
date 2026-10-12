@@ -172,7 +172,7 @@
 .panel {
   box-sizing: border-box;
   padding: var(--dbs-space-8) 0;
-  border: 1px solid var(--dbs-border-default);
+  border: 1px solid var(--dbs-border-interactive);
   border-block-start: 0;
 }
 

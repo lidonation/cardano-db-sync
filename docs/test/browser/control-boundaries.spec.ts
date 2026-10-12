@@ -34,6 +34,16 @@ async function applyPalette(page: Page, palette: string) {
     );
     document.documentElement.setAttribute('data-dbs-palette', name);
   }, palette);
+  // Measure the chosen palette after its legible color transitions have finished.
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((animation) => animation instanceof CSSTransition)
+        .map((animation) => animation.finished.catch(() => undefined)),
+    );
+  });
 }
 
 async function openInventory(page: Page, palette: string = 'light', width = 1440) {
@@ -117,10 +127,16 @@ test.describe('active sidebar label (NAV-5)', () => {
     test(`${palette} binds accent.primary-text at 4.5:1`, async ({page}) => {
       await page.setViewportSize({width: 1440, height: 900});
       await page.goto(DOCS);
-      await page.locator('.theme-doc-sidebar-container').waitFor();
+      await page.getByRole('navigation', {name: 'Docs', exact: true}).waitFor();
       await applyPalette(page, palette);
-      const active = page.locator('.theme-doc-sidebar-container .menu__link--active').first();
+      const active = page
+        .getByRole('navigation', {name: 'Docs', exact: true})
+        .locator('[aria-current="page"]')
+        .first();
       await expect(active).toBeVisible();
+      await expect
+        .poll(() => active.evaluate((element) => getComputedStyle(element).color))
+        .toBe(ACTIVE_LABEL[palette]);
       const colour = await active.evaluate((element) => getComputedStyle(element).color);
       const surface = await active.evaluate(paintedBackground);
       const measured = {color: colour, surface};
@@ -140,10 +156,10 @@ test.describe('active sidebar label (NAV-5)', () => {
     for (const palette of PALETTES) {
       await page.setViewportSize({width: 1440, height: 900});
       await page.goto(DOCS);
-      await page.locator('.theme-doc-sidebar-container').waitFor();
+      await page.getByRole('navigation', {name: 'Docs', exact: true}).waitFor();
       await applyPalette(page, palette);
       const results = await new AxeBuilder({page})
-        .include('.theme-doc-sidebar-container')
+        .include('nav[aria-label="Docs"]')
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
         .analyze();
       expect(

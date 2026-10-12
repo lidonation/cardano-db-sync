@@ -1,10 +1,5 @@
-/*
- * Site-wide overrides for Docusaurus-owned surfaces.
- *
- * Tokens live in the generated `tokens.css` (single origin: `design/tokens.source.json`;
- * KICKOFF §3 forbids inventing values here). This sheet only binds Docusaurus/Infima hooks
- * to those tokens.
- */
+/* Global accessibility and browser surfaces. Values come from the generated
+ * token pipeline; neither the palette nor the Infima bridge is redefined here. */
 
 /* SEC-2: Docusaurus hides its SVG icon sprite with an inline style attribute, which
    style-src 'self' blocks. plugins/security swaps it for this marker, hidden from here instead,
@@ -13,15 +8,147 @@ svg[data-dbs-icon-sprite] {
   display: none;
 }
 
-/* NAV-5: the active docs-sidebar label uses `accent.primary-text` (5.87:1 on
-   `surface.accent-subtle`), never `accent.primary` (4.02 light / 4.02 cream / 4.34 navy).
-   The hover rule matches Infima's own `.menu__link--active:hover` specificity so the
-   binding holds under the pointer too. The background wash stays Infima's own, which already
-   flips for dark palettes — the label colour is what did not survive theming. */
-.menu__link--active {
-  color: var(--dbs-accent-primary-text);
+/* R3 / A11Y-3 / DF-3: a single keyboard indicator, including native controls
+   and Docusaurus chrome. Important beats component resets, not user styles. */
+:focus-visible {
+  outline: var(--dbs-focus-ring) !important;
+  outline-offset: var(--dbs-focus-offset) !important;
 }
 
-.menu__link--active:hover {
+/* R4 / A11Y-12: reserve the pinned 72px header and the outside focus ring.
+   The bridge owns navbar height; do not introduce another height variable. */
+html {
+  scroll-padding-block-start: calc(
+    var(--dbs-navbar-block-size, var(--ifm-navbar-height)) + var(--dbs-space-8)
+  );
+  scrollbar-color: var(--dbs-border-interactive) var(--dbs-surface-base);
+}
+
+:focus,
+[id] {
+  scroll-margin-block: var(--dbs-space-8);
+}
+
+/* R8: browser surfaces use the same themed roles as authored components. */
+::selection {
+  background: var(--dbs-surface-selected);
+  color: var(--dbs-text-on-selected);
+}
+
+input,
+textarea,
+[contenteditable] {
+  caret-color: var(--dbs-text-primary);
+}
+
+a {
+  text-underline-offset: var(--dbs-space-4);
+}
+
+table,
+time,
+[data-dbs-tabular] {
+  font-variant-numeric: tabular-nums;
+}
+
+::-webkit-scrollbar {
+  width: var(--dbs-space-12);
+  height: var(--dbs-space-12);
+}
+
+::-webkit-scrollbar-track {
+  background: var(--dbs-surface-base);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--dbs-border-interactive);
+  border: 2px solid var(--dbs-surface-base);
+}
+
+/* R1/R6: the native skip anchor stays above the viewport until focused.
+   Static translation also stays hidden under reduced motion, without widening
+   the document. Long translations wrap under user text-spacing settings. */
+.dbs-skip-link {
+  position: fixed;
+  inset-block-start: var(--dbs-space-16);
+  inset-inline-start: var(--dbs-space-16);
+  max-inline-size: calc(100% - var(--dbs-space-32));
+  box-sizing: border-box;
+  z-index: calc(var(--ifm-z-index-fixed) + 1);
+  transform: translateY(calc(-100% - var(--dbs-space-32)));
+  padding: var(--dbs-space-8) var(--dbs-space-16);
+  color: var(--dbs-text-primary);
+  background: var(--dbs-surface-base);
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.dbs-skip-link:focus {
+  transform: none;
+  box-shadow: none;
+}
+
+/* R6 / A11Y-14/15: chrome grows with user text settings. The normal header
+   retains its 72px floor; long labels wrap without clipping their focus rings. */
+.navbar {
+  height: auto;
+  min-block-size: var(--ifm-navbar-height);
+  overflow: visible;
+}
+
+.navbar__inner {
+  flex-wrap: wrap;
+  min-inline-size: 0;
+}
+
+.navbar__items {
+  min-inline-size: 0;
+  flex-wrap: wrap;
+}
+
+.navbar__item,
+.navbar__brand,
+.menu__link,
+.footer__link-item {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.navbar__brand {
+  min-inline-size: 0;
+}
+
+.navbar__title {
+  white-space: normal;
+}
+
+/* R5 / A11Y-4: suppress movement, not feedback. Removing keyframe animation
+   leaves loading text intact; short colour transitions still communicate state.
+   Static transforms (drawer positioning, centring) are deliberately preserved. */
+@media (prefers-reduced-motion: reduce) {
+  html,
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition-property: color, background-color, border-color, outline-color !important;
+    transition-duration: 150ms !important;
+    transition-delay: 0s !important;
+  }
+}
+
+/* Active chrome labels are text, not the accent fill (TOK-5). Infima's default
+   primary fill misses AA on the sidebar tint and on cream's base surface. */
+.navbar__link--active,
+.navbar__link:hover,
+.menu__link--active,
+.menu__link:hover,
+.breadcrumbs__item--active .breadcrumbs__link {
   color: var(--dbs-accent-primary-text);
 }

@@ -27,6 +27,8 @@ async function goto(page: Page, url: string, width = 1440) {
   await page.goto(url);
   await page.locator('.navbar').waitFor();
   await page.evaluate(() => document.fonts.ready);
+  const menu = page.getByRole('button', {name: 'Menu', exact: true});
+  if (await menu.isVisible()) await menu.click();
 }
 
 function themeButton(page: Page) {
@@ -178,7 +180,7 @@ test.describe('responsive and focus discipline (DF-7, FLOOR-4, NAV-4)', () => {
 
   test('every navbar keyboard stop shows the focus ring', async ({page}) => {
     await goto(page, HOME);
-    await page.locator('.navbar .navbar__brand').click();
+    await page.locator('header[data-dbs-component="Navbar / Full"] a').first().focus();
     const unringed: string[] = [];
     let seen = 0;
     for (let step = 0; step < 40; step += 1) {
@@ -273,7 +275,7 @@ test.describe('palette regressions', () => {
     await page.locator('h1').click();
     await expect(themeButton(page)).toHaveAttribute('aria-expanded', 'false');
     await themeButton(page).click();
-    const docs = page.locator('.navbar .navbar__link').first();
+    const docs = page.getByRole('navigation', {name: 'Sections'}).first().getByRole('link').first();
     await docs.focus();
     await expect(docs).toBeFocused();
     await expect(themeButton(page)).toHaveAttribute('aria-expanded', 'false');
@@ -298,9 +300,13 @@ test.describe('palette regressions', () => {
     await goto(page, HOME, 375);
     await themeButton(page).click();
     await page.getByRole('menuitemradio', {name: 'Navy', exact: true}).click();
-    await page.getByRole('button', {name: 'Toggle navigation bar'}).click();
-    const mobile = page.locator('.navbar-sidebar').getByRole('button', {name: /^Theme:/});
+    const menu = page.getByRole('button', {name: 'Menu', exact: true});
+    const mobile = page
+      .locator(`[id="${await menu.getAttribute('aria-controls')}"]`)
+      .getByRole('button', {name: /^Theme:/});
     await expect(mobile).toHaveAccessibleName('Theme: Navy. Change theme');
+    await page.setViewportSize({width: 1440, height: 900});
+    await expect(themeButton(page)).toHaveAccessibleName('Theme: Navy. Change theme');
   });
 });
 
