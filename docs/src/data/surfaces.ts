@@ -14,6 +14,7 @@ export const SURFACES = {
   schema: '/schema',
   numbers: '/numbers',
   survey: '/survey',
+  surveyResults: '/survey/results',
   ecosystem: '/ecosystem',
   config: '/config',
   faq: '/faq',
