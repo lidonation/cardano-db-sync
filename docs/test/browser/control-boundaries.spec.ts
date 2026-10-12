@@ -112,15 +112,20 @@ test.describe('disabled choices and tabs retain the interactive boundary (TOK-6)
   }
 });
 
+/** The docs sidebar as B34 renders it; the current page's row carries aria-current. */
+const SIDEBAR = 'nav[aria-label="Docs"]';
+
 test.describe('active sidebar label (NAV-5)', () => {
   for (const palette of PALETTES) {
     test(`${palette} binds accent.primary-text at 4.5:1`, async ({page}) => {
       await page.setViewportSize({width: 1440, height: 900});
       await page.goto(DOCS);
-      await page.locator('.theme-doc-sidebar-container').waitFor();
+      await page.locator(SIDEBAR).waitFor();
       await applyPalette(page, palette);
-      const active = page.locator('.theme-doc-sidebar-container .menu__link--active').first();
+      const active = page.locator(`${SIDEBAR} [aria-current="page"]`).first();
       await expect(active).toBeVisible();
+      // the row is a link, and Infima transitions link colour: read it once the palette settles
+      await expect(active).toHaveCSS('color', ACTIVE_LABEL[palette]);
       const colour = await active.evaluate((element) => getComputedStyle(element).color);
       const surface = await active.evaluate(paintedBackground);
       const measured = {color: colour, surface};
@@ -140,10 +145,10 @@ test.describe('active sidebar label (NAV-5)', () => {
     for (const palette of PALETTES) {
       await page.setViewportSize({width: 1440, height: 900});
       await page.goto(DOCS);
-      await page.locator('.theme-doc-sidebar-container').waitFor();
+      await page.locator(SIDEBAR).waitFor();
       await applyPalette(page, palette);
       const results = await new AxeBuilder({page})
-        .include('.theme-doc-sidebar-container')
+        .include(SIDEBAR)
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
         .analyze();
       expect(

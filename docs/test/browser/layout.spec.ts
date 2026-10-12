@@ -284,6 +284,17 @@ test('resizing closes the drawer without leaving focus on hidden content', async
   await expect(menuButton(page)).toHaveAttribute('aria-expanded', 'false');
 });
 
+test('focus the browser drops while the drawer hides still lands on the home link', async ({
+  page,
+}) => {
+  await open(page, PAGE, 375);
+  await menuButton(page).click();
+  // Chrome's focus fixup can blur the hidden drawer's link before the media listener runs
+  await page.evaluate(() => (document.activeElement as HTMLElement | null)?.blur());
+  await page.setViewportSize({width: 1440, height: 900});
+  await expect(page.locator('header[data-dbs-component="Navbar / Full"] a').first()).toBeFocused();
+});
+
 test('all language choices remain reachable in a landscape-phone drawer', async ({page}) => {
   await page.setViewportSize({width: 568, height: 320});
   await page.goto(PAGE);
