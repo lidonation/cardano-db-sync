@@ -1,6 +1,9 @@
 /* Card / Tool · Team · Use case · Query · Sample query · Stat · Choice · Option · Data option.
    Flat surfaces, a 1px boundary, square corners, no shadows. Widths are constraints, not fixed
-   sizes (NAV-3): a card fills its grid cell up to the design's width. */
+   sizes (NAV-3): a card fills its grid cell up to the design's width.
+   TOK-6: the base boundary below is the decorative hairline for static cards (Query, Sample
+   query, Stat). Every interactive kind outranks it — link cards by `[data-link]` (0,2,0) and
+   selectable cards by `.card.select` (0,2,0) — so no control ever shows the hairline. */
 .card {
   position: relative;
   display: flex;
@@ -211,6 +214,8 @@
 }
 .select {
   cursor: pointer;
+}
+.card.select {
   border-color: var(--dbs-border-interactive);
 }
 .input {
@@ -250,7 +255,9 @@
 }
 .select:has(.input:disabled) {
   cursor: not-allowed;
-  border-color: var(--dbs-border-default);
+  /* TOK-6: a disabled choice is still a choice card — the control role, not the hairline.
+     The disabled signal comes from the sunken fill, the disabled label and the cursor. */
+  border-color: var(--dbs-border-interactive);
   background: var(--dbs-surface-sunken);
 }
 .select:has(.input:disabled) .title,

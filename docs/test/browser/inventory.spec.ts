@@ -3,6 +3,7 @@ import {expect, test, type Page} from '@playwright/test';
 
 import {INVENTORY, THEME_WORDS, shownStates} from '../../src/components/inventory';
 import {INVENTORY_URL} from '../../playwright.config';
+import {contrast} from './contrast';
 
 /**
  * B29 — the component inventory, audited in a browser (THM-5, THM-6, FLOOR-4, FLOOR-5, DF-2,
@@ -115,20 +116,6 @@ test.describe('axe, WCAG 2.2 AA', () => {
     }
   }
 });
-
-/** WCAG relative luminance contrast between two computed `rgb()` colours. */
-function contrast(a: string, b: string): number {
-  const luminance = (colour: string) => {
-    const [r, g, bl] = (colour.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
-    const channel = (value: number) => {
-      const c = value / 255;
-      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
-    };
-    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(bl);
-  };
-  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
-  return (light + 0.05) / (dark + 0.05);
-}
 
 test.describe('button contrast, measured on the clipped fill axe cannot see (FLOOR-1, FLOOR-3)', () => {
   for (const palette of PALETTES) {

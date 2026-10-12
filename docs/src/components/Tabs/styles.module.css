@@ -62,7 +62,9 @@
 }
 
 .tab[aria-disabled='true'] {
-  border-color: var(--dbs-border-default);
+  /* TOK-6: a disabled tab is still a tab — the control role, not the hairline. The disabled
+     signal comes from the sunken fill, the disabled label and the cursor. */
+  border-color: var(--dbs-border-interactive);
   background: var(--dbs-surface-sunken);
   color: var(--dbs-text-disabled);
   cursor: not-allowed;

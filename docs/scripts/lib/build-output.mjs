@@ -11,6 +11,8 @@ export const SKIP_DIRS = new Set([
   'build',
   '.docusaurus',
   'coverage',
+  'test-results',
+  'playwright-report',
   '.git',
   'dist-newstyle',
 ]);

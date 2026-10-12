@@ -1,9 +1,9 @@
 /*
- * Placeholder stylesheet.
+ * Site-wide overrides for Docusaurus-owned surfaces.
  *
- * The design system lands in B42 (typography tokens) and B47 (§20 design deliverables). Until the
- * token pipeline exists, this file carries no colour, type size, radius or spacing value: KICKOFF
- * §3 forbids inventing one, and `tokens.css` is generated, never hand-written.
+ * Tokens live in the generated `tokens.css` (single origin: `design/tokens.source.json`;
+ * KICKOFF §3 forbids inventing values here). This sheet only binds Docusaurus/Infima hooks
+ * to those tokens.
  */
 
 /* SEC-2: Docusaurus hides its SVG icon sprite with an inline style attribute, which
@@ -11,4 +11,17 @@
    or it renders as an empty 300x150 box. */
 svg[data-dbs-icon-sprite] {
   display: none;
+}
+
+/* NAV-5: the active docs-sidebar label uses `accent.primary-text` (5.87:1 on
+   `surface.accent-subtle`), never `accent.primary` (4.02 light / 4.02 cream / 4.34 navy).
+   The hover rule matches Infima's own `.menu__link--active:hover` specificity so the
+   binding holds under the pointer too. The background wash stays Infima's own, which already
+   flips for dark palettes — the label colour is what did not survive theming. */
+.menu__link--active {
+  color: var(--dbs-accent-primary-text);
+}
+
+.menu__link--active:hover {
+  color: var(--dbs-accent-primary-text);
 }
