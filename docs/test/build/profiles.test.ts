@@ -4,6 +4,7 @@ import path from 'node:path';
 import {promisify} from 'node:util';
 
 import {beforeAll, describe, expect, it} from 'vitest';
+import {load} from 'cheerio';
 
 import {DEFAULT_LOCALE, LOCALES} from '../../config/i18n';
 import {PROFILES} from '../../config/profiles';
@@ -291,9 +292,43 @@ describe('the FAQ page carries FAQPage JSON-LD that matches it (META-2, B44-c)',
     for (const locale of LOCALES) {
       it(`in the ${profile} ${locale} build`, async () => {
         const prefix = locale === DEFAULT_LOCALE ? '' : locale;
-        const html = await fs.readFile(path.join(OUT[profile], prefix, 'faq', 'index.html'), 'utf8');
+        const html = await fs.readFile(
+          path.join(OUT[profile], prefix, 'faq', 'index.html'),
+          'utf8',
+        );
         expect(faqPageProblems(html)).toEqual([]);
       });
     }
+  }
+});
+
+describe('global brand icons survive localized builds (#63)', () => {
+  for (const name of ['dev', 'prod'] as const) {
+    it(`${name}: every page points at the global icons and their published bytes`, async () => {
+      const profile = PROFILES[name];
+      const icons = {
+        icon: 'brand/png/mark-badge-32.png',
+        'apple-touch-icon': 'brand/png/mark-badge-180.png',
+      };
+      for (const page of await htmlFiles(OUT[name])) {
+        const $ = load(await fs.readFile(path.join(OUT[name], page), 'utf8'));
+        for (const [rel, file] of Object.entries(icons)) {
+          const links = $(`link[rel="${rel}"]`);
+          expect(links.length, `${name} ${page} ${rel}`).toBe(1);
+          const url = new URL(links.attr('href')!, profile.url);
+          expect(url.origin, `${name} ${page} ${rel}`).toBe(profile.url);
+          expect(url.pathname, `${name} ${page} ${rel}`).toBe(`${profile.baseUrl}${file}`);
+        }
+      }
+      const files = (
+        await fs.readdir(path.join(DOCS_ROOT, 'static/brand'), {recursive: true})
+      ).filter((file) => /\.(png|svg)$/.test(file));
+      expect(files).toHaveLength(47);
+      for (const file of files) {
+        expect(await fs.readFile(path.join(OUT[name], 'brand', file)), `${name} ${file}`).toEqual(
+          await fs.readFile(path.join(DOCS_ROOT, 'static/brand', file)),
+        );
+      }
+    });
   }
 });

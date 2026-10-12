@@ -24,9 +24,9 @@ const profile = resolveProfile();
 const config: Config = {
   title: 'Cardano DB Sync',
   tagline: 'The Cardano chain, as a Postgres database you can query',
-  // B01 follow-up (#63): brand marks live in `static/brand/`, which Docusaurus copies to the
-  // build root. `favicon` is resolved through `baseUrl` by Docusaurus, so ENV-1 holds.
-  favicon: 'brand/png/mark-badge-32.png',
+  // Static assets are global. A relative favicon is prefixed with the active locale by
+  // Docusaurus. Use the profile origin and baseUrl so every locale requests the same file.
+  favicon: `${profile.url}${profile.baseUrl}brand/png/mark-badge-32.png`,
 
   // Apple touch icon, `baseUrl`-relative by construction — never a hardcoded subpath (ENV-1).
   // The navbar logo stays with the design deliverables (B47).
