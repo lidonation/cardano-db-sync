@@ -40,6 +40,7 @@ export default defineConfig({
         'src/data/release-history.ts',
         'src/ecosystem/entries.ts',
         'src/numbers/data.ts',
+        'src/numbers/plot.ts',
         'docusaurus.config.ts',
       ],
       reporter: ['text-summary', 'json-summary'],

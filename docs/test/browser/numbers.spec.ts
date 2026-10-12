@@ -75,6 +75,15 @@ for (const palette of ['light', 'dark', 'cream', 'navy']) {
       await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
       await page.evaluate(() => document.fonts.ready);
       expect(await smallTargets(page)).toEqual([]);
+      expect(
+        await page
+          .locator('main [data-dbs-component="Metric"] > span:first-child > span')
+          .evaluateAll((nodes) =>
+            nodes
+              .filter((node) => node.textContent && !node.textContent.includes('UTC'))
+              .every((node) => node.getClientRects().length === 1),
+          ),
+      ).toBe(true);
       const wideCard = page.locator('main details').locator('..');
       if (width >= 1024) expect((await wideCard.boundingBox())!.width).toBeGreaterThan(384);
       if (

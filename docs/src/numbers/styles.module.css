@@ -133,3 +133,10 @@
   padding-block: var(--dbs-space-12);
   cursor: pointer;
 }
+
+@media (max-width: 1279px) {
+  .metricValue {
+    font: var(--dbs-font-heading-md);
+    letter-spacing: var(--dbs-font-heading-md-tracking);
+  }
+}

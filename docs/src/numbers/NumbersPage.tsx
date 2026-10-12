@@ -5,12 +5,13 @@ import Layout from '@theme/Layout';
 import {MAIN_CONTENT_ID} from '../lib/accessibility';
 import useBuildEnvironment from '../lib/useBuildEnvironment';
 import useFallbackLang from '../i18n/useFallbackLang';
-import {committedNumbersState, formatNumber, formatUtc} from './data';
+import {committedNumbersState, formatNumber, formatUtc, numbersForNetwork} from './data';
 import type {CardanoNetwork, NumbersState} from './types';
 import {NUMBERS_IDS} from './ids';
 import {messages} from './messages';
 import useNumbersTranslate from './useNumbersTranslate';
 import styles from './styles.module.css';
+import {growthPoints} from './plot';
 
 export default function NumbersPage({
   state,
@@ -21,12 +22,13 @@ export default function NumbersPage({
 }): React.JSX.Element {
   const build = useBuildEnvironment();
   const activeNetwork = network ?? build.profile.network;
-  const current = state ?? committedNumbersState(activeNetwork);
+  const current = numbersForNetwork(state ?? committedNumbersState(activeNetwork), activeNetwork);
   const t = useNumbersTranslate();
   const lang = useFallbackLang(NUMBERS_IDS);
   const title = `${t(messages.title)} · ${t(messages[activeNetwork])}`;
   const snapshot = current.status === 'unavailable' ? null : current.snapshot;
   const storage = snapshot?.storage;
+  const growth = growthPoints(storage?.growth ?? []);
   const metrics = snapshot
     ? [
         [t(messages.block), formatNumber(snapshot.blockHeight)],
@@ -62,7 +64,7 @@ export default function NumbersPage({
                         value={
                           <span
                             className={
-                              label === t(messages.boundary) ? styles.dateValue : undefined
+                              label === t(messages.boundary) ? styles.dateValue : styles.metricValue
                             }
                           >
                             {value}
@@ -109,53 +111,32 @@ export default function NumbersPage({
                           <h3>{t(messages.growth)}</h3>
                           <p>{t(messages.modelled)}</p>
                           <p id="numbers-growth-summary">
-                            {storage.growth.length === 0
+                            {growth.length === 0
                               ? t(messages.growthEmpty)
                               : t(messages.growthSummary)
-                                  .replace('{count}', formatNumber(storage.growth.length))
-                                  .replace('{firstEpoch}', formatNumber(storage.growth[0].epoch))
-                                  .replace('{firstGB}', formatNumber(storage.growth[0].gigabytes))
-                                  .replace(
-                                    '{lastEpoch}',
-                                    formatNumber(storage.growth.at(-1)!.epoch),
-                                  )
-                                  .replace(
-                                    '{lastGB}',
-                                    formatNumber(storage.growth.at(-1)!.gigabytes),
-                                  )}
+                                  .replace('{count}', formatNumber(growth.length))
+                                  .replace('{firstEpoch}', formatNumber(growth[0].epoch))
+                                  .replace('{firstGB}', formatNumber(growth[0].gigabytes))
+                                  .replace('{lastEpoch}', formatNumber(growth.at(-1)!.epoch))
+                                  .replace('{lastGB}', formatNumber(growth.at(-1)!.gigabytes))}
                           </p>
-                          {storage.growth.length > 0 && (
+                          {growth.length > 0 && (
                             <svg
                               className={styles.chart}
                               viewBox="0 0 600 180"
                               role="img"
                               aria-labelledby="numbers-growth-summary"
                             >
-                              {storage.growth.length > 0 && (
-                                <polyline
-                                  className={styles.line}
-                                  points={storage.growth
-                                    .map(
-                                      (point, index) =>
-                                        `${20 + (index * 560) / Math.max(1, storage.growth.length - 1)},${160 - (point.gigabytes / Math.max(1, ...storage.growth.map((item) => item.gigabytes))) * 140}`,
-                                    )
-                                    .join(' ')}
-                                />
-                              )}
-                              {storage.growth.map((point, index) => (
+                              <polyline
+                                className={styles.line}
+                                points={growth.map((point) => `${point.x},${point.y}`).join(' ')}
+                              />
+                              {growth.map((point) => (
                                 <circle
                                   key={point.epoch}
                                   className={styles.point}
-                                  cx={20 + (index * 560) / Math.max(1, storage.growth.length - 1)}
-                                  cy={
-                                    160 -
-                                    (point.gigabytes /
-                                      Math.max(
-                                        1,
-                                        ...storage.growth.map((item) => item.gigabytes),
-                                      )) *
-                                      140
-                                  }
+                                  cx={point.x}
+                                  cy={point.y}
                                   r="4"
                                 />
                               ))}
@@ -175,7 +156,7 @@ export default function NumbersPage({
                                   </tr>
                                 </thead>
                                 <tbody>
-                                  {storage.growth.map((point) => (
+                                  {growth.map((point) => (
                                     <tr key={point.epoch}>
                                       <th scope="row">{formatNumber(point.epoch)}</th>
                                       <td>{formatNumber(point.gigabytes)}</td>

@@ -218,3 +218,48 @@ describe('Numbers snapshot boundary (NUM-1…NUM-5)', () => {
     expect(formatUtc(snapshot.updatedAt)).toBe('2026-10-12 00:00 UTC');
   });
 });
+
+import {growthPoints} from '../../src/numbers/plot';
+import {numbersForNetwork} from '../../src/numbers/data';
+
+describe('Numbers view boundaries', () => {
+  it('rejects mismatched ready and stale props without leaking figures', () => {
+    const ready = {status: 'ready', snapshot: {...snapshot, network: 'mainnet'}} as const;
+    expect(numbersForNetwork(ready, 'preview')).toEqual({status: 'unavailable', reason: 'network'});
+    expect(numbersForNetwork({...ready, status: 'stale'}, 'preview')).toEqual({
+      status: 'unavailable',
+      reason: 'network',
+    });
+    expect(numbersForNetwork(ready, 'mainnet')).toBe(ready);
+    expect(numbersForNetwork({status: 'unavailable', reason: 'missing'}, 'preview')).toEqual({
+      status: 'unavailable',
+      reason: 'missing',
+    });
+  });
+  it('orders growth chronologically without changing shared outputs', () => {
+    const rows = [
+      {epoch: 99, gigabytes: 12},
+      {epoch: 88, gigabytes: 1},
+      {epoch: 98, gigabytes: 11},
+    ];
+    expect(growthPoints(rows).map((p) => p.epoch)).toEqual([88, 98, 99]);
+    expect(rows.map((p) => p.epoch)).toEqual([99, 88, 98]);
+  });
+  it('spaces gapped epochs by distance, not array index', () => {
+    const points = growthPoints([
+      {epoch: 88, gigabytes: 1},
+      {epoch: 89, gigabytes: 2},
+      {epoch: 99, gigabytes: 3},
+    ]);
+    expect(points[0].x).toBe(20);
+    expect(points[1].x).toBeCloseTo(20 + 560 / 11);
+    expect(points[2].x).toBe(580);
+  });
+  it('supports empty, single-point, zero and sub-GB growth without NaN', () => {
+    expect(growthPoints([])).toEqual([]);
+    expect(growthPoints([{epoch: 99, gigabytes: 0}])).toEqual([
+      {epoch: 99, gigabytes: 0, x: 20, y: 160},
+    ]);
+    expect(growthPoints([{epoch: 99, gigabytes: 0.01}])[0].y).toBe(20);
+  });
+});
