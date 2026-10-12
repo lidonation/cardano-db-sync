@@ -1,11 +1,23 @@
 import React, {useEffect, useRef, useState} from 'react';
 
-import {translate} from '@docusaurus/Translate';
+import {translate as defaultTranslate} from '@docusaurus/Translate';
+import codeTranslations from '@generated/codeTranslations';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+
+import {pageTranslator} from '../../i18n/pageTranslator';
+import useFallbackLang from '../../i18n/useFallbackLang';
 
 import Icon from '../shared/Icon';
 import {demoAttributes, type InteractionState} from '../shared/states';
 
 import styles from './styles.module.css';
+
+const COPY_IDS = [
+  'components.copy.idle',
+  'components.copy.copying',
+  'components.copy.copied',
+  'components.copy.failed',
+] as const;
 
 export type CopyState = 'idle' | 'copying' | 'copied' | 'failed';
 
@@ -29,6 +41,17 @@ export default function CodeCopy({
   readonly state?: CopyState;
   readonly demo?: InteractionState;
 }): React.JSX.Element | null {
+  const {
+    i18n: {currentLocale, defaultLocale},
+  } = useDocusaurusContext();
+  const lang = useFallbackLang(COPY_IDS) ?? currentLocale;
+  const translate = pageTranslator(
+    COPY_IDS,
+    codeTranslations,
+    currentLocale,
+    defaultLocale,
+    defaultTranslate,
+  );
   const [live, setLive] = useState<CopyState>('idle');
   const timer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => () => clearTimeout(timer.current), []);
@@ -73,7 +96,7 @@ export default function CodeCopy({
     }),
   };
   return (
-    <span className={styles.wrap} data-dbs-component="Code / Copy">
+    <span className={styles.wrap} data-dbs-component="Code / Copy" lang={lang}>
       <button
         type="button"
         className={styles.copy}

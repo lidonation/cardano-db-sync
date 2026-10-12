@@ -61,6 +61,12 @@ describe('docusaurus.config (ENV-1)', () => {
     expect(config.customFields?.profile).toEqual(PROFILES.dev);
   });
 
+  it('counts the landing page facts at build time (B44-a)', async () => {
+    const config = await loadConfig('dev');
+    const {releaseFacts} = await import('../../src/data/release-facts');
+    expect(config.customFields?.releaseFacts).toEqual(releaseFacts());
+  });
+
   it('gives every profile the production address for the environment banner (ENV-4)', async () => {
     for (const name of ['dev', 'prod']) {
       const config = await loadConfig(name);
@@ -123,7 +129,7 @@ describe('build hygiene', () => {
     expect(config.markdown?.hooks?.onBrokenMarkdownLinks).toBe('throw');
   });
 
-  it('registers the CNAME, route-manifest, environment, security, i18n and inventory plugins', async () => {
+  it('registers the CNAME, route-manifest, environment, security, i18n, inventory and CSS-prune plugins', async () => {
     const config = await loadConfig('prod');
     const {default: cnamePlugin} = await import('../../plugins/cname');
     const {default: routeManifestPlugin} = await import('../../plugins/route-manifest');
@@ -132,6 +138,7 @@ describe('build hygiene', () => {
     const {default: i18nPlugin} = await import('../../plugins/i18n');
     const {default: inventoryPlugin} = await import('../../plugins/inventory');
     const {default: palettePlugin} = await import('../../plugins/palette');
+    const {default: cssPrunePlugin} = await import('../../plugins/css-prune');
     expect(config.plugins).toEqual([
       cnamePlugin,
       routeManifestPlugin,
@@ -140,6 +147,7 @@ describe('build hygiene', () => {
       i18nPlugin,
       inventoryPlugin,
       palettePlugin,
+      cssPrunePlugin,
     ]);
   });
 

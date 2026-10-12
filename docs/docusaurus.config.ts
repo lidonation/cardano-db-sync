@@ -4,12 +4,14 @@ import type * as Preset from '@docusaurus/preset-classic';
 import {I18N} from './config/i18n';
 import {PROFILES, resolveProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
+import cssPrunePlugin from './plugins/css-prune';
 import environmentPlugin from './plugins/environment';
 import i18nPlugin from './plugins/i18n';
 import inventoryPlugin, {layoutFixturePlugins} from './plugins/inventory';
 import palettePlugin from './plugins/palette';
 import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
+import {releaseFacts} from './src/data/release-facts';
 
 const profile = resolveProfile();
 
@@ -48,6 +50,9 @@ const config: Config = {
     profile,
     // ENV-4: the environment banner's way out to the real site.
     productionUrl: `${PROFILES.prod.url}${PROFILES.prod.baseUrl}`,
+    // B44-a: the landing page's "in this build" figures, counted here at build time so the
+    // schema artifact they come from never ships to the browser.
+    releaseFacts: releaseFacts(),
   },
 
   // A11Y-18: `lang` and `dir` on <html> come from each locale's config (B40).
@@ -84,6 +89,7 @@ const config: Config = {
   // B29: the component inventory, on the development server only (DBS_INVENTORY=1); B34's layout
   // fixture docs behind the same flag.
   // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
+  // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
     cnamePlugin,
     routeManifestPlugin,
@@ -92,6 +98,7 @@ const config: Config = {
     i18nPlugin,
     inventoryPlugin,
     palettePlugin,
+    cssPrunePlugin,
     ...layoutFixturePlugins(),
   ],
 
@@ -129,8 +136,14 @@ const config: Config = {
           title: 'Project',
           items: [
             {label: 'GitHub', href: profile.repoUrl},
-            {label: 'Issues', href: `${profile.repoUrl}/issues`},
             {label: 'Releases', href: `${profile.repoUrl}/releases`},
+          ],
+        },
+        {
+          title: 'Community',
+          items: [
+            {label: 'Discord #db-sync', href: 'https://discord.com/invite/inter-sect'},
+            {label: 'Issues', href: `${profile.repoUrl}/issues`},
           ],
         },
       ],
