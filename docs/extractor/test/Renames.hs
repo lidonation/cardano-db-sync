@@ -75,6 +75,57 @@ main = do
   check "a statement with no rename yields nothing" $
     scanMigration mig "ALTER TABLE a ADD COLUMN renamed_at timestamp;" == Right []
 
+  check "nested PostgreSQL block comments are ignored" $
+    scanMigration mig "/* outer /* inner */ ALTER TABLE a RENAME TO b; */" == Right []
+  check "uppercase version guards are validated" $
+    fails "IF NEXT_VERSION = 7 THEN EXECUTE 'ALTER TABLE a RENAME TO b'; END IF;" "disagrees"
+  check "every version guard is validated" $
+    fails "IF next_version = 8 THEN SELECT 1; END IF; IF next_version = 7 THEN EXECUTE 'ALTER TABLE a RENAME TO b'; END IF;" "disagrees"
+  check "non-public schemas cannot alias public objects" $
+    fails "ALTER TABLE private.a RENAME TO b;" "unrecognised"
+  check "domain constraints cannot alias table constraints" $
+    fails "ALTER DOMAIN a RENAME CONSTRAINT old TO new;" "unrecognised"
+  check "migration filenames require numeric stage/version and an eight-digit date" $
+    all
+      ((== Nothing) . parseMigrationName)
+      ["migration-2-0008-garbage.sql", "migration-2-+008-20200108.sql", "migration--2-0008-20200108.sql", "migration-5-0008-20200108.sql"]
+
+  check "stage-four migrations remain supported" $
+    parseMigrationName "migration-4-0008-20200108.sql" == Just (Migration 4 8 "migration-4-0008-20200108.sql")
+  invalid <- extractRenames "test/invalid-rename-fixtures"
+  check "malformed migration filenames fail loudly instead of dropping renames" $
+    case invalid of
+      Left errs -> any ("invalid migration filename" `Text.isInfixOf`) errs
+      Right _ -> False
+
+  check "self-renames fail before emitting an unusable artifact" $
+    fails "ALTER TABLE a RENAME TO a;" "unrecognised"
+  collision <- extractRenames "test/collision-rename-fixtures"
+  check "destination collisions do not silently lose former names" $
+    case collision of
+      Left errs -> any ("destination collision" `Text.isInfixOf`) errs
+      Right _ -> False
+
+  check "ordinary dollar strings do not execute embedded SQL" $
+    scanMigration mig "SELECT $$; ALTER TABLE a RENAME TO b; $$;" == Right []
+  check "DO dollar bodies still expose executed renames" $
+    case scanMigration mig "DO $body$ BEGIN EXECUTE 'ALTER TABLE a RENAME TO b'; END $body$;" of
+      Right [r] -> rnFrom r == "a" && rnTo r == "b"
+      _ -> False
+  check "unterminated dollar strings fail" $
+    fails "SELECT $body$ unfinished" "unterminated dollar"
+
+  check "EXECUTE dollar literals expose executed renames" $
+    case scanMigration mig "DO $$ BEGIN EXECUTE $sql$ALTER TABLE a RENAME TO b$sql$; END $$;" of
+      Right [r] -> rnFrom r == "a" && rnTo r == "b"
+      _ -> False
+  check "dynamic EXECUTE dollar concatenation fails loudly" $
+    fails "DO $$ BEGIN EXECUTE $sql$ALTER TABLE $sql$ || t || $sql$ RENAME TO b$sql$; END $$;" "unrecognised"
+  check "procedure dollar bodies expose executed renames" $
+    case scanMigration mig "CREATE PROCEDURE migrate() LANGUAGE plpgsql AS $$ BEGIN EXECUTE 'ALTER TABLE a RENAME TO b'; END $$;" of
+      Right [r] -> rnFrom r == "a" && rnTo r == "b"
+      _ -> False
+
   -- The real migrations
   real <- extractRenames "../.."
   case real of

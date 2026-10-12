@@ -9,6 +9,7 @@
 -- line, and the exit code is 1: a rename is never silently dropped.
 module Main (main) where
 
+import Control.Exception (IOException, displayException, try)
 import qualified Data.ByteString as BS
 import qualified Data.Text as Text
 import qualified Data.Text.IO as TIO
@@ -22,7 +23,18 @@ import System.IO
 
 main :: IO ()
 main = do
+  hSetEncoding stdout utf8
+  hSetEncoding stderr utf8
   args <- getArgs
+  result <- try @IOException (if args == ["--help"] then putStr usage else run args)
+  case result of
+    Left err -> do
+      hPutStrLn stderr ("extract-renames: " <> displayException err)
+      exitFailure
+    Right () -> pure ()
+
+run :: [String] -> IO ()
+run args =
   case parseArgs args of
     Left err -> do
       hPutStrLn stderr ("extract-renames: " <> err)
@@ -74,7 +86,8 @@ parseArgs = go (".", "")
   where
     go (root, out) [] = if null out then Left "missing --out FILE" else Right (root, out)
     go (root, out) (flag : value : rest) = case flag of
-      "--repo-root" -> go (value, out) rest
+      "--repo-root" | not (null value) -> go (value, out) rest
+      "--repo-root" -> Left "empty --repo-root DIR"
       "--out" -> go (root, value) rest
       _ -> Left ("unknown argument: " <> flag)
     go _ _ = Left "every flag needs a value"

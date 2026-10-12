@@ -12,9 +12,13 @@ author:             Lido Nation
 maintainer:         darlington@lidonation.com
 category:           Development
 build-type:         Simple
-extra-source-files: test/fixtures/*.hs
+extra-source-files: test/cli.sh
+                    test/renames-cli.sh
+                    test/fixtures/*.hs
                     test/golden/*.json
                     test/rename-fixtures/schema/*.sql
+                    test/invalid-rename-fixtures/schema/*.sql
+                    test/collision-rename-fixtures/schema/*.sql
 
 common warnings
   ghc-options: -Wall

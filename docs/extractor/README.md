@@ -77,10 +77,14 @@ cabal run extract-renames -- --repo-root ../.. --out ../generated/schema-renames
 
 - The SQL is tokenised, not executed. Comments are skipped, dollar-quoted
   function bodies are read like top-level SQL, and an `EXECUTE '…'` literal is
-  scanned as the statement it runs. Unquoted identifiers fold to lower case.
+  scanned as the statement it runs. Unquoted identifiers fold to lower case. Nested block comments are skipped.
+  Only unqualified or `public`-qualified names are supported. Other schemas
+  and domain-owned constraint renames fail because the artifact has no schema
+  or domain-owner field.
 - Each rename is keyed by the migration that ran it: `{stage, version, file}`.
   For a versioned migration the `IF next_version = N` guard must match the
-  filename's version, or the run fails. On the schema axis (SPECIFICATION
+  filename's version, or the run fails. All guards are checked, including
+  uppercase identifiers. On the schema axis (SPECIFICATION
   §8.3), a stage-two rename has happened once `stage_two >= version`. Stage
   one and stage three run in full on every start, so their renames have
   always happened.
@@ -102,6 +106,8 @@ The site reads the map through `src/data/schema-renames.ts`:
 - `formerNames` gives its earlier names, used as the SRCH-5 search aliases.
 
 `check:renames` guards that the committed map stays consumable.
+`sh test/renames-cli.sh "$(cabal list-bin extract-renames)"` checks the CLI,
+including help, invalid arguments, filesystem failures and invalid UTF-8.
 
 ## Notes
 

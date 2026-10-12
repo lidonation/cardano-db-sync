@@ -34,7 +34,7 @@ import Data.Char (isAlphaNum, isDigit, isSpace)
 import Data.Either (partitionEithers)
 import Data.List (sort, sortOn)
 import qualified Data.Map.Strict as Map
-import Data.Maybe (fromMaybe, mapMaybe)
+import Data.Maybe (fromMaybe, isNothing, mapMaybe)
 import Data.Text (Text)
 import qualified Data.Text as Text
 import qualified Data.Text.Encoding as TE
@@ -129,10 +129,15 @@ data RenameMap = RenameMap
 parseMigrationName :: FilePath -> Maybe Migration
 parseMigrationName file = case Text.splitOn "-" (Text.pack file) of
   ["migration", stage, version, rest]
-    | Just s <- readMaybe (Text.unpack stage)
+    | stage `elem` ["1", "2", "3", "4"]
+    , Just s <- readMaybe (Text.unpack stage)
     , Text.length version == 4
+    , Text.all isDigit version
     , Just v <- readMaybe (Text.unpack version)
-    , ".sql" `Text.isSuffixOf` rest ->
+    , let date = Text.dropEnd 4 rest
+    , ".sql" `Text.isSuffixOf` rest
+    , Text.length date == 8
+    , Text.all isDigit date ->
         Just (Migration s v file)
   _ -> Nothing
 
@@ -144,6 +149,7 @@ data Tok
     TQuoted Text
   | -- | a single-quoted string literal, unescaped
     TString Text
+  | TDollar Text
   | TSemi
   | TSym Char
   deriving (Eq, Show)
@@ -152,7 +158,7 @@ data Located = Located {locLine :: Int, locTok :: Tok}
   deriving (Show)
 
 -- | Tokenise SQL. Comments are dropped and dollar-quote delimiters are
--- transparent, so a function body is tokenised like top-level SQL.
+-- kept as literals; scanMigration expands only supported executable bodies.
 tokenise :: Int -> Text -> Either (Int, Text) [Located]
 tokenise = go
   where
@@ -162,12 +168,13 @@ tokenise = go
         | c == '\n' -> go (line + 1) rest
         | isSpace c -> go line rest
         | "--" `Text.isPrefixOf` s -> go line (Text.dropWhile (/= '\n') s)
-        | "/*" `Text.isPrefixOf` s ->
-            let (body, after) = Text.breakOn "*/" (Text.drop 2 s)
-             in if Text.null after
-                  then Left (line, "unterminated block comment")
-                  else go (line + Text.count "\n" body) (Text.drop 2 after)
-        | c == '$', Just after <- dollarTag rest -> go line after
+        | "/*" `Text.isPrefixOf` s -> skipComment line 1 (Text.drop 2 s)
+        | c == '$'
+        , Just (delimiter, after) <- dollarTag rest ->
+            let (body, closing) = Text.breakOn delimiter after
+             in if Text.null closing
+                  then Left (line, "unterminated dollar quote")
+                  else (Located line (TDollar body) :) <$> go (line + Text.count "\n" body) (Text.drop (Text.length delimiter) closing)
         | c == '\'' -> quoted '\'' TString line rest
         | c == '"' -> quoted '"' TQuoted line rest
         | c == ';' -> (Located line TSemi :) <$> go line rest
@@ -176,11 +183,21 @@ tokenise = go
              in (Located line (TWord w) :) <$> go line after
         | otherwise -> (Located line (TSym c) :) <$> go line rest
 
+    -- PostgreSQL block comments nest. Do not expose text after an inner close.
+    skipComment line depth s
+      | Text.null s = Left (line, "unterminated block comment")
+      | "/*" `Text.isPrefixOf` s = skipComment line (depth + 1) (Text.drop 2 s)
+      | "*/" `Text.isPrefixOf` s =
+          if depth == (1 :: Int)
+            then go line (Text.drop 2 s)
+            else skipComment line (depth - 1) (Text.drop 2 s)
+      | otherwise = skipComment (line + if Text.head s == '\n' then 1 else 0) depth (Text.tail s)
+
     -- @$$@ or @$tag$@: the rest of the input after the closing @$@
     dollarTag rest =
       let (tag, after) = Text.span (\x -> isAlphaNum x || x == '_') rest
        in case Text.uncons after of
-            Just ('$', after') | Text.all (not . isDigit) (Text.take 1 tag) -> Just after'
+            Just ('$', after') | Text.all (not . isDigit) (Text.take 1 tag) -> Just ("$" <> tag <> "$", after')
             _ -> Nothing
 
     -- a quoted token, with the quote doubled as its escape
@@ -212,7 +229,8 @@ statements toks = case break ((== TSemi) . locTok) toks of
 -- the file could not be read as @file:line: message@.
 scanMigration :: Migration -> Text -> Either [Text] [Rename]
 scanMigration mig src = do
-  toks <- either (\(l, e) -> Left [at l e]) Right (tokenise 1 src)
+  raw <- either (\(l, e) -> Left [at l e]) Right (tokenise 1 src)
+  toks <- expandBodies [] raw
   guardCheck toks
   let (errs, found) = partitionEithers (concatMap (statement 0) (statements toks))
   unless (null errs) (Left errs)
@@ -221,14 +239,41 @@ scanMigration mig src = do
     at :: Int -> Text -> Text
     at l msg = Text.pack (migFile mig) <> ":" <> Text.pack (show l) <> ": " <> msg
 
+    -- Dollar quotes are data except at a DO body or CREATE FUNCTION AS body.
+    -- Track only the current statement's prefix, not arbitrary SQL semantics.
+    expandBodies _ [] = Right []
+    expandBodies prefix (l@(Located line (TDollar body)) : rest)
+      | isBody prefix = do
+          inner <- either (\(n, e) -> Left [at n e]) Right (tokenise line body)
+          expanded <- expandBodies [] inner
+          after <- expandBodies prefix rest
+          pure (expanded ++ after)
+      | otherwise = (l :) <$> expandBodies (locTok l : prefix) rest
+    expandBodies prefix (l : rest) =
+      (l :) <$> expandBodies (if locTok l == TSemi then [] else locTok l : prefix) rest
+
+    isBody prefix =
+      let words' = [Text.toUpper w | TWord w <- reverse prefix]
+       in case words' of
+            ["DO"] -> True
+            ["DO", "LANGUAGE", _] -> True
+            "CREATE" : remaining ->
+              any (`elem` take 3 remaining) ["FUNCTION", "PROCEDURE"] && case prefix of
+                TWord w : _ -> Text.toUpper w == "AS"
+                _ -> False
+            _ -> False
+
     -- A versioned migration guards its body with @IF next_version = N@; the
     -- rename map keys renames by that version, so it must agree with the
     -- filename.
-    guardCheck toks = case [(locLine l, n) | (l@(Located _ (TWord "next_version")), Located _ (TSym '='), Located _ (TWord n)) <- triples toks] of
-      (l, n) : _
-        | readMaybe (Text.unpack n) /= Just (migVersion mig) ->
-            Left [at l ("guard `next_version = " <> n <> "` disagrees with the file's version " <> Text.pack (show (migVersion mig)))]
-      _ -> Right ()
+    guardCheck toks =
+      let mismatches =
+            [ at (locLine l) ("guard `next_version = " <> n <> "` disagrees with the file's version " <> Text.pack (show (migVersion mig)))
+            | (l@(Located _ (TWord w)), Located _ (TSym '='), Located _ (TWord n)) <- triples toks
+            , upper w == "NEXT_VERSION"
+            , readMaybe (Text.unpack n) /= Just (migVersion mig)
+            ]
+       in unless (null mismatches) (Left mismatches)
 
     triples xs = zip3 xs (drop 1 xs) (drop 2 xs)
 
@@ -236,7 +281,7 @@ scanMigration mig src = do
     statement :: Int -> [Located] -> [Either Text [Rename]]
     -- The literal may follow control flow in the same statement
     -- (@IF next_version = 26 THEN EXECUTE '…'@), so the prefix is scanned too.
-    statement depth stmt = case reverse stmt of
+    statement depth original = case reverse stmt of
       Located _ (TString body) : Located l (TWord w) : before
         | upper w == "EXECUTE" ->
             statement depth (reverse before) ++ case tokenise l body of
@@ -247,6 +292,13 @@ scanMigration mig src = do
       _
         | any (isRename . locTok) stmt -> [rename stmt]
         | otherwise -> []
+      where
+        -- Within EXECUTE, dollar literals have the same SQL semantics as
+        -- single-quoted literals. Outside EXECUTE they remain ordinary data.
+        stmt
+          | any (\l -> case locTok l of TWord w -> upper w == "EXECUTE"; _ -> False) original =
+              map (\l -> case locTok l of TDollar body -> l {locTok = TString body}; _ -> l) original
+          | otherwise = original
 
     isRename = \case
       TWord w -> upper w == "RENAME"
@@ -268,20 +320,24 @@ scanMigration mig src = do
           let rest5 = case rest4 of TSym '*' : r -> r; r -> r
           rest6 <- keyword "RENAME" rest5
           let mk k tbl from to = Rename k tbl from to mig line
+              changed from to = if from == to then Nothing else Just ()
           case rest6 of
             TWord t : new | upper t == "TO" -> do
               (to, []) <- identifier new
+              changed name to
               pure [mk kind Nothing name to]
             TWord c : old
               | upper c == "CONSTRAINT"
-              , kind `elem` [KTable, KDomain] -> do
+              , kind == KTable -> do
                   (from, rest7) <- identifier old
                   (to, []) <- identifier =<< keyword "TO" rest7
+                  changed from to
                   pure [mk KConstraint (Just name) from to]
             _ | kind == KTable -> do
               let cols = optional ["COLUMN"] rest6
               (from, rest7) <- identifier cols
               (to, []) <- identifier =<< keyword "TO" rest7
+              changed from to
               pure [mk KColumn (Just name) from to]
             _ -> Nothing
 
@@ -306,7 +362,8 @@ scanMigration mig src = do
     qualifiedName toks = do
       (first, rest) <- identifier toks
       case rest of
-        TSym '.' : more -> identifier more
+        TSym '.' : more | first == "public" -> identifier more
+        TSym '.' : _ -> Nothing
         _ -> pure (first, rest)
 
     -- Unquoted identifiers fold to lower case, as PostgreSQL folds them.
@@ -324,6 +381,7 @@ scanMigration mig src = do
       TWord w -> w
       TQuoted q -> "\"" <> q <> "\""
       TString s -> "'" <> s <> "'"
+      TDollar s -> "$$" <> s <> "$$"
       TSemi -> ";"
       TSym c -> Text.singleton c
 
@@ -369,12 +427,24 @@ extractRenames :: FilePath -> IO (Either [Text] (Int, RenameMap))
 extractRenames root = do
   files <- sort <$> listDirectory (root </> schemaDir)
   let migrations = mapMaybe parseMigrationName files
+      invalid =
+        [ Text.pack file <> ": invalid migration filename"
+        | file <- files
+        , "migration-" `Text.isPrefixOf` Text.pack file
+        , ".sql" `Text.isSuffixOf` Text.pack file
+        , isNothing (parseMigrationName file)
+        ]
   results <- mapM scanFile migrations
   let (errs, found) = partitionEithers results
+      rmap = buildRenameMap (concat found)
+      collisions =
+        [ "rename destination collision: entity folding lost rename history"
+        | sum (map (length . enFormer) (rmEntities rmap)) /= length (rmRenames rmap)
+        ]
   pure $
-    if null errs && not (null migrations)
-      then Right (length migrations, buildRenameMap (concat found))
-      else Left (if null migrations then ["no migration files under " <> Text.pack schemaDir] else concat errs)
+    if null errs && null invalid && null collisions && not (null migrations)
+      then Right (length migrations, rmap)
+      else Left (invalid ++ collisions ++ concat errs ++ ["no migration files under " <> Text.pack schemaDir | null migrations])
   where
     scanFile mig = do
       bytes <- BS.readFile (root </> schemaDir </> migFile mig)
