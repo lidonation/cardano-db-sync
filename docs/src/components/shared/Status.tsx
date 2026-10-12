@@ -1,5 +1,9 @@
 import React, {type ReactNode} from 'react';
 
+import clsx from 'clsx';
+
+import {translate} from '@docusaurus/Translate';
+
 import Icon from './Icon';
 
 import styles from './shared.module.css';
@@ -25,7 +29,7 @@ export function Skeleton({
 }): React.JSX.Element {
   return (
     <span
-      className={[styles.skeleton, shape === 'hexagon' ? styles.hexagon : ''].join(' ').trim()}
+      className={clsx(styles.skeleton, shape === 'hexagon' && styles.hexagon)}
       data-size={size}
       aria-hidden="true"
     />
@@ -66,5 +70,14 @@ export function EmptyState({
   readonly children: ReactNode;
   readonly framed?: boolean;
 }): React.JSX.Element {
-  return <p className={framed ? `${styles.empty} ${styles.framed}` : styles.empty}>{children}</p>;
+  return <p className={clsx(styles.empty, framed && styles.framed)}>{children}</p>;
+}
+
+/** The visually hidden "Loading…" line a busy container announces once. */
+export function loadingLabel(): string {
+  return translate({
+    id: 'components.loading',
+    message: 'Loading…',
+    description: 'Announced while a component waits for its data',
+  });
 }

@@ -1,7 +1,7 @@
 import React, {type ReactNode} from 'react';
 
-import Retry, {loadingLabel} from '../shared/Retry';
-import {ErrorMessage, Skeleton, VisuallyHidden} from '../shared/Status';
+import Retry from '../shared/Retry';
+import {ErrorMessage, Skeleton, VisuallyHidden, loadingLabel} from '../shared/Status';
 import type {DataStatus} from '../shared/states';
 
 import styles from './styles.module.css';

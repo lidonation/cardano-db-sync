@@ -1,5 +1,7 @@
 import React, {useId, useState, type ReactNode} from 'react';
 
+import clsx from 'clsx';
+
 import Link from '@docusaurus/Link';
 import {translate} from '@docusaurus/Translate';
 
@@ -123,7 +125,7 @@ export function NavbarFull({
       </div>
       <nav id={menuId} className={styles.drawer} aria-label={sections} hidden={!open}>
         {linkList}
-        <Link className={`${styles.link} ${styles.drawerGithub}`} to={githubHref}>
+        <Link className={clsx(styles.link, styles.drawerGithub)} to={githubHref}>
           GitHub
         </Link>
       </nav>

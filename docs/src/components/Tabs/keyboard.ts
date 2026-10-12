@@ -1,4 +1,18 @@
 /**
+ * The tab that is selected and holds the group's one tab stop: the requested one when it exists and
+ * is enabled, otherwise the first enabled tab. Without this a stale or disabled `defaultSelected`
+ * (or items that change under it) leaves no tab with `tabIndex=0`, and the group drops out of the
+ * keyboard order (A11Y-28).
+ */
+export function resolveSelected(
+  items: readonly {readonly id: string; readonly disabled?: boolean}[],
+  requested: string | undefined,
+): string | undefined {
+  const usable = items.filter((item) => !item.disabled);
+  return usable.find((item) => item.id === requested)?.id ?? usable[0]?.id;
+}
+
+/**
  * Arrow-key movement for a tablist (A11Y-28, WAI-ARIA tabs pattern): Left/Right (Up/Down for a
  * vertical list) step to the previous/next enabled tab and wrap; Home/End jump to the first/last
  * enabled tab. Disabled tabs are skipped. Right means "next in reading order", so in a

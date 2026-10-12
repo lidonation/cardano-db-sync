@@ -1,5 +1,7 @@
+/* a text button, with the 44px hit area every control has (DF-6) */
 .retry {
-  min-block-size: 24px;
+  min-block-size: 44px;
+  min-inline-size: 44px;
   padding: 0 var(--dbs-space-4);
   border: 0;
   background: none;

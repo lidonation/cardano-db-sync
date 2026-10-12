@@ -1,9 +1,12 @@
 import React, {useId, type ChangeEvent, type ReactNode} from 'react';
 
+import clsx from 'clsx';
+
 import {translate} from '@docusaurus/Translate';
 
 import Icon from '../shared/Icon';
 import {ErrorMessage} from '../shared/Status';
+import {demoAttributes} from '../shared/states';
 
 import Frame, {CardSkeleton, type CardDataProps} from './Frame';
 import styles from './styles.module.css';
@@ -67,10 +70,10 @@ function SelectFrame({
   return (
     <div className={styles.selectWrap}>
       <label
-        className={`${styles.card} ${styles.select} ${layout}`}
+        className={clsx(styles.card, styles.select, layout)}
         data-kind={kind}
         data-dbs-component={`Card / ${kind}`}
-        data-dbs-demo={data.demo}
+        {...demoAttributes(data.demo)}
         data-error={error ? '' : undefined}
       >
         <input

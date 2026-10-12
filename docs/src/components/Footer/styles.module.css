@@ -58,6 +58,7 @@
   display: inline-flex;
   align-items: center;
   min-block-size: 44px;
+  min-inline-size: 44px;
   color: var(--dbs-code-text-muted);
   font: var(--dbs-font-body-sm);
   letter-spacing: var(--dbs-font-body-sm-tracking);

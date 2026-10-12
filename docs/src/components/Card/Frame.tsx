@@ -1,9 +1,11 @@
 import React, {type ReactNode} from 'react';
 
+import clsx from 'clsx';
+
 import Link from '@docusaurus/Link';
 
-import Retry, {loadingLabel} from '../shared/Retry';
-import {EmptyState, ErrorMessage, Skeleton, VisuallyHidden} from '../shared/Status';
+import Retry from '../shared/Retry';
+import {EmptyState, ErrorMessage, Skeleton, VisuallyHidden, loadingLabel} from '../shared/Status';
 import {demoAttributes, type DataStatus, type InteractionState} from '../shared/states';
 
 import styles from './styles.module.css';
@@ -56,7 +58,7 @@ export default function Frame({
   readonly children: ReactNode;
 }): React.JSX.Element {
   const attributes = {
-    className: [styles.card, className].filter(Boolean).join(' '),
+    className: clsx(styles.card, className),
     'data-kind': kind,
     'data-dbs-component': `Card / ${kind}`,
     ...demoAttributes(demo),

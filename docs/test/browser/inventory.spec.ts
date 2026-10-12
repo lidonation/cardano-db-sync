@@ -128,7 +128,10 @@ test.describe('button contrast, measured on the clipped fill axe cannot see (FLO
     test(palette, async ({page}) => {
       await open(page, palette);
       const buttons = await page
-        .locator('#inventory [data-dbs-component="Button"]:not([aria-disabled="true"])')
+        .locator(
+          // loading buttons are aria-disabled too, but they are busy, not disabled: measure them
+          '#inventory [data-dbs-component="Button"]:not([aria-disabled="true"]:not([aria-busy="true"]))',
+        )
         .evaluateAll((elements) =>
           elements.map((element) => ({
             where: `${element.closest('[data-inventory-entry]')?.getAttribute('data-inventory-entry')} · ${element.closest('[data-inventory-state]')?.getAttribute('data-inventory-state')}`,
@@ -149,6 +152,81 @@ test.describe('button contrast, measured on the clipped fill axe cannot see (FLO
       ]);
       expect(failures).toEqual([]);
     });
+  }
+});
+
+test.describe('disabled buttons stay disabled under the pointer (FLOOR-5)', () => {
+  for (const palette of PALETTES) {
+    test(palette, async ({page}) => {
+      await open(page, palette);
+      const entry = page.locator('[data-inventory-entry="Button / Disabled"]');
+      const fills = await entry.locator('[data-dbs-component="Button"]').evaluateAll((elements) =>
+        elements.map((element) => ({
+          state: element.closest('[data-inventory-state]')?.getAttribute('data-inventory-state'),
+          fill: getComputedStyle(element, '::after').backgroundColor,
+        })),
+      );
+      const rest = fills.find((button) => button.state === 'default')?.fill;
+      expect(rest).toBeTruthy();
+      // a pinned hover or press on a disabled button paints the disabled fill, not the variant's
+      expect(fills.filter((button) => button.fill !== rest)).toEqual([]);
+      // and so does a real pointer
+      const button = entry
+        .locator('[data-inventory-state="default"] [data-dbs-component="Button"]')
+        .first();
+      await button.hover();
+      expect(
+        await button.evaluate((element) => getComputedStyle(element, '::after').backgroundColor),
+      ).toBe(rest);
+    });
+  }
+});
+
+test('every control has a 44 by 44 hit area at every width (DF-6, NAV-4)', async ({page}) => {
+  for (const width of WIDTHS) {
+    await open(page, 'light', width);
+    const small = await page.evaluate(() => {
+      const HALF = 21.5;
+      const controls = document.querySelectorAll<HTMLElement>(
+        '[data-inventory-state] :is(a[href], button, input, [role="option"], [role="link"])',
+      );
+      const failures: string[] = [];
+      for (const control of Array.from(controls)) {
+        const host = control.matches('input') ? (control.closest('label') ?? control) : control;
+        const rect = host.getBoundingClientRect();
+        if (rect.width === 0 || rect.height === 0) {
+          continue; // not rendered at this width
+        }
+        host.scrollIntoView({block: 'center', inline: 'center'});
+        const box = host.getBoundingClientRect();
+        const cx = box.left + box.width / 2;
+        const cy = box.top + box.height / 2;
+        // a box that is already 44 wide (or tall) is probed just inside its own edge; a smaller
+        // one must still be hit 21.5px out from its centre, by a hit area drawn around it
+        const dx = box.width >= 44 ? box.width / 2 - 1 : HALF;
+        const dy = box.height >= 44 ? box.height / 2 - 1 : HALF;
+        const probes = [
+          [cx - dx, cy],
+          [cx + dx, cy],
+          [cx, cy - dy],
+          [cx, cy + dy],
+        ];
+        const missed = probes.some(([x, y]) => {
+          const hit = document.elementFromPoint(x, y);
+          return !hit || !(hit === host || host.contains(hit));
+        });
+        if (missed) {
+          const where = host
+            .closest('[data-inventory-entry]')
+            ?.getAttribute('data-inventory-entry');
+          failures.push(
+            `${where} · ${host.tagName} "${host.textContent?.trim().slice(0, 20)}" ${Math.round(box.width)}x${Math.round(box.height)}`,
+          );
+        }
+      }
+      return [...new Set(failures)];
+    });
+    expect(small, `${width}px`).toEqual([]);
   }
 });
 

@@ -2,8 +2,7 @@ import React, {useState} from 'react';
 
 import Link from '@docusaurus/Link';
 
-import {loadingLabel} from '../shared/Retry';
-import {Skeleton, VisuallyHidden} from '../shared/Status';
+import {Skeleton, VisuallyHidden, loadingLabel} from '../shared/Status';
 import {demoAttributes, type InteractionState} from '../shared/states';
 
 import styles from './styles.module.css';
@@ -36,14 +35,16 @@ export default function Avatar({
   readonly loading?: boolean;
   readonly demo?: InteractionState;
 }): React.JSX.Element {
-  const [failed, setFailed] = useState(false);
+  // remember which source failed, so a new `src` gets its own chance to load
+  const [failedSrc, setFailedSrc] = useState<string>();
+  const failed = src !== undefined && failedSrc === src;
   const width = WIDTH[size];
   const height = Math.round((2 * width) / Math.sqrt(3));
   const initials = name
     .split(/[\s._-]+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
+    .map((part) => Array.from(part)[0]?.toUpperCase())
     .join('');
   const status = loading ? 'loading' : !src ? 'empty' : failed ? 'error' : 'ready';
   const face =
@@ -61,7 +62,7 @@ export default function Avatar({
         height={height}
         loading="lazy"
         decoding="async"
-        onError={() => setFailed(true)}
+        onError={() => setFailedSrc(src)}
       />
     ) : (
       <span className={styles.fallback}>
