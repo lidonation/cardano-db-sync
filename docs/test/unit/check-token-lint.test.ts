@@ -246,6 +246,19 @@ describe('TOK-6: control boundaries bind border.interactive (B35)', () => {
     ).toEqual([]);
   });
 
+  it.each([
+    ['src/components/Navbar/styles.module.css', '.drawerActions,\n.drawerPreferences'],
+    ['src/theme/DocLayout/styles.module.css', '.panel'],
+    ['src/landing/styles.module.css', '.stage'],
+  ])('keeps the integration hairline allowance scoped to %s', (file, selector) => {
+    const css = `${selector} { border: 1px solid var(--dbs-border-default); }`;
+    expect(findBorderProblems(file, css)).toEqual([]);
+    expect(findBorderProblems('src/unrelated.css', css)).toHaveLength(1);
+    expect(
+      findBorderProblems(file, '.control { border: 1px solid var(--dbs-border-default); }'),
+    ).toHaveLength(1);
+  });
+
   it('does not mistake .tabs for .tab when classifying the tablist rule', () => {
     expect(
       isDecorativeBorder(

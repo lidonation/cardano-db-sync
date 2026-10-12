@@ -68,6 +68,56 @@ export function NavbarFull({
   const home = useRef<HTMLAnchorElement>(null);
   const drawer = useRef<HTMLElement>(null);
   const opened = useRef(false);
+  const barActions = useRef<HTMLDivElement>(null);
+  const drawerActions = useRef<HTMLDivElement>(null);
+  // Keep the last focus target when CSS hides it before a media-query listener runs.
+  const lastFocus = useRef<Element | null>(null);
+  useEffect(() => {
+    lastFocus.current = document.activeElement;
+    const remember = (event: FocusEvent) => {
+      lastFocus.current = event.target instanceof Element ? event.target : null;
+    };
+    const leaveControl = (event: PointerEvent) => {
+      // Clicking page text intentionally leaves the control, even when focus falls back to body.
+      if (
+        event.target instanceof Node &&
+        !barActions.current?.contains(event.target) &&
+        !drawer.current?.contains(event.target) &&
+        !menuButton.current?.contains(event.target)
+      )
+        lastFocus.current = null;
+    };
+    document.addEventListener('focusin', remember);
+    document.addEventListener('pointerdown', leaveControl);
+    return () => {
+      document.removeEventListener('focusin', remember);
+      document.removeEventListener('pointerdown', leaveControl);
+    };
+  }, []);
+  useEffect(() => {
+    const onBar = window.matchMedia('(min-width: 768px)');
+    const moveActionFocus = () => {
+      const active = document.activeElement;
+      const focused = active === document.body || active === null ? lastFocus.current : active;
+      const source = onBar.matches ? drawerActions.current : barActions.current;
+      if (!focused || !source?.contains(focused)) return;
+      const target = onBar.matches ? barActions.current : drawerActions.current;
+      // Match the control's position so a multi-control actions slot keeps its focus order.
+      const controls = Array.from(source.querySelectorAll<HTMLElement>('a, button, select, input'));
+      const index = controls.findIndex(
+        (control) => control === focused || control.contains(focused),
+      );
+      const replacement = target?.querySelectorAll<HTMLElement>('a, button, select, input')[index];
+      if (replacement?.getClientRects().length && !replacement.matches(':disabled')) {
+        replacement.focus();
+      } else {
+        // The drawer stays collapsed until the user opens it.
+        menuButton.current?.focus();
+      }
+    };
+    onBar.addEventListener('change', moveActionFocus);
+    return () => onBar.removeEventListener('change', moveActionFocus);
+  }, []);
   // Opening moves focus into the drawer; the first open from the inventory's pinned state does not.
   useEffect(() => {
     if (open && opened.current) {
@@ -84,12 +134,8 @@ export function NavbarFull({
         // At 1280 the open drawer is hidden by CSS before this listener runs, and the browser may
         // already have dropped focus from inside it to <body>: that counts as focus in the drawer.
         const active = document.activeElement;
-        if (
-          active === null ||
-          active === document.body ||
-          drawer.current?.contains(active) ||
-          active === menuButton.current
-        )
+        const focused = active === null || active === document.body ? lastFocus.current : active;
+        if (focused && (drawer.current?.contains(focused) || focused === menuButton.current))
           home.current?.focus();
         setOpen(false);
       }
@@ -137,8 +183,11 @@ export function NavbarFull({
       className={styles.navbar}
       data-dbs-component="Navbar / Full"
       onBlur={(event) => {
-        // A nonmodal disclosure must release the page when keyboard focus leaves its chrome.
-        if (open && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+        // Close for a real move into the page. A null target can be CSS hiding a control
+        // during a breakpoint change; the media listeners still need the open drawer to
+        // hand focus to its replacement.
+        if (open && event.relatedTarget && !event.currentTarget.contains(event.relatedTarget))
+          setOpen(false);
       }}
     >
       <div className={styles.bar}>
@@ -159,7 +208,11 @@ export function NavbarFull({
               </span>
             </button>
           )}
-          {actions && <div className={styles.actions}>{actions}</div>}
+          {actions && (
+            <div ref={barActions} className={styles.actions}>
+              {actions}
+            </div>
+          )}
           {githubHref && (
             <Link className={styles.github} to={githubHref}>
               <Icon name="github" size={16} />
@@ -200,7 +253,11 @@ export function NavbarFull({
             GitHub
           </Link>
         )}
-        {actions && <div className={styles.drawerActions}>{actions}</div>}
+        {actions && (
+          <div ref={drawerActions} className={styles.drawerActions}>
+            {actions}
+          </div>
+        )}
         {preferences && <div className={styles.drawerPreferences}>{preferences}</div>}
       </nav>
     </header>

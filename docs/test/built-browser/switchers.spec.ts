@@ -68,3 +68,23 @@ test('the sole version links to the current equivalent doc', async ({page}) => {
     page.locator('.navbar').getByRole('link', {name: 'Next', exact: true}),
   ).toHaveAttribute('href', /\/docs\/intro$/);
 });
+
+for (const width of [1440, 1024, 768, 767, 375]) {
+  test(`the shipped version selector follows DF-7 at ${width}px`, async ({page}) => {
+    await page.setViewportSize({width, height: 900});
+    await page.goto(`${BUILT_HOME}docs/intro`);
+    const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+    const version = header.getByRole('link', {name: 'Next', exact: true});
+    if (width < 768) await header.getByRole('button', {name: 'Menu'}).click();
+    await expect(version).toBeVisible();
+    await expect(version).toHaveAttribute('href', /\/docs\/intro$/);
+    await version.focus();
+    if (width === 768) {
+      await page.setViewportSize({width: 767, height: 900});
+      await expect(header.getByRole('button', {name: 'Menu'})).toBeFocused();
+    } else if (width === 767) {
+      await page.setViewportSize({width: 768, height: 900});
+      await expect(version).toBeFocused();
+    }
+  });
+}
