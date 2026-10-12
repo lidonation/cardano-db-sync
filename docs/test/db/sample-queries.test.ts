@@ -41,3 +41,11 @@ describe('landing sample queries plan against the replayed schema', () => {
     });
   }
 });
+
+// Rewards are recorded after their earning epoch. An EXPLAIN cannot catch the wrong epoch filter.
+describe('landing reward example result', () => {
+  it('returns the latest recorded rewards when the current epoch is two epochs later', () => {
+    const seed = `WITH reward(amount, earned_epoch) AS (VALUES (100::bigint, 8), (200::bigint, 8), (50::bigint, 7)), epoch(no) AS (VALUES (10))`;
+    expect(queryValue(name, `${seed} ${SAMPLE_QUERIES.rewards}`)).toBe('300');
+  });
+});

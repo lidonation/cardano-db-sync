@@ -1,7 +1,6 @@
 import React, {type ReactNode} from 'react';
 
 import Link from '@docusaurus/Link';
-import {translate} from '@docusaurus/Translate';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 import Button from '../components/Button';
@@ -10,12 +9,14 @@ import CodeCopy from '../components/CodeCopy';
 import Metric from '../components/Metric';
 import Icon from '../components/shared/Icon';
 import type {ReleaseFacts} from '../data/release-facts';
+import {QUICKSTART_COMMANDS} from '../data/quickstart';
 import {SAMPLE_QUERIES} from '../data/sample-queries';
 import {SURFACES} from '../data/surfaces';
 
 import {faqItems} from './faq';
 import HeroGraphic from './HeroGraphic';
 import useSurface from './useSurface';
+import useLandingTranslate from './useLandingTranslate';
 import styles from './styles.module.css';
 
 export const REPO_URL = 'https://github.com/IntersectMBO/cardano-db-sync';
@@ -44,6 +45,7 @@ function MoreLink({href, children}: {readonly href?: string; readonly children: 
 }
 
 function Hero(): React.JSX.Element {
+  const translate = useLandingTranslate();
   return (
     <section className={styles.hero} aria-labelledby="landing-title">
       <div className={styles.heroText}>
@@ -66,7 +68,7 @@ function Hero(): React.JSX.Element {
           {translate({
             id: 'landing.hero.lead',
             message:
-              'Cardano DB Sync mirrors every block, transaction and ledger event on the Cardano chain into a normalized PostgreSQL schema — the data backbone behind explorers, wallets and analytics across the ecosystem.',
+              'Cardano DB Sync mirrors every block, transaction and ledger event on the Cardano chain into a normalized PostgreSQL schema. It is the data backbone behind explorers, wallets and analytics across the ecosystem.',
           })}
         </p>
         <div className={styles.actions}>
@@ -95,6 +97,7 @@ function Hero(): React.JSX.Element {
 }
 
 function Facts(): React.JSX.Element {
+  const translate = useLandingTranslate();
   const facts = useDocusaurusContext().siteConfig.customFields?.releaseFacts as ReleaseFacts;
   const surface = useSurface();
   const items = [
@@ -144,6 +147,7 @@ function Facts(): React.JSX.Element {
 }
 
 function Pipeline(): React.JSX.Element {
+  const translate = useLandingTranslate();
   const steps = [
     {
       name: 'cardano-node',
@@ -196,6 +200,7 @@ function Pipeline(): React.JSX.Element {
 }
 
 function UseCases(): React.JSX.Element {
+  const translate = useLandingTranslate();
   const surface = useSurface();
   const cases = [
     [
@@ -230,7 +235,7 @@ function UseCases(): React.JSX.Element {
       translate({id: 'landing.use.staking', message: 'Staking and pools'}),
       translate({
         id: 'landing.use.staking.body',
-        message: 'Pools, delegations and rewards — every epoch, every lovelace.',
+        message: 'Pools, delegations and rewards, every epoch, every lovelace.',
       }),
     ],
     [
@@ -271,6 +276,7 @@ function UseCases(): React.JSX.Element {
 }
 
 function Queries(): React.JSX.Element {
+  const translate = useLandingTranslate();
   const surface = useSurface();
   const schema = surface('schema');
   const run = translate({id: 'landing.queries.run', message: 'Read about these tables'});
@@ -281,7 +287,7 @@ function Queries(): React.JSX.Element {
       SAMPLE_QUERIES.balance,
     ],
     [
-      translate({id: 'landing.queries.rewards', message: 'Rewards earned last epoch'}),
+      translate({id: 'landing.queries.rewards', message: 'Latest recorded rewards'}),
       SAMPLE_QUERIES.rewards,
     ],
   ];
@@ -310,7 +316,7 @@ function Queries(): React.JSX.Element {
 }
 
 function Quickstart(): React.JSX.Element {
-  const pg = 'PGPASSFILE=config/pgpass-mainnet';
+  const translate = useLandingTranslate();
   const steps = [
     {
       title: translate({id: 'landing.quick.restore', message: 'Restore a snapshot'}),
@@ -319,7 +325,7 @@ function Quickstart(): React.JSX.Element {
         message:
           'Skip genesis: download the latest state snapshot and restore it into PostgreSQL with its ledger state.',
       }),
-      command: `${pg} scripts/postgresql-setup.sh --restore-snapshot <snapshot.tgz> ledger-state/mainnet`,
+      command: QUICKSTART_COMMANDS.restore,
     },
     {
       title: translate({id: 'landing.quick.run', message: 'Point it at your node'}),
@@ -327,7 +333,7 @@ function Quickstart(): React.JSX.Element {
         id: 'landing.quick.run.body',
         message: 'Run db-sync against your local cardano-node socket and config.',
       }),
-      command: `${pg} cardano-db-sync --config config/mainnet-config.yaml --socket-path <node.socket> --state-dir ledger-state/mainnet --schema-dir schema/`,
+      command: QUICKSTART_COMMANDS.run,
     },
     {
       title: translate({id: 'landing.quick.query', message: 'Query away'}),
@@ -335,7 +341,7 @@ function Quickstart(): React.JSX.Element {
         id: 'landing.quick.query.body',
         message: 'Watch it catch up to the tip, then connect any SQL client.',
       }),
-      command: `${pg} psql cexplorer -c '${SAMPLE_QUERIES.syncCheck}'`,
+      command: QUICKSTART_COMMANDS.query,
     },
   ];
   return (
@@ -345,6 +351,13 @@ function Quickstart(): React.JSX.Element {
         <h2 id="landing-quick" className={styles.heading}>
           {translate({id: 'landing.quick.title', message: 'Up and running in three steps'})}
         </h2>
+        <p className={styles.intro}>
+          {translate({
+            id: 'landing.quick.prerequisites',
+            message:
+              'These mainnet examples run from the repository root. Install the db-sync binary, configure config/pgpass-mainnet, create an empty database, and replace path/to/snapshot.tgz and path/to/node.socket with your paths. Use a snapshot compatible with your release and configuration.',
+          })}
+        </p>
         <ol className={styles.steps}>
           {steps.map((step, index) => (
             <li key={step.title} className={styles.step}>
@@ -375,6 +388,7 @@ function Quickstart(): React.JSX.Element {
 }
 
 function Faq(): React.JSX.Element {
+  const translate = useLandingTranslate();
   const surface = useSurface();
   return (
     <section className={styles.section} aria-labelledby="landing-faq">
@@ -389,7 +403,7 @@ function Faq(): React.JSX.Element {
           </MoreLink>
         </div>
         <div className={styles.faq}>
-          {faqItems().map((item, index) => (
+          {faqItems(translate).map((item, index) => (
             <details key={item.question} className={styles.faqItem} open={index === 0}>
               <summary className={styles.faqQuestion}>
                 <span>{item.question}</span>
@@ -406,6 +420,7 @@ function Faq(): React.JSX.Element {
 }
 
 function Community(): React.JSX.Element {
+  const translate = useLandingTranslate();
   const surface = useSurface();
   return (
     <section className={styles.warm} aria-labelledby="landing-community">

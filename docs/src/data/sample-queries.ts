@@ -19,6 +19,6 @@ WHERE o.address = 'addr1qxy…'
   rewards: `SELECT SUM(amount) AS lovelace
 FROM reward
 WHERE earned_epoch =
-  (SELECT MAX(no) - 1 FROM epoch);`,
+  (SELECT MAX(earned_epoch) FROM reward);`,
   syncCheck: `SELECT MAX(block_no) FROM block;`,
 } as const;
