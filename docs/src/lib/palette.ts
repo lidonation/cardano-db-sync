@@ -58,6 +58,17 @@ export interface PaletteStorage {
   setItem(key: string, value: string): void;
 }
 
+/** Accessing the storage object itself can throw in sandboxed or privacy-restricted frames. */
+export function getBrowserPaletteStorage(browser: {
+  readonly localStorage: PaletteStorage;
+}): PaletteStorage {
+  try {
+    return browser.localStorage;
+  } catch {
+    return {getItem: () => null, setItem: () => {}};
+  }
+}
+
 /** Minimal document surface the switcher writes to, so tests can pass a fake. */
 export interface PaletteDocument {
   getAttribute(name: string): string | null;
@@ -121,28 +132,27 @@ export function resolveInitialPalette(
   return currentTheme === 'dark' ? 'dark' : 'light';
 }
 
+/** Read the effective bootstrap palette, including non-persisted query overrides. */
+export function resolveEffectivePalette(
+  documentElement: Pick<PaletteDocument, 'getAttribute'>,
+  storage: Pick<PaletteStorage, 'getItem'>,
+): Palette {
+  const effective = documentElement.getAttribute('data-dbs-palette');
+  return isPalette(effective)
+    ? effective
+    : resolveInitialPalette(getStoredPalette(storage), documentElement.getAttribute('data-theme'));
+}
+
 /**
- * The inline bootstrap that runs before paint (injected by the palette plugin into
- * `<head>` alongside Docusaurus' own theme script). It is self-contained — it reads the
+ * The inline bootstrap that runs before paint (injected into `preBodyTags`
+ * after Docusaurus' own theme script). It is self-contained — it reads the
  * query string, both storage keys and the OS preference itself — so it sets the right
- * pair no matter which of the two scripts runs first. Stored palette wins and repairs
+ * pair after the framework restores its light/dark attributes. Stored palette wins and repairs
  * all three attributes; otherwise the palette follows the resolved Infima theme, so a
  * new visitor never flashes the wrong family. Contains `dbs-palette`,
  * `data-dbs-palette` and `data-theme` so the SEC-3 gate recognises it as a
  * colour-mode bootstrap alongside Docusaurus'.
  */
+// Canonical minified bytes: HTML minification is idempotent, enabling an exact CSP allowlist.
 export const PALETTE_BOOTSTRAP =
-  '(function(){try{var p=null,t=null,q=null;try{p=window.localStorage.getItem("dbs-palette")}catch(e){}' +
-  'try{t=window.localStorage.getItem("theme")}catch(e){}' +
-  'try{q=new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(e){}' +
-  'var v={light:1,dark:1,cream:1,navy:1};' +
-  'if(q&&v[q]){p=q}' +
-  'if(p&&v[p]){var m=(p==="dark"||p==="navy")?"dark":"light";' +
-  'document.documentElement.setAttribute("data-theme",m);' +
-  'document.documentElement.setAttribute("data-dbs-palette",p);' +
-  'document.documentElement.setAttribute("data-theme-choice",m)}' +
-  'else{var s=(t==="dark"||t==="light")?t:((window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches)?"dark":"light");' +
-  'var c=(t==="dark"||t==="light")?t:"system";' +
-  'document.documentElement.setAttribute("data-theme",s);' +
-  'document.documentElement.setAttribute("data-dbs-palette",s);' +
-  'document.documentElement.setAttribute("data-theme-choice",c)}}catch(e){}})();';
+  '!function(){try{var t=null,e=null,a=null;try{t=window.localStorage.getItem("dbs-palette")}catch(t){}try{e=window.localStorage.getItem("theme")}catch(t){}try{a=new URLSearchParams(window.location.search).get("docusaurus-theme")}catch(t){}var c={light:1,dark:1,cream:1,navy:1};if(a&&Object.prototype.hasOwnProperty.call(c,a)&&(t=a),t&&Object.prototype.hasOwnProperty.call(c,t)){var r="dark"===t||"navy"===t?"dark":"light";document.documentElement.setAttribute("data-theme",r),document.documentElement.setAttribute("data-dbs-palette",t),document.documentElement.setAttribute("data-theme-choice",r)}else{var d="dark"===e||"light"===e?e:window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light",o="dark"===e||"light"===e?e:"system";document.documentElement.setAttribute("data-theme",d),document.documentElement.setAttribute("data-dbs-palette",d),document.documentElement.setAttribute("data-theme-choice",o)}}catch(t){}}()';

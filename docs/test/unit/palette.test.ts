@@ -9,6 +9,8 @@ import {
   applyPalette,
   attributesFor,
   getStoredPalette,
+  getBrowserPaletteStorage,
+  resolveEffectivePalette,
   isPalette,
   paletteToTheme,
   resolveInitialPalette,
@@ -178,7 +180,55 @@ describe('palette bootstrap (SEC-3)', () => {
     expect(runBootstrap({systemDark: true})).toEqual({palette: 'dark', theme: 'dark'});
   });
 
+  it('honours each valid query override over storage', () => {
+    for (const palette of PALETTES) {
+      expect(
+        runBootstrap({palette: 'cream', theme: 'light', search: `?docusaurus-theme=${palette}`}),
+      ).toEqual({palette, theme: paletteToTheme(palette)});
+    }
+  });
+
+  it('rejects inherited object property names in query and storage', () => {
+    for (const bad of ['toString', 'constructor', '__proto__', 'hasOwnProperty']) {
+      expect(runBootstrap({palette: bad, search: `?docusaurus-theme=${bad}`})).toEqual({
+        palette: 'light',
+        theme: 'light',
+      });
+    }
+  });
+
   it('ignores a corrupt stored value', () => {
     expect(runBootstrap({palette: 'sepia'})).toEqual({palette: 'light', theme: 'light'});
+  });
+});
+
+describe('effective palette and unavailable browser storage', () => {
+  it('guards a denied localStorage getter and supplies no-op storage', () => {
+    const browser = Object.defineProperty({}, 'localStorage', {
+      get() {
+        throw new Error('SecurityError');
+      },
+    }) as Window;
+    const storage = getBrowserPaletteStorage(browser);
+    expect(storage.getItem('dbs-palette')).toBeNull();
+    expect(() => storage.setItem('dbs-palette', 'navy')).not.toThrow();
+    const doc = fakeDocument();
+    applyPalette('navy', doc, storage);
+    expect(doc.attrs.get('data-dbs-palette')).toBe('navy');
+  });
+
+  it('prefers the effective query-selected palette over storage', () => {
+    expect(
+      resolveEffectivePalette(
+        fakeDocument({'data-dbs-palette': 'navy', 'data-theme': 'dark'}),
+        fakeStorage({'dbs-palette': 'cream'}),
+      ),
+    ).toBe('navy');
+    expect(
+      resolveEffectivePalette(
+        fakeDocument({'data-dbs-palette': 'bad', 'data-theme': 'dark'}),
+        fakeStorage(),
+      ),
+    ).toBe('dark');
   });
 });

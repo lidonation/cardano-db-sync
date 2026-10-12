@@ -307,3 +307,16 @@ describe('emitFontsAsFiles (SEC-2)', () => {
     }
   });
 });
+
+describe('palette bootstrap allowlist', () => {
+  it('rejects appended code and palette-marker spoofing', async () => {
+    const {PALETTE_BOOTSTRAP} = await import('../../src/lib/palette');
+    expect(isColourModeBootstrap(`${PALETTE_BOOTSTRAP};alert(1)`)).toBe(false);
+    expect(isColourModeBootstrap('/* dbs-palette data-dbs-palette "data-theme" */alert(1)')).toBe(
+      false,
+    );
+    expect(
+      isColourModeBootstrap('localStorage.getItem("theme");/* dbs-palette "data-theme" */alert(1)'),
+    ).toBe(false);
+  });
+});

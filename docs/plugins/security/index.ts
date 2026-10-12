@@ -3,6 +3,8 @@ import path from 'node:path';
 
 import type {LoadContext, Plugin} from '@docusaurus/types';
 
+import {PALETTE_BOOTSTRAP} from '../../src/lib/palette';
+
 import {SCRIPT, hashSource, isInlineExecutable} from '../../scripts/lib/csp.mjs';
 
 /** The webpack config Docusaurus hands `configureWebpack`. */
@@ -115,17 +117,11 @@ export function inlineScripts(html: string): string[] {
 
 /** Docusaurus' colour-mode bootstrap: reads the stored theme and sets `data-theme` before paint. */
 export function isColourModeBootstrap(code: string): boolean {
-  if (code.includes('localStorage.getItem("theme")') && code.includes('"data-theme"')) {
-    return true;
+  // Palette markers must never let arbitrary code reach the broader framework recognizer.
+  if (code.includes('dbs-palette') || code.includes('data-dbs-palette')) {
+    return code === PALETTE_BOOTSTRAP;
   }
-  // THM-1 (B30): the palette bootstrap runs after Docusaurus' own script and restores
-  // `data-dbs-palette` alongside `data-theme`. It is the same class of inline script —
-  // storage read before paint, no network, no tracking — so the SEC-3 gate allows it.
-  return (
-    code.includes('dbs-palette') &&
-    code.includes('data-dbs-palette') &&
-    code.includes('"data-theme"')
-  );
+  return code.includes('localStorage.getItem("theme")') && code.includes('"data-theme"');
 }
 
 /**
