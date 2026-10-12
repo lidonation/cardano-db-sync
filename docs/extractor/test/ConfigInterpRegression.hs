@@ -51,6 +51,15 @@ main = do
   check "unknown text parser fails closed" (bad (textBody "unknown"))
   check "guarded text alternative fails closed" (bad (textBody "\\case { \"x\" | False -> pure Root; _ -> fail \"no\" }"))
   check "wildcard accepting text parser fails closed" (bad (textBody "\\case { \"x\" -> pure Root; _ -> pure Root }"))
+  check "text parser helper effects fail closed" (bad (textBody "\\case { \"x\" -> validateBackend True; _ -> fail \"no\" }"))
+  let restrictedBool =
+        schema $
+          Text.unlines
+            [ "data Root = Root Bool"
+            , "instance FromJSON Root where"
+            , "  parseJSON = Aeson.withBool \"root\" $ \\b -> if b then pure (Root b) else fail \"disabled\""
+            ]
+  check "withBool callback cannot bypass extraction checks" (bad restrictedBool)
   real <- extractConfig "../.." configSources configRoot
   case real of
     Left errs -> fail (show errs)

@@ -216,7 +216,7 @@ parserShape env t scope ex = case ex of
     if null vals || not (textComplete scope f)
       then unknown
       else pure (SEnum (map fst vals))
-  EApp (EApp (EVar "withBool") _) _ -> pure SBool
+  EApp (EApp (EVar "withBool") _) _ -> unknown
   EApp (EApp (EVar "withScientific") _) _ -> unknown
   ELam [PVar v] (ECase (EVar v') alts) | v == v' -> case [s | Alt (PCon "String" [PStr s]) _ <- alts] of
     [] -> unknown
@@ -293,11 +293,16 @@ textComplete scope f = case f of
       _ -> e == ECon "Nothing"
     accepted e = case stripPure e of
       ECon _ -> True
-      EVar _ -> True
-      EApp a b -> accepted a && accepted b
+      EVar _ -> False
+      EApp a b -> case spine (EApp a b) of
+        (ECon _, args) -> all argument args
+        _ -> False
       EStr _ -> True
       EInt _ -> True
       _ -> False
+    argument e = case e of
+      EVar _ -> True
+      _ -> accepted e
 
 -- | The body of the first alternative matching a value, with the
 -- alternative's variables substituted — unless that body is a failure.
