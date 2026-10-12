@@ -10,10 +10,16 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+      # read by check:config (CON-4)
+      - "config/mainnet-config.yaml"
+      - "config/preprod-config.yaml"
   pull_request:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
+      # read by check:config (CON-4)
+      - "config/mainnet-config.yaml"
+      - "config/preprod-config.yaml"
   # docs-i18n.yml dispatches this on the Crowdin translations branch, whose pull request is opened
   # by GITHUB_TOKEN and so triggers nothing on its own.
   workflow_dispatch:
@@ -55,6 +61,8 @@ jobs:
         run: npm run check:css
       - name: Annotation artifact is consumable (CON-1)
         run: npm run check:annotations
+      - name: Config the site hands out is config db-sync reads (CON-4)
+        run: npm run check:config
       - name: Schema artifact is sound (SCH-1, GDE-6)
         run: npm run check:schema
       - name: Tokens regenerate byte-identically (THM-2, DF-1, DF-11)
