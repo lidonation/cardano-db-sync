@@ -28,7 +28,11 @@
     }
   ],
   "freeText": [
-    {"id": "ft-approved-1", "text": "Please document the snapshot restore flow.", "moderated": true},
+    {
+      "id": "ft-approved-1",
+      "text": "Please document the snapshot restore flow.",
+      "moderated": true
+    },
     {"id": "ft-unreviewed-1", "text": "This response has not passed review.", "moderated": false}
   ],
   "generatedAt": "2026-10-01T00:00:00Z"
