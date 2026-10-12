@@ -79,8 +79,6 @@
   text-decoration-thickness: 2px;
   text-underline-offset: 3px;
 }
-
-.link:focus-visible,
 .link[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);

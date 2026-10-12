@@ -91,15 +91,6 @@
   background: var(--dbs-surface-accent-subtle);
 }
 
-.row:focus-visible,
-.groupLink:focus-visible,
-.tocLink:focus-visible,
-.tocMobileLink:focus-visible,
-.disclosureButton:focus-visible {
-  outline: var(--dbs-focus-ring);
-  outline-offset: calc(-1 * var(--dbs-focus-offset));
-}
-
 /* the current page: tinted row, a 3px bar on the reading-start edge, the label weight (FLOOR-6) */
 .row[aria-current='page'],
 .groupLink[aria-current='page'] {

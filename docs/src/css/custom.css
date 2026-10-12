@@ -96,30 +96,10 @@ time,
   overflow: visible;
 }
 
-.navbar__inner {
-  flex-wrap: wrap;
-  min-inline-size: 0;
-}
-
-.navbar__items {
-  min-inline-size: 0;
-  flex-wrap: wrap;
-}
-
-.navbar__item,
-.navbar__brand,
-.menu__link,
-.footer__link-item {
+/* Locale dropdown labels can expand with text overrides. The shared navbar owns its layout. */
+.navbar__item {
   white-space: normal;
   overflow-wrap: anywhere;
-}
-
-.navbar__brand {
-  min-inline-size: 0;
-}
-
-.navbar__title {
-  white-space: normal;
 }
 
 /* R5 / A11Y-4: suppress movement, not feedback. Removing keyframe animation

@@ -61,13 +61,7 @@
 .menu:active {
   background: var(--dbs-surface-accent-subtle);
 }
-
-.link:focus-visible,
-.link[data-dbs-demo='focus'],
-.home:focus-visible,
-.github:focus-visible,
-.search:focus-visible,
-.menu:focus-visible {
+.link[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);
 }
