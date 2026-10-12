@@ -128,6 +128,16 @@ test.describe('content', () => {
     expect(response.status()).toBe(200);
   });
 
+  test('skip link moves focus to the ecosystem main landmark', async ({page}) => {
+    await open(page, 1440);
+    await page.keyboard.press('Tab');
+    const skip = page.getByRole('link', {name: 'Skip to main content'});
+    await expect(skip).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('main')).toBeFocused();
+    await expect(page.locator('main')).toHaveAttribute('id', 'dbs-main-content');
+  });
+
   test('one h1, and headings in order', async ({page}) => {
     await open(page, 1440);
     await expect(page.locator('main h1')).toHaveCount(1);

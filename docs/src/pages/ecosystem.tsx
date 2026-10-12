@@ -5,6 +5,7 @@ import Layout from '@theme/Layout';
 import Ecosystem from '../ecosystem/Ecosystem';
 import {ECOSYSTEM_IDS} from '../ecosystem/ids';
 import useEcosystemTranslate from '../ecosystem/useEcosystemTranslate';
+import {MAIN_CONTENT_ID} from '../lib/accessibility';
 import useFallbackLang from '../i18n/useFallbackLang';
 
 /**
@@ -24,7 +25,7 @@ export default function EcosystemPage(): React.JSX.Element {
           'Explorers, APIs and governance platforms built on Cardano DB Sync, each linking to the SQL it runs.',
       })}
     >
-      <main lang={lang}>
+      <main id={MAIN_CONTENT_ID} tabIndex={-1} lang={lang}>
         <Ecosystem />
       </main>
     </Layout>
