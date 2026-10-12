@@ -8,10 +8,15 @@ import {
   RETIRED_TOKENS,
   SOURCE,
   TOKENS_CSS,
+  findBorderProblems,
   findCodeProblems,
+  findNavProblems,
   findOverrideProblems,
   findViolations,
   flatten,
+  hasSidebarBinding,
+  innermostSelector,
+  isDecorativeBorder,
   main,
   varName,
 } from '../../scripts/check-token-lint.mjs';
@@ -37,6 +42,12 @@ const SOURCE_OK = {
 beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'dbsync-token-lint-'));
   await write(SOURCE, JSON.stringify(SOURCE_OK));
+  // NAV-5 is tree-wide: every fixture tree carries the sidebar binding unless the test
+  // overwrites it.
+  await write(
+    'src/css/custom.css',
+    '.menu__link--active { color: var(--dbs-accent-primary-text); }',
+  );
 });
 
 afterEach(async () => {
@@ -135,6 +146,166 @@ describe('check:token-lint over a tree', () => {
     const {lines, out} = recorder();
     expect(await main({root, out})).toBe(2);
     expect(lines.join('\n')).toMatch(/cannot read/);
+  });
+});
+
+describe('TOK-6: control boundaries bind border.interactive (B35)', () => {
+  it('flags a non-interactive border token on a control, naming the selector', () => {
+    expect(
+      findBorderProblems('src/x.css', '.field { border: 1px solid var(--dbs-border-default); }'),
+    ).toEqual([{line: 1, rule: 'TOK-6', message: expect.stringContaining('--dbs-border-default')}]);
+    expect(
+      findBorderProblems(
+        'src/x.css',
+        ".tab[aria-disabled='true'] { border-color: var(--dbs-border-strong); }",
+      ).map((p) => p.rule),
+    ).toEqual(['TOK-6']);
+  });
+
+  it('flags each hairline token, in shorthands and logical properties', () => {
+    for (const token of [
+      '--dbs-border-default',
+      '--dbs-border-strong',
+      '--dbs-border-warm',
+      '--dbs-border-warm-strong',
+    ]) {
+      expect(
+        findBorderProblems('src/x.css', `.a { border-block-end: 1px solid var(${token}); }`).map(
+          (p) => p.rule,
+        ),
+      ).toEqual(['TOK-6']);
+    }
+  });
+
+  it('leaves control tokens, radii and non-border properties alone', () => {
+    const css = [
+      '.a { border: 1px solid var(--dbs-border-interactive); }',
+      '.b { border: 2px solid var(--dbs-border-selected); }',
+      '.c { border-radius: var(--dbs-radius-md); }',
+      '.d { background: linear-gradient(var(--dbs-border-default), var(--dbs-border-default)); }',
+      '.e { color: var(--dbs-border-default); }',
+    ].join('\n');
+    expect(findBorderProblems('src/x.css', css)).toEqual([]);
+  });
+
+  it.each([
+    [
+      'static card default, outranked for interactive kinds',
+      '.card',
+      'border: 1px solid var(--dbs-border-default)',
+    ],
+    [
+      'empty placeholder',
+      ".card[data-status='empty']",
+      'border: 1px dashed var(--dbs-border-strong)',
+    ],
+    ['static KeyCap text', '.cap', 'border: 1px solid var(--dbs-border-strong)'],
+    ['empty-state wrapper', '.framed', 'border: 1px dashed var(--dbs-border-strong)'],
+    [
+      'tablist rule, not a tab',
+      ".tabs[data-appearance='underline'] .list",
+      'border-block-end: 1px solid var(--dbs-border-default)',
+    ],
+    ['navbar hairline', '.navbar', 'border-block-end: 1px solid var(--dbs-border-default)'],
+    [
+      'drawer container rule',
+      '.drawer:not([hidden])',
+      'border-block-start: 1px solid var(--dbs-border-default)',
+    ],
+  ])('allows the decorative hairline: %s', (_why, selector, declaration) => {
+    expect(findBorderProblems('src/x.css', `${selector} { ${declaration}; }`)).toEqual([]);
+  });
+
+  it('does not mistake .tabs for .tab when classifying the tablist rule', () => {
+    expect(isDecorativeBorder('src/x.css', ".tabs[data-appearance='underline'] .list")).toMatch(
+      /tablist/,
+    );
+    expect(
+      findBorderProblems(
+        'src/x.css',
+        ".tabs[data-appearance='underline'] .tab { border-color: var(--dbs-border-default); }",
+      ),
+    ).toHaveLength(1);
+  });
+
+  it('still flags a control buried in a selector list or under @media', () => {
+    expect(
+      findBorderProblems(
+        'src/x.css',
+        '@media (max-width: 767px) { .field, .other { border-color: var(--dbs-border-warm); } }',
+      ).map((p) => p.rule),
+    ).toEqual(['TOK-6']);
+  });
+
+  it('reads the innermost selector through nesting', () => {
+    expect(innermostSelector('@media (x: y) {\n  .field {\n    border: 0;', 30)).toBe('.field');
+    expect(innermostSelector('.a { color: red; }', 4)).toBe('.a');
+  });
+
+  it('ignores commented-out code', () => {
+    expect(
+      findBorderProblems(
+        'src/x.css',
+        '/* .field { border: 1px solid var(--dbs-border-default); } */',
+      ),
+    ).toEqual([]);
+  });
+
+  it('catches a violation over a tree and reports it from main', async () => {
+    await write(
+      'src/controls/field.css',
+      '.field { border: 1px solid var(--dbs-border-default); }',
+    );
+    await write(
+      'src/css/custom.css',
+      '.menu__link--active { color: var(--dbs-accent-primary-text); }',
+    );
+    const violations = await findViolations(root);
+    expect(violations.map((v) => `${v.file}:${v.line} ${v.rule}`)).toEqual([
+      'src/controls/field.css:1 TOK-6',
+    ]);
+    const {lines, out} = recorder();
+    expect(await main({root, out})).toBe(1);
+    expect(lines.join('\n')).toMatch(/field\.css:1 {2}TOK-6/);
+  });
+});
+
+describe('NAV-5: the active sidebar label binds accent.primary-text (B35)', () => {
+  const BINDING = '.menu__link--active { color: var(--dbs-accent-primary-text); }';
+
+  it('accepts the binding, including under hover', () => {
+    expect(findNavProblems('src/css/custom.css', BINDING)).toEqual([]);
+    expect(
+      findNavProblems(
+        'src/css/custom.css',
+        '.menu__link--active:hover { color: var(--dbs-accent-primary-text); }',
+      ),
+    ).toEqual([]);
+    expect(hasSidebarBinding([BINDING])).toBe(true);
+  });
+
+  it('flags any other colour on the active sidebar label', () => {
+    const problems = findNavProblems(
+      'src/css/custom.css',
+      '.menu__link--active { color: var(--dbs-accent-primary); }',
+    );
+    expect(problems.map((p) => p.rule)).toEqual(['NAV-5']);
+    expect(problems[0].message).toMatch(/accent-primary-text/);
+  });
+
+  it('fails the tree without the binding', async () => {
+    await write('src/css/custom.css', 'a { color: red; }');
+    expect(hasSidebarBinding(['a { color: red; }'])).toBe(false);
+    const {lines, out} = recorder();
+    expect(await main({root, out})).toBe(1);
+    expect(lines.join('\n')).toMatch(/\(stylesheets\) {2}menu__link--active {2}NAV-5/);
+  });
+
+  it('passes the tree with the binding', async () => {
+    await write('src/css/custom.css', BINDING);
+    const {lines, out} = recorder();
+    expect(await main({root, out})).toBe(0);
+    expect(lines.join('\n')).toMatch(/TOK-6.*NAV-5 hold/);
   });
 });
 

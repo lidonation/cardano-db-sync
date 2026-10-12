@@ -25,6 +25,11 @@ Rules every component here follows:
   recovery (CONTENT-5).
 - **`demo`** pins hover, pressed or focus at rest, so the inventory can audit every state's
   contrast without a pointer. Pages never set it.
+- **Control boundaries bind `border.interactive`** — never `border.default`, `border.strong` or
+  a warm border — in every state including disabled (TOK-6, FLOOR-3). Static surfaces keep the
+  `border.default` hairline; link cards outrank it by `[data-link]`, selectable cards by
+  `.card.select`. `check:token-lint` enforces the binding; only documented decorative hairlines
+  are exempt.
 
 THM-6 ruling (2026-10-12):
 
