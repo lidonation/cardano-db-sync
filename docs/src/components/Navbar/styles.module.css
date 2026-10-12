@@ -131,14 +131,36 @@
   text-decoration: none;
 }
 
+.actions,
+.preferences {
+  display: flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+}
+
+.drawerActions,
+.drawerPreferences {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-8);
+  margin-block-start: var(--dbs-space-12);
+  padding-block-start: var(--dbs-space-12);
+  border-block-start: 1px solid var(--dbs-border-default);
+}
+
 .menu,
 .drawer,
-.drawerGithub {
+.drawerGithub,
+.drawerActions {
   display: none;
 }
 
 /* md and sm (below 1280): the sections move into the disclosure, as DF-7 draws them */
 @media (max-width: 1279px) {
+  .preferences {
+    display: none;
+  }
+
   .wide {
     display: none;
   }
@@ -233,6 +255,14 @@
 
   .drawerGithub {
     display: inline-flex;
+  }
+
+  .actions {
+    display: none;
+  }
+
+  .drawerActions {
+    display: flex;
   }
 
   .menu {

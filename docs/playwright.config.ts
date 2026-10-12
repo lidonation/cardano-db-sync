@@ -1,17 +1,21 @@
 import {defineConfig, devices} from '@playwright/test';
 
 import {PROFILES} from './config/profiles';
-import {INVENTORY_ENV_VAR, INVENTORY_PATH} from './plugins/inventory';
+import {INVENTORY_ENV_VAR, INVENTORY_PATH, LAYOUT_FIXTURE_PATH} from './plugins/inventory';
 
 /**
  * B29 — the component suite. Serves the component inventory from the development server (the
  * inventory is never built into a profile) and audits it in a real browser: axe in four palettes
- * at three widths, every state rendered, keyboard behaviour. Run with `npm run test:components`.
+ * at three widths, every state rendered, keyboard behaviour. B34 adds the responsive docs layout,
+ * run against fixture docs behind the same flag. Run with `npm run test:components`.
  */
 const PORT = 3100;
 const ORIGIN = `http://127.0.0.1:${PORT}`;
 
-export const INVENTORY_URL = `${ORIGIN}${PROFILES.dev.baseUrl}${INVENTORY_PATH}`;
+export const SITE_URL = `${ORIGIN}${PROFILES.dev.baseUrl}`;
+export const INVENTORY_URL = `${SITE_URL}${INVENTORY_PATH}`;
+/** B34's fixture docs: sections and a long page with a table of contents. */
+export const LAYOUT_URL = `${SITE_URL}${LAYOUT_FIXTURE_PATH}`;
 
 export default defineConfig({
   testDir: 'test/browser',

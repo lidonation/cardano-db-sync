@@ -1,0 +1,377 @@
+/* B34 — the docs layout across the four DF-7 tiers.
+ *
+ *   lg  1280 and up   12 cols · margins 120 at 1440 (a centred 1200 content width) · gutter 24
+ *                     sidebar 240 · content · "On this page" column 240
+ *   md  1024–1279      8 cols · margins 48 · gutter 24   sidebar 240 · content + "On this page" disclosure
+ *   sm   768–1023      8 cols · margins 32 · gutter 16   sidebar 200 · content + disclosure
+ *   xs   below 768     4 cols · margins 16 · gutter 16   "On this section" + "On this page" disclosures
+ *
+ * Every row a pointer can hit is at least 44px tall (NAV-4, DF-6). Square corners throughout. */
+
+/* ---- the frame: sidebar column beside the main column ---- */
+
+.root {
+  --dbs-docs-sidebar: 240px;
+  --dbs-docs-gutter: var(--dbs-space-24);
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--dbs-docs-gutter);
+  box-sizing: border-box;
+  inline-size: 100%;
+  padding-inline: max(var(--dbs-space-48), calc((100% - 1200px) / 2));
+}
+
+.root[data-sidebar] {
+  grid-template-columns: var(--dbs-docs-sidebar) minmax(0, 1fr);
+}
+
+.sidebar {
+  position: sticky;
+  inset-block-start: var(--ifm-navbar-height);
+  align-self: start;
+  box-sizing: border-box;
+  max-block-size: calc(100vh - var(--ifm-navbar-height));
+  overflow-y: auto;
+  padding-block: var(--dbs-space-24);
+}
+
+.main {
+  min-inline-size: 0;
+  padding-block: var(--dbs-space-32) var(--dbs-space-64);
+}
+
+/* ---- sidebar rows (also the "On this section" panel) ---- */
+
+.list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.group + .group,
+.list > li + .group {
+  margin-block-start: var(--dbs-space-16);
+}
+
+.groupHeading,
+.groupLink {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  padding-inline: var(--dbs-space-12);
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-eyebrow);
+  letter-spacing: var(--dbs-font-eyebrow-tracking);
+  text-decoration: none;
+}
+
+.row {
+  position: relative;
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-block-size: 44px;
+  padding: var(--dbs-space-8) var(--dbs-space-12) var(--dbs-space-8) var(--dbs-space-16);
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+  text-decoration: none;
+}
+
+.row:hover,
+.groupLink:hover {
+  background: var(--dbs-surface-sunken);
+  color: var(--dbs-text-primary);
+  text-decoration: none;
+}
+
+.row:active,
+.groupLink:active {
+  background: var(--dbs-surface-accent-subtle);
+}
+
+.row:focus-visible,
+.groupLink:focus-visible,
+.tocLink:focus-visible,
+.disclosureButton:focus-visible {
+  outline: var(--dbs-focus-ring);
+  outline-offset: calc(-1 * var(--dbs-focus-offset));
+}
+
+/* the current page: tinted row, a 3px bar on the reading-start edge, the label weight (FLOOR-6) */
+.row[aria-current='page'],
+.groupLink[aria-current='page'] {
+  background: var(--dbs-surface-accent-subtle);
+  color: var(--dbs-accent-primary-text);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+
+.row[aria-current='page']::before {
+  content: '';
+  position: absolute;
+  inset-block: 0;
+  inset-inline-start: 0;
+  inline-size: 3px;
+  background: var(--dbs-accent-primary);
+}
+
+/* ---- disclosures: "On this section" and "On this page" (NAV-2) ---- */
+
+.disclosure {
+  margin-block-end: var(--dbs-space-16);
+  background: var(--dbs-surface-base);
+}
+
+.disclosure[data-tone='sunken'] {
+  background: var(--dbs-surface-sunken);
+}
+
+.disclosureButton {
+  display: flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+  box-sizing: border-box;
+  inline-size: 100%;
+  min-block-size: 44px;
+  margin: 0;
+  padding: var(--dbs-space-8) var(--dbs-space-12);
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: 0;
+  background: transparent;
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+  text-align: start;
+  cursor: pointer;
+}
+
+.disclosureButton:hover {
+  background: var(--dbs-surface-sunken);
+}
+
+.disclosureButton svg {
+  flex: none;
+  margin-inline-start: auto;
+  stroke: currentColor;
+}
+
+.kicker {
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+}
+
+.disclosureLabel {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}
+
+.panel {
+  box-sizing: border-box;
+  padding: var(--dbs-space-8) 0;
+  border: 1px solid var(--dbs-border-default);
+  border-block-start: 0;
+}
+
+/* ---- one doc: content beside the "On this page" column ---- */
+
+.doc {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  column-gap: var(--dbs-docs-gutter);
+}
+
+.content {
+  min-inline-size: 0;
+}
+
+/* CONTENT-3: a 65–75ch reading measure */
+.article {
+  max-inline-size: 72ch;
+}
+
+.toc {
+  display: none;
+}
+
+.tocHeading {
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  margin: 0;
+  padding-inline: var(--dbs-space-12);
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-eyebrow);
+  letter-spacing: var(--dbs-font-eyebrow-tracking);
+}
+
+.tocList,
+.tocList ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.tocList ul .tocLink {
+  padding-inline-start: var(--dbs-space-24);
+}
+
+.tocLink {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-block-size: 44px;
+  padding: var(--dbs-space-8) var(--dbs-space-12);
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-body-sm);
+  letter-spacing: var(--dbs-font-body-sm-tracking);
+  text-decoration: none;
+}
+
+.tocLink:hover {
+  background: var(--dbs-surface-sunken);
+  color: var(--dbs-text-primary);
+  text-decoration: none;
+}
+
+.tocLinkActive {
+  color: var(--dbs-accent-primary-text);
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
+}
+
+.sectionDisclosure {
+  display: none;
+}
+
+/* lg: the TOC is a column; its disclosure goes */
+@media (min-width: 1280px) {
+  .doc[data-toc] {
+    grid-template-columns: minmax(0, 1fr) 240px;
+  }
+
+  .toc {
+    position: sticky;
+    inset-block-start: calc(var(--ifm-navbar-height) + var(--dbs-space-24));
+    display: block;
+    align-self: start;
+    max-block-size: calc(100vh - var(--ifm-navbar-height) - var(--dbs-space-48));
+    overflow-y: auto;
+  }
+
+  .pageDisclosure {
+    display: none;
+  }
+}
+
+/* sm: narrower sidebar, margins 32, gutter 16 */
+@media (max-width: 1023px) {
+  .root {
+    --dbs-docs-sidebar: 200px;
+    --dbs-docs-gutter: var(--dbs-space-16);
+
+    padding-inline: var(--dbs-space-32);
+  }
+}
+
+/* xs: no sidebar column; it becomes the "On this section" disclosure. Margins 16. */
+@media (max-width: 767px) {
+  .root,
+  .root[data-sidebar] {
+    grid-template-columns: minmax(0, 1fr);
+    padding-inline: var(--dbs-space-16);
+  }
+
+  .sidebar {
+    display: none;
+  }
+
+  .main {
+    padding-block-start: var(--dbs-space-16);
+  }
+
+  .sectionDisclosure {
+    display: block;
+  }
+}
+
+/* ---- the stock doc furniture, held to the 44px floor and square corners ---- */
+
+.article :global(.breadcrumbs) {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-block-end: var(--dbs-space-16);
+}
+
+.article :global(.breadcrumbs__item) {
+  display: inline-flex;
+  align-items: center;
+}
+
+.article :global(.breadcrumbs__link) {
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  min-block-size: 44px;
+  min-inline-size: 44px;
+  padding-inline: var(--dbs-space-8);
+  border-radius: 0;
+}
+
+.article :global(.breadcrumbs__item--active .breadcrumbs__link) {
+  background: var(--dbs-surface-accent-subtle);
+  color: var(--dbs-accent-primary-text);
+}
+
+.article :global(.theme-doc-footer-edit-meta-row) {
+  margin-inline: 0;
+}
+
+.article :global(.theme-doc-footer-edit-meta-row > .col) {
+  padding-inline: 0;
+}
+
+/* heading anchors: a 44px box that does not grow the heading's line */
+.article :global(.hash-link) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  inline-size: 44px;
+  block-size: 44px;
+  margin-block: calc(-1 * var(--dbs-space-12));
+  padding: 0;
+  vertical-align: middle;
+}
+
+/* square corners everywhere (DESIGN.md), including the stock code blocks */
+.article :global(.theme-code-block),
+.article :global(.theme-code-block pre),
+.article code {
+  border-radius: 0;
+}
+
+/* code block copy and wrap buttons */
+.article :global(.theme-code-block) button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  inline-size: 44px;
+  block-size: 44px;
+}
+
+.article :global(.theme-edit-this-page),
+.article :global(.theme-last-updated) {
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
+}
+
+.root :global(.theme-back-to-top-button) {
+  inline-size: 44px;
+  block-size: 44px;
+  border-radius: 0;
+}

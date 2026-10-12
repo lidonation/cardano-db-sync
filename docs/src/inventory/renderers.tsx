@@ -124,6 +124,7 @@ export const RENDER: Readonly<Record<string, Render>> = {
         active: state === 'selected' && link.label === 'Schema',
       }))}
       githubHref="https://github.com/IntersectMBO/cardano-db-sync"
+      onSearch={() => undefined}
       defaultMenuOpen={state === 'selected'}
       demo={pinned(state) && {href: '/docs/schema', state: pinned(state) as InteractionState}}
     />

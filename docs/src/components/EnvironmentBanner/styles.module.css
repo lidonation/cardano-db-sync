@@ -20,6 +20,10 @@
 }
 
 .link {
+  /* standalone, not inside a sentence, so it holds the 44px floor (NAV-4) */
+  display: inline-flex;
+  align-items: center;
+  min-block-size: 44px;
   color: var(--dbs-status-warning-text);
   text-decoration: underline;
   text-underline-offset: 2px;

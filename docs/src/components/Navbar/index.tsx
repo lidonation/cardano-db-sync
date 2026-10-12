@@ -1,4 +1,4 @@
-import React, {useId, useState, type ReactNode} from 'react';
+import React, {useEffect, useId, useRef, useState, type KeyboardEvent, type ReactNode} from 'react';
 
 import clsx from 'clsx';
 
@@ -27,11 +27,13 @@ export interface NavLink {
 }
 
 /**
- * `Navbar / Full` — wordmark, the five sections, the search trigger, GitHub and a slot for the
- * theme, locale and version controls (B30 fills it). Below 1280px — the DF-7 md and sm tiers — the
- * sections move into a disclosure behind a Menu button (NAV-2): collapsed by default,
- * keyboard-operable, its state announced by `aria-expanded`. Below 768px the search trigger becomes
- * a 44px icon button.
+ * `Navbar / Full` — wordmark, the sections, the search trigger, GitHub and two slots for the
+ * controls B30 builds. Below 1280px — the DF-7 md and sm tiers — the sections and the
+ * `preferences` (locale, theme) move into a drawer behind a Menu button (NAV-2): collapsed by
+ * default, keyboard-operable, its state announced by `aria-expanded`; opening it moves focus into
+ * it, and Esc closes it and returns focus to the Menu button. `actions` (the version selector) stay
+ * in the bar down to 768px and move into the drawer below it, where the search trigger becomes a
+ * 44px icon button. The search trigger appears only once search exists to open (B31).
  * Every row is at least 44px (NAV-4). It renders route data known at build time, so it has no
  * loading, error or empty state; links have hover, pressed, focus and active (selected) states.
  */
@@ -41,14 +43,20 @@ export function NavbarFull({
   githubHref,
   onSearch,
   actions,
+  preferences,
   defaultMenuOpen = false,
   demo,
 }: {
   readonly homeHref: string;
   readonly links: readonly NavLink[];
-  readonly githubHref: string;
+  /** The repository; without it there is no GitHub link. */
+  readonly githubHref?: string;
+  /** Opens search; without it there is no search trigger. */
   readonly onSearch?: () => void;
+  /** In the bar down to 768px, in the drawer below (DF-7: the version selector). */
   readonly actions?: ReactNode;
+  /** In the bar at 1280px and up, in the drawer below (DF-7: locale and theme). */
+  readonly preferences?: ReactNode;
   /** Starts with the narrow-screen menu open, for the inventory. */
   readonly defaultMenuOpen?: boolean;
   /** Pins an interaction state on one link, for the inventory. */
@@ -56,6 +64,22 @@ export function NavbarFull({
 }): React.JSX.Element {
   const menuId = useId();
   const [open, setOpen] = useState(defaultMenuOpen);
+  const menuButton = useRef<HTMLButtonElement>(null);
+  const drawer = useRef<HTMLElement>(null);
+  const opened = useRef(false);
+  // Opening moves focus into the drawer; the first open from the inventory's pinned state does not.
+  useEffect(() => {
+    if (open && opened.current) {
+      drawer.current?.querySelector<HTMLElement>('a, button, select, input')?.focus();
+    }
+    opened.current = true;
+  }, [open]);
+  const onDrawerKey = (event: KeyboardEvent<HTMLElement>) => {
+    if (event.key === 'Escape') {
+      setOpen(false);
+      menuButton.current?.focus();
+    }
+  };
   const searchLabel = translate({
     id: 'components.navbar.search',
     message: 'Search docs',
@@ -92,20 +116,26 @@ export function NavbarFull({
           {linkList}
         </nav>
         <div className={styles.tools}>
-          <button type="button" className={styles.search} onClick={onSearch}>
-            <KeyCap>⌘K</KeyCap>
-            <span className={styles.searchText}>{searchLabel}</span>
-            <Icon name="search" size={16} className={styles.searchIcon} />
-            <span className={styles.searchName}>
-              <VisuallyHidden>{searchLabel}</VisuallyHidden>
-            </span>
-          </button>
-          <Link className={styles.github} to={githubHref}>
-            <Icon name="github" size={16} />
-            <span className={styles.githubText}>GitHub</span>
-          </Link>
-          {actions}
+          {onSearch && (
+            <button type="button" className={styles.search} onClick={onSearch}>
+              <KeyCap>⌘K</KeyCap>
+              <span className={styles.searchText}>{searchLabel}</span>
+              <Icon name="search" size={16} className={styles.searchIcon} />
+              <span className={styles.searchName}>
+                <VisuallyHidden>{searchLabel}</VisuallyHidden>
+              </span>
+            </button>
+          )}
+          {actions && <div className={styles.actions}>{actions}</div>}
+          {githubHref && (
+            <Link className={styles.github} to={githubHref}>
+              <Icon name="github" size={16} />
+              <span className={styles.githubText}>GitHub</span>
+            </Link>
+          )}
+          {preferences && <div className={styles.preferences}>{preferences}</div>}
           <button
+            ref={menuButton}
             type="button"
             className={styles.menu}
             aria-expanded={open}
@@ -123,11 +153,22 @@ export function NavbarFull({
           </button>
         </div>
       </div>
-      <nav id={menuId} className={styles.drawer} aria-label={sections} hidden={!open}>
+      <nav
+        ref={drawer}
+        id={menuId}
+        className={styles.drawer}
+        aria-label={sections}
+        hidden={!open}
+        onKeyDown={onDrawerKey}
+      >
         {linkList}
-        <Link className={clsx(styles.link, styles.drawerGithub)} to={githubHref}>
-          GitHub
-        </Link>
+        {githubHref && (
+          <Link className={clsx(styles.link, styles.drawerGithub)} to={githubHref}>
+            GitHub
+          </Link>
+        )}
+        {actions && <div className={styles.drawerActions}>{actions}</div>}
+        {preferences && <div className={styles.drawerPreferences}>{preferences}</div>}
       </nav>
     </header>
   );
