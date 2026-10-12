@@ -148,11 +148,24 @@
   border-block-start: 1px solid var(--dbs-border-default);
 }
 
-.menu,
-.drawer,
-.drawerGithub,
-.drawerActions {
+.drawer {
   display: none;
+}
+
+/* Controls that only some tiers show are hidden by a min-width query, never by a top-level rule
+   that must outrank their shared `display`: the production minifier merges same-declaration rules
+   and can reorder them, which put Menu on the bar at 1440. A query is never merged across. */
+@media (min-width: 1280px) {
+  .menu {
+    display: none;
+  }
+}
+
+@media (min-width: 768px) {
+  .drawerGithub,
+  .drawerActions {
+    display: none;
+  }
 }
 
 /* md and sm (below 1280): the sections move into the disclosure, as DF-7 draws them */
@@ -179,10 +192,6 @@
     justify-content: center;
     min-inline-size: 44px;
     padding: 0;
-  }
-
-  .menu {
-    display: inline-flex;
   }
 
   .search {
@@ -256,16 +265,8 @@
     display: none;
   }
 
-  .drawerGithub {
-    display: inline-flex;
-  }
-
   .actions {
     display: none;
-  }
-
-  .drawerActions {
-    display: flex;
   }
 
   .menu {
