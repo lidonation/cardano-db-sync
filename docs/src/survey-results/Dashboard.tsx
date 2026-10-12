@@ -3,6 +3,9 @@ import React from 'react';
 import landing from '../landing/styles.module.css';
 
 import dash from './styles.module.css';
+import Intro from './Intro';
+import {EmptySection} from './Empty';
+import {interpolateMessage} from './messages';
 import type {ResolvedAggregate} from './types';
 
 /**
@@ -58,79 +61,13 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
   const message = (
     entry: Parameters<DashboardTranslate>[0],
     values: Record<string, string | number>,
-  ) =>
-    t(entry).replace(/\{(\w+)\}/g, (placeholder, key: string) =>
-      key in values ? String(values[key]) : placeholder,
-    );
-  const basis = message(
-    {
-      id: 'results.basis.message',
-      message:
-        'These counts use response-time validation only. They will be re-verified canonically at tally time, when epoch {epoch} ends.',
-    },
-    {epoch: resolved.endEpoch},
-  );
-  const interim = t({
-    id: 'results.interim.message',
-    message:
-      'Every figure on this page is an interim tally, and stays interim: results are never final.',
-  });
+  ) => interpolateMessage(t(entry), values);
   return React.createElement(
     'div',
     {className: landing.landing},
-    React.createElement(
-      'section',
-      {className: landing.section, 'aria-labelledby': 'results-title'},
-      React.createElement(
-        'div',
-        {className: landing.inner},
-        React.createElement(
-          'p',
-          {className: landing.eyebrow},
-          React.createElement('span', {'aria-hidden': 'true'}, '// '),
-          t({id: 'results.eyebrow', message: 'results'}),
-        ),
-        React.createElement(
-          'h1',
-          {id: 'results-title', className: landing.heading},
-          t({id: 'results.title', message: 'Survey results'}),
-        ),
-        React.createElement(
-          'p',
-          {className: landing.intro},
-          t({
-            id: 'results.intro',
-            message:
-              'How operators run Cardano DB Sync, as tallied from survey responses. Counts are exact; bars show each share.',
-          }),
-        ),
-        React.createElement('p', {className: landing.intro}, basis),
-        React.createElement('p', {className: landing.intro}, interim),
-      ),
-    ),
+    React.createElement(Intro, {resolved, t}),
     resolved.questions.length === 0 && resolved.closed.length === 0
-      ? React.createElement(
-          'section',
-          {className: landing.section, 'aria-labelledby': 'results-empty'},
-          React.createElement(
-            'div',
-            {className: landing.inner},
-            React.createElement(
-              'h2',
-              {id: 'results-empty', className: landing.heading},
-              t({id: 'results.empty.title', message: 'Pre-tally: no results yet'}),
-            ),
-            React.createElement(
-              'p',
-              {className: landing.intro},
-              t({
-                id: 'results.empty.body',
-                message:
-                  'The tally has not run yet, so there is nothing to show. This page will list the results once responses are tallied.',
-              }),
-            ),
-          ),
-        )
+      ? React.createElement(EmptySection, {t})
       : resolved.questions.map((question) => {
           const total = question.options.reduce((sum, option) => sum + option.count, 0);
           const sectionId = `results-question-${question.question}`;

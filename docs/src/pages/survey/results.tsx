@@ -5,7 +5,7 @@ import Layout from '@theme/Layout';
 import {MAIN_CONTENT_ID} from '../../lib/accessibility';
 import useFallbackLang from '../../i18n/useFallbackLang';
 
-import DashboardView from '../../survey-results/Dashboard';
+import DashboardView from '@generated/survey-results/default/view';
 import {DASHBOARD_IDS} from '../../survey-results/ids';
 import resolved from '@generated/survey-results/default/resolved.json';
 import useDashboardTranslate from '../../survey-results/useDashboardTranslate';

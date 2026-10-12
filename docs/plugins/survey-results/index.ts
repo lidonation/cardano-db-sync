@@ -16,7 +16,14 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
       const manifest = JSON.parse(
         readFileSync(path.join(root, 'manifest.json'), 'utf8'),
       ) as SurveyManifest;
-      await createData('resolved.json', JSON.stringify(resolveAggregate(manifest, aggregate)));
+      const resolved = resolveAggregate(manifest, aggregate);
+      await createData('resolved.json', JSON.stringify(resolved));
+      const empty =
+        resolved.questions.length === 0 &&
+        resolved.closed.length === 0 &&
+        resolved.freeText.length === 0;
+      const view = path.join(root, empty ? 'Empty.tsx' : 'Dashboard.tsx');
+      await createData('view.js', 'export {default} from ' + JSON.stringify(view) + ';');
     },
     getPathsToWatch() {
       return [path.join(context.siteDir, 'src/survey-results/*.json')];

@@ -29,7 +29,7 @@ describe('SUR-7 generation boundary', () => {
         content: undefined,
         actions: {
           createData: async (_name: string, data: string) => {
-            output = data;
+            if (_name === 'resolved.json') output = data;
             return '';
           },
         } as never,
