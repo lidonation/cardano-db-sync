@@ -3,7 +3,7 @@ import React, {type ReactNode} from 'react';
 import {translate} from '@docusaurus/Translate';
 
 import Icon from '../shared/Icon';
-import {VisuallyHidden} from '../shared/Status';
+import {VisuallyHidden} from '../shared/VisuallyHidden';
 
 import styles from './styles.module.css';
 

@@ -8,10 +8,7 @@ import Icon from './Icon';
 
 import styles from './shared.module.css';
 
-/** Text for assistive technology only. */
-export function VisuallyHidden({children}: {children: ReactNode}): React.JSX.Element {
-  return <span className={styles.visuallyHidden}>{children}</span>;
-}
+export {VisuallyHidden} from './VisuallyHidden';
 
 /** Skeleton sizes. Fixed classes, because the CSP forbids inline styles (SEC-2). */
 export type SkeletonSize = 'icon' | 'avatar' | 'title' | 'line' | 'line-short' | 'value' | 'block';
