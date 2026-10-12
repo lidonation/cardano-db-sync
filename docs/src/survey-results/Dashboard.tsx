@@ -229,8 +229,8 @@ export default function DashboardView({resolved, t}: DashboardViewProps): React.
                           'tr',
                           null,
                           React.createElement('th', {scope: 'col'}, 'Epoch'),
-                          ...(question.historyOptions ?? []).map((label) =>
-                            React.createElement('th', {scope: 'col', key: label}, label),
+                          ...(question.historyOptions ?? []).map((label, index) =>
+                            React.createElement('th', {scope: 'col', key: index}, label),
                           ),
                         ),
                       ),

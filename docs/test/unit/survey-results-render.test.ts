@@ -89,6 +89,27 @@ describe('survey results dashboard markup (B44-f slice B)', () => {
     expect(markup).toContain('From source</th>');
   });
 
+  it('renders duplicate option labels as separate history columns', () => {
+    const doubled: Aggregate = {
+      ...fixture,
+      questions: [
+        {
+          question: 0,
+          label: 'Q',
+          options: [
+            {option: 0, label: 'Same', count: 5},
+            {option: 1, label: 'Same', count: 3},
+          ],
+          history: [{epoch: 1, counts: [5, 3]}],
+        },
+      ],
+    };
+    const markup = markupOf(doubled);
+    expect(markup.match(/<th scope="col">Same<\/th>/g)).toHaveLength(2);
+    expect(markup).toContain('>5<');
+    expect(markup).toContain('>3<');
+  });
+
   it('reports superseded options separately, never merged', () => {
     const markup = golden();
     expect(markup).toContain('Superseded by question 1, option 1');
