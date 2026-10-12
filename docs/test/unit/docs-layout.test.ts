@@ -45,10 +45,9 @@ describe('deriveNav (NAV-1)', () => {
     ]);
     expect(nav.links.every((link) => !link.active)).toBe(true);
     expect(nav.github).toBe('https://github.com/IntersectMBO/cardano-db-sync');
-    expect(nav.preferences.map((item) => item.type)).toEqual([
-      'localeDropdown',
-      'docsVersionDropdown',
-    ]);
+    // DF-7: the version selector stays on the bar down to 768, the locale only from 1280
+    expect(nav.actions.map((item) => item.type)).toEqual(['docsVersionDropdown']);
+    expect(nav.preferences.map((item) => item.type)).toEqual(['localeDropdown']);
   });
 
   it('normalizes destinations and active paths alike, without a doubled base URL', () => {

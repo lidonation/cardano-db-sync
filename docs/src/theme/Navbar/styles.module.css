@@ -13,11 +13,13 @@
 
 /* The stock controls in the preferences slot keep the 44px floor (NAV-4, DF-6) until B30 replaces
    them with the designed selectors. */
-.sticky :global(.navbar__item.dropdown) {
+/* Infima hides every navbar__item below 997px. Our slots own visibility at 768/1280. */
+.sticky :global(.navbar__item) {
   display: inline-flex;
   padding: 0;
 }
 
+.sticky :global(.navbar__item.navbar__link),
 .sticky :global(.navbar__item.dropdown > .navbar__link),
 .colorMode :global(button) {
   display: inline-flex;

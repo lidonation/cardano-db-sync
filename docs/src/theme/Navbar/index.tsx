@@ -20,9 +20,10 @@ import styles from './styles.module.css';
  * active section is derived from the route (NAV-1), and laid out per DF-7: links at 1280 and up, a
  * Menu drawer below. It stays pinned under the top of the viewport at 72px.
  *
- * The locale dropdown and the colour-mode toggle keep working in the preferences slot until B30
- * builds their designed replacements; search joins when B31 provides something to open. The navbar
- * is remounted per route, so the drawer closes after a navigation.
+ * DF-7 places the controls: the version selector rides the actions slot (on the bar down to 768,
+ * in the drawer below); the locale selector and the theme switcher ride the preferences slot (on
+ * the bar from 1280, in the drawer below). Search joins when B31 provides something to open. The
+ * navbar is remounted per route, so the drawer closes after a navigation.
  */
 export default function Navbar(): ReactNode {
   useEffect(() => {
@@ -80,11 +81,13 @@ export default function Navbar(): ReactNode {
     baseUrl,
     resolveDocsState(versions, activeDoc),
   );
+  const item = (config: NavbarItemConfig, index: number) => (
+    <NavbarItem key={index} {...(config as React.ComponentProps<typeof NavbarItem>)} />
+  );
+  const actions: ReactNode = nav.actions.length > 0 ? <>{nav.actions.map(item)}</> : undefined;
   const preferences: ReactNode = (
     <>
-      {nav.preferences.map((item, index) => (
-        <NavbarItem key={index} {...(item as React.ComponentProps<typeof NavbarItem>)} />
-      ))}
+      {nav.preferences.map(item)}
       {!disableSwitch && <NavbarColorModeToggle className={styles.colorMode} />}
     </>
   );
@@ -96,6 +99,7 @@ export default function Navbar(): ReactNode {
         homeHref="/"
         links={nav.links}
         githubHref={nav.github}
+        actions={actions}
         preferences={preferences}
       />
     </div>
