@@ -373,7 +373,7 @@
 }
 
 .faqItem {
-  border: 1px solid var(--dbs-border-default);
+  border: 1px solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);
 }
 

@@ -27,6 +27,8 @@ async function goto(page: Page, url: string, width = 1440) {
   await page.goto(url);
   await page.locator('.navbar').waitFor();
   await page.evaluate(() => document.fonts.ready);
+  const menu = page.getByRole('button', {name: 'Menu', exact: true});
+  if (await menu.isVisible()) await menu.click();
 }
 
 function menuButton(page: Page) {
@@ -175,7 +177,7 @@ test.describe('responsive and focus discipline (DF-7, FLOOR-4, NAV-4)', () => {
   test('the switcher keeps a 44px target at phone width', async ({page}) => {
     await goto(page, HOME, 375);
     // DF-7: below 1280 the theme control lives in the Menu drawer (B34).
-    await menuButton(page).click();
+    await expect(menuButton(page)).toHaveAttribute('aria-expanded', 'true');
     const box = await themeButton(page).boundingBox();
     expect(box).not.toBeNull();
     expect(box!.width).toBeGreaterThanOrEqual(44);
@@ -279,7 +281,7 @@ test.describe('palette regressions', () => {
     await page.locator('h1').click();
     await expect(themeButton(page)).toHaveAttribute('aria-expanded', 'false');
     await themeButton(page).click();
-    const docs = page.locator('.navbar .navbar__link').first();
+    const docs = page.getByRole('navigation', {name: 'Sections'}).first().getByRole('link').first();
     await docs.focus();
     await expect(docs).toBeFocused();
     await expect(themeButton(page)).toHaveAttribute('aria-expanded', 'false');
@@ -310,6 +312,8 @@ test.describe('palette regressions', () => {
     const drawer = page.locator(`[id="${await menuButton(page).getAttribute('aria-controls')}"]`);
     const mobile = drawer.getByRole('button', {name: /^Theme:/});
     await expect(mobile).toHaveAccessibleName('Theme: Navy. Change theme');
+    await page.setViewportSize({width: 1440, height: 900});
+    await expect(themeButton(page)).toHaveAccessibleName('Theme: Navy. Change theme');
   });
 });
 

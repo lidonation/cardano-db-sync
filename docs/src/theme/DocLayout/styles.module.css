@@ -28,12 +28,15 @@
 
 .sidebar {
   position: sticky;
-  inset-block-start: var(--ifm-navbar-height);
+  inset-block-start: var(--dbs-navbar-block-size, var(--ifm-navbar-height));
   align-self: start;
   box-sizing: border-box;
-  max-block-size: calc(100vh - var(--ifm-navbar-height));
+  max-block-size: calc(100dvh - var(--dbs-navbar-block-size, var(--ifm-navbar-height)));
   overflow-y: auto;
   padding-block: var(--dbs-space-24);
+  /* Keep the 2px outline and 2px offset inside both navigation scrollports. */
+  padding-inline: var(--dbs-space-4);
+  scroll-padding-block: var(--dbs-space-8);
 }
 
 .main {
@@ -89,15 +92,6 @@
 .row:active,
 .groupLink:active {
   background: var(--dbs-surface-accent-subtle);
-}
-
-.row:focus-visible,
-.groupLink:focus-visible,
-.tocLink:focus-visible,
-.tocMobileLink:focus-visible,
-.disclosureButton:focus-visible {
-  outline: var(--dbs-focus-ring);
-  outline-offset: calc(-1 * var(--dbs-focus-offset));
 }
 
 /* the current page: tinted row, a 3px bar on the reading-start edge, the label weight (FLOOR-6) */
@@ -172,7 +166,7 @@
 .panel {
   box-sizing: border-box;
   padding: var(--dbs-space-8) 0;
-  border: 1px solid var(--dbs-border-default);
+  border: 1px solid var(--dbs-border-interactive);
   border-block-start: 0;
 }
 
@@ -257,10 +251,17 @@
 
   .toc {
     position: sticky;
-    inset-block-start: calc(var(--ifm-navbar-height) + var(--dbs-space-24));
+    inset-block-start: calc(
+      var(--dbs-navbar-block-size, var(--ifm-navbar-height)) + var(--dbs-space-24)
+    );
     display: block;
     align-self: start;
-    max-block-size: calc(100vh - var(--ifm-navbar-height) - var(--dbs-space-48));
+    max-block-size: calc(
+      100dvh - var(--dbs-navbar-block-size, var(--ifm-navbar-height)) - var(--dbs-space-48)
+    );
+    box-sizing: border-box;
+    padding: var(--dbs-space-4);
+    scroll-padding-block: var(--dbs-space-8);
     overflow-y: auto;
   }
 
