@@ -137,15 +137,26 @@
   display: none;
 }
 
-/* md and sm: the sections move into the disclosure (DF-7) */
-@media (max-width: 1023px) {
-  .bar {
-    padding: 0 var(--dbs-space-32);
+/* md and sm (below 1280): the sections move into the disclosure, as DF-7 draws them */
+@media (max-width: 1279px) {
+  .wide {
+    display: none;
   }
 
-  .wide,
+  /* the GitHub link goes icon-only; its word stays its name (A11Y-17) */
   .githubText {
-    display: none;
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .github {
+    justify-content: center;
+    min-inline-size: 44px;
+    padding: 0;
   }
 
   .menu {
@@ -153,7 +164,7 @@
   }
 
   .search {
-    min-inline-size: 180px;
+    min-inline-size: 240px;
   }
 
   .drawer:not([hidden]) {
@@ -165,6 +176,17 @@
   .drawer .links {
     flex-direction: column;
     gap: 0;
+  }
+}
+
+/* sm */
+@media (max-width: 1023px) {
+  .bar {
+    padding: 0 var(--dbs-space-32);
+  }
+
+  .search {
+    min-inline-size: 180px;
   }
 }
 

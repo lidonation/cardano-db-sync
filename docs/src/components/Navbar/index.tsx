@@ -26,9 +26,10 @@ export interface NavLink {
 
 /**
  * `Navbar / Full` — wordmark, the five sections, the search trigger, GitHub and a slot for the
- * theme, locale and version controls (B30 fills it). Below 1024px the sections move into a
- * disclosure behind a Menu button (DF-7, NAV-2): collapsed by default, keyboard-operable, its state
- * announced by `aria-expanded`. Below 768px the search trigger becomes a 44px icon button.
+ * theme, locale and version controls (B30 fills it). Below 1280px — the DF-7 md and sm tiers — the
+ * sections move into a disclosure behind a Menu button (NAV-2): collapsed by default,
+ * keyboard-operable, its state announced by `aria-expanded`. Below 768px the search trigger becomes
+ * a 44px icon button.
  * Every row is at least 44px (NAV-4). It renders route data known at build time, so it has no
  * loading, error or empty state; links have hover, pressed, focus and active (selected) states.
  */

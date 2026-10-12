@@ -79,6 +79,25 @@ test.describe('axe, WCAG 2.2 AA', () => {
           .include('#inventory')
           .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
           .analyze();
+        // axe cannot see a background painted on a clipped pseudo-element, so it leaves those
+        // nodes "incomplete" rather than failing them. Only the hexagon buttons paint that way, and
+        // they are measured directly below; anything else left unchecked is a failure here.
+        const unchecked = await Promise.all(
+          results.incomplete
+            .filter((result) => result.id === 'color-contrast')
+            .flatMap((result) => result.nodes)
+            .map((node) =>
+              page
+                .locator(node.target.join(' '))
+                .first()
+                .evaluate((element) =>
+                  element.closest('[data-dbs-component="Button"]')
+                    ? null
+                    : element.outerHTML.slice(0, 80),
+                ),
+            ),
+        );
+        expect(unchecked.filter(Boolean)).toEqual([]);
         const found = results.violations.flatMap((violation) =>
           violation.nodes.map(
             (node) => `${violation.id}: ${node.target.join(' ')} — ${node.failureSummary}`,
@@ -87,6 +106,49 @@ test.describe('axe, WCAG 2.2 AA', () => {
         expect(found).toEqual([]);
       });
     }
+  }
+});
+
+/** WCAG relative luminance contrast between two computed `rgb()` colours. */
+function contrast(a: string, b: string): number {
+  const luminance = (colour: string) => {
+    const [r, g, bl] = (colour.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+    const channel = (value: number) => {
+      const c = value / 255;
+      return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    };
+    return 0.2126 * channel(r) + 0.7152 * channel(g) + 0.0722 * channel(bl);
+  };
+  const [light, dark] = [luminance(a), luminance(b)].sort((x, y) => y - x);
+  return (light + 0.05) / (dark + 0.05);
+}
+
+test.describe('button contrast, measured on the clipped fill axe cannot see (FLOOR-1, FLOOR-3)', () => {
+  for (const palette of PALETTES) {
+    test(palette, async ({page}) => {
+      await open(page, palette);
+      const buttons = await page
+        .locator('#inventory [data-dbs-component="Button"]:not([aria-disabled="true"])')
+        .evaluateAll((elements) =>
+          elements.map((element) => ({
+            where: `${element.closest('[data-inventory-entry]')?.getAttribute('data-inventory-entry')} · ${element.closest('[data-inventory-state]')?.getAttribute('data-inventory-state')}`,
+            label: getComputedStyle(element).color,
+            fill: getComputedStyle(element, '::after').backgroundColor,
+            boundary: getComputedStyle(element, '::before').backgroundColor,
+            page: getComputedStyle(document.querySelector('#inventory')!).backgroundColor,
+          })),
+        );
+      expect(buttons.length).toBeGreaterThanOrEqual(20);
+      const failures = buttons.flatMap((button) => [
+        ...(contrast(button.label, button.fill) < 4.5
+          ? [`${button.where}: label ${contrast(button.label, button.fill).toFixed(2)}:1`]
+          : []),
+        ...(contrast(button.boundary, button.page) < 3
+          ? [`${button.where}: boundary ${contrast(button.boundary, button.page).toFixed(2)}:1`]
+          : []),
+      ]);
+      expect(failures).toEqual([]);
+    });
   }
 });
 
@@ -202,7 +264,7 @@ test.describe('behaviour', () => {
     await expect(invalid).toHaveAccessibleDescription('Choose at least one to continue.');
   });
 
-  test('below 1024px the sections sit behind a Menu disclosure (NAV-2)', async ({page}) => {
+  test('below 1280px the sections sit behind a Menu disclosure (DF-7, NAV-2)', async ({page}) => {
     await open(page, 'light', 375);
     const navbar = page.locator(
       '[data-inventory-entry="Navbar / Full"] [data-inventory-state="default"]',
