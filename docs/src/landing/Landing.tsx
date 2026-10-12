@@ -287,7 +287,7 @@ function Queries(): React.JSX.Element {
       SAMPLE_QUERIES.balance,
     ],
     [
-      translate({id: 'landing.queries.rewards', message: 'Rewards earned last epoch'}),
+      translate({id: 'landing.queries.rewards', message: 'Latest recorded rewards'}),
       SAMPLE_QUERIES.rewards,
     ],
   ];
