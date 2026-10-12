@@ -14,14 +14,24 @@ const SPACING = [
   '* {line-height: 1.5 !important; letter-spacing: .12em !important; word-spacing: .16em !important;}',
   'p {margin-block-end: 2em !important;}',
 ];
-const STOPS = 'a[href], button, input, select, textarea, [tabindex]';
+const STOPS = 'a[href], button, input, select, textarea, summary, [tabindex]';
 
 async function open(page: Page, route = '', palette: Palette = 'light') {
   await page.addInitScript((name) => {
     localStorage.setItem('dbs-palette', name);
     localStorage.setItem('theme', name === 'dark' || name === 'navy' ? 'dark' : 'light');
   }, palette);
-  await page.goto(route || './');
+  // Docusaurus' static server redirects an explicit 404.html to /404 outside a dev baseUrl.
+  // Request a missing URL in the same locale so the actual emitted 404 page is exercised.
+  const requestRoute = route.endsWith('404.html')
+    ? route.replace(/404\.html$/, '__b43_missing__/')
+    : route || './';
+  const response = await page.goto(requestRoute);
+  if (route.endsWith('404.html')) {
+    expect(response?.status()).toBe(404);
+    await expect(page.locator('main .hero__title')).toBeVisible();
+    await expect(page.locator('#landing-title')).toHaveCount(0);
+  }
   await expect(page.locator('main')).toHaveCount(1);
   await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
   await page.evaluate(() => document.fonts.ready);
@@ -159,7 +169,9 @@ async function noContentLoss(page: Page) {
 }
 
 async function labelInName(page: Page) {
-  const controls = page.locator('a[href], button, [role="button"], [role="menuitemradio"]');
+  const controls = page.locator(
+    'a[href], button, summary, [role="button"], [role="menuitemradio"]',
+  );
   for (let index = 0; index < (await controls.count()); index++) {
     const control = controls.nth(index);
     if (
@@ -318,7 +330,7 @@ test('native skip anchor works without JavaScript on docs', async ({browser, bas
 
 test('client navigation restores the first skip stop', async ({page}) => {
   await open(page);
-  await page.locator('main a[href*="docs/intro"]').click();
+  await page.locator('main a[href*="docs/intro"]').first().click();
   await expect(page).toHaveURL(/\/docs\/intro\/?$/);
   await expect(page.locator('main')).toHaveAttribute('id', 'dbs-main-content');
   await page.keyboard.press('Tab');
