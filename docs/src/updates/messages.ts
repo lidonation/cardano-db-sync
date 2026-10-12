@@ -52,7 +52,7 @@ export default function useUpdatesMessages() {
     unavailableBody: translate({
       id: 'updates.unavailable.body',
       message:
-        'The Updates feed is not available yet. The git-history source (B22) has not been published.',
+        'The Updates feed is not available yet. Release, schema and documentation changes will appear here once the feed is published.',
     }),
     firstRelease: translate({
       id: 'updates.firstRelease',

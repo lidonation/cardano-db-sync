@@ -1,6 +1,9 @@
 /* B44-d: Penpot's 440 x 560 Updates panel. It grows for real rows and translated copy. */
 .page {
-  padding: var(--dbs-space-48) var(--dbs-space-16);
+  box-sizing: border-box;
+  max-inline-size: 1200px;
+  margin-inline: auto;
+  padding: var(--dbs-space-48) var(--dbs-space-48);
   color: var(--dbs-text-primary);
 }
 .heading {
@@ -54,7 +57,10 @@
   color: var(--dbs-accent-primary-text);
 }
 .subject {
-  display: inline-block;
+  display: flex;
+  align-items: center;
+  min-block-size: 44px;
+  min-inline-size: 44px;
   padding-block: var(--dbs-space-4);
   color: var(--dbs-accent-primary-text);
   font: var(--dbs-font-body-sm);
@@ -112,5 +118,16 @@
   }
   .fields {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 1023px) {
+  .page {
+    padding-inline: var(--dbs-space-32);
+  }
+}
+@media (max-width: 767px) {
+  .page {
+    padding-inline: var(--dbs-space-16);
   }
 }

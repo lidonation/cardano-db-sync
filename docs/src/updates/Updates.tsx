@@ -89,7 +89,7 @@ export default function Updates({feed}: {readonly feed: UpdatesFeed | null}): Re
   return (
     <section className={styles.panel} aria-label={messages.title} lang={lang}>
       <div className={styles.metric} role="status" aria-live="polite" aria-atomic="true">
-        <span className={styles.count}>{metric}</span>
+        <span className={styles.count}>{metric}</span>{' '}
         <span className={styles.label}>
           {messages.count} · {messages[period]}
         </span>
