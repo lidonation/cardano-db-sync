@@ -167,6 +167,7 @@ test('real Updates route reports unavailable source without invented entries', a
 
 test('the first skip link focuses the Updates main landmark', async ({page}) => {
   await page.goto(`${SITE_URL}updates`);
+  await expect(page.locator('html')).toHaveAttribute('data-has-hydrated', 'true');
   await page.keyboard.press('Tab');
   await expect(page.locator('a.dbs-skip-link')).toBeFocused();
   await page.keyboard.press('Enter');
