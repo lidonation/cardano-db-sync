@@ -14,7 +14,7 @@ export default function sharedCode(): Plugin {
                 cacheGroups: {
                   siteShared: {
                     name: 'site-shared',
-                    test: /[/\\]src[/\\].*\.[jt]sx?$/,
+                    test: /[/\\]src[/\\]/,
                     chunks: 'async',
                     minChunks: 2,
                     minSize: 0,

@@ -24,5 +24,5 @@ it('deduplicates site modules reused by two async routes, without changing serve
   });
   expect((group.test as RegExp).test('/project/docs/src/components/Card/Frame.tsx')).toBe(true);
   expect((group.test as RegExp).test('/project/docs/node_modules/react/index.js')).toBe(false);
-  expect((group.test as RegExp).test('/project/docs/src/numbers/styles.module.css')).toBe(false);
+  expect((group.test as RegExp).test('/project/docs/src/numbers/styles.module.css')).toBe(true);
 });
