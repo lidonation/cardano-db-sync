@@ -181,3 +181,53 @@ describe('B30 - the three global controls share the navbar (THM-1, A11Y-29, DF-7
     expect(items.map((item) => item.type)).not.toContain('colorModeToggle');
   });
 });
+
+describe('B01 follow-up - brand assets in static/ and favicon (#63)', () => {
+  interface HeadTag {
+    readonly tagName?: string;
+    readonly attributes?: Record<string, string>;
+  }
+
+  async function headTags(profile?: string): Promise<HeadTag[]> {
+    const config = await loadConfig(profile);
+    return (config.headTags ?? []) as HeadTag[];
+  }
+
+  it('uses a static/brand mark as the favicon, resolved through baseUrl (ENV-1, CON)', async () => {
+    for (const name of ['dev', 'prod']) {
+      const config = await loadConfig(name);
+      expect(config.favicon).toBe('brand/png/mark-badge-32.png');
+    }
+    // Relative, not root-absolute or absolute: Docusaurus resolves it through baseUrl.
+    const config = await loadConfig('dev');
+    expect(config.favicon).not.toMatch(/^\/|https?:/);
+  });
+
+  it('adds an Apple touch icon via headTags, baseUrl-relative per profile', async () => {
+    for (const name of ['dev', 'prod'] as const) {
+      const tags = await headTags(name);
+      const apple = tags.find((tag) => tag.attributes?.rel === 'apple-touch-icon');
+      expect(apple?.tagName).toBe('link');
+      expect(apple?.attributes?.href).toBe(`${PROFILES[name].baseUrl}brand/png/mark-badge-180.png`);
+    }
+  });
+
+  it('keeps the favicon and touch icon free of hardcoded environment values (ENV-1)', async () => {
+    const source = await fs.readFile(CONFIG_PATH, 'utf8');
+    expect(source).not.toContain('/cardano-db-sync/');
+    expect(source).not.toMatch(/favicon\s*:\s*['"`]\//);
+    expect(source).not.toMatch(/favicon\s*:\s*['"`]https?:/);
+    expect(source).toContain('profile.baseUrl');
+  });
+
+  it('ships the brand marks from static/ with no public/ tree left', async () => {
+    const docsRoot = path.resolve(CONFIG_PATH, '..');
+    await expect(
+      fs.stat(path.join(docsRoot, 'static/brand/png/mark-badge-32.png')),
+    ).resolves.toBeDefined();
+    await expect(
+      fs.stat(path.join(docsRoot, 'static/brand/png/mark-badge-180.png')),
+    ).resolves.toBeDefined();
+    await expect(fs.stat(path.join(docsRoot, 'public'))).rejects.toThrow(/ENOENT/);
+  });
+});
