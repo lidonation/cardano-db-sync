@@ -15,7 +15,6 @@ import {
   findViolations,
   flatten,
   hasSidebarBinding,
-  innermostSelector,
   isDecorativeBorder,
   main,
   varName,
@@ -213,13 +212,31 @@ describe('TOK-6: control boundaries bind border.interactive (B35)', () => {
       'border-block-start: 1px solid var(--dbs-border-default)',
     ],
   ])('allows the decorative hairline: %s', (_why, selector, declaration) => {
-    expect(findBorderProblems('src/x.css', `${selector} { ${declaration}; }`)).toEqual([]);
+    const module =
+      selector === '.card' || selector.includes('data-status')
+        ? 'Card'
+        : selector === '.cap'
+          ? 'KeyCap'
+          : selector === '.framed'
+            ? 'shared'
+            : selector.includes('.list')
+              ? 'Tabs'
+              : 'Navbar';
+    expect(
+      findBorderProblems(
+        `src/components/${module}/${module === 'shared' ? 'shared.module.css' : 'styles.module.css'}`,
+        `${selector} { ${declaration}; }`,
+      ),
+    ).toEqual([]);
   });
 
   it('does not mistake .tabs for .tab when classifying the tablist rule', () => {
-    expect(isDecorativeBorder('src/x.css', ".tabs[data-appearance='underline'] .list")).toMatch(
-      /tablist/,
-    );
+    expect(
+      isDecorativeBorder(
+        'src/components/Tabs/styles.module.css',
+        ".tabs[data-appearance='underline'] .list",
+      ),
+    ).toMatch(/tablist/);
     expect(
       findBorderProblems(
         'src/x.css',
@@ -235,11 +252,6 @@ describe('TOK-6: control boundaries bind border.interactive (B35)', () => {
         '@media (max-width: 767px) { .field, .other { border-color: var(--dbs-border-warm); } }',
       ).map((p) => p.rule),
     ).toEqual(['TOK-6']);
-  });
-
-  it('reads the innermost selector through nesting', () => {
-    expect(innermostSelector('@media (x: y) {\n  .field {\n    border: 0;', 30)).toBe('.field');
-    expect(innermostSelector('.a { color: red; }', 4)).toBe('.a');
   });
 
   it('ignores commented-out code', () => {
@@ -360,5 +372,68 @@ describe('B03 gaps closed in review', () => {
     expect(await main({root, out})).toBe(1);
     expect(lines.join('\n')).toContain('cream.surface.base  TOK-12');
     expect(lines.join('\n')).toContain('cream.surface.ghost  THM-4');
+  });
+});
+
+describe('B35 review regressions', () => {
+  it.each([
+    ['src/x.css', '.card'],
+    ['src/components/Navbar/styles.module.css', '.drawer button'],
+    ['src/components/Tabs/styles.module.css', '.list button'],
+    ['src/components/Card/styles.module.css', ".card[data-status='empty'], .field"],
+  ])('does not grant decorative exceptions to %s %s', (file, selector) => {
+    expect(
+      findBorderProblems(file, `${selector} { border: 1px solid var(--dbs-border-default); }`),
+    ).toHaveLength(1);
+  });
+
+  it('keeps the containing rule after a nested rule closes', () => {
+    const css =
+      '.field { &:hover { color: var(--dbs-text-primary); } border: 1px solid var(--dbs-border-default); }';
+    expect(findBorderProblems('src/x.css', css)[0]?.message).toContain("'.field'");
+  });
+
+  it.each([
+    '@media (min-width: 1px) { .menu__link--active { color: var(--dbs-accent-primary); } }',
+    '.menu__link--active { @media (min-width: 1px) { color: var(--dbs-accent-primary); } }',
+    '.menu__link--active { &:hover { color: var(--dbs-accent-primary); } }',
+  ])('checks the active label in nested CSS: %s', (css) => {
+    expect(findNavProblems('src/x.css', css)).toHaveLength(1);
+  });
+
+  it('accepts a nested binding and reports its actual declaration line', () => {
+    expect(
+      hasSidebarBinding([
+        '@media (min-width: 1px) { .menu__link--active { color: var(--dbs-accent-primary-text); } }',
+      ]),
+    ).toBe(true);
+    expect(
+      findNavProblems(
+        'src/x.css',
+        '@media (x:y) {\n.menu__link--active {\ncolor: var(--dbs-accent-primary);\n}\n}',
+      )[0]?.line,
+    ).toBe(3);
+  });
+
+  it.each([
+    '.menu__link--active-shadow { color: var(--dbs-accent-primary-text); }',
+    '.menu__link--active::before { color: var(--dbs-accent-primary-text); }',
+    '.menu__link--active:hover { color: var(--dbs-accent-primary-text); }',
+    '.other:not(.x, .menu__link--active) { color: var(--dbs-accent-primary-text); }',
+    '.other[data-label=".menu__link--active"] { color: var(--dbs-accent-primary-text); }',
+  ])('does not satisfy the at-rest label binding with %s', (css) => {
+    expect(hasSidebarBinding([css])).toBe(false);
+  });
+});
+
+describe('generated browser artifacts', () => {
+  it('does not lint or satisfy the sidebar binding from a recorded trace', async () => {
+    await write('src/css/custom.css', 'a { text-decoration: underline; }');
+    await write(
+      'test-results/traces/resources/bundle.css',
+      '.field {border: 1px solid var(--dbs-border-default);} .menu__link--active { color: var(--dbs-accent-primary-text); }',
+    );
+    expect(await findViolations(root)).toEqual([]);
+    expect(await main({root, out: recorder().out})).toBe(1);
   });
 });

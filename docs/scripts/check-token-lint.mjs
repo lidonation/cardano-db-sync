@@ -29,6 +29,7 @@ import path from 'node:path';
 import process from 'node:process';
 
 import {SKIP_DIRS, TOKENS_CSS, lineIndex, walk} from './lib/build-output.mjs';
+import {declarations, stripComments} from './lib/css-declarations.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 export const SOURCE = 'design/tokens.source.json';
@@ -96,31 +97,30 @@ function isBoundaryProperty(property) {
   );
 }
 
-/**
- * Comments blanked to spaces of the same shape, so offsets — and therefore line numbers —
- * survive while commented-out code never trips the gate.
- */
-function stripComments(css) {
-  return css.replace(/\/\*[\s\S]*?\*\//g, (comment) => comment.replace(/[^\n]/g, ' '));
-}
-
-/**
- * The innermost rule selector a declaration at `index` sits under, normalised to one line.
- * At-rules between the rule and the declaration are looked through; the selector of a rule
- * nested in `@media` still reads as the rule's own selector.
- */
-export function innermostSelector(css, index) {
-  const open = css.lastIndexOf('{', index);
-  if (open === -1) {
-    return '';
-  }
-  const previousClose = css.lastIndexOf('}', open - 1);
-  const parentOpen = css.lastIndexOf('{', open - 1);
-  return css
-    .slice(Math.max(previousClose, parentOpen) + 1, open)
-    .trim()
-    .replace(/\s+/g, ' ');
-}
+/** Reviewed exceptions are bound to both their module and their exact selector. */
+const DECORATIVE_BORDERS = new Map([
+  [
+    'src/components/Card/styles.module.css',
+    new Map([
+      ['.card', 'static card default; interactive kinds override it'],
+      [".card[data-status='empty']", 'empty placeholder, never interactive'],
+    ]),
+  ],
+  ['src/components/KeyCap/styles.module.css', new Map([['.cap', 'KeyCap is static text']])],
+  ['src/components/shared/shared.module.css', new Map([['.framed', 'empty-state wrapper']])],
+  [
+    'src/components/Tabs/styles.module.css',
+    new Map([[".tabs[data-appearance='underline'] .list", 'tablist rule, not a tab']]),
+  ],
+  [
+    'src/components/Navbar/styles.module.css',
+    new Map([
+      ['.navbar', 'navbar hairline'],
+      ['.drawer:not([hidden])', 'nav drawer container rule'],
+    ]),
+  ],
+  ['src/inventory/styles.module.css', new Map([['.entry', 'inventory section rule']])],
+]);
 
 /**
  * Whether a `border*` declaration holding a non-interactive token is a decorative hairline
@@ -128,32 +128,7 @@ export function innermostSelector(css, index) {
  * misuse TOK-6 exists to prevent. `file` is the stylesheet path relative to the docs root.
  */
 export function isDecorativeBorder(file, selector) {
-  const sel = selector.trim();
-  if (sel === '.card') {
-    return 'static card default; [data-link] and .card.select outrank it for every interactive kind';
-  }
-  if (sel.includes("[data-status='empty']")) {
-    return 'empty placeholder, never interactive';
-  }
-  if (sel === '.cap') {
-    return 'KeyCap is static text, not a control';
-  }
-  if (sel === '.framed') {
-    return 'empty-state wrapper, not a control';
-  }
-  if (/\.list(?![a-z-])/.test(sel) && !/\.tab(?![a-z-])/.test(sel)) {
-    return 'tablist rule under the tabs, not a tab';
-  }
-  if (sel === '.navbar') {
-    return 'navbar hairline, not a control';
-  }
-  if (/^\.drawer\b/.test(sel) && !sel.includes('Github') && !sel.includes('.link')) {
-    return 'nav drawer container rule, not a control';
-  }
-  if (file.endsWith('src/inventory/styles.module.css') && sel === '.entry') {
-    return "inventory's own section rule in the dev tool";
-  }
-  return null;
+  return DECORATIVE_BORDERS.get(file)?.get(selector.trim()) ?? null;
 }
 
 /**
@@ -164,10 +139,8 @@ export function findBorderProblems(file, text) {
   const css = stripComments(text);
   const lineAt = lineIndex(css);
   const problems = [];
-  const pattern = /([a-z-]+)\s*:\s*([^;{}]+)/g;
-  for (const match of css.matchAll(pattern)) {
-    const property = match[1].toLowerCase();
-    const value = match[2];
+  for (const decl of declarations(css)) {
+    const {property, value, offset} = decl;
     if (!isBoundaryProperty(property)) {
       continue;
     }
@@ -175,13 +148,13 @@ export function findBorderProblems(file, text) {
     if (!token) {
       continue;
     }
-    const selector = innermostSelector(css, match.index);
+    const selector = decl.selectors.findLast((rule) => !rule.startsWith('@')) ?? '';
     const reason = isDecorativeBorder(file, selector);
     if (reason !== null) {
       continue;
     }
     problems.push({
-      line: lineAt(match.index),
+      line: lineAt(offset),
       rule: 'TOK-6',
       message:
         `${token} bounds '${selector || '<unknown>'}' - controls bind border.interactive ` +
@@ -191,64 +164,101 @@ export function findBorderProblems(file, text) {
   return problems;
 }
 
-/**
- * NAV-5: `.menu__link--active` rules in one stylesheet that set a colour other than the
- * sidebar binding. The missing-binding case is tree-wide and reported by `main`.
- */
+/** Split only top-level commas: commas inside :is(), :not() or attributes are not branches. */
+function selectorList(selector) {
+  const branches = [];
+  let start = 0;
+  let depth = 0;
+  let quote = '';
+  for (let i = 0; i < selector.length; i += 1) {
+    const ch = selector[i];
+    if (ch === '\\') {
+      i += 1;
+      continue;
+    }
+    if (quote) {
+      if (ch === quote) quote = '';
+      continue;
+    }
+    if (ch === '"' || ch === "'") {
+      quote = ch;
+      continue;
+    }
+    if (ch === '(' || ch === '[') depth += 1;
+    if (ch === ')' || ch === ']') depth -= 1;
+    if (ch === ',' && depth === 0) {
+      branches.push(selector.slice(start, i));
+      start = i + 1;
+    }
+  }
+  branches.push(selector.slice(start));
+  return branches;
+}
+
+/** Ignore classes mentioned only inside attribute values or functional pseudo-class arguments. */
+function selectorSubject(selector) {
+  let outside = '';
+  let depth = 0;
+  for (const ch of selector) {
+    if (ch === '(' || ch === '[') depth += 1;
+    else if (ch === ')' || ch === ']') depth -= 1;
+    else if (depth === 0) outside += ch;
+  }
+  return outside.split(/\s+|[>+~]/).at(-1) ?? '';
+}
+
+/** Effective selector branches, including CSS nesting and at-rule wrappers. */
+function selectorBranches(selectors) {
+  let branches = [''];
+  for (const selector of selectors.filter((rule) => !rule.startsWith('@'))) {
+    branches = branches.flatMap((parent) =>
+      selectorList(selector).map((part) => {
+        const child = part.trim();
+        return child.includes('&') ? child.replaceAll('&', parent) : `${parent} ${child}`.trim();
+      }),
+    );
+  }
+  return branches;
+}
+
+/** Only rules that target the link itself count, not an icon, pseudo-element or namesake. */
+function targetsActiveLabel(selector) {
+  const subject = selectorSubject(selector);
+  return /\.menu__link--active(?![\w-])/.test(subject) && !subject.includes('::');
+}
+
+/** NAV-5: inspect every active-label colour, including nested media and state rules. */
 export function findNavProblems(file, text) {
   const css = stripComments(text);
   const lineAt = lineIndex(css);
   const problems = [];
-  const blocks = css.split('}');
-  for (const block of blocks) {
-    const brace = block.indexOf('{');
-    if (brace === -1 || !block.slice(0, brace).includes('menu__link--active')) {
+  for (const decl of declarations(css)) {
+    if (decl.property !== 'color' || !selectorBranches(decl.selectors).some(targetsActiveLabel))
       continue;
-    }
-    const offset = css.indexOf(block);
-    for (const decl of block.slice(brace + 1).split(';')) {
-      const colon = decl.indexOf(':');
-      if (colon === -1) {
-        continue;
-      }
-      if (decl.slice(0, colon).trim().toLowerCase() !== 'color') {
-        continue;
-      }
-      const value = decl.slice(colon + 1).trim();
-      if (value !== `var(${SIDEBAR_ACTIVE_TOKEN})`) {
-        problems.push({
-          line: lineAt(offset + brace),
-          rule: 'NAV-5',
-          message: `active sidebar label sets ${value} - bind ${`var(${SIDEBAR_ACTIVE_TOKEN})`}`,
-        });
-      }
+    if (decl.value !== `var(${SIDEBAR_ACTIVE_TOKEN})`) {
+      problems.push({
+        line: lineAt(decl.offset),
+        rule: 'NAV-5',
+        message: `active sidebar label sets ${decl.value} - bind var(${SIDEBAR_ACTIVE_TOKEN})`,
+      });
     }
   }
   return problems;
 }
 
-/** Tree-wide NAV-5: at least one stylesheet must carry the sidebar active binding. */
+/** An at-rest binding is required; hover-only or pseudo-element colours do not satisfy it. */
 export function hasSidebarBinding(cssTexts) {
   return cssTexts.some((text) =>
-    stripComments(text)
-      .split('}')
-      .some((block) => {
-        const brace = block.indexOf('{');
-        if (brace === -1 || !block.slice(0, brace).includes('menu__link--active')) {
-          return false;
-        }
-        return block
-          .slice(brace + 1)
-          .split(';')
-          .some((decl) => {
-            const colon = decl.indexOf(':');
-            return (
-              colon !== -1 &&
-              decl.slice(0, colon).trim().toLowerCase() === 'color' &&
-              decl.slice(colon + 1).trim() === `var(${SIDEBAR_ACTIVE_TOKEN})`
-            );
-          });
-      }),
+    [...declarations(stripComments(text))].some(
+      (decl) =>
+        decl.property === 'color' &&
+        decl.value === `var(${SIDEBAR_ACTIVE_TOKEN})` &&
+        selectorBranches(decl.selectors).some(
+          (selector) =>
+            targetsActiveLabel(selector) &&
+            !/:(hover|active|focus|focus-visible|focus-within)\b/.test(selector),
+        ),
+    ),
   );
 }
 
@@ -346,9 +356,10 @@ export function findCodeProblems(file, text) {
 }
 
 /** Every source file under the docs root except dependencies, build output, tests and tokens.css. */
-export async function findViolations(root = ROOT) {
+async function scanSources(root) {
   root = path.resolve(root);
   const violations = [];
+  const cssTexts = [];
   const skip = (dir) =>
     SKIP_DIRS.has(path.basename(dir)) ||
     (path.dirname(dir) === root && ['test', 'design'].includes(path.basename(dir)));
@@ -362,6 +373,7 @@ export async function findViolations(root = ROOT) {
       violations.push({file, ...v});
     }
     if ((file.endsWith('.css') || file.endsWith('.scss')) && file !== TOKENS_CSS) {
+      cssTexts.push(text);
       for (const v of findBorderProblems(file, text)) {
         violations.push({file, ...v});
       }
@@ -370,25 +382,12 @@ export async function findViolations(root = ROOT) {
       }
     }
   }
-  return violations;
+  return {violations, cssTexts};
 }
 
-/** Tree-wide NAV-5 over a docs root: any stylesheet carrying the sidebar active binding. */
-async function hasSidebarBindingIn(root) {
-  const texts = [];
-  const skip = (dir) =>
-    SKIP_DIRS.has(path.basename(dir)) ||
-    (path.dirname(dir) === root && ['test', 'design'].includes(path.basename(dir)));
-  for await (const full of walk(root, skip)) {
-    const file = path.relative(root, full).split(path.sep).join('/');
-    if (file.startsWith('scripts/') || file === TOKENS_CSS) {
-      continue;
-    }
-    if (path.extname(full) === '.css' || path.extname(full) === '.scss') {
-      texts.push(await readFile(full, 'utf8'));
-    }
-  }
-  return hasSidebarBinding(texts);
+/** Public violation list for callers that do not need the tree-wide sidebar check. */
+export async function findViolations(root = ROOT) {
+  return (await scanSources(root)).violations;
 }
 
 /** @typedef {import('./lib/build-output.mjs').Reporter} Reporter */
@@ -411,8 +410,8 @@ export async function main({root = ROOT, out = /** @type {Reporter} */ (console)
     return 2;
   }
   const overrides = findOverrideProblems(source);
-  const code = await findViolations(root);
-  const sidebar = (await hasSidebarBindingIn(root))
+  const {violations: code, cssTexts} = await scanSources(root);
+  const sidebar = hasSidebarBinding(cssTexts)
     ? []
     : [
         {
