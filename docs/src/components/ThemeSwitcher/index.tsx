@@ -4,10 +4,12 @@ import {translate} from '@docusaurus/Translate';
 
 import {
   PALETTES,
-  PALETTE_LABELS,
   applyPalette,
+  getBrowserPaletteStorage,
+  resolveEffectivePalette,
   getStoredPalette,
-  resolveInitialPalette,
+  paletteToTheme,
+  PALETTE_STORAGE_KEY,
   type Palette,
 } from '../../lib/palette';
 
@@ -27,21 +29,69 @@ import styles from './styles.module.css';
  * Escape closes and returns focus; Tab leaves and closes. Every row is 44px (DF-6/NAV-4)
  * with the global focus ring (FLOOR-4). The checkmark glyph pairs the colour cue (FLOOR-6).
  */
-export default function ThemeSwitcher(): React.JSX.Element {
+export default function ThemeSwitcher({
+  onChangeTheme,
+}: {
+  readonly onChangeTheme?: (theme: 'light' | 'dark') => void;
+}): React.JSX.Element {
   const [palette, setPalette] = useState<Palette>('light');
   const [open, setOpen] = useState(false);
   const [focusIndex, setFocusIndex] = useState(0);
+  const switcherRef = useRef<HTMLDivElement>(null);
   const buttonRef = useRef<HTMLButtonElement>(null);
   const itemRefs = useRef<(HTMLLIElement | null)[]>([]);
   const menuId = useId();
 
-  // Resolve after mount so server and client render the same default (no hydration
-  // mismatch): the palette bootstrap already set the attributes before paint.
+  // Read the effective attributes, including a query override. Observe the shared
+  // document so the desktop, mobile and inventory instances announce one state.
   useEffect(() => {
-    const stored = getStoredPalette(window.localStorage);
-    const current = document.documentElement.getAttribute('data-theme');
-    setPalette(resolveInitialPalette(stored, current));
-  }, []);
+    const root = document.documentElement;
+    const storage = getBrowserPaletteStorage(window);
+    const sync = () => {
+      const current = resolveEffectivePalette(root, storage);
+      const theme = root.getAttribute('data-theme');
+      const next =
+        paletteToTheme(current) === theme ? current : theme === 'dark' ? 'dark' : 'light';
+      if (root.getAttribute('data-dbs-palette') !== next) {
+        root.setAttribute('data-dbs-palette', next);
+      }
+      setPalette(next);
+    };
+    sync();
+    const observer = new MutationObserver(sync);
+    observer.observe(root, {attributes: true, attributeFilter: ['data-theme', 'data-dbs-palette']});
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== PALETTE_STORAGE_KEY && event.key !== null) return;
+      const next = getStoredPalette(storage);
+      if (next) {
+        onChangeTheme?.(paletteToTheme(next));
+        applyPalette(next, root, storage);
+      } else {
+        root.setAttribute(
+          'data-dbs-palette',
+          root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light',
+        );
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('storage', onStorage);
+    };
+  }, [onChangeTheme]);
+
+  useEffect(() => {
+    if (!open) return;
+    const dismiss = (event: Event) => {
+      if (!switcherRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    document.addEventListener('pointerdown', dismiss);
+    document.addEventListener('focusin', dismiss);
+    return () => {
+      document.removeEventListener('pointerdown', dismiss);
+      document.removeEventListener('focusin', dismiss);
+    };
+  }, [open]);
 
   useEffect(() => {
     if (open) {
@@ -55,7 +105,29 @@ export default function ThemeSwitcher(): React.JSX.Element {
     message: 'Theme',
     description: 'Label of the theme switcher menu button',
   });
-  const currentName = PALETTE_LABELS[palette];
+  const names: Record<Palette, string> = {
+    light: translate({
+      id: 'components.themeSwitcher.light',
+      message: 'Light',
+      description: 'Light palette name',
+    }),
+    dark: translate({
+      id: 'components.themeSwitcher.dark',
+      message: 'Dark',
+      description: 'Dark palette name',
+    }),
+    cream: translate({
+      id: 'components.themeSwitcher.cream',
+      message: 'Cream',
+      description: 'Cream palette name',
+    }),
+    navy: translate({
+      id: 'components.themeSwitcher.navy',
+      message: 'Navy',
+      description: 'Navy palette name',
+    }),
+  };
+  const currentName = names[palette];
   const buttonName = translate(
     {
       id: 'components.themeSwitcher.button',
@@ -67,7 +139,8 @@ export default function ThemeSwitcher(): React.JSX.Element {
 
   const choose = (next: Palette) => {
     setPalette(next);
-    applyPalette(next, document.documentElement, window.localStorage);
+    onChangeTheme?.(paletteToTheme(next));
+    applyPalette(next, document.documentElement, getBrowserPaletteStorage(window));
     setOpen(false);
     buttonRef.current?.focus();
   };
@@ -95,6 +168,9 @@ export default function ThemeSwitcher(): React.JSX.Element {
       setOpen(false);
       buttonRef.current?.focus();
     } else if (event.key === 'Tab') {
+      // Keep the browser's forward Tab order anchored to a node that survives closing.
+      buttonRef.current?.focus();
+      if (event.shiftKey) event.preventDefault();
       setOpen(false);
     } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -103,14 +179,14 @@ export default function ThemeSwitcher(): React.JSX.Element {
   };
 
   return (
-    <div className={styles.switcher} data-dbs-component="Theme switcher">
+    <div ref={switcherRef} className={styles.switcher} data-dbs-component="Theme switcher">
       <button
         ref={buttonRef}
         type="button"
         className={styles.button}
         aria-haspopup="menu"
         aria-expanded={open}
-        aria-controls={menuId}
+        aria-controls={open ? menuId : undefined}
         aria-label={buttonName}
         onClick={() => setOpen(!open)}
         onKeyDown={onButtonKeyDown}
@@ -140,7 +216,7 @@ export default function ThemeSwitcher(): React.JSX.Element {
                 <span aria-hidden="true" className={styles.check}>
                   {checked ? '✓' : ''}
                 </span>
-                <span>{PALETTE_LABELS[name]}</span>
+                <span>{names[name]}</span>
               </li>
             );
           })}

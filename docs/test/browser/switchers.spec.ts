@@ -2,6 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
 import {PROFILES} from '../../config/profiles';
+import {BROWSER_ORIGIN} from '../../playwright.config';
 
 /**
  * B30 — the three global controls in the real navbar (THM-1, TOK-2, A11Y-29, DF-7).
@@ -13,7 +14,7 @@ import {PROFILES} from '../../config/profiles';
  * same-page locale switches, equivalent-page version switches, and keyboard with
  * visible focus throughout.
  */
-const ORIGIN = 'http://127.0.0.1:3100';
+const ORIGIN = BROWSER_ORIGIN;
 const BASE = PROFILES.dev.baseUrl;
 const HOME = `${ORIGIN}${BASE}`;
 const DOCS = `${ORIGIN}${BASE}docs/intro`;
@@ -110,7 +111,7 @@ test.describe('theme switcher (THM-1, TOK-2, A11Y-29)', () => {
 });
 
 test.describe('locale switcher (hreflang-consistent)', () => {
-  test('navigates to the same page in the target locale', async ({page}) => {
+  test('offers the same page in the target locale', async ({page}) => {
     await goto(page, HOME);
     // The locale toggle is Docusaurus' own dropdown, restyled by switchers.css.
     const toggle = page.locator('.navbar__item.dropdown > a.navbar__link').first();
@@ -121,17 +122,10 @@ test.describe('locale switcher (hreflang-consistent)', () => {
         '.dropdown__menu .dropdown__link[hreflang="ja"], .dropdown__menu .dropdown__link:has-text("日本語")',
       )
       .first();
-    if ((await japanese.count()) > 0) {
-      await japanese.click();
-      await page.waitForURL(/\/ja\/?$/);
-      expect(page.url()).toMatch(/\/ja\/?$/);
-    } else {
-      // Fallback: follow the Japanese alternate the page advertises (META-4).
-      const href = await page.locator('link[rel="alternate"][hreflang="ja"]').getAttribute('href');
-      expect(href).toMatch(/\/ja\/?$/);
-      await page.goto(href!);
-      expect(page.url()).toMatch(/\/ja\/?$/);
-    }
+    // The development server serves only English. Check the actual control's
+    // target here; the built-site suite follows it through a real localized page.
+    await expect(japanese).toHaveCount(1);
+    await expect(japanese).toHaveAttribute('href', /\/ja\/?$/);
   });
 
   test('is keyboard-operable with a visible name', async ({page}) => {
@@ -232,4 +226,99 @@ test.describe('axe, WCAG 2.2 AA', () => {
       expect(results.violations.map((v) => v.id)).toEqual([]);
     });
   }
+});
+
+test.describe('palette regressions', () => {
+  test('an explicit palette survives OS appearance changes', async ({page}) => {
+    await page.emulateMedia({colorScheme: 'light'});
+    await goto(page, HOME);
+    await themeButton(page).click();
+    await page.getByRole('menuitemradio', {name: 'Navy', exact: true}).click();
+    await page.emulateMedia({colorScheme: 'dark'});
+    await page.emulateMedia({colorScheme: 'light'});
+    // Allow the media-query change event to reach the framework listener.
+    await page.waitForTimeout(150);
+    await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+    await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', 'navy');
+  });
+
+  test('a query palette is the announced and checked palette', async ({page}) => {
+    await page.addInitScript(() => localStorage.setItem('dbs-palette', 'cream'));
+    await goto(page, `${HOME}?docusaurus-theme=dark`);
+    await expect(themeButton(page)).toHaveAccessibleName('Theme: Dark. Change theme');
+    await themeButton(page).click();
+    await expect(page.getByRole('menuitemradio', {checked: true})).toHaveText('✓Dark');
+  });
+
+  test('a denied storage getter does not break selection', async ({page}) => {
+    const errors: string[] = [];
+    page.on('pageerror', (error) => errors.push(error.message));
+    await page.addInitScript(() =>
+      Object.defineProperty(window, 'localStorage', {
+        get() {
+          throw new DOMException('Storage denied', 'SecurityError');
+        },
+      }),
+    );
+    await goto(page, HOME);
+    await themeButton(page).click();
+    await page.getByRole('menuitemradio', {name: 'Navy', exact: true}).click();
+    await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', 'navy');
+    expect(errors).toEqual([]);
+  });
+
+  test('outside pointer and focus dismiss without stealing focus', async ({page}) => {
+    await goto(page, HOME);
+    await themeButton(page).click();
+    await page.locator('h1').click();
+    await expect(themeButton(page)).toHaveAttribute('aria-expanded', 'false');
+    await themeButton(page).click();
+    const docs = page.locator('.navbar .navbar__link').first();
+    await docs.focus();
+    await expect(docs).toBeFocused();
+    await expect(themeButton(page)).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  test('Tab leaves the menu on a real control and Shift+Tab returns to its trigger', async ({
+    page,
+  }) => {
+    await goto(page, HOME);
+    await themeButton(page).focus();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Tab');
+    await expect(themeButton(page)).toHaveAttribute('aria-expanded', 'false');
+    expect(await page.evaluate(() => document.activeElement?.tagName)).not.toBe('BODY');
+    await themeButton(page).focus();
+    await page.keyboard.press('Enter');
+    await page.keyboard.press('Shift+Tab');
+    await expect(themeButton(page)).toBeFocused();
+  });
+
+  test('desktop and mobile controls announce the same palette', async ({page}) => {
+    await goto(page, HOME, 375);
+    await themeButton(page).click();
+    await page.getByRole('menuitemradio', {name: 'Navy', exact: true}).click();
+    await page.getByRole('button', {name: 'Toggle navigation bar'}).click();
+    const mobile = page.locator('.navbar-sidebar').getByRole('button', {name: /^Theme:/});
+    await expect(mobile).toHaveAccessibleName('Theme: Navy. Change theme');
+  });
+});
+
+test('system-following and same-family cross-tab palette changes stay synchronized', async ({
+  page,
+  context,
+}) => {
+  await page.emulateMedia({colorScheme: 'light'});
+  await goto(page, HOME);
+  await page.emulateMedia({colorScheme: 'dark'});
+  await expect(themeButton(page)).toHaveAccessibleName('Theme: Dark. Change theme');
+  const other = await context.newPage();
+  await goto(other, HOME);
+  await themeButton(other).click();
+  await other.getByRole('menuitemradio', {name: 'Cream', exact: true}).click();
+  await expect(themeButton(page)).toHaveAccessibleName('Theme: Cream. Change theme');
+  await themeButton(other).click();
+  await other.getByRole('menuitemradio', {name: 'Light', exact: true}).click();
+  await expect(themeButton(page)).toHaveAccessibleName('Theme: Light. Change theme');
+  await other.close();
 });

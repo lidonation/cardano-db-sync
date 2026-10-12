@@ -8,10 +8,13 @@ import {INVENTORY_ENV_VAR, INVENTORY_PATH} from './plugins/inventory';
  * inventory is never built into a profile) and audits it in a real browser: axe in four palettes
  * at three widths, every state rendered, keyboard behaviour. Run with `npm run test:components`.
  */
-const PORT = 3100;
-const ORIGIN = `http://127.0.0.1:${PORT}`;
+const PORT = Number(process.env.DBS_TEST_PORT ?? 3100);
+if (!Number.isInteger(PORT) || PORT < 1024 || PORT > 65535) {
+  throw new Error('DBS_TEST_PORT must be an integer from 1024 to 65535.');
+}
+export const BROWSER_ORIGIN = `http://127.0.0.1:${PORT}`;
 
-export const INVENTORY_URL = `${ORIGIN}${PROFILES.dev.baseUrl}${INVENTORY_PATH}`;
+export const INVENTORY_URL = `${BROWSER_ORIGIN}${PROFILES.dev.baseUrl}${INVENTORY_PATH}`;
 
 export default defineConfig({
   testDir: 'test/browser',
@@ -27,7 +30,7 @@ export default defineConfig({
   webServer: {
     command: `npx cross-env ${INVENTORY_ENV_VAR}=1 DOCS_PROFILE=dev docusaurus start --port ${PORT} --host 127.0.0.1 --no-open`,
     url: INVENTORY_URL,
-    reuseExistingServer: !process.env.CI,
+    reuseExistingServer: false,
     timeout: 240_000,
     stdout: 'ignore',
     stderr: 'pipe',

@@ -7,7 +7,7 @@ import {INVENTORY, codeName, shownStates} from '../components/inventory';
 import {RENDER} from './renderers';
 import styles from './styles.module.css';
 
-const PALETTES = ['light', 'dark', 'cream', 'navy'] as const;
+import {PALETTES, paletteToTheme} from '../lib/palette';
 
 /** Definitions drawn at full page width in the design. */
 const WIDE = new Set(['Navbar / Full', 'Navbar / Minimal', 'Section / Divider', 'Footer / Navy']);
@@ -22,14 +22,11 @@ const WIDE = new Set(['Navbar / Full', 'Navbar / Minimal', 'Section / Divider', 
  * Infima, `data-dbs-palette` for our tokens); the browser suite sets them directly.
  */
 export default function InventoryPage(): React.JSX.Element {
-  const [palette, setPalette] = useState<string>();
+  const [palette, setPalette] = useState<(typeof PALETTES)[number]>();
   useEffect(() => {
     if (palette) {
       // Both attributes, like the switcher (THM-1): the Infima family and the palette.
-      document.documentElement.setAttribute(
-        'data-theme',
-        palette === 'dark' || palette === 'navy' ? 'dark' : 'light',
-      );
+      document.documentElement.setAttribute('data-theme', paletteToTheme(palette));
       document.documentElement.setAttribute('data-dbs-palette', palette);
     }
   }, [palette]);
