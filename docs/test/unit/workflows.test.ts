@@ -18,6 +18,8 @@ interface Step {
   name?: string;
   run?: string;
   shell?: string;
+  uses?: string;
+  with?: Record<string, unknown>;
 }
 interface Job {
   steps?: Step[];
@@ -111,5 +113,24 @@ describe('scheduled-job alerts (NUM-4)', () => {
       }
     }
     expect(problems).toEqual([]);
+  });
+});
+
+describe('accessibility recording archive (B43)', () => {
+  it('writes both profile JSON reports and refuses an empty keyboard archive', async () => {
+    const manifest = JSON.parse(await fs.readFile(path.join(ROOT, 'docs/package.json'), 'utf8'));
+    const script = manifest.scripts['test:chrome'] as string;
+    for (const profile of ['dev', 'prod']) {
+      expect(script).toContain(`PLAYWRIGHT_JSON_OUTPUT_FILE=test-results/chrome-${profile}.json`);
+    }
+    expect(script.match(/--reporter=list,json/g)).toHaveLength(2);
+    const doc = yaml.load(
+      await fs.readFile(path.join(ROOT, '.github/workflows/docs-site.yml'), 'utf8'),
+    ) as Workflow;
+    const archive = Object.values(doc.jobs ?? {})
+      .flatMap((job) => job.steps ?? [])
+      .find((step) => step.with?.name === 'chrome-keyboard-recordings');
+    expect(archive?.with?.path).toBe('docs/test-results/chrome-*');
+    expect(archive?.with?.['if-no-files-found']).toBe('error');
   });
 });

@@ -99,6 +99,8 @@ export function NavbarFull({
     return () => wide.removeEventListener('change', closeOnWide);
   }, [open]);
   const onDrawerKey = (event: KeyboardEvent<HTMLElement>) => {
+    // A nested menu gets first refusal: its Escape returns to its own trigger.
+    if (event.defaultPrevented) return;
     if (event.key === 'Escape') {
       setOpen(false);
       menuButton.current?.focus();
@@ -131,7 +133,14 @@ export function NavbarFull({
     </ul>
   );
   return (
-    <header className={styles.navbar} data-dbs-component="Navbar / Full">
+    <header
+      className={styles.navbar}
+      data-dbs-component="Navbar / Full"
+      onBlur={(event) => {
+        // A nonmodal disclosure must release the page when keyboard focus leaves its chrome.
+        if (open && !event.currentTarget.contains(event.relatedTarget)) setOpen(false);
+      }}
+    >
       <div className={styles.bar}>
         <Link ref={home} className={styles.home} to={homeHref}>
           <Wordmark />

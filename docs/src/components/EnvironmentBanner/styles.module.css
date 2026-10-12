@@ -33,8 +33,3 @@
   color: var(--dbs-status-warning-text);
   text-decoration-thickness: 2px;
 }
-
-.link:focus-visible {
-  outline: var(--dbs-focus-ring);
-  outline-offset: var(--dbs-focus-offset);
-}

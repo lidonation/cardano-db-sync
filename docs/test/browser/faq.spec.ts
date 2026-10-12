@@ -108,6 +108,15 @@ test.describe('content', () => {
     await expect(page.locator('#faq-title')).toBeVisible();
   });
 
+  test('the first skip link focuses the FAQ main landmark', async ({page}) => {
+    await open(page, 1440);
+    await page.keyboard.press('Tab');
+    await expect(page.locator('a.dbs-skip-link')).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('main')).toBeFocused();
+    await expect(page.locator('main')).toHaveAttribute('id', 'dbs-main-content');
+  });
+
   test('one h1, and headings in order', async ({page}) => {
     await open(page, 1440);
     await expect(page.locator('main h1')).toHaveCount(1);

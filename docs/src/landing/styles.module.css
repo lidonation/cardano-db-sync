@@ -379,7 +379,6 @@
 }
 
 .faqItem {
-  scroll-margin-block-start: var(--ifm-navbar-height);
   /* the box bounds the question, which is the control (FLOOR-3, TOK-6) */
   border: 1px solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);

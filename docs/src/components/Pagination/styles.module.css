@@ -33,8 +33,6 @@
 .card[data-dbs-demo='pressed'] {
   background: var(--dbs-surface-accent-subtle);
 }
-
-.card:focus-visible,
 .card[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);
