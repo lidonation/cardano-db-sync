@@ -396,10 +396,7 @@ function Quickstart(): React.JSX.Element {
         <ol className={styles.steps}>
           {steps.map((step, index) => (
             <li key={step.title} className={styles.step}>
-              <span
-                className={`dbs-type-title ${shared.hexagon} ${styles.stepNumber}`}
-                aria-hidden="true"
-              >
+              <span className={`${shared.hexagon} ${styles.stepNumber}`} aria-hidden="true">
                 {index + 1}
               </span>
               <div className={styles.stepText}>

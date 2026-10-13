@@ -90,13 +90,6 @@
   composes: dbs-type-caption from global;
 }
 
-@media (max-width: 767px) {
-  .footer {
-    grid-template-columns: minmax(0, 1fr);
-    padding-inline: var(--dbs-space-16);
-  }
-}
-
 .brandWordmark {
   composes: dbs-type-title from global;
 }
