@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
+import {SURFACES, NAVBAR_MENU, FOOTER_MENU} from '../../src/data/surfaces';
+
 import {LOCALES} from '../../config/i18n';
 import {PROFILES, type ProfileName} from '../../config/profiles';
 import {PALETTES, type Palette} from '../../src/lib/palette';
@@ -608,7 +610,10 @@ for (const route of ['', 'docs/intro/', 'survey/results/']) {
       const expected = {light: '#ffffff', dark: '#0f1117', cream: '#fcfbf5', navy: '#011555'}[
         palette
       ];
-      expect(backgrounds.token.toLowerCase()).toBe(expected);
+      const token = backgrounds.token
+        .toLowerCase()
+        .replace(/^#([a-f\d])([a-f\d])([a-f\d])$/, '#$1$1$2$2$3$3');
+      expect(token).toBe(expected);
       const rgb = `rgb(${[1, 3, 5].map((offset) => parseInt(expected.slice(offset, offset + 2), 16)).join(', ')})`;
       expect(backgrounds.actual).toBe(rgb);
     });
@@ -621,7 +626,6 @@ test('every built surface has a chrome menu destination; unbuilt routes stay hid
   await open(page);
   const profile = (process.env.DBS_BUILT_PROFILE ?? 'dev') as ProfileName;
   const base = PROFILES[profile].baseUrl.replace(/\/$/, '');
-  const {SURFACES, NAVBAR_MENU, FOOTER_MENU} = await import('../../src/data/surfaces');
   const menu = page.locator('[data-dbs-component="Navbar / Full"] nav a, footer nav a');
   const hrefs = await menu.evaluateAll((links) =>
     links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, '')),
