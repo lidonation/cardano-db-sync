@@ -68,7 +68,13 @@ describe('measure', () => {
         css: size(css),
         js: size(js) + size('x'),
       });
-      expect(pages).toEqual([{page: 'index.html', bytes: size(html(base)) + size(css) + size(js)}]);
+      expect(pages).toEqual([
+        {
+          page: 'index.html',
+          bytes: size(html(base)) + size(css) + size(js),
+          htmlBytes: size(html(base)),
+        },
+      ]);
     },
   );
 
@@ -249,4 +255,57 @@ describe('complete site asset policy', () => {
       expect(lines.join('\n')).toContain(`over budget: total ${kind}`);
     },
   );
+});
+
+describe('per-page HTML budget', () => {
+  it('accepts exactly 20 KiB and rejects one byte over independently of initial assets', () => {
+    const limit = 20 * 1024;
+    expect(
+      overBudget(
+        {totals: {}, pages: [{page: 'a.html', bytes: limit, htmlBytes: limit}]},
+        {page: {html: limit, initial: 180 * 1024}},
+      ),
+    ).toEqual([]);
+    expect(
+      overBudget(
+        {totals: {}, pages: [{page: 'a.html', bytes: limit + 1, htmlBytes: limit + 1}]},
+        {page: {html: limit, initial: 180 * 1024}},
+      ),
+    ).toEqual([{what: 'HTML of a.html', bytes: limit + 1, limit}]);
+  });
+  it('still rejects combined payloads when HTML is small', () => {
+    expect(
+      overBudget(
+        {totals: {}, pages: [{page: 'a.html', bytes: 184321, htmlBytes: 100}]},
+        {page: {html: 20480, initial: 184320}},
+      ),
+    ).toEqual([{what: 'initial payload of a.html', bytes: 184321, limit: 184320}]);
+  });
+  it('fails closed if the HTML measurement is missing', () => {
+    expect(() =>
+      overBudget({totals: {}, pages: [{page: 'a.html', bytes: 100}]}, {page: {html: 20480}}),
+    ).toThrow('missing HTML measurement');
+  });
+  it('detects oversized HTML in a non-default locale through the CLI', async () => {
+    await write('index.html', '<p>default</p>');
+    await write('ja/index.html', '<p>locale</p>');
+    await write('ja/assets/main.js', 'x');
+    const lines: string[] = [];
+    expect(
+      await main(
+        [root],
+        {log: (m) => lines.push(m), error: (m) => lines.push(m)},
+        {page: {html: 1}},
+      ),
+    ).toBe(1);
+    expect(lines.join('\n')).toContain('over budget: HTML of index.html');
+  });
+  it('ships the approved 20 KiB HTML and 180 KiB combined limits', async () => {
+    const budget = parseBudget(
+      JSON.parse(
+        await fs.readFile(path.join(import.meta.dirname, '../../config/asset-budget.json'), 'utf8'),
+      ),
+    );
+    expect(budget.page).toEqual({html: 20480, initial: 184320});
+  });
 });
