@@ -62,7 +62,6 @@
   border: 0;
   background: none;
   color: var(--dbs-text-primary);
-  composes: dbs-type-mono-sm from global;
 }
 
 .was {
