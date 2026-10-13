@@ -9,41 +9,39 @@
   composes: body from './styles.module.css';
 }
 .configKey {
+  composes: dbs-type-mono from global;
   display: block;
   padding: 0;
   border: 0;
   background: none;
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-mono);
-  letter-spacing: var(--dbs-font-mono-tracking);
 }
 .tables {
+  composes: dbs-type-mono-sm from global;
   display: block;
   padding: 0;
   border: 0;
   background: none;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-mono-sm);
-  letter-spacing: var(--dbs-font-mono-sm-tracking);
 }
 .card[data-kind='Data option'] {
-  min-block-size: 108px;
+  min-block-size: var(--dbs-size-card-data-min);
 }
 .card[data-kind='Choice'] {
-  min-block-size: 136px;
+  min-block-size: var(--dbs-size-card-choice-min);
 }
 .card[data-kind='Option'] {
-  max-inline-size: 282px;
-  min-block-size: 150px;
+  max-inline-size: var(--dbs-size-card-option-max);
+  min-block-size: var(--dbs-size-card-option-min);
 }
 /* Selectable cards: Choice, Option and Data option. */
 
 .selectWrap {
   inline-size: 100%;
-  max-inline-size: 384px;
+  max-inline-size: var(--dbs-size-card-max);
 }
 .selectWrap:has([data-kind='Option']) {
-  max-inline-size: 282px;
+  max-inline-size: var(--dbs-size-card-option-max);
 }
 .select {
   cursor: pointer;
@@ -52,13 +50,8 @@
   border-color: var(--dbs-border-interactive);
 }
 .input {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
+  composes: visuallyHidden from '../shared/visually-hidden.module.css';
   margin: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 .selectText {
   display: flex;
@@ -80,11 +73,11 @@
   outline-offset: var(--dbs-focus-offset);
 }
 .select:has(.input:checked) {
-  border: 2px solid var(--dbs-border-selected);
+  border: var(--dbs-border-width-emphasis) solid var(--dbs-border-selected);
   background: var(--dbs-surface-accent-subtle);
 }
 .select[data-error] {
-  border: 2px solid var(--dbs-status-danger-text);
+  border: var(--dbs-border-width-emphasis) solid var(--dbs-status-danger-text);
 }
 .select:has(.input:disabled) {
   cursor: not-allowed;
@@ -108,9 +101,9 @@
   inset-inline-end: var(--dbs-space-16);
   display: grid;
   place-items: center;
-  inline-size: 24px;
-  block-size: 24px;
-  border: 1px solid var(--dbs-border-interactive);
+  inline-size: var(--dbs-space-24);
+  block-size: var(--dbs-space-24);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-on-selected);
 }
@@ -149,7 +142,7 @@
 
 /* Data option: the switch */
 .dataOption {
-  padding-inline-end: 120px;
+  padding-inline-end: var(--dbs-size-card-switch-reserve);
 }
 .switch {
   position: absolute;
@@ -162,21 +155,21 @@
 .track {
   position: relative;
   display: block;
-  inline-size: 38px;
-  block-size: 22px;
-  border: 1px solid var(--dbs-border-interactive);
+  inline-size: var(--dbs-size-switch-track-width);
+  block-size: var(--dbs-size-switch-track-height);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   background: var(--dbs-surface-sunken);
 }
 .knob {
   position: absolute;
-  inset-block-start: 2px;
-  inset-inline-start: 2px;
-  inline-size: 16px;
-  block-size: 16px;
-  border: 1px solid var(--dbs-border-interactive);
+  inset-block-start: var(--dbs-border-width-emphasis);
+  inset-inline-start: var(--dbs-border-width-emphasis);
+  inline-size: var(--dbs-space-16);
+  block-size: var(--dbs-space-16);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   border-radius: 50%;
   background: var(--dbs-surface-base);
-  transition: transform 150ms ease-out;
+  transition: transform var(--dbs-motion-feedback) ease-out;
 }
 .select:has(.input:checked) .track {
   border-color: var(--dbs-border-selected);
@@ -184,16 +177,15 @@
 }
 .select:has(.input:checked) .knob {
   border-color: var(--dbs-border-selected);
-  transform: translateX(16px);
+  transform: translateX(var(--dbs-space-16));
 }
 [dir='rtl'] .select:has(.input:checked) .knob {
-  transform: translateX(-16px);
+  transform: translateX(calc(-1 * var(--dbs-space-16)));
 }
 .switchWord {
-  min-inline-size: 3ch;
+  composes: dbs-type-label-sm from global;
+  min-inline-size: var(--dbs-size-switch-label-min);
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-label-sm);
-  letter-spacing: var(--dbs-font-label-sm-tracking);
 }
 .switchWord[data-word='on'],
 .select:has(.input:checked) .switchWord[data-word='off'] {

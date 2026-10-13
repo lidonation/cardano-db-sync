@@ -1,5 +1,6 @@
 .page {
-  padding: var(--dbs-space-64) max(var(--dbs-space-48), calc((100% - 1200px) / 2));
+  padding: var(--dbs-space-64)
+    max(var(--dbs-space-48), calc((100% - var(--dbs-layout-content-max)) / 2));
   color: var(--dbs-text-primary);
   overflow-wrap: anywhere;
 }
@@ -12,9 +13,8 @@
   letter-spacing: var(--dbs-font-heading-lg-tracking);
 }
 .kicker {
+  composes: dbs-type-label from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
 }
 .metrics,
 .provenance {
@@ -81,7 +81,7 @@
 .line {
   fill: none;
   stroke: var(--dbs-accent-primary-text);
-  stroke-width: 3;
+  stroke-width: var(--dbs-border-width-marker);
 }
 @media (max-width: 1023px) {
   .page {
@@ -119,8 +119,7 @@
   letter-spacing: var(--dbs-font-title-tracking);
 }
 .dateValue {
-  font: var(--dbs-font-body);
-  letter-spacing: var(--dbs-font-body-tracking);
+  composes: dbs-type-body from global;
 }
 .point {
   fill: var(--dbs-accent-primary-text);
@@ -135,8 +134,7 @@
 }
 
 .metricValue {
-  font: var(--dbs-font-heading-md);
-  letter-spacing: var(--dbs-font-heading-md-tracking);
+  composes: dbs-type-heading-md from global;
 }
 
 @media (max-width: 479px) {

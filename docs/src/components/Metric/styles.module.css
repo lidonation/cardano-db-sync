@@ -3,25 +3,23 @@
   flex-direction: column;
   gap: var(--dbs-space-8);
   min-inline-size: 0;
-  max-inline-size: 280px;
+  max-inline-size: var(--dbs-size-metric-max);
 }
 
 .value {
+  composes: dbs-type-heading-lg from global;
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-heading-lg);
-  letter-spacing: var(--dbs-font-heading-lg-tracking);
+
   font-variant-numeric: tabular-nums;
   overflow-wrap: anywhere;
 }
 
 .label {
+  composes: dbs-type-body-sm from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
 }
 
 .empty {
+  composes: dbs-type-body from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-body);
-  letter-spacing: var(--dbs-font-body-tracking);
 }
