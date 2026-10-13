@@ -1,5 +1,9 @@
 import React, {type ReactNode} from 'react';
 
+import routes from '@generated/routes';
+import useBaseUrl from '@docusaurus/useBaseUrl';
+import {gateMenu, routePaths} from '../../data/surfaces';
+
 import Link from '@docusaurus/Link';
 import {translate} from '@docusaurus/Translate';
 
@@ -20,6 +24,8 @@ export interface FooterColumn {
  * states; it holds build-time data only, so loading, error and empty do not apply — a column with
  * no links is not rendered.
  */
+const PATHS = routePaths(routes);
+
 export default function Footer({
   meta,
   columns,
@@ -34,10 +40,15 @@ export default function Footer({
   /** Pins an interaction state on the link with this `href`, for the inventory. */
   readonly demo?: {readonly href: string; readonly state: InteractionState};
 }): React.JSX.Element {
+  const baseUrl = useBaseUrl('/');
+  const builtColumns = columns.map((column) => ({
+    ...column,
+    links: gateMenu(column.links, PATHS, baseUrl),
+  }));
   return (
     <footer className={styles.footer} data-dbs-component="Footer">
       <div className={styles.brand}>
-        <Wordmark />
+        <Wordmark className={styles.brandWordmark} />
         <span className={styles.meta}>{meta}</span>
       </div>
       <nav
@@ -48,7 +59,7 @@ export default function Footer({
           description: 'Accessible name of the footer navigation',
         })}
       >
-        {columns
+        {builtColumns
           .filter((column) => column.links.length > 0)
           .map((column, index) => (
             <div key={index} className={styles.column}>

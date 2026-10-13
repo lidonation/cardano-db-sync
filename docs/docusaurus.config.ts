@@ -13,6 +13,7 @@ import inventoryPlugin, {layoutFixturePlugins} from './plugins/inventory';
 import palettePlugin from './plugins/palette';
 import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
+import {NAVBAR_MENU, FOOTER_MENU} from './src/data/surfaces';
 import {releaseFacts} from './src/data/release-facts';
 import {loadReleaseHistory} from './src/data/release-history';
 
@@ -123,14 +124,12 @@ const config: Config = {
     navbar: {
       title: 'Cardano DB Sync',
       items: [
-        {
-          type: 'docSidebar',
-          sidebarId: 'docsSidebar',
-          position: 'left',
-          label: 'Docs',
-        },
-        // B44-b: the Ecosystem page, an app page beside the docs.
-        {to: '/ecosystem', label: 'Ecosystem', position: 'left'},
+        ...NAVBAR_MENU.map((item) => ({
+          to: item.href,
+          ...(item.href === NAVBAR_MENU[0].href ? {activeBasePath: '/docs'} : {}),
+          label: item.label,
+          position: 'left' as const,
+        })),
         // B30: the three global controls share one discipline (THM-1, A11Y-29, DF-7).
         // The theme switcher is the swizzled ColorModeToggle (four palettes); locale and
         // version ride on Docusaurus' own dropdowns so same-page navigation (hreflang
@@ -146,27 +145,17 @@ const config: Config = {
     },
     footer: {
       style: 'light',
-      links: [
-        {
-          title: 'Docs',
-          items: [{label: 'Introduction', to: '/docs/intro'}],
-        },
-        {
-          title: 'Project',
-          items: [
-            {label: 'GitHub', href: profile.repoUrl},
-            {label: 'Releases', href: `${profile.repoUrl}/releases`},
-            {label: 'Updates', to: '/updates'},
-          ],
-        },
-        {
-          title: 'Community',
-          items: [
-            {label: 'Discord #db-sync', href: 'https://discord.com/invite/inter-sect'},
-            {label: 'Issues', href: `${profile.repoUrl}/issues`},
-          ],
-        },
-      ],
+      links: FOOTER_MENU.map((column) => ({
+        title: column.title,
+        items: column.items.map((item) => ({
+          label: item.label,
+          ...(item.href.startsWith('/')
+            ? {to: item.href}
+            : {
+                href: item.href.replace(/^repository/, profile.repoUrl),
+              }),
+        })),
+      })),
       copyright: `Cardano DB Sync is maintained by Intersect. Built ${new Date().getFullYear()}.`,
     },
     colorMode: {

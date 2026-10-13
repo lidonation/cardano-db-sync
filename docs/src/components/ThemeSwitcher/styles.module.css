@@ -1,6 +1,6 @@
 /* Theme switcher (B30) — the four-palette menu. Token values only; the boundary is
    border.interactive (FLOOR-3), the ring is the global focus ring (FLOOR-4), every row is
-   44px (DF-6/NAV-4). The checkmark pairs the colour cue so selection is never colour
+   var(--dbs-layout-target-min) (DF-6/NAV-4). The checkmark pairs the colour cue so selection is never colour
    alone (FLOOR-6). */
 .switcher {
   position: relative;
@@ -11,16 +11,15 @@
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
-  min-block-size: 44px;
-  min-inline-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
+  min-inline-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-12);
-  border: 1px solid var(--dbs-border-interactive);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   border-radius: var(--dbs-radius-md);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
   cursor: pointer;
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
   white-space: nowrap;
 }
 
@@ -33,10 +32,10 @@
 }
 
 .dot {
-  inline-size: 12px;
-  block-size: 12px;
+  inline-size: var(--dbs-space-12);
+  block-size: var(--dbs-space-12);
   flex: none;
-  border: 1px solid var(--dbs-border-interactive);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   border-radius: var(--dbs-radius-pill);
   background: var(--dbs-surface-sunken);
 }
@@ -54,23 +53,23 @@
 }
 
 .buttonText {
-  color: var(--dbs-text-primary);
+  color: var(--dbs-text-secondary);
 }
 
 .current {
-  color: var(--dbs-text-secondary);
+  display: none;
 }
 
 .menu {
   position: absolute;
   inset-block-start: calc(100% + var(--dbs-space-8));
   inset-inline-end: 0;
-  z-index: 10;
-  min-inline-size: 200px;
+  z-index: var(--dbs-layer-raised);
+  min-inline-size: var(--dbs-size-chrome-dropdown);
   margin: 0;
   padding: var(--dbs-space-8);
   list-style: none;
-  border: 1px solid var(--dbs-border-interactive);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   border-radius: var(--dbs-radius-md);
   background: var(--dbs-surface-base);
 }
@@ -79,13 +78,12 @@
   display: flex;
   align-items: center;
   gap: var(--dbs-space-8);
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-12);
   border-radius: var(--dbs-radius-sm);
   color: var(--dbs-text-primary);
   cursor: pointer;
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
 }
 
 .option:hover {
@@ -93,11 +91,10 @@
 }
 
 .check {
-  inline-size: 16px;
+  inline-size: var(--dbs-space-16);
   flex: none;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
   text-align: center;
 }
 
@@ -110,23 +107,18 @@
 @media (max-width: 767px) {
   .button {
     justify-content: center;
-    min-inline-size: 44px;
+    min-inline-size: var(--dbs-layout-target-min);
     padding: 0;
   }
 
   .buttonText,
   .current {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    display: none;
   }
 
   .menu {
     position: fixed;
-    inset-block-start: 72px;
+    inset-block-start: var(--dbs-layout-navbar-height);
     inset-inline: var(--dbs-space-16);
   }
 }

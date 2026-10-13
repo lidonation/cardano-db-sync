@@ -1,6 +1,9 @@
 import React, {useEffect, type ReactNode} from 'react';
 
 import {useLocation} from '@docusaurus/router';
+import routes from '@generated/routes';
+import {gateMenu, routePaths} from '../../data/surfaces';
+
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import {useThemeConfig} from '@docusaurus/theme-common';
 import {
@@ -25,6 +28,8 @@ import styles from './styles.module.css';
  * the bar from 1280, in the drawer below). Search joins when B31 provides something to open. The
  * navbar is remounted per route, so the drawer closes after a navigation.
  */
+const PATHS = routePaths(routes);
+
 export default function Navbar(): ReactNode {
   useEffect(() => {
     const navbar = document.querySelector<HTMLElement>('.navbar');
@@ -76,7 +81,9 @@ export default function Navbar(): ReactNode {
   const versions = useDocsVersionCandidates(undefined);
   const {activeDoc} = useActiveDocContext(undefined);
   const nav = deriveNav(
-    items as NavbarItemConfig[],
+    (items as NavbarItemConfig[]).filter(
+      (item) => !item.to || gateMenu([{href: item.to}], PATHS, baseUrl).length > 0,
+    ),
     pathname,
     baseUrl,
     resolveDocsState(versions, activeDoc),

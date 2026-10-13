@@ -1,7 +1,12 @@
-/* Navbar / Full and Navbar / Minimal — 72px (`--ifm-navbar-height`), a 1px rule below. */
+:global(:root) {
+  --dbs-navbar-bar-size: var(--dbs-layout-navbar-height);
+  --dbs-navbar-top: 0;
+}
+
+/* Navbar / Full and Navbar / Minimal — var(--dbs-layout-navbar-height) (`--ifm-navbar-height`), a 1px rule below. */
 .navbar {
   background: var(--dbs-surface-base);
-  border-block-end: 1px solid var(--dbs-border-default);
+  border-block-end: var(--dbs-border-width-hairline) solid var(--dbs-border-default);
   color: var(--dbs-text-primary);
 }
 
@@ -11,14 +16,14 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--dbs-space-24);
-  min-block-size: 72px;
+  min-block-size: var(--dbs-layout-navbar-height);
   padding: 0 var(--dbs-space-48);
 }
 
 .home {
   display: inline-flex;
   align-items: center;
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   color: var(--dbs-text-primary);
   text-decoration: none;
 }
@@ -35,11 +40,10 @@
   position: relative;
   display: inline-flex;
   align-items: center;
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-12);
-  color: var(--dbs-text-primary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  color: var(--dbs-text-secondary);
+  composes: dbs-type-label from global;
   text-decoration: none;
 }
 
@@ -65,12 +69,16 @@
   outline-offset: var(--dbs-focus-offset);
 }
 
+.link[aria-current='page'] {
+  color: var(--dbs-text-primary);
+}
+
 /* the current section: a 2px bar under the label */
 .link[aria-current='page']::after {
   content: '';
   position: absolute;
-  inset: auto var(--dbs-space-12) 6px;
-  block-size: 2px;
+  inset: auto var(--dbs-space-12) calc(var(--dbs-space-8) - var(--dbs-border-width-emphasis));
+  block-size: var(--dbs-border-width-emphasis);
   background: var(--dbs-accent-primary);
 }
 
@@ -85,22 +93,21 @@
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-12);
-  border: 1px solid var(--dbs-border-interactive);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
   cursor: pointer;
 }
 
 .search {
-  min-inline-size: 220px;
+  min-inline-size: var(--dbs-size-chrome-search-wide);
 }
 
 .searchText {
   color: var(--dbs-text-placeholder);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
+  composes: dbs-type-body-sm from global;
 }
 
 .searchIcon,
@@ -109,19 +116,17 @@
 }
 
 .menuText {
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
 }
 
 .github {
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-8);
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
   text-decoration: none;
 }
 
@@ -139,7 +144,7 @@
   gap: var(--dbs-space-8);
   margin-block-start: var(--dbs-space-12);
   padding-block-start: var(--dbs-space-12);
-  border-block-start: 1px solid var(--dbs-border-interactive);
+  border-block-start: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
 }
 
 .drawer {
@@ -174,33 +179,28 @@
 
   /* the GitHub link goes icon-only; its word stays its name (A11Y-17) */
   .githubText {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    display: none;
   }
 
   .github {
     justify-content: center;
-    min-inline-size: 44px;
+    min-inline-size: var(--dbs-layout-target-min);
     padding: 0;
   }
 
   .search {
-    min-inline-size: 240px;
+    min-inline-size: var(--dbs-size-chrome-search-medium);
   }
 
   .drawer:not([hidden]) {
     display: block;
     max-block-size: calc(
-      100dvh - var(--dbs-navbar-bar-size, var(--ifm-navbar-height)) - var(--dbs-navbar-top, 0px) -
-        1px
+      100dvh - var(--dbs-navbar-bar-size, var(--ifm-navbar-height)) - var(--dbs-navbar-top, 0) -
+        var(--dbs-border-width-hairline)
     );
     overflow-y: auto;
     padding: var(--dbs-space-8) var(--dbs-space-32) var(--dbs-space-16);
-    border-block-start: 1px solid var(--dbs-border-default);
+    border-block-start: var(--dbs-border-width-hairline) solid var(--dbs-border-default);
   }
 
   .drawer .links {
@@ -216,11 +216,11 @@
   }
 
   .search {
-    min-inline-size: 180px;
+    min-inline-size: var(--dbs-size-chrome-search-small);
   }
 }
 
-/* xs: icon-only search and menu, 44px targets */
+/* xs: icon-only search and menu, var(--dbs-layout-target-min) targets */
 @media (max-width: 767px) {
   .bar {
     gap: var(--dbs-space-8);
@@ -232,7 +232,7 @@
   }
 
   .search {
-    min-inline-size: 44px;
+    min-inline-size: var(--dbs-layout-target-min);
     justify-content: center;
     padding: 0;
   }
@@ -244,12 +244,7 @@
 
   /* the word leaves the screen but stays the button's name (A11Y-17) */
   .menuText {
-    position: absolute;
-    inline-size: 1px;
-    block-size: 1px;
-    overflow: hidden;
-    clip-path: inset(50%);
-    white-space: nowrap;
+    display: none;
   }
 
   .searchIcon,
@@ -267,7 +262,7 @@
 
   .menu {
     justify-content: center;
-    min-inline-size: 44px;
+    min-inline-size: var(--dbs-layout-target-min);
     padding: 0;
   }
 
@@ -286,4 +281,20 @@
 .drawer :global(.dropdown--show .dropdown__menu),
 .drawer :global(.dropdown--hoverable:hover .dropdown__menu) {
   display: block;
+}
+
+/* At the wide tier, chrome shares the landing content edges. */
+@media (min-width: 1280px) {
+  .bar {
+    display: grid;
+    grid-template-columns: var(--dbs-size-chrome-nav-brand-track) auto minmax(0, 1fr);
+    gap: 0;
+    padding-inline: max(var(--dbs-space-48), calc((100% - var(--dbs-layout-content-max)) / 2));
+  }
+  .home {
+    justify-self: start;
+  }
+  .tools {
+    justify-self: end;
+  }
 }

@@ -273,7 +273,15 @@
       "updates-panel-min": "560px",
       "inventory-cell-min": "300px",
       "card-use-min": "190px",
-      "tabs-hit-outset": "7px"
+      "tabs-hit-outset": "7px",
+      "chrome-footer-columns": "700px",
+      "chrome-footer-track": "240px",
+      "chrome-nav-brand-track": "300px",
+      "chrome-search-wide": "220px",
+      "chrome-search-medium": "240px",
+      "chrome-search-small": "180px",
+      "chrome-dropdown": "200px",
+      "chrome-footer-column-min": "160px"
     }
   },
   "dark": {
