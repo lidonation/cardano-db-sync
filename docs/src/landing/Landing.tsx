@@ -74,7 +74,7 @@ function Hero(): React.JSX.Element {
             description: 'Landing hero eyebrow',
           })}
         </Eyebrow>
-        <h1 id="landing-title" className={`dbs-type-display-hero ${styles.title}`}>
+        <h1 id="landing-title" className={styles.title}>
           <span className={styles.titleLine}>
             {translate({id: 'landing.hero.title1', message: 'Follow the chain.'})}
           </span>{' '}
@@ -82,7 +82,7 @@ function Hero(): React.JSX.Element {
             {translate({id: 'landing.hero.title2', message: 'Query it in SQL.'})}
           </span>
         </h1>
-        <p className={`dbs-type-body ${styles.lead}`}>
+        <p className={styles.lead}>
           {translate({
             id: 'landing.hero.lead',
             message:
@@ -133,7 +133,7 @@ function Facts(): React.JSX.Element {
       <BandEdge />
       <div className={styles.inner}>
         <div className={styles.headRow}>
-          <h2 id="landing-facts" className={`dbs-type-eyebrow ${styles.eyebrow}`}>
+          <h2 id="landing-facts" className={styles.eyebrow}>
             <span aria-hidden="true">//{' '}</span>
             {translate({
               id: 'landing.facts.eyebrow',
@@ -185,10 +185,10 @@ function Pipeline(): React.JSX.Element {
     <section className={styles.section} aria-labelledby="landing-how">
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.how.eyebrow', message: 'how it works'})}</Eyebrow>
-        <h2 id="landing-how" className={`dbs-type-heading-lg ${styles.heading}`}>
+        <h2 id="landing-how" className={styles.heading}>
           {translate({id: 'landing.how.title', message: 'How it works'})}
         </h2>
-        <p className={`dbs-type-body ${styles.intro}`}>
+        <p className={styles.intro}>
           {translate({
             id: 'landing.how.intro',
             message:
@@ -199,7 +199,7 @@ function Pipeline(): React.JSX.Element {
           {steps.map((step, index) => (
             <li key={step.name} className={styles.stage}>
               <StageIcon index={index} />
-              <span className={`dbs-type-eyebrow ${styles.stageName}`}>{step.name}</span>
+              <span className={styles.stageName}>{step.name}</span>
               <span className={`dbs-type-caption ${styles.stageBody}`}>{step.body}</span>
               {index < steps.length - 1 && (
                 <span aria-hidden="true" className={styles.stageArrow} />
@@ -264,7 +264,7 @@ function UseCases(): React.JSX.Element {
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.use.eyebrow', message: 'use cases'})}</Eyebrow>
         <div className={styles.headRow}>
-          <h2 id="landing-use" className={`dbs-type-heading-lg ${styles.heading}`}>
+          <h2 id="landing-use" className={styles.heading}>
             {translate({
               id: 'landing.use.title',
               message: 'Built for everything that reads the chain',
@@ -318,7 +318,7 @@ function Queries(): React.JSX.Element {
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.queries.eyebrow', message: 'sample queries'})}</Eyebrow>
         <div className={styles.headRow}>
-          <h2 id="landing-queries" className={`dbs-type-heading-lg ${styles.heading}`}>
+          <h2 id="landing-queries" className={styles.heading}>
             {translate({id: 'landing.queries.title', message: 'Your chain, one query away'})}
           </h2>
         </div>
@@ -383,10 +383,10 @@ function Quickstart(): React.JSX.Element {
       <BandEdge />
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.quick.eyebrow', message: 'quickstart'})}</Eyebrow>
-        <h2 id="landing-quick" className={`dbs-type-heading-lg ${styles.heading}`}>
+        <h2 id="landing-quick" className={styles.heading}>
           {translate({id: 'landing.quick.title', message: 'Up and running in three steps'})}
         </h2>
-        <p className={`dbs-type-body ${styles.intro}`}>
+        <p className={styles.intro}>
           {translate({
             id: 'landing.quick.prerequisites',
             message:
@@ -403,8 +403,8 @@ function Quickstart(): React.JSX.Element {
                 {index + 1}
               </span>
               <div className={styles.stepText}>
-                <h3 className={`dbs-type-title ${styles.stepTitle}`}>{step.title}</h3>
-                <p className={`dbs-type-body-sm ${styles.stepBody}`}>{step.body}</p>
+                <h3 className={styles.stepTitle}>{step.title}</h3>
+                <p className={styles.stepBody}>{step.body}</p>
               </div>
               <Command text={step.command} surface="raised" />
             </li>
@@ -424,7 +424,7 @@ function Faq(): React.JSX.Element {
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.faq.eyebrow', message: 'faq'})}</Eyebrow>
         <div className={styles.headRow}>
-          <h2 id="landing-faq" className={`dbs-type-heading-lg ${styles.heading}`}>
+          <h2 id="landing-faq" className={styles.heading}>
             {translate({id: 'landing.faq.title', message: 'Frequently asked questions'})}
           </h2>
           <TextLink href={surface('faq')}>
@@ -434,12 +434,12 @@ function Faq(): React.JSX.Element {
         <div className={styles.faq}>
           {faqItems(translate).map((item, index) => (
             <details key={item.question} className={styles.faqItem} open={index === 0}>
-              <summary className={`dbs-type-label ${styles.faqQuestion}`}>
+              <summary className={styles.faqQuestion}>
                 <span>{item.question}</span>
                 <Icon name="plus" size={16} className={styles.faqPlus} />
                 <Icon name="minus" size={16} className={styles.faqMinus} />
               </summary>
-              <p className={`dbs-type-caption ${styles.faqAnswer}`}>{item.answer}</p>
+              <p className={styles.faqAnswer}>{item.answer}</p>
             </details>
           ))}
         </div>
@@ -461,13 +461,13 @@ function Community(): React.JSX.Element {
       </span>
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.community.eyebrow', message: 'community'})}</Eyebrow>
-        <h2 id="landing-community" className={`dbs-type-heading-lg ${styles.heading}`}>
+        <h2 id="landing-community" className={styles.heading}>
           {translate({
             id: 'landing.community.title',
             message: 'Run by the community, for the community',
           })}
         </h2>
-        <p className={`dbs-type-body ${styles.intro}`}>
+        <p className={styles.intro}>
           {translate({
             id: 'landing.community.body',
             message:
@@ -487,7 +487,7 @@ function Community(): React.JSX.Element {
               {translate({id: 'landing.cta.issues', message: 'Report an issue'})}
             </Button>
           )}
-          <Link className={`dbs-type-label ${styles.discord}`} to={DISCORD_URL}>
+          <Link className={styles.discord} to={DISCORD_URL}>
             {translate({id: 'landing.cta.discord', message: 'Discord #db-sync'})}
             <Icon name="external" size={12} />
           </Link>

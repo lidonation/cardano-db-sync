@@ -89,3 +89,17 @@
   position: absolute;
   inset: calc(-1 * (var(--dbs-space-8) - var(--dbs-border-width-hairline))) 0;
 }
+
+/* Recovery instructions stay visible and wrap without widening a narrow command. */
+.wrap[data-variant='plain']:has(.copy[data-state='failed']) {
+  flex: 1;
+  min-inline-size: 0;
+}
+.wrap[data-variant='plain'] .copy[data-state='failed'] {
+  max-inline-size: 100%;
+  white-space: normal;
+}
+.wrap[data-variant='plain'] .copy[data-state='failed'] span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
+}

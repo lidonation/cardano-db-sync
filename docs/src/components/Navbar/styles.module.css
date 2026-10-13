@@ -1,6 +1,6 @@
 :global(:root) {
   --dbs-navbar-bar-size: var(--dbs-layout-navbar-height);
-  --dbs-navbar-top: 0;
+  --dbs-navbar-top: 0px;
 }
 
 /* Navbar / Full and Navbar / Minimal — var(--dbs-layout-navbar-height) (`--ifm-navbar-height`), a 1px rule below. */
@@ -195,7 +195,7 @@
   .drawer:not([hidden]) {
     display: block;
     max-block-size: calc(
-      100dvh - var(--dbs-navbar-bar-size, var(--ifm-navbar-height)) - var(--dbs-navbar-top, 0) -
+      100dvh - var(--dbs-navbar-bar-size, var(--ifm-navbar-height)) - var(--dbs-navbar-top, 0px) -
         var(--dbs-border-width-hairline)
     );
     overflow-y: auto;

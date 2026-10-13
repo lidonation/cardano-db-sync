@@ -121,7 +121,11 @@ export default function CodeCopy({
           name={state === 'copied' ? 'check' : state === 'failed' ? 'alert' : 'copy'}
           size={12}
         />
-        <span>{state === 'copying' || state === 'copied' ? words[state] : words.idle}</span>
+        <span>
+          {state === 'copying' || state === 'copied' || (variant === 'plain' && state === 'failed')
+            ? words[state]
+            : words.idle}
+        </span>
       </button>
       {/* The live region is always present so the outcome is announced; "Copied" is already on
           the button, so only the failure is also shown in words beside it. */}

@@ -28,6 +28,10 @@
 .section {
   padding-block-start: var(--dbs-space-96);
 }
+/* Standalone FAQ and Ecosystem pages end on a plain section. */
+.section:last-child {
+  padding-block-end: var(--dbs-space-96);
+}
 .dark,
 .warm {
   position: relative;
@@ -359,7 +363,7 @@
   align-items: center;
   justify-content: space-between;
   gap: var(--dbs-space-8);
-  block-size: var(--dbs-layout-badge-inline);
+  min-block-size: var(--dbs-layout-badge-inline);
   margin-inline: calc(-1 * var(--dbs-space-24));
   padding-inline: var(--dbs-space-24) var(--dbs-space-12);
   background: var(--dbs-surface-sunken);
@@ -367,6 +371,7 @@
 }
 .queryHeader > :last-child {
   flex: none;
+  margin-block: calc(-1 * var(--dbs-border-width-emphasis));
 }
 .sql {
   margin: var(--dbs-space-24) 0 0;
@@ -475,6 +480,7 @@
   color: var(--dbs-text-secondary);
 }
 .discord {
+  composes: dbs-type-label from global;
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
@@ -542,6 +548,14 @@
   }
 }
 @media (max-width: 767px) {
+  .dark[aria-labelledby='landing-facts'] .headRow {
+    display: flex;
+    align-items: flex-start;
+  }
+  .dark[aria-labelledby='landing-facts'] .headRow > a {
+    position: static;
+    transform: none;
+  }
   .landing {
     --dbs-landing-margin: var(--dbs-space-16);
     --dbs-rail-inset: var(--dbs-space-8);

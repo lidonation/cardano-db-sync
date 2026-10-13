@@ -339,3 +339,46 @@ test.describe('locked Landing 1440 contract', () => {
     });
   }
 });
+
+test('expanded translated copy reflows without overlapping facts or query content', async ({
+  page,
+}) => {
+  await open(page, 320);
+  await page.evaluate(() => {
+    document.querySelector('#landing-facts')!.textContent =
+      'Aktueller Stand dieser Veröffentlichung';
+    const header = document.querySelector('[data-kind="Query"] > div')!;
+    header.querySelector('span')!.textContent =
+      'Wie hoch ist das aktuell verfügbare Guthaben einer beliebigen Adresse in dieser Datenbank?';
+  });
+  const layout = await page.evaluate(() => {
+    const facts = document.querySelector('#landing-facts')!;
+    const link = facts.parentElement!.querySelector('a')!;
+    const range = document.createRange();
+    range.selectNodeContents(facts);
+    const f = range.getBoundingClientRect();
+    const l = link.getBoundingClientRect();
+    const header = document.querySelector('[data-kind="Query"] > div')!;
+    const title = header.querySelector('span')!;
+    const t = title.getBoundingClientRect();
+    const sql = header.nextElementSibling!.getBoundingClientRect();
+    return {
+      factsOverlap: f.left < l.right && f.right > l.left && f.top < l.bottom && f.bottom > l.top,
+      titleBottom: t.bottom,
+      sqlTop: sql.top,
+    };
+  });
+  expect(layout.factsOverlap).toBe(false);
+  expect(layout.titleBottom).toBeLessThanOrEqual(layout.sqlTop);
+});
+
+test('standalone FAQ keeps space above the footer', async ({page}) => {
+  await open(page, 1440);
+  await page.goto(new URL('faq', test.info().project.use.baseURL ?? SITE_URL).href);
+  await page.locator('#faq-title').waitFor();
+  const padding = await page
+    .locator('main section')
+    .last()
+    .evaluate((el) => getComputedStyle(el).paddingBlockEnd);
+  expect(padding).toBe('96px');
+});

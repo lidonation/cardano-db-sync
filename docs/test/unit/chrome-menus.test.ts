@@ -1,3 +1,4 @@
+import {readFileSync} from 'node:fs';
 import {describe, expect, it} from 'vitest';
 
 import {FOOTER_MENU, NAVBAR_MENU, SURFACES, gateMenu, routePaths} from '../../src/data/surfaces';
@@ -47,4 +48,10 @@ describe('chrome route gating', () => {
       'Introduction',
     ]);
   });
+});
+
+it('keeps Docs as a version-aware sidebar destination', () => {
+  const config = readFileSync(new URL('../../docusaurus.config.ts', import.meta.url), 'utf8');
+  expect(config).toContain("type: 'docSidebar'");
+  expect(config).toContain("sidebarId: 'docsSidebar'");
 });

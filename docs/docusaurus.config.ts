@@ -125,8 +125,9 @@ const config: Config = {
       title: 'Cardano DB Sync',
       items: [
         ...NAVBAR_MENU.map((item) => ({
-          to: item.href,
-          ...(item.href === NAVBAR_MENU[0].href ? {activeBasePath: '/docs'} : {}),
+          ...(item.href === NAVBAR_MENU[0].href
+            ? {type: 'docSidebar' as const, sidebarId: 'docsSidebar'}
+            : {to: item.href}),
           label: item.label,
           position: 'left' as const,
         })),
