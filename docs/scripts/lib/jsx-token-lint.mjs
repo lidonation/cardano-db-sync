@@ -68,24 +68,42 @@ export function findJsxTokenProblems(file, source) {
     ts.isStringLiteralLike(node) ||
     ts.isNumericLiteral(node) ||
     (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand));
-  const inspectObject = (node, seen = new Set()) => {
-    if (!ts.isObjectLiteralExpression(node) || seen.has(node)) return;
-    seen.add(node);
-    for (const p of node.properties) {
-      if (ts.isSpreadAssignment(p)) {
-        inspectObject(resolve(p.expression), seen);
-        continue;
+  const shorthandValue = (p) => {
+    const declaration = checker.getShorthandAssignmentValueSymbol(p)?.valueDeclaration;
+    return declaration && ts.isVariableDeclaration(declaration) && declaration.initializer
+      ? declaration.initializer
+      : p.name;
+  };
+  // Unknown spreads can overwrite any earlier field. Leave those values caller-owned;
+  // explicit fields appearing after the spread are still statically checked.
+  const collectObject = (expression, fields, seen = new Set()) => {
+    const object = resolve(expression);
+    if (!ts.isObjectLiteralExpression(object) || seen.has(object)) {
+      fields.clear();
+      return;
+    }
+    seen.add(object);
+    for (const p of object.properties) {
+      if (ts.isSpreadAssignment(p)) collectObject(p.expression, fields, seen);
+      else if (ts.isPropertyAssignment(p) || ts.isShorthandPropertyAssignment(p)) {
+        if (ts.isComputedPropertyName(p.name)) {
+          fields.clear();
+          continue;
+        }
+        const name = p.name.getText(ast).replace(/^['"]|['"]$/g, '');
+        fields.set(name, {
+          expression: ts.isShorthandPropertyAssignment(p) ? shorthandValue(p) : p.initializer,
+          location: p,
+        });
       }
-      if (!ts.isPropertyAssignment(p) && !ts.isShorthandPropertyAssignment(p)) continue;
-      const name = p.name.getText(ast).replace(/^['"]|['"]$/g, '');
-      const v = ts.isShorthandPropertyAssignment(p)
-        ? (() => {
-            const declaration = checker.getShorthandAssignmentValueSymbol(p)?.valueDeclaration;
-            return declaration && ts.isVariableDeclaration(declaration) && declaration.initializer
-              ? resolve(declaration.initializer)
-              : p.name;
-          })()
-        : resolve(p.initializer);
+    }
+    seen.delete(object);
+  };
+  const inspectObject = (node) => {
+    const fields = new Map();
+    collectObject(node, fields);
+    for (const [name, {expression, location: p}] of fields) {
+      const v = resolve(expression);
       if (!literal(v)) continue;
       const value = (ts.isStringLiteralLike(v) ? v.text : v.getText(ast))
         .replace(/url\([^)]*\)/gi, '')
@@ -133,39 +151,29 @@ export function findJsxTokenProblems(file, source) {
         `raw JSX ${name} - use --dbs-icon-* / --dbs-size-* through a src/lib token constant or props`,
       );
   };
-  const inspectProps = (tag, expression, seen = new Set()) => {
-    const object = resolve(expression);
-    if (!ts.isObjectLiteralExpression(object) || seen.has(object)) return;
-    seen.add(object);
-    for (const p of object.properties) {
-      if (ts.isSpreadAssignment(p)) {
-        inspectProps(tag, p.expression, seen);
-      } else if (ts.isPropertyAssignment(p)) {
-        inspectAttribute(tag, p.name.getText(ast).replace(/^['"]|['"]$/g, ''), p.initializer, p);
-      } else if (ts.isShorthandPropertyAssignment(p)) {
-        const declaration = checker.getShorthandAssignmentValueSymbol(p)?.valueDeclaration;
-        const value =
-          declaration && ts.isVariableDeclaration(declaration) && declaration.initializer
-            ? declaration.initializer
-            : p.name;
-        inspectAttribute(tag, p.name.text, value, p);
-      }
-    }
-  };
   const visit = (node) => {
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       const tag = node.tagName.getText(ast);
+      const fields = new Map();
       for (const a of node.attributes.properties) {
         if (ts.isJsxSpreadAttribute(a)) {
-          inspectProps(tag, a.expression);
+          collectObject(a.expression, fields);
           continue;
         }
-        if (!ts.isJsxAttribute(a) || !a.initializer) continue;
+        if (!ts.isJsxAttribute(a)) continue;
+        const name = a.name.getText(ast);
+        // Boolean shorthand attributes overwrite earlier values too.
+        if (!a.initializer) {
+          fields.delete(name);
+          continue;
+        }
         const expression = ts.isJsxExpression(a.initializer)
           ? a.initializer.expression
           : a.initializer;
-        if (expression) inspectAttribute(tag, a.name.getText(ast), expression, a);
+        if (expression) fields.set(name, {expression, location: a});
       }
+      for (const [name, {expression, location}] of fields)
+        inspectAttribute(tag, name, expression, location);
     }
     ts.forEachChild(node, visit);
   };

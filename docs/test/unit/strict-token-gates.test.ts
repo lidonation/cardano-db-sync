@@ -273,3 +273,25 @@ describe('SVG viewport and JSX prop spreads', () => {
     expect(findJsxTokenProblems('a.tsx', source)).toEqual([]),
   );
 });
+
+describe('last-write precedence', () => {
+  it.each([
+    '<svg {...{width:24}} width="100%"/>',
+    'const base={padding:4};const x=<div style={{...base,padding:"var(--dbs-space-4)"}}/>',
+    '<svg {...{...{width:24},width:"100%"}}/>',
+    '<svg width={24} {...props}/>',
+    '<div style={{padding:4,...props}}/>',
+    '<svg width={24} {...{...props,height:"100%"}}/>',
+  ])('allows overwritten or caller-owned values %s', (source) =>
+    expect(findJsxTokenProblems('a.tsx', source)).toEqual([]),
+  );
+  it.each([
+    '<svg width="100%" {...{width:24}}/>',
+    'const base={padding:4};const x=<div style={{padding:"var(--dbs-space-4)",...base}}/>',
+    '<svg {...{width:"100%",...{width:24}}}/>',
+    '<svg {...props} width={24}/>',
+    '<div style={{...props,padding:4}}/>',
+  ])('checks the final static value %s', (source) =>
+    expect(findJsxTokenProblems('a.tsx', source)).toHaveLength(1),
+  );
+});
