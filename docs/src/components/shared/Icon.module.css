@@ -1,0 +1,21 @@
+.icon {
+  inline-size: var(--dbs-icon-size-sm);
+  block-size: var(--dbs-icon-size-sm);
+  flex: none;
+}
+.icon[data-size='12'] {
+  inline-size: var(--dbs-icon-size-xs);
+  block-size: var(--dbs-icon-size-xs);
+}
+.icon[data-size='24'] {
+  inline-size: var(--dbs-icon-size-md);
+  block-size: var(--dbs-icon-size-md);
+}
+.icon[data-size='32'] {
+  inline-size: var(--dbs-icon-size-lg);
+  block-size: var(--dbs-icon-size-lg);
+}
+.icon[data-size='48'] {
+  inline-size: var(--dbs-icon-size-xl);
+  block-size: var(--dbs-icon-size-xl);
+}
