@@ -2,7 +2,6 @@
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-12);
-  composes: dbs-type-wordmark from global;
   white-space: nowrap;
 }
 

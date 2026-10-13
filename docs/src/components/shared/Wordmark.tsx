@@ -11,7 +11,7 @@ export default function Wordmark({
   readonly className?: string;
 }): React.JSX.Element {
   return (
-    <span className={`${styles.wordmark} ${className}`}>
+    <span className={`${styles.wordmark} ${className || 'dbs-type-wordmark'}`}>
       <Icon name="logo" size={24} className={styles.mark} />
       <span>
         Cardano <strong className={styles.strong}>DB Sync</strong>
