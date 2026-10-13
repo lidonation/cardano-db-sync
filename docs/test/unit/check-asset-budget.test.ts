@@ -212,3 +212,41 @@ describe('each locale is its own site', () => {
     expect(lines.join('\n')).toMatch(/\/ja \(gzip\)/);
   });
 });
+
+describe('complete site asset policy', () => {
+  it('enforces all five asset totals and retains the initial-page gate', async () => {
+    const budget = parseBudget(
+      JSON.parse(
+        await fs.readFile(path.join(import.meta.dirname, '../../config/asset-budget.json'), 'utf8'),
+      ),
+    );
+    expect(Object.keys(budget.totals!).sort()).toEqual(['css', 'font', 'html', 'image', 'js']);
+    expect(budget.page?.initial).toBe(180 * 1024);
+    for (const kind of ['js', 'css', 'font', 'image', 'html'] as const) {
+      const cap = budget.totals![kind]!;
+      expect(overBudget({totals: {[kind]: cap}, pages: []}, budget)).toEqual([]);
+      expect(overBudget({totals: {[kind]: cap + 1}, pages: []}, budget)).toEqual([
+        {what: `total ${kind}`, bytes: cap + 1, limit: cap},
+      ]);
+    }
+  });
+  it.each(['font', 'image', 'html'] as const)(
+    'fails the real CLI gate for an oversized %s file in a non-default locale',
+    async (kind) => {
+      await write('index.html', '<p>default</p>');
+      await write('ja/index.html', '<p>locale</p>');
+      await write('ja/assets/main.js', 'x');
+      const file = {font: 'font.woff2', image: 'image.webp', html: 'page.html'}[kind];
+      await write(`ja/assets/${file}`, 'payload');
+      const lines: string[] = [];
+      expect(
+        await main(
+          [root],
+          {log: (m) => lines.push(m), error: (m) => lines.push(m)},
+          {totals: {[kind]: 1}},
+        ),
+      ).toBe(1);
+      expect(lines.join('\n')).toContain(`over budget: total ${kind}`);
+    },
+  );
+});
