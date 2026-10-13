@@ -1,8 +1,11 @@
 {
-  "$comment": "PERF-1 asset budget, gzip bytes, checked by scripts/check-asset-budget.mjs. B02 baseline (Docusaurus scaffold): js 165.0 KiB, css 13.7 KiB, heaviest page initial payload 162.2 KiB. Limits sit ~10-15% above it; B38 replaces them with the SPECIFICATION budget. B06 raised css to 18 KiB: SEC-2's self-hosted fonts add nine @font-face rules (+0.8 KiB gzip, total 16.5 KiB); the font files themselves load from CSS on demand, three per page (~108 KiB raw), and are reported under font. B34 keeps the 18 KiB cap by separating visually hidden text CSS from status styles unused by the site chrome. B43 adds the shared accessibility substrate. The measured CSS total was 18.7 KiB before removing duplicate focus declarations; the temporary cap is 19 KiB. JavaScript and initial-page limits are unchanged. B38 still owns the final specification budget.",
+  "$comment": "PERF-1 gzip-byte limits per profile and locale, not a combined five-language total. Audit 2026-10-13 against PR90 9fd5b297: maxima JS 194004 B, CSS 19379 B, font 254847 B, image 220730 B, HTML 37175 B (7 pages), initial 181028 B. JS 240 KiB reserves ~50 KiB for lazy search, Config and survey UI; CSS 24 KiB reserves ~5 KiB for those controls. Initial stays 180 KiB: new route code must not enter global chrome. Font 280 KiB accommodates the existing fixed families/subsets plus ~12%; image 512 KiB reserves ~296 KiB for optimised diagrams/social art. HTML 8 MiB is a staged ceiling: ~130 pages x 5 retained versions x 10 KiB gzip/page = 6.35 MiB, plus schema/app/retired-route allowance. These are estimates, not a verified completed-site size. Reaudit at B18, B20, B32/B33 and B38; large wallet/search dependencies require measured route-scoped budgets, not automatic cap increases. The deployment raw-size cap and per-page image justification are separate checks.",
   "totals": {
-    "js": 194560,
-    "css": 19456
+    "js": 245760,
+    "css": 24576,
+    "font": 286720,
+    "image": 524288,
+    "html": 8388608
   },
   "page": {
     "initial": 184320
