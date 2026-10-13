@@ -16,6 +16,9 @@
     "/numbers": {
       "status": "live"
     },
+    "/survey/results": {
+      "status": "live"
+    },
     "/updates": {
       "status": "live"
     }

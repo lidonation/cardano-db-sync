@@ -1,0 +1,116 @@
+/* B44-f — the survey results dashboard bars. Only the bars are new here: every other
+ * element reuses ../landing/styles.module.css. Square corners, token colours only. */
+
+.bars {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-8);
+  margin-block-start: var(--dbs-space-16);
+}
+
+/* The track is display, not a control boundary (TOK-6): the default hairline. */
+.bar {
+  border: 1px solid var(--dbs-border-default);
+  border-radius: 0;
+  background: var(--dbs-surface-base);
+}
+
+.fill {
+  border-radius: 0;
+  background: var(--dbs-accent-primary);
+  block-size: var(--dbs-space-8);
+}
+
+/* Fill widths in 5% steps of the question-total share. */
+.w0 {
+  width: 0%;
+}
+
+.w5 {
+  width: 5%;
+}
+
+.w10 {
+  width: 10%;
+}
+
+.w15 {
+  width: 15%;
+}
+
+.w20 {
+  width: 20%;
+}
+
+.w25 {
+  width: 25%;
+}
+
+.w30 {
+  width: 30%;
+}
+
+.w35 {
+  width: 35%;
+}
+
+.w40 {
+  width: 40%;
+}
+
+.w45 {
+  width: 45%;
+}
+
+.w50 {
+  width: 50%;
+}
+
+.w55 {
+  width: 55%;
+}
+
+.w60 {
+  width: 60%;
+}
+
+.w65 {
+  width: 65%;
+}
+
+.w70 {
+  width: 70%;
+}
+
+.w75 {
+  width: 75%;
+}
+
+.w80 {
+  width: 80%;
+}
+
+.w85 {
+  width: 85%;
+}
+
+.w90 {
+  width: 90%;
+}
+
+.w95 {
+  width: 95%;
+}
+
+.w100 {
+  width: 100%;
+}
+
+.tableScroll {
+  max-inline-size: 100%;
+  overflow-x: auto;
+}
+
+.tableScroll table {
+  margin-block: var(--dbs-space-16);
+}

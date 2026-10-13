@@ -1,0 +1,78 @@
+{
+  "$comment": "Golden fixture for test/unit/survey-results.test.ts: a small aggregate exercising every render rule \u2014 a replaces merge (q1.o0 absorbs q0.o0), a supersedes closure (q0.o2 reported separately), derived history (SUR-18), and one moderated plus one unmoderated free-text item (SUR-7: ft-unreviewed must never render).",
+  "surveyRef": "core-1",
+  "tallyBasis": "response-time-only",
+  "interim": true,
+  "endEpoch": 2000,
+  "questions": [
+    {
+      "question": 0,
+      "label": "How do you run db-sync?",
+      "options": [
+        {
+          "option": 0,
+          "label": "Docker",
+          "count": 12
+        },
+        {
+          "option": 1,
+          "label": "From source",
+          "count": 7
+        },
+        {
+          "option": 2,
+          "label": "Nix",
+          "count": 3
+        }
+      ],
+      "history": [
+        {
+          "epoch": 540,
+          "counts": [8, 5, 2]
+        },
+        {
+          "epoch": 541,
+          "counts": [12, 7, 3]
+        }
+      ]
+    },
+    {
+      "question": 1,
+      "label": "How do you run db-sync today?",
+      "options": [
+        {
+          "option": 0,
+          "label": "Docker",
+          "count": 5
+        },
+        {
+          "option": 1,
+          "label": "Prebuilt binary",
+          "count": 4
+        }
+      ]
+    }
+  ],
+  "freeText": [
+    {
+      "id": "ft-approved-1",
+      "text": "Please document the snapshot restore flow.",
+      "moderated": true
+    },
+    {
+      "id": "ft-unreviewed-1",
+      "text": "This response has not passed review.",
+      "moderated": false
+    }
+  ],
+  "generatedAt": "2026-10-01T00:00:00Z",
+  "replacements": [
+    {
+      "newer": {
+        "question": 1,
+        "option": 0
+      },
+      "count": 14
+    }
+  ]
+}
