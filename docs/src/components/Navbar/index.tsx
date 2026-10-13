@@ -5,6 +5,8 @@ import clsx from 'clsx';
 import Link from '@docusaurus/Link';
 import {translate} from '@docusaurus/Translate';
 
+import {atLeast} from '../../lib/breakpoints';
+
 import KeyCap from '../KeyCap';
 import Icon from '../shared/Icon';
 import {VisuallyHidden} from '../shared/VisuallyHidden';
@@ -95,7 +97,7 @@ export function NavbarFull({
     };
   }, []);
   useEffect(() => {
-    const onBar = window.matchMedia('(min-width: 768px)');
+    const onBar = window.matchMedia(atLeast('sm'));
     const moveActionFocus = () => {
       const active = document.activeElement;
       const focused = active === document.body || active === null ? lastFocus.current : active;
@@ -128,7 +130,7 @@ export function NavbarFull({
     opened.current = true;
   }, [open]);
   useEffect(() => {
-    const wide = window.matchMedia('(min-width: 1280px)');
+    const wide = window.matchMedia(atLeast('lg'));
     const closeOnWide = () => {
       if (wide.matches && open) {
         // At 1280 the open drawer is hidden by CSS before this listener runs, and the browser may
@@ -216,7 +218,10 @@ export function NavbarFull({
           {githubHref && (
             <Link className={styles.github} to={githubHref}>
               <Icon name="github" size={16} />
-              <span className={styles.githubText}>GitHub</span>
+              <VisuallyHidden>GitHub</VisuallyHidden>
+              <span className={styles.githubText} aria-hidden="true">
+                GitHub
+              </span>
             </Link>
           )}
           {preferences && <div className={styles.preferences}>{preferences}</div>}
@@ -229,7 +234,14 @@ export function NavbarFull({
             onClick={() => setOpen(!open)}
           >
             <Icon name={open ? 'close' : 'menu'} size={16} />
-            <span className={styles.menuText}>
+            <VisuallyHidden>
+              {translate({
+                id: 'components.navbar.menu',
+                message: 'Menu',
+                description: 'Narrow-screen menu button',
+              })}
+            </VisuallyHidden>
+            <span className={styles.menuText} aria-hidden="true">
               {translate({
                 id: 'components.navbar.menu',
                 message: 'Menu',

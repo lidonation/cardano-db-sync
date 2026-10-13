@@ -11,6 +11,7 @@
 export const SURFACES = {
   docs: '/docs/intro',
   guides: '/docs/guides',
+  installation: '/docs/installation',
   schema: '/schema',
   numbers: '/numbers',
   survey: '/survey',
@@ -53,4 +54,59 @@ export function routePaths(routes: readonly RouteNode[]): Set<string> {
 export function routeExists(paths: ReadonlySet<string>, baseUrl: string, path: string): boolean {
   const full = trim(`${baseUrl.replace(/\/+$/, '')}${path}`);
   return paths.has(full);
+}
+
+/** Ordered designed navigation. Labels pass through Docusaurus' config translation pipeline. */
+export const NAVBAR_MENU = [
+  {label: 'Docs', href: SURFACES.docs},
+  {label: 'Schema', href: SURFACES.schema},
+  {label: 'Numbers', href: SURFACES.numbers},
+  {label: 'Survey', href: SURFACES.survey},
+  {label: 'Ecosystem', href: SURFACES.ecosystem},
+] as const;
+
+/** External destinations are completed from the active build profile in the config. */
+export const FOOTER_MENU: readonly {
+  readonly title: string;
+  readonly items: readonly {readonly label: string; readonly href: string}[];
+}[] = [
+  {
+    title: 'Docs',
+    items: [
+      {label: 'Introduction', href: SURFACES.docs},
+      {label: 'Installation', href: SURFACES.installation},
+      {label: 'Configuration', href: SURFACES.config},
+      {label: 'Schema', href: SURFACES.schema},
+    ],
+  },
+  {
+    title: 'Project',
+    items: [
+      {label: 'GitHub', href: 'repository'},
+      {label: 'Releases', href: 'repository/releases'},
+      {label: 'Issues', href: 'repository/issues'},
+      {label: 'Updates', href: SURFACES.updates},
+    ],
+  },
+  {
+    title: 'Community',
+    items: [
+      {label: 'Discord', href: 'https://discord.com/invite/inter-sect'},
+      {label: 'Survey', href: SURFACES.survey},
+      {label: 'Survey results', href: SURFACES.surveyResults},
+      {label: 'Ecosystem', href: SURFACES.ecosystem},
+      {label: 'FAQ', href: SURFACES.faq},
+    ],
+  },
+] as const;
+
+/** Local destinations need a built route; external links do not depend on this build. */
+export function gateMenu<T extends {readonly href: string}>(
+  items: readonly T[],
+  paths: ReadonlySet<string>,
+  baseUrl: string,
+): T[] {
+  return items.filter(
+    (item) => !item.href.startsWith('/') || routeExists(paths, baseUrl, item.href),
+  );
 }

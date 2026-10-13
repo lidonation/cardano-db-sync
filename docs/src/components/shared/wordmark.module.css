@@ -8,12 +8,14 @@
 }
 
 .mark {
+  display: none;
   flex: none;
   color: var(--dbs-accent-primary-text);
 }
 
 .strong {
-  font-weight: 700;
+  font: inherit;
+  letter-spacing: inherit;
 }
 
 /* the 320px reflow floor (NAV-3): let the name wrap rather than push the page sideways */
