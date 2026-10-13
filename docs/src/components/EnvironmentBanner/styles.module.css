@@ -6,7 +6,7 @@
   align-items: baseline;
   gap: var(--dbs-space-8) var(--dbs-space-16);
   padding: var(--dbs-space-8) var(--dbs-space-16);
-  border-bottom: 1px solid var(--dbs-status-warning);
+  border-bottom: var(--dbs-border-width-hairline) solid var(--dbs-status-warning);
   background: var(--dbs-status-warning-subtle);
   color: var(--dbs-status-warning-text);
   font: var(--dbs-font-body-sm);
@@ -14,8 +14,8 @@
 }
 
 .label {
-  font: var(--dbs-font-label-sm);
-  letter-spacing: var(--dbs-font-label-sm-tracking);
+  composes: dbs-type-label-sm from global;
+
   text-transform: uppercase;
 }
 
@@ -23,13 +23,12 @@
   /* standalone, not inside a sentence, so it holds the 44px floor (NAV-4) */
   display: inline-flex;
   align-items: center;
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   color: var(--dbs-status-warning-text);
   text-decoration: underline;
-  text-underline-offset: 2px;
 }
 
 .link:hover {
   color: var(--dbs-status-warning-text);
-  text-decoration-thickness: 2px;
+  text-decoration-thickness: var(--dbs-border-width-emphasis);
 }

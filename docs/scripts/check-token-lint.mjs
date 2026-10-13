@@ -30,6 +30,7 @@ import process from 'node:process';
 
 import {SKIP_DIRS, TOKENS_CSS, lineIndex, walk} from './lib/build-output.mjs';
 import {declarations, stripComments} from './lib/css-declarations.mjs';
+import {findJsxTokenProblems} from './lib/jsx-token-lint.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 export const SOURCE = 'design/tokens.source.json';
@@ -105,6 +106,10 @@ const DECORATIVE_BORDERS = new Map([
       ['.card', 'static card default; interactive kinds override it'],
       [".card[data-status='empty']", 'empty placeholder, never interactive'],
     ]),
+  ],
+  [
+    'src/components/Footer/styles.module.css',
+    new Map([['.footer', 'footer top separator, never a control']]),
   ],
   ['src/components/KeyCap/styles.module.css', new Map([['.cap', 'KeyCap is static text']])],
   ['src/components/shared/shared.module.css', new Map([['.framed', 'empty-state wrapper']])],
@@ -341,7 +346,7 @@ export function findOverrideProblems(source) {
 export function findCodeProblems(file, text) {
   const generated = file === TOKENS_CSS;
   const lineAt = lineIndex(text);
-  const problems = [];
+  const problems = /\.[jt]sx$/.test(file) ? findJsxTokenProblems(file, text) : [];
   if (!generated && CODE_EXTENSIONS.has(path.extname(file))) {
     for (const literal of colourLiterals(text)) {
       problems.push({
