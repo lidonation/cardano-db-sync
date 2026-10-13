@@ -5,9 +5,9 @@
   composes: evidence from './styles.module.css';
 }
 .value {
+  composes: dbs-type-heading-lg from global;
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-heading-lg);
-  letter-spacing: var(--dbs-font-heading-lg-tracking);
+
   font-variant-numeric: tabular-nums;
 }
 /* Stat bar: decorative, the figure is in the text */
@@ -15,7 +15,7 @@
 .bar {
   display: block;
   inline-size: 100%;
-  block-size: 8px;
+  block-size: var(--dbs-space-8);
   margin-block: var(--dbs-space-8);
 }
 .barTrack {

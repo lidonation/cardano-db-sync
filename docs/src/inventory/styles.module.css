@@ -9,9 +9,8 @@
 }
 
 .title {
+  composes: dbs-type-heading-lg from global;
   margin: 0;
-  font: var(--dbs-font-heading-lg);
-  letter-spacing: var(--dbs-font-heading-lg-tracking);
 }
 
 .intro,
@@ -27,14 +26,13 @@
 }
 
 .palette {
-  min-block-size: 32px;
+  composes: dbs-type-caption from global;
+  min-block-size: var(--dbs-space-32);
   padding: 0 var(--dbs-space-12);
-  border: 1px solid var(--dbs-border-interactive);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
   cursor: pointer;
-  font: var(--dbs-font-caption);
-  letter-spacing: var(--dbs-font-caption-tracking);
 }
 
 .palette[aria-pressed='true'] {
@@ -42,23 +40,17 @@
   border-color: var(--dbs-border-selected);
 }
 
-.palette:focus-visible {
-  outline: var(--dbs-focus-ring);
-  outline-offset: var(--dbs-focus-offset);
-}
-
 .entry {
   display: flex;
   flex-direction: column;
   gap: var(--dbs-space-12);
   padding-block-start: var(--dbs-space-24);
-  border-block-start: 1px solid var(--dbs-border-default);
+  border-block-start: var(--dbs-border-width-hairline) solid var(--dbs-border-default);
 }
 
 .name {
+  composes: dbs-type-title from global;
   margin: 0;
-  font: var(--dbs-font-title);
-  letter-spacing: var(--dbs-font-title-tracking);
 }
 
 .usage code {
@@ -71,14 +63,16 @@
 }
 
 .was {
+  composes: dbs-type-body-sm from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
 }
 
 .grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 300px), 1fr));
+  grid-template-columns: repeat(
+    auto-fill,
+    minmax(min(100%, var(--dbs-size-inventory-cell-min)), 1fr)
+  );
   gap: var(--dbs-space-24);
 }
 
@@ -101,9 +95,8 @@
 }
 
 .state {
+  composes: dbs-type-eyebrow from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-eyebrow);
-  letter-spacing: var(--dbs-font-eyebrow-tracking);
 }
 
 .page :global(.inventory-row) {

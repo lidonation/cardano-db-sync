@@ -1,17 +1,17 @@
 /* Avatar — a pointy-top hexagon, h = 2w/√3 (never a squashed square box). */
 .avatar {
   display: inline-grid;
-  inline-size: 92px;
+  inline-size: var(--dbs-size-avatar-default);
   aspect-ratio: 92 / 106.2;
   text-decoration: none;
 }
 
 .avatar[data-size='core'] {
-  inline-size: 88px;
+  inline-size: var(--dbs-size-avatar-core);
 }
 
 .avatar[data-size='meta'] {
-  inline-size: 32px;
+  inline-size: var(--dbs-space-32);
 }
 
 .image,
@@ -20,15 +20,16 @@
   grid-area: 1 / 1;
   inline-size: 100%;
   block-size: 100%;
-  clip-path: polygon(50% 0, 100% 25%, 100% 75%, 50% 100%, 0 75%, 0 25%);
 }
 
 .image {
+  composes: hexagon from '../shared/shared.module.css';
   object-fit: cover;
   background: var(--dbs-accent-primary-tint);
 }
 
 .fallback {
+  composes: hexagon from '../shared/shared.module.css';
   display: grid;
   place-items: center;
   background: var(--dbs-accent-primary-tint);
@@ -51,10 +52,8 @@ a.avatar[data-dbs-demo='hover'] .fallback {
 
 a.avatar:active,
 a.avatar[data-dbs-demo='pressed'] {
-  transform: translateY(1px);
+  transform: translateY(var(--dbs-border-width-hairline));
 }
-
-a.avatar:focus-visible,
 a.avatar[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);

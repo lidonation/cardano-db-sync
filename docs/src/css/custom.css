@@ -41,7 +41,8 @@ textarea,
   caret-color: var(--dbs-text-primary);
 }
 
-a {
+a,
+button {
   text-underline-offset: var(--dbs-space-4);
 }
 
@@ -62,7 +63,7 @@ time,
 
 ::-webkit-scrollbar-thumb {
   background: var(--dbs-border-interactive);
-  border: 2px solid var(--dbs-surface-base);
+  border: var(--dbs-border-width-emphasis) solid var(--dbs-surface-base);
 }
 
 /* R1/R6: the native skip anchor stays above the viewport until focused.
@@ -118,7 +119,7 @@ time,
   *::after {
     animation: none !important;
     transition-property: color, background-color, border-color, outline-color !important;
-    transition-duration: 150ms !important;
+    transition-duration: var(--dbs-motion-feedback) !important;
     transition-delay: 0s !important;
   }
 }

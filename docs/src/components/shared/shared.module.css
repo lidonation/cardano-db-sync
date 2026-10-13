@@ -7,8 +7,8 @@
 }
 
 .skeleton[data-size='icon'] {
-  inline-size: 24px;
-  block-size: 24px;
+  inline-size: var(--dbs-space-24);
+  block-size: var(--dbs-space-24);
 }
 
 .skeleton[data-size='avatar'] {
@@ -18,27 +18,27 @@
 
 .skeleton[data-size='title'] {
   inline-size: 60%;
-  block-size: 20px;
+  block-size: var(--dbs-size-skeleton-title-height);
 }
 
 .skeleton[data-size='line'] {
   inline-size: 90%;
-  block-size: 12px;
+  block-size: var(--dbs-space-12);
 }
 
 .skeleton[data-size='line-short'] {
   inline-size: 40%;
-  block-size: 12px;
+  block-size: var(--dbs-space-12);
 }
 
 .skeleton[data-size='value'] {
   inline-size: 55%;
-  block-size: 40px;
+  block-size: var(--dbs-size-skeleton-value-height);
 }
 
 .skeleton[data-size='block'] {
   inline-size: 100%;
-  block-size: 48px;
+  block-size: var(--dbs-space-48);
 }
 
 .hexagon {
@@ -46,18 +46,17 @@
 }
 
 .error {
+  composes: dbs-type-caption from global;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: start;
   gap: var(--dbs-space-4) var(--dbs-space-8);
   margin: var(--dbs-space-8) 0 0;
   color: var(--dbs-status-danger-text);
-  font: var(--dbs-font-caption);
-  letter-spacing: var(--dbs-font-caption-tracking);
 }
 
 .errorIcon {
-  margin-block-start: 2px;
+  margin-block-start: var(--dbs-border-width-emphasis);
 }
 
 /* the recovery control sits under the words */
@@ -67,13 +66,12 @@
 }
 
 .empty {
+  composes: dbs-type-caption from global;
   margin: 0;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-caption);
-  letter-spacing: var(--dbs-font-caption-tracking);
 }
 
 .framed {
   padding: var(--dbs-space-12) var(--dbs-space-16);
-  border: 1px dashed var(--dbs-border-strong);
+  border: var(--dbs-border-width-hairline) dashed var(--dbs-border-strong);
 }

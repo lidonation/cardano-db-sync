@@ -3,43 +3,44 @@
    the fill inset by 1px. The element itself is a plain box, so the focus ring is the square ring
    DF-3 draws, outside a 2px offset. */
 .button {
+  composes: dbs-type-label from global;
+  --dbs-button-cut: var(--dbs-space-12);
   position: relative;
   isolation: isolate;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-block-size: 44px;
-  min-inline-size: 130px;
+  min-block-size: var(--dbs-layout-target-min);
+  min-inline-size: var(--dbs-size-button-sm);
   padding: 0 var(--dbs-space-32);
   border: 0;
   background: none;
   cursor: pointer;
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+
   text-decoration: none;
   white-space: nowrap;
-  transition: transform 150ms ease-out;
+  transition: transform var(--dbs-motion-feedback) ease-out;
 }
 
 .button[data-size='md'] {
-  min-inline-size: 190px;
+  min-inline-size: var(--dbs-size-button-md);
 }
 
 .button[data-size='lg'] {
-  min-inline-size: 230px;
+  min-inline-size: var(--dbs-size-button-lg);
 }
 
 .button::before,
 .button::after {
   content: '';
   position: absolute;
-  z-index: -1;
+  z-index: var(--dbs-layer-below);
   clip-path: polygon(
-    12px 0,
-    calc(100% - 12px) 0,
+    var(--dbs-button-cut) 0,
+    calc(100% - var(--dbs-button-cut)) 0,
     100% 50%,
-    calc(100% - 12px) 100%,
-    12px 100%,
+    calc(100% - var(--dbs-button-cut)) 100%,
+    var(--dbs-button-cut) 100%,
     0 50%
   );
 }
@@ -49,7 +50,7 @@
 }
 
 .button::after {
-  inset: 1px;
+  inset: var(--dbs-border-width-hairline);
 }
 
 .label {
@@ -57,8 +58,6 @@
   align-items: center;
   gap: var(--dbs-space-8);
 }
-
-.button:focus-visible,
 .button[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);
@@ -139,11 +138,10 @@
 .button[data-variant='danger']:hover .label,
 .button[data-variant='danger'][data-dbs-demo='hover'] .label {
   text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .button[data-variant='danger']:active,
 .button[data-variant='danger'][data-dbs-demo='pressed'] {
-  transform: translateY(1px);
+  transform: translateY(var(--dbs-border-width-hairline));
 }
 
 /* error — the action failed; the boundary says so too, next to the message */
@@ -180,7 +178,7 @@
 
 @media (prefers-reduced-motion: no-preference) {
   .spinner {
-    animation: spin 900ms linear infinite;
+    animation: spin var(--dbs-motion-spinner) linear infinite;
   }
 }
 
