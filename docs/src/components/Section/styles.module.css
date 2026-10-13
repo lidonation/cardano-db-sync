@@ -1,20 +1,22 @@
 .divider {
   position: relative;
-  block-size: 11px;
+  block-size: calc(var(--dbs-icon-size-xs) - var(--dbs-border-width-hairline));
   background: linear-gradient(var(--dbs-border-default), var(--dbs-border-default)) center / 100%
-    1px no-repeat;
+    var(--dbs-border-width-hairline) no-repeat;
 }
 
 .cross {
   position: relative;
   display: inline-block;
-  inline-size: 11px;
-  block-size: 11px;
+  inline-size: calc(var(--dbs-icon-size-xs) - var(--dbs-border-width-hairline));
+  block-size: calc(var(--dbs-icon-size-xs) - var(--dbs-border-width-hairline));
   background:
-    linear-gradient(var(--dbs-accent-primary), var(--dbs-accent-primary)) center / 11px 1px
-      no-repeat,
-    linear-gradient(var(--dbs-accent-primary), var(--dbs-accent-primary)) center / 1px 11px
-      no-repeat;
+    linear-gradient(var(--dbs-accent-primary), var(--dbs-accent-primary)) center /
+      calc(var(--dbs-icon-size-xs) - var(--dbs-border-width-hairline))
+      var(--dbs-border-width-hairline) no-repeat,
+    linear-gradient(var(--dbs-accent-primary), var(--dbs-accent-primary)) center /
+      var(--dbs-border-width-hairline)
+      calc(var(--dbs-icon-size-xs) - var(--dbs-border-width-hairline)) no-repeat;
 }
 
 .divider .cross {
@@ -23,9 +25,9 @@
 }
 
 .divider .cross[data-edge='start'] {
-  inset-inline-start: -5px;
+  inset-inline-start: calc(-1 * (var(--dbs-space-4) + var(--dbs-border-width-hairline)));
 }
 
 .divider .cross[data-edge='end'] {
-  inset-inline-end: -5px;
+  inset-inline-end: calc(-1 * (var(--dbs-space-4) + var(--dbs-border-width-hairline)));
 }

@@ -1,10 +1,14 @@
-import React, {type ReactNode} from 'react';
+import React from 'react';
 
 import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 import Button from '../components/Button';
-import {QueryCard, UseCaseCard} from '../components/Card';
+import Frame, {CardSkeleton} from '../components/Card/Frame';
+import Command from '../components/Command';
+import TextLink from '../components/TextLink';
+import {SectionCross, SectionDivider} from '../components/Section';
+import shared from '../components/shared/shared.module.css';
 import CodeCopy from '../components/CodeCopy';
 import Metric from '../components/Metric';
 import Icon from '../components/shared/Icon';
@@ -15,7 +19,7 @@ import {SAMPLE_QUERIES} from '../data/sample-queries';
 import {SURFACES} from '../data/surfaces';
 
 import {faqItems} from './faq';
-import HeroGraphic from './HeroGraphic';
+import HeroGraphic, {DatabaseCylinder} from './HeroGraphic';
 import Eyebrow from './Eyebrow';
 import useSurface from './useSurface';
 import useLandingTranslate from './useLandingTranslate';
@@ -23,14 +27,38 @@ import styles from './styles.module.css';
 
 const DOCKER = 'docker compose up -d && docker compose logs -f';
 
-/** A text link with a trailing arrow, rendered only when it has somewhere to go. */
-function MoreLink({href, children}: {readonly href?: string; readonly children: ReactNode}) {
-  if (!href) return null;
+/** Rail decorations are out of flow, so the section rhythm remains exact. */
+function BandEdge(): React.JSX.Element {
   return (
-    <Link className={styles.more} to={href}>
-      {children}
-      <Icon name="arrow-right" size={12} className={styles.directional} />
-    </Link>
+    <div className={styles.bandEdge} aria-hidden="true">
+      <SectionCross />
+      <SectionCross />
+    </div>
+  );
+}
+function RhythmDivider(): React.JSX.Element {
+  return (
+    <div className={styles.rhythmDivider}>
+      <SectionDivider />
+    </div>
+  );
+}
+function StageIcon({index}: {readonly index: number}): React.JSX.Element {
+  return index === 2 ? (
+    <svg
+      className={styles.stageIcon}
+      viewBox="1182 222 156 156"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <DatabaseCylinder />
+    </svg>
+  ) : (
+    <Icon
+      name="hexagon"
+      size={48}
+      className={`${styles.stageIcon} ${styles[`stageTone${index}`]}`}
+    />
   );
 }
 
@@ -46,7 +74,7 @@ function Hero(): React.JSX.Element {
             description: 'Landing hero eyebrow',
           })}
         </Eyebrow>
-        <h1 id="landing-title" className={styles.title}>
+        <h1 id="landing-title" className={`dbs-type-display-hero ${styles.title}`}>
           <span className={styles.titleLine}>
             {translate({id: 'landing.hero.title1', message: 'Follow the chain.'})}
           </span>{' '}
@@ -54,7 +82,7 @@ function Hero(): React.JSX.Element {
             {translate({id: 'landing.hero.title2', message: 'Query it in SQL.'})}
           </span>
         </h1>
-        <p className={styles.lead}>
+        <p className={`dbs-type-body ${styles.lead}`}>
           {translate({
             id: 'landing.hero.lead',
             message:
@@ -65,20 +93,12 @@ function Hero(): React.JSX.Element {
           <Button variant="primary" size="md" href={SURFACES.docs}>
             {translate({id: 'landing.cta.docs', message: 'Read the docs'})}
           </Button>
-          <Button variant="secondary" size="md" href={REPO_URL}>
+          <Button variant="ghost" size="md" href={REPO_URL}>
             {translate({id: 'landing.cta.github', message: 'View on GitHub'})}
           </Button>
         </div>
-        <div className={styles.command}>
-          <pre className={styles.commandText}>
-            <code>
-              <span aria-hidden="true" className={styles.prompt}>
-                ${' '}
-              </span>
-              {DOCKER}
-            </code>
-          </pre>
-          <CodeCopy text={DOCKER} />
+        <div className={styles.heroCommand}>
+          <Command text={DOCKER} />
         </div>
       </div>
       <HeroGraphic />
@@ -110,9 +130,10 @@ function Facts(): React.JSX.Element {
   ];
   return (
     <section className={styles.dark} aria-labelledby="landing-facts">
+      <BandEdge />
       <div className={styles.inner}>
         <div className={styles.headRow}>
-          <h2 id="landing-facts" className={styles.eyebrow}>
+          <h2 id="landing-facts" className={`dbs-type-eyebrow ${styles.eyebrow}`}>
             <span aria-hidden="true">//{' '}</span>
             {translate({
               id: 'landing.facts.eyebrow',
@@ -120,9 +141,9 @@ function Facts(): React.JSX.Element {
               description: 'Heading of the strip of facts counted from the documented schema',
             })}
           </h2>
-          <MoreLink href={surface('numbers')}>
+          <TextLink href={surface('numbers')} tone="prompt">
             {translate({id: 'landing.facts.numbers', message: 'View the numbers'})}
-          </MoreLink>
+          </TextLink>
         </div>
         <ul className={styles.facts}>
           {items.map((item) => (
@@ -132,6 +153,7 @@ function Facts(): React.JSX.Element {
           ))}
         </ul>
       </div>
+      <BandEdge />
     </section>
   );
 }
@@ -163,10 +185,10 @@ function Pipeline(): React.JSX.Element {
     <section className={styles.section} aria-labelledby="landing-how">
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.how.eyebrow', message: 'how it works'})}</Eyebrow>
-        <h2 id="landing-how" className={styles.heading}>
+        <h2 id="landing-how" className={`dbs-type-heading-lg ${styles.heading}`}>
           {translate({id: 'landing.how.title', message: 'How it works'})}
         </h2>
-        <p className={styles.intro}>
+        <p className={`dbs-type-body ${styles.intro}`}>
           {translate({
             id: 'landing.how.intro',
             message:
@@ -176,10 +198,11 @@ function Pipeline(): React.JSX.Element {
         <ol className={styles.pipeline}>
           {steps.map((step, index) => (
             <li key={step.name} className={styles.stage}>
-              <span className={styles.stageName}>{step.name}</span>
-              <span className={styles.stageBody}>{step.body}</span>
+              <StageIcon index={index} />
+              <span className={`dbs-type-eyebrow ${styles.stageName}`}>{step.name}</span>
+              <span className={`dbs-type-caption ${styles.stageBody}`}>{step.body}</span>
               {index < steps.length - 1 && (
-                <Icon name="arrow-right" size={16} className={styles.stageArrow} />
+                <span aria-hidden="true" className={styles.stageArrow} />
               )}
             </li>
           ))}
@@ -241,7 +264,7 @@ function UseCases(): React.JSX.Element {
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.use.eyebrow', message: 'use cases'})}</Eyebrow>
         <div className={styles.headRow}>
-          <h2 id="landing-use" className={styles.heading}>
+          <h2 id="landing-use" className={`dbs-type-heading-lg ${styles.heading}`}>
             {translate({
               id: 'landing.use.title',
               message: 'Built for everything that reads the chain',
@@ -254,12 +277,21 @@ function UseCases(): React.JSX.Element {
           )}
         </div>
         <ul className={styles.cards}>
-          {cases.map(([title, body]) => (
+          {cases.map(([title, body], index) => (
             <li key={title}>
-              <UseCaseCard title={title} description={body} />
+              <Frame kind="Use case" skeleton={<CardSkeleton icon />} className={styles.useCard}>
+                <Icon name="hexagon" size={32} className={styles[`useIcon${index}`]} />
+                <span className="dbs-type-title">{title}</span>
+                <span className={`dbs-type-body-sm ${styles.cardBody}`}>{body}</span>
+              </Frame>
             </li>
           ))}
         </ul>
+        <div className={styles.schemaLink}>
+          <TextLink href={surface('schema')}>
+            {translate({id: 'landing.queries.schema', message: 'Explore the full schema'})}
+          </TextLink>
+        </div>
       </div>
     </section>
   );
@@ -286,17 +318,29 @@ function Queries(): React.JSX.Element {
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.queries.eyebrow', message: 'sample queries'})}</Eyebrow>
         <div className={styles.headRow}>
-          <h2 id="landing-queries" className={styles.heading}>
+          <h2 id="landing-queries" className={`dbs-type-heading-lg ${styles.heading}`}>
             {translate({id: 'landing.queries.title', message: 'Your chain, one query away'})}
           </h2>
-          <MoreLink href={schema}>
-            {translate({id: 'landing.queries.schema', message: 'Explore the full schema'})}
-          </MoreLink>
         </div>
         <ul className={styles.cards}>
           {queries.map(([question, sql]) => (
             <li key={question}>
-              <QueryCard question={question} sql={sql} href={schema} linkLabel={run} copyable />
+              <Frame kind="Query" skeleton={<CardSkeleton />} className={styles.queryCard}>
+                <div className={`dbs-type-label-sm ${styles.queryHeader}`}>
+                  <span>{question}</span>
+                  <CodeCopy text={sql} variant="plain" tone="surface" />
+                </div>
+                <pre className={`dbs-type-mono ${styles.sql}`}>
+                  <code>{sql}</code>
+                </pre>
+                {schema && (
+                  <div className={styles.queryLink}>
+                    <TextLink href={schema} size="label-sm">
+                      {run}
+                    </TextLink>
+                  </div>
+                )}
+              </Frame>
             </li>
           ))}
         </ul>
@@ -336,12 +380,13 @@ function Quickstart(): React.JSX.Element {
   ];
   return (
     <section className={styles.dark} aria-labelledby="landing-quick">
+      <BandEdge />
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.quick.eyebrow', message: 'quickstart'})}</Eyebrow>
-        <h2 id="landing-quick" className={styles.heading}>
+        <h2 id="landing-quick" className={`dbs-type-heading-lg ${styles.heading}`}>
           {translate({id: 'landing.quick.title', message: 'Up and running in three steps'})}
         </h2>
-        <p className={styles.intro}>
+        <p className={`dbs-type-body ${styles.intro}`}>
           {translate({
             id: 'landing.quick.prerequisites',
             message:
@@ -351,28 +396,22 @@ function Quickstart(): React.JSX.Element {
         <ol className={styles.steps}>
           {steps.map((step, index) => (
             <li key={step.title} className={styles.step}>
-              <span className={styles.stepNumber} aria-hidden="true">
+              <span
+                className={`dbs-type-title ${shared.hexagon} ${styles.stepNumber}`}
+                aria-hidden="true"
+              >
                 {index + 1}
               </span>
               <div className={styles.stepText}>
-                <h3 className={styles.stepTitle}>{step.title}</h3>
-                <p className={styles.stepBody}>{step.body}</p>
+                <h3 className={`dbs-type-title ${styles.stepTitle}`}>{step.title}</h3>
+                <p className={`dbs-type-body-sm ${styles.stepBody}`}>{step.body}</p>
               </div>
-              <div className={styles.command}>
-                <pre className={styles.commandText}>
-                  <code>
-                    <span aria-hidden="true" className={styles.prompt}>
-                      ${' '}
-                    </span>
-                    {step.command}
-                  </code>
-                </pre>
-                <CodeCopy text={step.command} />
-              </div>
+              <Command text={step.command} surface="raised" />
             </li>
           ))}
         </ol>
       </div>
+      <BandEdge />
     </section>
   );
 }
@@ -385,22 +424,22 @@ function Faq(): React.JSX.Element {
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.faq.eyebrow', message: 'faq'})}</Eyebrow>
         <div className={styles.headRow}>
-          <h2 id="landing-faq" className={styles.heading}>
+          <h2 id="landing-faq" className={`dbs-type-heading-lg ${styles.heading}`}>
             {translate({id: 'landing.faq.title', message: 'Frequently asked questions'})}
           </h2>
-          <MoreLink href={surface('faq')}>
+          <TextLink href={surface('faq')}>
             {translate({id: 'landing.faq.all', message: 'All questions'})}
-          </MoreLink>
+          </TextLink>
         </div>
         <div className={styles.faq}>
           {faqItems(translate).map((item, index) => (
             <details key={item.question} className={styles.faqItem} open={index === 0}>
-              <summary className={styles.faqQuestion}>
+              <summary className={`dbs-type-label ${styles.faqQuestion}`}>
                 <span>{item.question}</span>
                 <Icon name="plus" size={16} className={styles.faqPlus} />
                 <Icon name="minus" size={16} className={styles.faqMinus} />
               </summary>
-              <p className={styles.faqAnswer}>{item.answer}</p>
+              <p className={`dbs-type-caption ${styles.faqAnswer}`}>{item.answer}</p>
             </details>
           ))}
         </div>
@@ -414,15 +453,21 @@ function Community(): React.JSX.Element {
   const surface = useSurface();
   return (
     <section className={styles.warm} aria-labelledby="landing-community">
+      <BandEdge />
+      <span aria-hidden="true" className={styles.communityHexes}>
+        <Icon name="hexagon" size={48} />
+        <Icon name="hexagon" size={32} />
+        <Icon name="hexagon" size={32} />
+      </span>
       <div className={styles.inner}>
         <Eyebrow>{translate({id: 'landing.community.eyebrow', message: 'community'})}</Eyebrow>
-        <h2 id="landing-community" className={styles.heading}>
+        <h2 id="landing-community" className={`dbs-type-heading-lg ${styles.heading}`}>
           {translate({
             id: 'landing.community.title',
             message: 'Run by the community, for the community',
           })}
         </h2>
-        <p className={styles.intro}>
+        <p className={`dbs-type-body ${styles.intro}`}>
           {translate({
             id: 'landing.community.body',
             message:
@@ -433,26 +478,28 @@ function Community(): React.JSX.Element {
           <Button variant="primary" size="md" href={SURFACES.docs}>
             {translate({id: 'landing.cta.docs', message: 'Read the docs'})}
           </Button>
-          {surface('survey') && (
-            <Button variant="secondary" size="md" href={surface('survey')}>
+          {surface('survey') ? (
+            <Button variant="ghost" size="md" href={surface('survey')}>
               {translate({id: 'landing.cta.survey', message: 'Take the survey'})}
             </Button>
+          ) : (
+            <Button variant="ghost" size="md" href={`${REPO_URL}/issues`}>
+              {translate({id: 'landing.cta.issues', message: 'Report an issue'})}
+            </Button>
           )}
-          <Button variant="ghost" size="md" href={`${REPO_URL}/issues`}>
-            {translate({id: 'landing.cta.issues', message: 'Report an issue'})}
-          </Button>
-          <Link className={styles.more} to={DISCORD_URL}>
+          <Link className={`dbs-type-label ${styles.discord}`} to={DISCORD_URL}>
             {translate({id: 'landing.cta.discord', message: 'Discord #db-sync'})}
             <Icon name="external" size={12} />
           </Link>
         </div>
       </div>
+      <BandEdge />
     </section>
   );
 }
 
 /**
- * B44-a — the landing page, after the design's `Landing · 1440` and its B47 tiers: what DB Sync
+ * B44-a - the landing page, after the design's `Landing · 1440` and its B47 tiers: what DB Sync
  * is, what this build documents, and the ways in. A section links to a surface only once that
  * surface exists (`useSurface`).
  */
@@ -462,7 +509,9 @@ export default function Landing(): React.JSX.Element {
       <Hero />
       <Facts />
       <Pipeline />
+      <RhythmDivider />
       <UseCases />
+      <RhythmDivider />
       <Queries />
       <Quickstart />
       <Faq />

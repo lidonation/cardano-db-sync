@@ -10,6 +10,7 @@ import useFallbackLang from '../../i18n/useFallbackLang';
 import Icon from '../shared/Icon';
 import {demoAttributes, type InteractionState} from '../shared/states';
 
+import hidden from '../shared/visually-hidden.module.css';
 import styles from './styles.module.css';
 
 const COPY_IDS = [
@@ -22,7 +23,7 @@ const COPY_IDS = [
 export type CopyState = 'idle' | 'copying' | 'copied' | 'failed';
 
 /**
- * `Code / Copy` — copies a code block's text (DF-4: every Copy button confirms). It sits on the
+ * `Code / Copy` - copies a code block's text (DF-4: every Copy button confirms). It sits on the
  * theme-invariant code surface, so it uses the `code.*` roles in every palette (THM-6: correctly
  * invariant). Its boundary is `code.text-muted`: `code.border` is 1.55:1 on `code.surface`
  * (FLOOR-3). The outcome is said in a word and a glyph beside the button and announced through a
@@ -34,8 +35,12 @@ export default function CodeCopy({
   disabled = false,
   state: pinned,
   demo,
+  variant = 'boxed',
+  tone = 'code',
 }: {
   readonly text: string;
+  readonly variant?: 'boxed' | 'plain';
+  readonly tone?: 'code' | 'surface';
   readonly disabled?: boolean;
   /** Pins the outcome, for the inventory. */
   readonly state?: CopyState;
@@ -96,10 +101,16 @@ export default function CodeCopy({
     }),
   };
   return (
-    <span className={styles.wrap} data-dbs-component="Code / Copy" lang={lang}>
+    <span
+      className={styles.wrap}
+      data-variant={variant}
+      data-tone={tone}
+      data-dbs-component="Code / Copy"
+      lang={lang}
+    >
       <button
         type="button"
-        className={styles.copy}
+        className={`dbs-type-mono-sm ${styles.copy}`}
         data-state={state}
         aria-disabled={disabled || state === 'copying' || undefined}
         aria-busy={state === 'copying' || undefined}
@@ -114,7 +125,11 @@ export default function CodeCopy({
       </button>
       {/* The live region is always present so the outcome is announced; "Copied" is already on
           the button, so only the failure is also shown in words beside it. */}
-      <span className={styles.status} role="status" data-state={state}>
+      <span
+        className={`dbs-type-mono-sm ${styles.status} ${state === 'copied' || variant === 'plain' ? hidden.visuallyHidden : ''}`}
+        role="status"
+        data-state={state}
+      >
         {state === 'copied' || state === 'failed' ? words[state] : ''}
       </span>
     </span>

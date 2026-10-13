@@ -1,8 +1,9 @@
 import React from 'react';
+import styles from './Icon.module.css';
 
 /**
  * The drawn icon set (CONTENT-2, FLOOR-8): every glyph is a path in the design file's own
- * hexagon-and-line language — 1.5px strokes, square caps, mitred joins — never an emoji or a
+ * hexagon-and-line language - 1.5px strokes, square caps, mitred joins - never an emoji or a
  * unicode character standing in for an icon. Icons are decorative (`aria-hidden`); the control
  * that holds one carries the accessible name. Colour is `currentColor`, so an icon always takes
  * its text token.
@@ -28,7 +29,7 @@ export type IconName =
   | 'spinner';
 
 const PATHS: Record<IconName, React.ReactNode> = {
-  hexagon: <path d="M8 1 14 4.5v7L8 15l-6-3.5v-7z" fill="currentColor" stroke="none" />,
+  hexagon: <path d="M8 1 14 4.5v7L8 15l-6-3.5v-7z" fill="inherit" stroke="inherit" />,
   logo: (
     <>
       <path d="M8 1.5 13.6 4.75v6.5L8 14.5l-5.6-3.25v-6.5z" fill="none" />
@@ -76,21 +77,20 @@ const PATHS: Record<IconName, React.ReactNode> = {
 
 export interface IconProps {
   readonly name: IconName;
-  /** One of the icon scale steps (`--dbs-icon-*`): 12, 16, 24, 32. */
-  readonly size?: 12 | 16 | 24 | 32;
+  /** One of the icon scale steps (`--dbs-icon-*`): 12, 16, 24, 32, 48. */
+  readonly size?: 12 | 16 | 24 | 32 | 48;
   readonly className?: string;
 }
 
 export default function Icon({name, size = 16, className}: IconProps): React.JSX.Element {
   return (
     <svg
-      className={className}
-      width={size}
-      height={size}
+      className={`${styles.icon} ${className ?? ''}`}
+      data-size={size}
       viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
+      fill={name === 'hexagon' ? 'currentColor' : 'none'}
+      stroke={name === 'hexagon' ? 'none' : 'currentColor'}
+      strokeWidth="var(--dbs-icon-stroke)"
       strokeLinecap="square"
       strokeLinejoin="miter"
       aria-hidden="true"
