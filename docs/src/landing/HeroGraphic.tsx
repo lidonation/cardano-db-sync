@@ -10,6 +10,17 @@ const hex = (cx: number, cy: number, r: number): string =>
     })
     .join(' ');
 
+/** The same flat PostgreSQL cylinder is used by the hero and pipeline. */
+export function DatabaseCylinder(): React.JSX.Element {
+  return (
+    <g>
+      <rect className={styles.gDbBody} x="1200" y="240" width="120" height="120" />
+      <ellipse className={styles.gDbBody} cx="1260" cy="360" rx="60" ry="18" />
+      <ellipse className={styles.gDbTop} cx="1260" cy="240" rx="60" ry="18" />
+    </g>
+  );
+}
+
 /**
  * The hero's flat graphic, from the design's `Landing · 1440`: blocks (hexagons) gathering into a
  * PostgreSQL cylinder. Decoration only - hidden from assistive technology, every colour a token.
@@ -46,9 +57,7 @@ export default function HeroGraphic(): React.JSX.Element {
         points={hex(1120, 300, 25)}
       />
       <rect className={styles.gLine} x="1158" y="298" width="36" height="3" />
-      <rect className={styles.gDbBody} x="1200" y="240" width="120" height="120" />
-      <ellipse className={styles.gDbBody} cx="1260" cy="360" rx="60" ry="18" />
-      <ellipse className={styles.gDbTop} cx="1260" cy="240" rx="60" ry="18" />
+      <DatabaseCylinder />
       <text className={`dbs-type-eyebrow ${styles.gLabel}`} x="1260" y="412" textAnchor="middle">
         PostgreSQL
       </text>

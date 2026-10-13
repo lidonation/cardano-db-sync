@@ -19,7 +19,7 @@ import {SAMPLE_QUERIES} from '../data/sample-queries';
 import {SURFACES} from '../data/surfaces';
 
 import {faqItems} from './faq';
-import HeroGraphic from './HeroGraphic';
+import HeroGraphic, {DatabaseCylinder} from './HeroGraphic';
 import Eyebrow from './Eyebrow';
 import useSurface from './useSurface';
 import useLandingTranslate from './useLandingTranslate';
@@ -45,9 +45,13 @@ function RhythmDivider(): React.JSX.Element {
 }
 function StageIcon({index}: {readonly index: number}): React.JSX.Element {
   return index === 2 ? (
-    <svg className={styles.stageIcon} viewBox="0 0 48 48" aria-hidden="true" focusable="false">
-      <path d="M6 12v24c0 10 36 10 36 0V12" fill="var(--dbs-brand-intersect-navy)" />
-      <ellipse cx="24" cy="12" rx="18" ry="7" fill="var(--dbs-brand-electric-blue)" />
+    <svg
+      className={styles.stageIcon}
+      viewBox="1182 222 156 156"
+      aria-hidden="true"
+      focusable="false"
+    >
+      <DatabaseCylinder />
     </svg>
   ) : (
     <Icon

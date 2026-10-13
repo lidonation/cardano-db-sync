@@ -17,6 +17,7 @@ describe('landing shared primitives', () => {
   it('uses shared hexagons, rail decorations and visually hidden feedback', () => {
     const landing = source('landing/Landing.tsx');
     expect(landing).toContain('shared.hexagon');
+    expect(landing).toContain('<DatabaseCylinder />');
     expect(landing).toContain('<SectionDivider />');
     expect(landing).toContain('<SectionCross />');
     expect(source('components/CodeCopy/index.tsx')).toContain('hidden.visuallyHidden');
