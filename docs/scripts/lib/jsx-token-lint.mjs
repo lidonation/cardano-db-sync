@@ -116,32 +116,55 @@ export function findJsxTokenProblems(file, source) {
       }
     }
   };
+  const inspectAttribute = (tag, name, expression, location) => {
+    const v = resolve(expression);
+    if (name === 'style') inspectObject(v);
+    // Only the svg viewport controls layout. Descendant dimensions are viewBox geometry.
+    if (
+      SVG_TAGS.has(tag) &&
+      SVG_PRESENTATION.has(name) &&
+      (!['width', 'height'].includes(name) || tag === 'svg') &&
+      literal(v) &&
+      /^[-+]?(?:\d*\.)?\d+(?:px|rem|em)?$/.test(ts.isStringLiteralLike(v) ? v.text : v.getText(ast))
+    )
+      add(
+        location,
+        'TOK-16',
+        `raw JSX ${name} - use --dbs-icon-* / --dbs-size-* through a src/lib token constant or props`,
+      );
+  };
+  const inspectProps = (tag, expression, seen = new Set()) => {
+    const object = resolve(expression);
+    if (!ts.isObjectLiteralExpression(object) || seen.has(object)) return;
+    seen.add(object);
+    for (const p of object.properties) {
+      if (ts.isSpreadAssignment(p)) {
+        inspectProps(tag, p.expression, seen);
+      } else if (ts.isPropertyAssignment(p)) {
+        inspectAttribute(tag, p.name.getText(ast).replace(/^['"]|['"]$/g, ''), p.initializer, p);
+      } else if (ts.isShorthandPropertyAssignment(p)) {
+        const declaration = checker.getShorthandAssignmentValueSymbol(p)?.valueDeclaration;
+        const value =
+          declaration && ts.isVariableDeclaration(declaration) && declaration.initializer
+            ? declaration.initializer
+            : p.name;
+        inspectAttribute(tag, p.name.text, value, p);
+      }
+    }
+  };
   const visit = (node) => {
     if (ts.isJsxOpeningElement(node) || ts.isJsxSelfClosingElement(node)) {
       const tag = node.tagName.getText(ast);
-      const native = SVG_TAGS.has(tag);
       for (const a of node.attributes.properties) {
+        if (ts.isJsxSpreadAttribute(a)) {
+          inspectProps(tag, a.expression);
+          continue;
+        }
         if (!ts.isJsxAttribute(a) || !a.initializer) continue;
-        const name = a.name.getText(ast);
         const expression = ts.isJsxExpression(a.initializer)
           ? a.initializer.expression
           : a.initializer;
-        const v = expression ? resolve(expression) : undefined;
-        if (!v) continue;
-        if (name === 'style') inspectObject(v);
-        if (
-          native &&
-          SVG_PRESENTATION.has(name) &&
-          literal(v) &&
-          /^[-+]?(?:\d*\.)?\d+(?:px|rem|em)?$/.test(
-            ts.isStringLiteralLike(v) ? v.text : v.getText(ast),
-          )
-        )
-          add(
-            a,
-            'TOK-16',
-            `raw JSX ${name} - use --dbs-icon-* / --dbs-size-* through a src/lib token constant or props`,
-          );
+        if (expression) inspectAttribute(tag, a.name.getText(ast), expression, a);
       }
     }
     ts.forEachChild(node, visit);

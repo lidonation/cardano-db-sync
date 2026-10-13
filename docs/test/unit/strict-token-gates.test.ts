@@ -242,3 +242,34 @@ describe('additional static-resolution safety', () => {
     ).toEqual([]),
   );
 });
+
+describe('SVG viewport and JSX prop spreads', () => {
+  it('keeps internal SVG dimensions as drawing coordinates', () => {
+    expect(
+      findJsxTokenProblems(
+        'a.tsx',
+        '<svg viewBox="0 0 24 24"><rect width={24} height={24}/><image width={12} height={12}/></svg>',
+      ),
+    ).toEqual([]);
+    expect(findJsxTokenProblems('a.tsx', '<svg width={24} height={24}/>')).toHaveLength(2);
+    expect(
+      findJsxTokenProblems('a.tsx', '<svg><rect strokeWidth={2}/><text fontSize={12}/></svg>'),
+    ).toHaveLength(2);
+  });
+  it.each([
+    '<svg {...{width:24}}/>',
+    '<div {...{style:{padding:4}}}/>',
+    'const width=24;const props={width};const x=<svg {...props}/>',
+    'const props={style:{padding:4}};const x=<div {...{...props}}/>',
+  ])('inspects static JSX spreads %s', (source) =>
+    expect(findJsxTokenProblems('a.tsx', source)).toHaveLength(1),
+  );
+  it.each([
+    'function A(props){return <svg {...props}/>}',
+    'const props={width:24};function A(props){return <svg {...props}/>}',
+    'const a=b;const b=a;const x=<svg {...a}/>',
+    '<svg><rect {...{width:24,height:24}}/></svg>',
+  ])('preserves dynamic props and drawing geometry %s', (source) =>
+    expect(findJsxTokenProblems('a.tsx', source)).toEqual([]),
+  );
+});
