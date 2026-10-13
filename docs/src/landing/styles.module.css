@@ -287,14 +287,8 @@
   inline-size: var(--dbs-icon-size-xl);
   block-size: var(--dbs-icon-size-xl);
 }
-.stageTone0 {
-  fill: var(--dbs-brand-cardano-blue);
-}
 .stageTone1 {
   fill: var(--dbs-accent-primary);
-}
-.stageTone3 {
-  fill: var(--dbs-accent-secondary);
 }
 .stageArrow {
   position: absolute;
@@ -333,17 +327,8 @@
 .useIcon1 {
   fill: var(--dbs-accent-secondary);
 }
-.useIcon2 {
-  fill: var(--dbs-brand-electric-blue);
-}
 .useIcon3 {
   fill: var(--dbs-brand-cardano-blue);
-}
-.useIcon4 {
-  fill: var(--dbs-status-warning);
-}
-.useIcon5 {
-  fill: var(--dbs-status-danger);
 }
 .schemaLink {
   display: flex;

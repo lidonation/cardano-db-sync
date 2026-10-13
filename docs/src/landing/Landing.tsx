@@ -4,7 +4,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 import Button from '../components/Button';
-import Frame, {CardSkeleton} from '../components/Card/Frame';
+import Frame from '../components/Card/Frame';
 import Command from '../components/Command';
 import TextLink from '../components/TextLink';
 import {SectionCross, SectionDivider} from '../components/Section';
@@ -279,7 +279,7 @@ function UseCases(): React.JSX.Element {
         <ul className={styles.cards}>
           {cases.map(([title, body], index) => (
             <li key={title}>
-              <Frame kind="Use case" skeleton={<CardSkeleton icon />} className={styles.useCard}>
+              <Frame kind="Use case" skeleton={null} className={styles.useCard}>
                 <Icon name="hexagon" size={32} className={styles[`useIcon${index}`]} />
                 <span className="dbs-type-title">{title}</span>
                 <span className={`dbs-type-body-sm ${styles.cardBody}`}>{body}</span>
@@ -325,7 +325,7 @@ function Queries(): React.JSX.Element {
         <ul className={styles.cards}>
           {queries.map(([question, sql]) => (
             <li key={question}>
-              <Frame kind="Query" skeleton={<CardSkeleton />} className={styles.queryCard}>
+              <Frame kind="Query" skeleton={null} className={styles.queryCard}>
                 <div className={`dbs-type-label-sm ${styles.queryHeader}`}>
                   <span>{question}</span>
                   <CodeCopy text={sql} variant="plain" tone="surface" />
