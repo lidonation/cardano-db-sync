@@ -5,12 +5,6 @@
   white-space: nowrap;
 }
 
-.mark {
-  display: none;
-  flex: none;
-  color: var(--dbs-accent-primary-text);
-}
-
 .strong {
   font: inherit;
   letter-spacing: inherit;

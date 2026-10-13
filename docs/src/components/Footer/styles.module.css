@@ -16,14 +16,6 @@
   gap: var(--dbs-space-8);
 }
 
-.brand [data-icon] {
-  stroke: var(--dbs-code-prompt);
-}
-
-.brand [data-icon] circle {
-  fill: var(--dbs-code-prompt);
-}
-
 .meta {
   color: var(--dbs-text-on-navy);
   composes: dbs-type-mono-sm from global;
