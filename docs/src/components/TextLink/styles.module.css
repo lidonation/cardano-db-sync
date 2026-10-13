@@ -1,20 +1,18 @@
 .link {
+  --dbs-link-text: var(--dbs-accent-primary-text);
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
   min-block-size: var(--dbs-layout-target-min);
-  color: var(--dbs-accent-primary-text);
+  color: var(--dbs-link-text);
   text-decoration: none;
 }
 .link[data-tone='prompt'] {
-  color: var(--dbs-code-prompt);
+  --dbs-link-text: var(--dbs-code-prompt);
 }
 .link:hover {
-  color: var(--dbs-accent-primary-text);
+  color: var(--dbs-link-text);
   text-decoration: underline;
-}
-.link[data-tone='prompt']:hover {
-  color: var(--dbs-code-prompt);
 }
 [dir='rtl'] .arrow {
   transform: scaleX(-1);
