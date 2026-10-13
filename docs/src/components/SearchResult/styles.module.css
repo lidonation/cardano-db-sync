@@ -4,7 +4,7 @@
   grid-template-columns: auto minmax(0, 1fr) auto auto;
   align-items: center;
   gap: var(--dbs-space-16);
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-16);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
@@ -17,18 +17,17 @@
 }
 
 .title {
+  composes: dbs-type-body from global;
   overflow: hidden;
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-body);
-  letter-spacing: var(--dbs-font-body-tracking);
+
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
 .meta {
+  composes: dbs-type-mono-sm from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-mono-sm);
-  letter-spacing: var(--dbs-font-mono-sm-tracking);
 }
 
 .enter {
@@ -88,7 +87,6 @@
 }
 
 .hint {
+  composes: dbs-type-caption from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-caption);
-  letter-spacing: var(--dbs-font-caption-tracking);
 }

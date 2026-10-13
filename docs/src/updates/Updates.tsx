@@ -37,9 +37,10 @@ export default function Updates({feed}: {readonly feed: UpdatesFeed | null}): Re
           <div className={styles.range}>
             <div className={styles.fields}>
               {(['from', 'to'] as const).map((endpoint) => (
-                <label key={endpoint} htmlFor={`${base}-${endpoint}`}>
+                <label className="dbs-type-label" key={endpoint} htmlFor={`${base}-${endpoint}`}>
                   {messages[endpoint]}
                   <input
+                    className="dbs-type-body-sm"
                     id={`${base}-${endpoint}`}
                     type="date"
                     value={range[endpoint]}

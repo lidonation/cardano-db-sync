@@ -26,7 +26,7 @@ export function SampleQueryCard({
     >
       <span className={styles.band}>{returns}</span>
       <pre className={styles.sql}>
-        <code>{sql}</code>
+        <code className="dbs-type-mono">{sql}</code>
       </pre>
     </Frame>
   );

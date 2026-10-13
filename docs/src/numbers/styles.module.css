@@ -1,5 +1,6 @@
 .page {
-  padding: var(--dbs-space-64) max(var(--dbs-space-48), calc((100% - 1200px) / 2));
+  padding: var(--dbs-space-64)
+    max(var(--dbs-space-48), calc((100% - var(--dbs-layout-content-max)) / 2));
   color: var(--dbs-text-primary);
   overflow-wrap: anywhere;
 }
@@ -7,14 +8,9 @@
   max-inline-size: 100%;
   margin-block-end: var(--dbs-space-48);
 }
-.hero h1 {
-  font: var(--dbs-font-heading-lg);
-  letter-spacing: var(--dbs-font-heading-lg-tracking);
-}
 .kicker {
+  composes: dbs-type-label from global;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
 }
 .metrics,
 .provenance {
@@ -42,10 +38,11 @@
 .card dd {
   margin: var(--dbs-space-8) 0 var(--dbs-space-16);
 }
+.value {
+  composes: dbs-type-heading-md from global;
+}
 .metrics dd,
 .value {
-  font: var(--dbs-font-heading-md);
-  letter-spacing: var(--dbs-font-heading-md-tracking);
   font-variant-numeric: tabular-nums;
 }
 .section {
@@ -81,7 +78,7 @@
 .line {
   fill: none;
   stroke: var(--dbs-accent-primary-text);
-  stroke-width: 3;
+  stroke-width: var(--dbs-border-width-marker);
 }
 @media (max-width: 1023px) {
   .page {
@@ -110,17 +107,8 @@
   }
 }
 
-.section h2 {
-  font: var(--dbs-font-heading-md);
-  letter-spacing: var(--dbs-font-heading-md-tracking);
-}
-.card h3 {
-  font: var(--dbs-font-title);
-  letter-spacing: var(--dbs-font-title-tracking);
-}
 .dateValue {
-  font: var(--dbs-font-body);
-  letter-spacing: var(--dbs-font-body-tracking);
+  composes: dbs-type-body from global;
 }
 .point {
   fill: var(--dbs-accent-primary-text);
@@ -135,8 +123,7 @@
 }
 
 .metricValue {
-  font: var(--dbs-font-heading-md);
-  letter-spacing: var(--dbs-font-heading-md-tracking);
+  composes: dbs-type-heading-md from global;
 }
 
 @media (max-width: 479px) {

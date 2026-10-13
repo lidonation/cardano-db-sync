@@ -27,7 +27,7 @@ export function ToolCard({
   return (
     <Frame kind="Tool" href={href} skeleton={<CardSkeleton />} {...data}>
       <span className={styles.toolName}>
-        <code>{name}</code>
+        <code className="dbs-type-mono">{name}</code>
         {href && <Icon name="external" size={12} />}
       </span>
       <span className={styles.meta}>{org}</span>
@@ -112,7 +112,7 @@ export function QueryCard({
         {copyable && <CodeCopy text={sql} />}
       </span>
       <pre className={styles.sql}>
-        <code>{sql}</code>
+        <code className="dbs-type-mono">{sql}</code>
       </pre>
       {href && (
         <Link className={styles.inlineLink} to={href}>

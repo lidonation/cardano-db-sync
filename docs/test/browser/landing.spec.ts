@@ -189,3 +189,196 @@ test.describe('axe, WCAG 2.2 AA', () => {
     }
   }
 });
+
+test.describe('locked Landing 1440 contract', () => {
+  test('layout geometry, bands and plain copy targets', async ({page}) => {
+    await open(page, 1440);
+    const geometry = await page.evaluate(() => {
+      const section = (id: string) => document.querySelector(`section[aria-labelledby="${id}"]`)!;
+      const box = (el: Element) => el.getBoundingClientRect();
+      const hero = section('landing-title');
+      const command = hero.querySelector('[data-dbs-component="Command"]')!;
+      const stages = Array.from(section('landing-how').querySelectorAll('ol > li'));
+      const facts = Array.from(section('landing-facts').querySelectorAll('ul > li'));
+      return {
+        command: [box(command).width, box(command).height],
+        stageWidths: stages.map((el) => box(el).width),
+        stagePitch: box(stages[1]).x - box(stages[0]).x,
+        factPitch: box(facts[1]).x - box(facts[0]).x,
+        bandPadding: getComputedStyle(section('landing-facts')).paddingBlockStart,
+        heroGap: box(section('landing-facts')).top - box(hero).bottom,
+        copies: Array.from(
+          document.querySelectorAll('main [data-dbs-component="Code / Copy"] button'),
+        ).map((el) => ({
+          height: box(el).height,
+          border: getComputedStyle(el).borderTopWidth,
+          background: getComputedStyle(el).backgroundColor,
+        })),
+      };
+    });
+    expect(geometry.command).toEqual([560, 52]);
+    expect(geometry.stageWidths).toEqual([276, 276, 276, 276]);
+    expect(geometry.stagePitch).toBe(308);
+    expect(geometry.factPitch).toBe(300);
+    expect(geometry.bandPadding).toBe('64px');
+    expect(geometry.heroGap).toBe(96);
+    for (const copy of geometry.copies) {
+      expect(copy.height).toBe(44);
+      expect(copy.border).toBe('0px');
+      expect(copy.background).toBe('rgba(0, 0, 0, 0)');
+    }
+  });
+
+  test('section heads, card grids, quickstart tracks and decoration', async ({page}) => {
+    await open(page, 1440);
+    const measured = await page.evaluate(() => {
+      const section = (id: string) => document.querySelector(`section[aria-labelledby="${id}"]`)!;
+      const box = (el: Element) => el.getBoundingClientRect();
+      const how = section('landing-how');
+      const use = section('landing-use');
+      const queries = section('landing-queries');
+      const quick = section('landing-quick');
+      const faq = section('landing-faq');
+      const community = section('landing-community');
+      const hero = section('landing-title');
+      const stages = Array.from(how.querySelectorAll('ol > li'));
+      const cards = Array.from(use.querySelectorAll('ul > li'));
+      const queryCards = Array.from(queries.querySelectorAll('ul > li'));
+      const step = quick.querySelector('ol > li')!;
+      const badge = step.children[0];
+      const copy = step.children[1];
+      const command = step.children[2];
+      const hexes = Array.from(community.querySelectorAll('svg')).slice(0, 3);
+      const graph = hero.querySelector('[data-dbs-graphic="hero"]')!;
+      return {
+        headingDelta: box(how.querySelector('h2')!).top - box(how.querySelector('p')!).top,
+        introGap: box(how.querySelectorAll('p')[1]).top - box(how.querySelector('h2')!).bottom,
+        contentGap: box(stages[0]).top - box(how.querySelectorAll('p')[1]).bottom,
+        plainGap: box(use.querySelector('p')!).top - box(how).bottom,
+        cardWidths: cards.map((el) => box(el).width),
+        cardPitch: box(cards[1]).left - box(cards[0]).left,
+        cardRowGap: box(cards[3]).top - box(cards[0]).bottom,
+        stageIcons: stages.map((el) => box(el.querySelector('svg')!).width),
+        queryHeights: queryCards.map((el) => box(el).height),
+        queryHeader: box(queryCards[0].querySelector('[data-kind="Query"]')!.firstElementChild!)
+          .height,
+        badge: [box(badge).width, box(badge).height],
+        tracks: [
+          box(copy).width,
+          box(command).width,
+          box(copy).left - box(badge).left,
+          box(command).left - box(copy).right,
+        ],
+        closedFaq: box(faq.querySelectorAll('details')[1]).height,
+        faqWidth: box(faq.querySelector('details')!).width,
+        faqPitch:
+          box(faq.querySelectorAll('details')[1]).left - box(faq.querySelector('details')!).left,
+        graphic: [box(graph).left, box(graph).top - box(hero.querySelector('h1')!).top],
+        hexes: hexes.map((el) => [box(el).left, box(el).top - box(community).top, box(el).width]),
+        bandPadding: [quick, community].map((el) => [
+          getComputedStyle(el).paddingBlockStart,
+          getComputedStyle(el).paddingBlockEnd,
+        ]),
+      };
+    });
+    expect(measured.headingDelta).toBeCloseTo(32, 0);
+    expect(measured.introGap).toBe(16);
+    expect(measured.contentGap).toBe(32);
+    expect(measured.plainGap).toBe(96);
+    expect(measured.cardWidths).toEqual([384, 384, 384, 384, 384, 384]);
+    expect(measured.cardPitch).toBe(408);
+    expect(measured.cardRowGap).toBe(24);
+    expect(measured.stageIcons).toEqual([48, 48, 48, 48]);
+    expect(new Set(measured.queryHeights).size).toBe(1);
+    expect(measured.queryHeader).toBe(40);
+    expect(measured.badge).toEqual([40, 46]);
+    expect(measured.tracks).toEqual([528, 580, 68, 24]);
+    expect(measured.closedFaq).toBe(64);
+    expect(measured.faqWidth).toBe(584);
+    expect(measured.faqPitch).toBe(616);
+    expect(measured.graphic[0]).toBe(820);
+    expect(measured.graphic[1]).toBeCloseTo(10, 0);
+    expect(measured.hexes).toEqual([
+      [1180, 30, 64],
+      [1250, 90, 40],
+      [1160, 110, 32],
+    ]);
+    expect(measured.bandPadding).toEqual([
+      ['64px', '64px'],
+      ['64px', '64px'],
+    ]);
+  });
+
+  for (const palette of ['light', 'dark', 'cream', 'navy']) {
+    test(`colour roles in ${palette}`, async ({page}) => {
+      await open(page, 1440, palette);
+      const roles = await page.evaluate(() => {
+        const section = (id: string) => document.querySelector(`section[aria-labelledby="${id}"]`)!;
+        const colour = (el: Element, role: string) => {
+          const probe = document.createElement('span');
+          probe.style.color = `var(${role})`;
+          el.append(probe);
+          const expected = getComputedStyle(probe).color;
+          probe.remove();
+          return {actual: getComputedStyle(el).color, expected};
+        };
+        return {
+          kicker: colour(section('landing-how').querySelector('p')!, '--dbs-text-kicker'),
+          codeKicker: colour(section('landing-quick').querySelector('p')!, '--dbs-code-accent'),
+          accent: colour(
+            document.querySelector('#landing-title span:last-child')!,
+            '--dbs-text-accent-display',
+          ),
+          band: getComputedStyle(section('landing-facts')).backgroundColor,
+        };
+      });
+      expect(roles.kicker.actual).toBe(roles.kicker.expected);
+      expect(roles.codeKicker.actual).toBe(roles.codeKicker.expected);
+      expect(roles.accent.actual).toBe(roles.accent.expected);
+      expect(roles.band).toBe(palette === 'dark' ? 'rgb(22, 27, 34)' : 'rgb(15, 17, 23)');
+    });
+  }
+});
+
+test('expanded translated copy reflows without overlapping facts or query content', async ({
+  page,
+}) => {
+  await open(page, 320);
+  await page.evaluate(() => {
+    document.querySelector('#landing-facts')!.textContent =
+      'Aktueller Stand dieser Veröffentlichung';
+    const header = document.querySelector('[data-kind="Query"] > div')!;
+    header.querySelector('span')!.textContent =
+      'Wie hoch ist das aktuell verfügbare Guthaben einer beliebigen Adresse in dieser Datenbank?';
+  });
+  const layout = await page.evaluate(() => {
+    const facts = document.querySelector('#landing-facts')!;
+    const link = facts.parentElement!.querySelector('a')!;
+    const range = document.createRange();
+    range.selectNodeContents(facts);
+    const f = range.getBoundingClientRect();
+    const l = link.getBoundingClientRect();
+    const header = document.querySelector('[data-kind="Query"] > div')!;
+    const title = header.querySelector('span')!;
+    const t = title.getBoundingClientRect();
+    const sql = header.nextElementSibling!.getBoundingClientRect();
+    return {
+      factsOverlap: f.left < l.right && f.right > l.left && f.top < l.bottom && f.bottom > l.top,
+      titleBottom: t.bottom,
+      sqlTop: sql.top,
+    };
+  });
+  expect(layout.factsOverlap).toBe(false);
+  expect(layout.titleBottom).toBeLessThanOrEqual(layout.sqlTop);
+});
+
+test('standalone FAQ keeps space above the footer', async ({page}) => {
+  await open(page, 1440);
+  await page.goto(new URL('faq', test.info().project.use.baseURL ?? SITE_URL).href);
+  await page.locator('#faq-title').waitFor();
+  const padding = await page
+    .locator('main section')
+    .last()
+    .evaluate((el) => getComputedStyle(el).paddingBlockEnd);
+  expect(padding).toBe('96px');
+});

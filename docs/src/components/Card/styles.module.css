@@ -10,30 +10,30 @@
   flex-direction: column;
   gap: var(--dbs-space-8);
   inline-size: 100%;
-  max-inline-size: 384px;
+  max-inline-size: var(--dbs-size-card-max);
   padding: var(--dbs-space-24);
-  border: 1px solid var(--dbs-border-default);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-default);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
   text-decoration: none;
 }
 
 .card[data-kind='Team'] {
-  max-inline-size: 190px;
-  min-block-size: 124px;
+  max-inline-size: var(--dbs-size-card-team-max);
+  min-block-size: var(--dbs-size-card-team-min);
 }
 .card[data-kind='Tool'] {
-  min-block-size: 118px;
+  min-block-size: var(--dbs-size-card-tool-min);
 }
 .card[data-kind='Use case'],
 .card[data-kind='Stat'] {
-  min-block-size: 190px;
+  min-block-size: var(--dbs-size-card-use-min);
 }
 .card[data-kind='Query'] {
-  min-block-size: 210px;
+  min-block-size: var(--dbs-size-card-query-min);
 }
 .card[data-kind='Sample query'] {
-  min-block-size: 130px;
+  min-block-size: var(--dbs-size-card-sample-min);
 }
 
 /* a card that is one link */
@@ -48,7 +48,6 @@
 .card[data-link][data-dbs-demo='pressed'] {
   background: var(--dbs-surface-accent-subtle);
 }
-.card[data-link]:focus-visible,
 .card[data-link][data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);
@@ -65,23 +64,23 @@
 
 /* text roles */
 .title {
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
+
   color: var(--dbs-text-primary);
 }
 .heading {
-  font: var(--dbs-font-title);
-  letter-spacing: var(--dbs-font-title-tracking);
+  composes: dbs-type-title from global;
+
   color: var(--dbs-text-primary);
 }
 .body {
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
+  composes: dbs-type-body-sm from global;
+
   color: var(--dbs-text-secondary);
 }
 .meta {
-  font: var(--dbs-font-caption);
-  letter-spacing: var(--dbs-font-caption-tracking);
+  composes: dbs-type-caption from global;
+
   color: var(--dbs-text-secondary);
 }
 .toolName {
@@ -96,16 +95,13 @@
   border: 0;
   background: none;
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-mono);
-  letter-spacing: var(--dbs-font-mono-tracking);
 }
 .evidence {
+  composes: dbs-type-mono-sm from global;
   padding: 0;
   border: 0;
   background: none;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-mono-sm);
-  letter-spacing: var(--dbs-font-mono-sm-tracking);
 }
 .mark,
 .icon {
@@ -120,6 +116,7 @@
   padding-block-start: 0;
 }
 .band {
+  composes: dbs-type-label-sm from global;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -128,8 +125,6 @@
   padding: var(--dbs-space-8) var(--dbs-space-24);
   background: var(--dbs-surface-sunken);
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-label-sm);
-  letter-spacing: var(--dbs-font-label-sm-tracking);
 }
 .sql {
   margin: 0;
@@ -140,25 +135,20 @@
   white-space: pre-wrap;
 }
 .inlineLink {
+  composes: dbs-type-label-sm from global;
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
   align-self: flex-start;
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   margin-block-start: auto;
   color: var(--dbs-accent-primary-text);
-  font: var(--dbs-font-label-sm);
-  letter-spacing: var(--dbs-font-label-sm-tracking);
+
   text-decoration: underline;
-  text-underline-offset: 3px;
 }
 .inlineLink:hover {
   color: var(--dbs-accent-primary-text);
-  text-decoration-thickness: 2px;
-}
-.inlineLink:focus-visible {
-  outline: var(--dbs-focus-ring);
-  outline-offset: var(--dbs-focus-offset);
+  text-decoration-thickness: var(--dbs-border-width-emphasis);
 }
 /* DF-8: arrows point the reading direction */
 [dir='rtl'] .directional {

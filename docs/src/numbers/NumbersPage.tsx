@@ -44,7 +44,7 @@ export default function NumbersPage({
         <div>
           <header className={styles.hero}>
             <p className={styles.kicker}>{t(messages.facts)}</p>
-            <h1>{title}</h1>
+            <h1 className="dbs-type-heading-lg">{title}</h1>
             <p>{t(messages.intro)}</p>
             <p>
               {t(activeNetwork === 'preview' ? messages.cadencePreview : messages.cadenceMainnet)}
@@ -75,7 +75,9 @@ export default function NumbersPage({
                   ))}
                 </ul>
                 <section className={styles.section} aria-labelledby="numbers-epoch-title">
-                  <h2 id="numbers-epoch-title">{t(messages.facts)}</h2>
+                  <h2 className="dbs-type-heading-md" id="numbers-epoch-title">
+                    {t(messages.facts)}
+                  </h2>
                   <dl className={styles.provenance}>
                     <Frame kind="Stat" skeleton={null} className={styles.card}>
                       <dt>{t(messages.updated)}</dt>
@@ -93,7 +95,9 @@ export default function NumbersPage({
                 </section>
                 <section className={styles.section} aria-labelledby="numbers-storage-title">
                   <p className={styles.kicker}>{t(messages.modelled)}</p>
-                  <h2 id="numbers-storage-title">{t(messages.storage)}</h2>
+                  <h2 className="dbs-type-heading-md" id="numbers-storage-title">
+                    {t(messages.storage)}
+                  </h2>
                   {!storage ? (
                     <p>{t(messages.modelMissing)}</p>
                   ) : (
@@ -108,7 +112,7 @@ export default function NumbersPage({
 
                       <div className={styles.storage}>
                         <Frame kind="Stat" skeleton={null} className={styles.card}>
-                          <h3>{t(messages.growth)}</h3>
+                          <h3 className="dbs-type-title">{t(messages.growth)}</h3>
                           <p>{t(messages.modelled)}</p>
                           <p id="numbers-growth-summary">
                             {growth.length === 0
@@ -205,7 +209,9 @@ export default function NumbersPage({
                   )}
                 </section>
                 <section className={styles.section} aria-labelledby="numbers-recent-title">
-                  <h2 id="numbers-recent-title">{t(messages.recent)}</h2>
+                  <h2 className="dbs-type-heading-md" id="numbers-recent-title">
+                    {t(messages.recent)}
+                  </h2>
                   {snapshot.recentEpochs.length === 0 && <p>{t(messages.epochsEmpty)}</p>}
                   <div className={styles.tableWrap}>
                     <table>

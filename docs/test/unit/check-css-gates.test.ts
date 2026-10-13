@@ -19,6 +19,11 @@ beforeEach(async () => {
   root = await fs.mkdtemp(path.join(os.tmpdir(), 'dbsync-css-'));
   await fs.mkdir(path.join(root, 'src'), {recursive: true});
   await writeTokenSource({base: {typography: {style: {body: {}}}}});
+  await fs.mkdir(path.join(root, 'src/css'), {recursive: true});
+  await fs.writeFile(
+    path.join(root, TOKENS_CSS),
+    ':root {--dbs-text-primary: black; --dbs-font-body-size: 16px; --dbs-font-label-size: 14px}',
+  );
 });
 
 /** Every tree scan needs the token source that names the type scale. */
@@ -31,7 +36,10 @@ afterEach(async () => {
   await fs.rm(root, {recursive: true, force: true});
 });
 
-const rules = (css: string) => checkCss(css).map((v) => v.rule);
+const rules = (css: string) =>
+  checkCss(css)
+    .map((v) => v.rule)
+    .filter((rule) => !['TOK-15', 'TOK-16', 'TOK-17', 'REUSE-1'].includes(rule));
 
 describe('FLOOR-4: focus outline is never removed', () => {
   it.each(['none', '0', '0px', 'none !important'])('flags `outline: %s`', (value) => {
@@ -121,7 +129,10 @@ describe('scanner', () => {
 
 describe('DF-1: no type size outside the 13-style scale', () => {
   const scale = new Set(['body', 'label']);
-  const df1 = (css: string) => checkCss(css, scale).map((v) => v.rule);
+  const df1 = (css: string) =>
+    checkCss(css, scale)
+      .map((v) => v.rule)
+      .filter((rule) => rule === 'DF-1');
 
   it.each(['15px', '1rem', '0.9em', 'larger', 'calc(1rem + 2px)', 'var(--other-size)'])(
     'flags `font-size: %s`',
@@ -299,6 +310,20 @@ describe('check:css over a tree', () => {
     ]);
   });
 
+  it('accepts declared global runtime aliases but not aliases scoped to another component', async () => {
+    await fs.writeFile(
+      path.join(root, 'src', 'globals.css'),
+      ':root { --dbs-global: 100%; } .owner { --dbs-private: 100%; }',
+    );
+    await fs.writeFile(
+      path.join(root, 'src', 'consumer.css'),
+      '.consumer { width: var(--dbs-global); height: var(--dbs-private); }',
+    );
+    const violations = await findViolations(root);
+    expect(violations).toHaveLength(1);
+    expect(violations[0].message).toContain('--dbs-private');
+  });
+
   it('fails when the token source has no type scale', async () => {
     await writeTokenSource({base: {}});
     await expect(loadTypeStyles(root)).rejects.toThrow(/no base.typography.style/);
@@ -344,7 +369,7 @@ describe('check:css CLI reporting', () => {
     const out = recorder();
     expect(await main(root, out)).toBe(1);
     const report = out.lines.join('\n');
-    expect(report).toContain('3 violation(s)');
+    expect(report).toContain('4 violation(s)');
     expect(report).toContain('src/bad.css:1  FLOOR-4');
     expect(report).toContain('src/bad.css:2  PERF-3');
     expect(report).toContain('src/bad.css:3  PERF-5');

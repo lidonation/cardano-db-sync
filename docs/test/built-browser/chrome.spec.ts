@@ -1,6 +1,8 @@
 import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
+import {SURFACES, NAVBAR_MENU, FOOTER_MENU} from '../../src/data/surfaces';
+
 import {LOCALES} from '../../config/i18n';
 import {PROFILES, type ProfileName} from '../../config/profiles';
 import {PALETTES, type Palette} from '../../src/lib/palette';
@@ -591,4 +593,73 @@ test('sticky docs navigation follows an enlarged measured navbar', async ({page}
     .toBe(true);
   await nav.getByRole('link').first().focus();
   expect((await focusMeasurement(page)).belowHeader).toBe(true);
+});
+
+// T1: the html canvas must follow the palette on app and documentation routes alike.
+for (const route of ['', 'docs/intro/', 'survey/results/']) {
+  for (const palette of PALETTES) {
+    test(`${route || 'home'} ${palette}: palette canvas uses surface.base`, async ({page}) => {
+      await open(page, route, palette);
+      const backgrounds = await page.locator('html').evaluate((node) => {
+        const style = getComputedStyle(node);
+        return {
+          actual: style.backgroundColor,
+          token: style.getPropertyValue('--dbs-surface-base').trim(),
+        };
+      });
+      const expected = {light: '#ffffff', dark: '#0f1117', cream: '#fcfbf5', navy: '#011555'}[
+        palette
+      ];
+      const token = backgrounds.token
+        .toLowerCase()
+        .replace(/^#([a-f\d])([a-f\d])([a-f\d])$/, '#$1$1$2$2$3$3');
+      expect(token).toBe(expected);
+      const rgb = `rgb(${[1, 3, 5].map((offset) => parseInt(expected.slice(offset, offset + 2), 16)).join(', ')})`;
+      expect(backgrounds.actual).toBe(rgb);
+    });
+  }
+}
+
+test('every built surface has a chrome menu destination; unbuilt routes stay hidden', async ({
+  page,
+}) => {
+  await open(page);
+  const profile = (process.env.DBS_BUILT_PROFILE ?? 'dev') as ProfileName;
+  const base = PROFILES[profile].baseUrl.replace(/\/$/, '');
+  const menu = page.locator('[data-dbs-component="Navbar / Full"] nav a, footer nav a');
+  const hrefs = await menu.evaluateAll((links) =>
+    links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, '')),
+  );
+  for (const surface of Object.values(SURFACES)) {
+    const response = await page.request.get(`${base}${surface}/`);
+    if (response.status() === 200) expect(hrefs).toContain(`${base}${surface}`);
+  }
+  for (const item of [...NAVBAR_MENU, ...FOOTER_MENU.flatMap((column) => column.items)]) {
+    if (!item.href.startsWith('/')) continue;
+    const response = await page.request.get(`${base}${item.href}/`);
+    expect(hrefs.includes(`${base}${item.href}`)).toBe(response.status() === 200);
+  }
+});
+
+test('1440 chrome follows the locked gutter and footer column tracks', async ({page}) => {
+  await open(page);
+  const boxes = await page.evaluate(() => {
+    const header = document.querySelector('[data-dbs-component="Navbar / Full"]')!;
+    const footer = document.querySelector('footer[data-dbs-component="Footer"]')!;
+    const theme = header.querySelector('[data-dbs-component="Theme switcher"]')!;
+    const columns = footer.querySelector('nav')!.children;
+    const home = header.querySelector('a')!;
+    return {
+      home: home.getBoundingClientRect().x,
+      themeEnd: theme.getBoundingClientRect().right,
+      columns: Array.from(columns).map((column) => column.getBoundingClientRect().x),
+      linkHeight: footer.querySelector('nav a')!.getBoundingClientRect().height,
+      wordmarkWeight: getComputedStyle(home.querySelector('strong')!).fontWeight,
+    };
+  });
+  expect(boxes.home).toBe(120);
+  expect(boxes.themeEnd).toBe(1320);
+  expect(boxes.columns).toEqual([620, 860, 1100]);
+  expect(boxes.linkHeight).toBeGreaterThanOrEqual(44);
+  expect(boxes.wordmarkWeight).toBe('300');
 });

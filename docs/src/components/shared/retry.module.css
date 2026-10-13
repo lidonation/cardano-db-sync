@@ -1,23 +1,16 @@
 /* a text button, with the 44px hit area every control has (DF-6) */
 .retry {
-  min-block-size: 44px;
-  min-inline-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
+  min-inline-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-4);
   border: 0;
   background: none;
   color: var(--dbs-accent-primary-text);
   cursor: pointer;
-  font: var(--dbs-font-label-sm);
-  letter-spacing: var(--dbs-font-label-sm-tracking);
+  composes: dbs-type-label-sm from global;
   text-decoration: underline;
-  text-underline-offset: 3px;
 }
 
 .retry:hover {
-  text-decoration-thickness: 2px;
-}
-
-.retry:focus-visible {
-  outline: var(--dbs-focus-ring);
-  outline-offset: var(--dbs-focus-offset);
+  text-decoration-thickness: var(--dbs-border-width-emphasis);
 }

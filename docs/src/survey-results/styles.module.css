@@ -10,7 +10,7 @@
 
 /* The track is display, not a control boundary (TOK-6): the default hairline. */
 .bar {
-  border: 1px solid var(--dbs-border-default);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-default);
   border-radius: 0;
   background: var(--dbs-surface-base);
 }

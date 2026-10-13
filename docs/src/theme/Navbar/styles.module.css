@@ -8,10 +8,10 @@
   background: transparent;
   position: sticky;
   inset-block-start: 0;
-  z-index: 100;
+  z-index: var(--dbs-layer-navbar);
 }
 
-/* The stock controls in the preferences slot keep the 44px floor (NAV-4, DF-6) until B30 replaces
+/* The stock controls in the preferences slot keep the var(--dbs-layout-target-min) floor (NAV-4, DF-6) until B30 replaces
    them with the designed selectors. */
 /* Infima hides every navbar__item below 997px. Our slots own visibility at 768/1280. */
 .sticky :global(.navbar__item) {
@@ -24,8 +24,8 @@
 .colorMode :global(button) {
   display: inline-flex;
   align-items: center;
-  min-block-size: 44px;
-  min-inline-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
+  min-inline-size: var(--dbs-layout-target-min);
   padding-inline: var(--dbs-space-12);
   color: var(--dbs-text-primary);
 }
@@ -33,5 +33,5 @@
 .sticky :global(.dropdown__link) {
   display: flex;
   align-items: center;
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
 }

@@ -14,14 +14,13 @@
 
 .tab {
   position: relative;
-  min-block-size: 32px;
+  min-block-size: var(--dbs-space-32);
   padding: 0 var(--dbs-space-12);
-  border: 1px solid var(--dbs-border-interactive);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-secondary);
   cursor: pointer;
-  font: var(--dbs-font-caption);
-  letter-spacing: var(--dbs-font-caption-tracking);
+  composes: dbs-type-caption from global;
 }
 
 /* the chip is drawn 32px tall; its hit area is 46 (DF-6, 44 with a pixel to spare), and wrapped rows sit 16px apart so
@@ -33,7 +32,7 @@
 .tabs[data-appearance='chip'] .tab::before {
   content: '';
   position: absolute;
-  inset: -7px 0;
+  inset: calc(-1 * var(--dbs-size-tabs-hit-outset)) 0;
 }
 
 .tab:hover,
@@ -47,8 +46,6 @@
   background: var(--dbs-surface-accent-subtle);
   color: var(--dbs-text-primary);
 }
-
-.tab:focus-visible,
 .tab[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);
@@ -73,17 +70,17 @@
 /* underline: a rule under the list, selected is a 3px bar under the label */
 .tabs[data-appearance='underline'] .list {
   gap: 0;
-  border-block-end: 1px solid var(--dbs-border-default);
+  border-block-end: var(--dbs-border-width-hairline) solid var(--dbs-border-default);
 }
 
 .tabs[data-appearance='underline'] .tab {
   position: relative;
-  min-block-size: 44px;
+  min-block-size: var(--dbs-layout-target-min);
   padding: 0 var(--dbs-space-16);
   border: 0;
   background: none;
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  --dbs-font-caption: var(--dbs-font-label);
+  --dbs-font-caption-tracking: var(--dbs-font-label-tracking);
 }
 
 .tabs[data-appearance='underline'] .tab:hover,
@@ -104,17 +101,12 @@
 .tabs[data-appearance='underline'] .tab[aria-selected='true']::after {
   content: '';
   position: absolute;
-  inset: auto 0 -1px;
-  block-size: 3px;
+  inset: auto 0 calc(-1 * var(--dbs-border-width-hairline));
+  block-size: var(--dbs-border-width-marker);
   background: var(--dbs-accent-primary);
 }
 
 .tabs[data-appearance='underline'] .tab[aria-disabled='true'] {
   background: none;
   color: var(--dbs-text-disabled);
-}
-
-.panel:focus-visible {
-  outline: var(--dbs-focus-ring);
-  outline-offset: var(--dbs-focus-offset);
 }

@@ -1,4 +1,4 @@
-/* Code / Copy — theme-invariant: it always sits on the code surface. */
+/* Code / Copy - theme-invariant: it always sits on the code surface. */
 .wrap {
   display: inline-flex;
   align-items: center;
@@ -12,21 +12,12 @@
   display: inline-flex;
   align-items: center;
   gap: var(--dbs-space-8);
-  min-block-size: 32px;
+  min-block-size: var(--dbs-space-32);
   padding: 0 var(--dbs-space-12);
-  border: 1px solid var(--dbs-code-text-muted);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-code-text-muted);
   background: var(--dbs-code-surface);
   color: var(--dbs-code-text);
   cursor: pointer;
-  font: var(--dbs-font-mono-sm);
-  letter-spacing: var(--dbs-font-mono-sm-tracking);
-}
-
-/* drawn 32px tall, with a hit area of at least 44 (DF-6) */
-.copy::before {
-  content: '';
-  position: absolute;
-  inset: -7px 0;
 }
 
 .copy:hover,
@@ -39,7 +30,6 @@
   background: var(--dbs-code-border);
 }
 
-.copy:focus-visible,
 .copy[data-dbs-demo='focus'] {
   outline: var(--dbs-focus-ring);
   outline-offset: var(--dbs-focus-offset);
@@ -72,19 +62,44 @@
 
 .status {
   color: var(--dbs-code-text-muted);
-  font: var(--dbs-font-mono-sm);
-  letter-spacing: var(--dbs-font-mono-sm-tracking);
-}
-
-.status[data-state='copied'] {
-  position: absolute;
-  inline-size: 1px;
-  block-size: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 
 .status[data-state='failed'] {
   color: var(--dbs-code-text);
+}
+
+.wrap[data-variant='plain'] {
+  padding: 0;
+  background: transparent;
+}
+.wrap[data-variant='plain'] .copy {
+  min-block-size: var(--dbs-layout-target-min);
+  min-inline-size: var(--dbs-layout-target-min);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--dbs-code-text-muted);
+}
+.wrap[data-tone='surface'] .copy {
+  color: var(--dbs-text-secondary);
+}
+
+.wrap[data-variant='boxed'] .copy::before {
+  content: '';
+  position: absolute;
+  inset: calc(-1 * (var(--dbs-space-8) - var(--dbs-border-width-hairline))) 0;
+}
+
+/* Recovery instructions stay visible and wrap without widening a narrow command. */
+.wrap[data-variant='plain']:has(.copy[data-state='failed']) {
+  flex: 1;
+  min-inline-size: 0;
+}
+.wrap[data-variant='plain'] .copy[data-state='failed'] {
+  max-inline-size: 100%;
+  white-space: normal;
+}
+.wrap[data-variant='plain'] .copy[data-state='failed'] span {
+  min-inline-size: 0;
+  overflow-wrap: anywhere;
 }

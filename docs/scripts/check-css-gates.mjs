@@ -34,6 +34,8 @@ import process from 'node:process';
 
 import {SKIP_DIRS, TOKENS_CSS, lineIndex, walk} from './lib/build-output.mjs';
 import {declarations, stripComments} from './lib/css-declarations.mjs';
+import {checkStrictCss} from './lib/strict-css.mjs';
+import {RAW_COLOUR, NAMED_COLOUR} from './lib/css-colours.mjs';
 
 const ROOT = path.resolve(import.meta.dirname, '..');
 
@@ -139,32 +141,6 @@ export async function loadTypeStyles(root = ROOT) {
 
 /** The generated token stylesheet: the one place colours are defined (TOK-1). */
 export {TOKENS_CSS};
-
-/** A raw colour: a hex literal or a colour function. Strings and `url()` are blanked first. */
-const RAW_COLOUR =
-  /#(?:[0-9a-f]{8}|[0-9a-f]{6}|[0-9a-f]{3,4})\b|\b(?:rgba?|hsla?|hwb|lab|lch|oklab|oklch|color)\(/i;
-
-/** The CSS named colours, less `transparent` and `currentColor`, which pick no palette colour. */
-const NAMED_COLOURS = (
-  'aliceblue antiquewhite aqua aquamarine azure beige bisque black blanchedalmond blue ' +
-  'blueviolet brown burlywood cadetblue chartreuse chocolate coral cornflowerblue cornsilk ' +
-  'crimson cyan darkblue darkcyan darkgoldenrod darkgray darkgreen darkgrey darkkhaki ' +
-  'darkmagenta darkolivegreen darkorange darkorchid darkred darksalmon darkseagreen ' +
-  'darkslateblue darkslategray darkslategrey darkturquoise darkviolet deeppink deepskyblue ' +
-  'dimgray dimgrey dodgerblue firebrick floralwhite forestgreen fuchsia gainsboro ghostwhite ' +
-  'gold goldenrod gray green greenyellow grey honeydew hotpink indianred indigo ivory khaki ' +
-  'lavender lavenderblush lawngreen lemonchiffon lightblue lightcoral lightcyan ' +
-  'lightgoldenrodyellow lightgray lightgreen lightgrey lightpink lightsalmon lightseagreen ' +
-  'lightskyblue lightslategray lightslategrey lightsteelblue lightyellow lime limegreen linen ' +
-  'magenta maroon mediumaquamarine mediumblue mediumorchid mediumpurple mediumseagreen ' +
-  'mediumslateblue mediumspringgreen mediumturquoise mediumvioletred midnightblue mintcream ' +
-  'mistyrose moccasin navajowhite navy oldlace olive olivedrab orange orangered orchid ' +
-  'palegoldenrod palegreen paleturquoise palevioletred papayawhip peachpuff peru pink plum ' +
-  'powderblue purple rebeccapurple red rosybrown royalblue saddlebrown salmon sandybrown ' +
-  'seagreen seashell sienna silver skyblue slateblue slategray slategrey snow springgreen ' +
-  'steelblue tan teal thistle tomato turquoise violet wheat white whitesmoke yellow yellowgreen'
-).split(' ');
-const NAMED_COLOUR = new RegExp(`(?<![\\w-])(?:${NAMED_COLOURS.join('|')})(?![\\w-])`, 'i');
 
 /** Properties that can take a colour, so a bare word there is a named colour, not a name. */
 const COLOUR_PROPERTY =
@@ -289,10 +265,10 @@ function transitionNamesLayout(value) {
  * @param {Set<string>} [typeStyles]
  * @param {{definesColours?: boolean}} [options] `definesColours` for the generated tokens.css only.
  */
-export function checkCss(source, typeStyles, {definesColours = false} = {}) {
+export function checkCss(source, typeStyles, {definesColours = false, ...strictOptions} = {}) {
   const css = stripComments(source);
   const lineAt = lineIndex(css);
-  const violations = [];
+  const violations = definesColours ? [] : checkStrictCss(source, strictOptions);
   const push = (decl, rule, message) =>
     violations.push({
       line: lineAt(decl.offset),
@@ -310,6 +286,7 @@ export function checkCss(source, typeStyles, {definesColours = false} = {}) {
 
   for (const decl of declarations(css)) {
     const {value, selectors} = decl;
+    if (definesColours || selectors.some((s) => /^@font-face\b/.test(s))) continue;
     // Vendor prefixes (-webkit-transition) obey the same rules as the standard property.
     const property = decl.property.replace(/^-[a-z]+-/, '');
     const inKeyframes = selectors.some((s) => /^@(-\w+-)?keyframes\b/.test(s));
@@ -414,16 +391,38 @@ export async function findViolations(root = ROOT) {
   root = path.resolve(root);
   const typeStyles = await loadTypeStyles(root);
   const violations = [];
+  const generated = await readFile(path.join(root, TOKENS_CSS), 'utf8');
+  const knownTokens = new Set([...generated.matchAll(/(--dbs-[\w-]+)\s*:/g)].map((m) => m[1]));
+  const breakpoints = [...generated.matchAll(/--dbs-breakpoint-[\w-]+:\s*(\d+)px/g)].map((m) =>
+    Number(m[1]),
+  );
   const skip = (dir) =>
     SKIP_DIRS.has(path.basename(dir)) ||
     (path.dirname(dir) === root && SKIP_ROOT_DIRS.has(path.basename(dir)));
+  const sources = [];
   for await (const full of walk(root, skip)) {
-    if (!SCAN_EXTENSIONS.has(path.extname(full))) {
-      continue;
+    if (!SCAN_EXTENSIONS.has(path.extname(full))) continue;
+    const source = await readFile(full, 'utf8');
+    sources.push({full, source});
+    // Runtime CSSOM measurements have global token aliases outside the generated palette.
+    // Only an explicit root declaration makes an alias available across stylesheets.
+    for (const decl of declarations(stripComments(source))) {
+      if (
+        decl.property.startsWith('--dbs-') &&
+        decl.selectors.some((s) => s === ':root' || s === ':global(:root)')
+      )
+        knownTokens.add(decl.property);
     }
+  }
+  for (const {full, source} of sources) {
     const file = path.relative(root, full).split(path.sep).join('/');
-    const options = {definesColours: file === TOKENS_CSS};
-    for (const v of checkCss(await readFile(full, 'utf8'), typeStyles, options)) {
+    const options = {
+      definesColours: file === TOKENS_CSS,
+      file,
+      knownTokens,
+      ...(breakpoints.length ? {breakpoints} : {}),
+    };
+    for (const v of checkCss(source, typeStyles, options)) {
       violations.push({file, ...v});
     }
   }

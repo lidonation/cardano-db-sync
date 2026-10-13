@@ -67,7 +67,7 @@ export default function InventoryPage(): React.JSX.Element {
               )}
             </h2>
             <p className={styles.usage}>
-              <code>{entry.usage}</code>
+              <code className="dbs-type-mono-sm">{entry.usage}</code>
               {entry.invariant && <span className={styles.was}> · theme-invariant (THM-6)</span>}
             </p>
             <div className={WIDE.has(entry.design) ? styles.wide : styles.grid}>
