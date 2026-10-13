@@ -13,10 +13,10 @@
     "/faq": {
       "status": "live"
     },
-    "/survey/results": {
+    "/numbers": {
       "status": "live"
     },
-    "/numbers": {
+    "/survey/results": {
       "status": "live"
     },
     "/updates": {
