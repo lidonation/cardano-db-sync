@@ -236,9 +236,11 @@
   text-decoration: none;
 }
 
+/* Docusaurus passes this export to classList.add/remove, so it must remain one token. */
 .tocLinkActive {
   color: var(--dbs-accent-primary-text);
-  composes: dbs-type-label from global;
+  --dbs-font-body-sm: var(--dbs-font-label);
+  --dbs-font-body-sm-tracking: var(--dbs-font-label-tracking);
 }
 
 .sectionDisclosure {
