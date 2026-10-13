@@ -8,6 +8,11 @@ svg[data-dbs-icon-sprite] {
   display: none;
 }
 
+:root {
+  /* Runtime header measurement overrides this fallback through CSSOM. */
+  --dbs-navbar-block-size: var(--dbs-layout-navbar-height);
+}
+
 /* R3 / A11Y-3 / DF-3: a single keyboard indicator, including native controls
    and Docusaurus chrome. Important beats component resets, not user styles. */
 :focus-visible {
@@ -18,9 +23,7 @@ svg[data-dbs-icon-sprite] {
 /* R4 / A11Y-12: reserve the pinned 72px header and the outside focus ring.
    The bridge owns navbar height; do not introduce another height variable. */
 html {
-  scroll-padding-block-start: calc(
-    var(--dbs-navbar-block-size, var(--ifm-navbar-height)) + var(--dbs-space-8)
-  );
+  scroll-padding-block-start: calc(var(--dbs-navbar-block-size) + var(--dbs-space-8));
   scrollbar-color: var(--dbs-border-interactive) var(--dbs-surface-base);
 }
 
@@ -75,7 +78,7 @@ time,
   inset-inline-start: var(--dbs-space-16);
   max-inline-size: calc(100% - var(--dbs-space-32));
   box-sizing: border-box;
-  z-index: calc(var(--ifm-z-index-fixed) + 1);
+  z-index: var(--dbs-layer-skip);
   transform: translateY(calc(-100% - var(--dbs-space-32)));
   padding: var(--dbs-space-8) var(--dbs-space-16);
   color: var(--dbs-text-primary);
@@ -120,7 +123,7 @@ time,
     animation: none !important;
     transition-property: color, background-color, border-color, outline-color !important;
     transition-duration: var(--dbs-motion-feedback) !important;
-    transition-delay: 0s !important;
+    transition-delay: var(--dbs-motion-none) !important;
   }
 }
 

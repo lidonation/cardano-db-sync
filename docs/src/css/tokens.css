@@ -98,9 +98,11 @@
   --dbs-icon-stroke: 1.5;
   --dbs-motion-feedback: 150ms;
   --dbs-motion-spinner: 900ms;
+  --dbs-motion-none: 0ms;
   --dbs-layer-below: -1;
   --dbs-layer-raised: 10;
   --dbs-layer-navbar: 100;
+  --dbs-layer-skip: 201;
   --dbs-code-surface: #0f1117;
   --dbs-code-surface-raised: #161b22;
   --dbs-code-border: #30363d;

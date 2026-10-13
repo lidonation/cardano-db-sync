@@ -20,8 +20,7 @@
   background: var(--dbs-surface-base);
   color: var(--dbs-text-secondary);
   cursor: pointer;
-  font: var(--dbs-font-caption);
-  letter-spacing: var(--dbs-font-caption-tracking);
+  composes: dbs-type-caption from global;
 }
 
 /* the chip is drawn 32px tall; its hit area is 46 (DF-6, 44 with a pixel to spare), and wrapped rows sit 16px apart so
@@ -80,8 +79,8 @@
   padding: 0 var(--dbs-space-16);
   border: 0;
   background: none;
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  --dbs-font-caption: var(--dbs-font-label);
+  --dbs-font-caption-tracking: var(--dbs-font-label-tracking);
 }
 
 .tabs[data-appearance='underline'] .tab:hover,

@@ -34,13 +34,12 @@
   place-items: center;
   background: var(--dbs-accent-primary-tint);
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
 }
 
 .avatar[data-size='meta'] .fallback {
-  font: var(--dbs-font-label-sm);
-  letter-spacing: var(--dbs-font-label-sm-tracking);
+  --dbs-font-label: var(--dbs-font-label-sm);
+  --dbs-font-label-tracking: var(--dbs-font-label-sm-tracking);
 }
 
 a.avatar:hover .image,

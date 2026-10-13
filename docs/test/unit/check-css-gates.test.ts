@@ -310,6 +310,20 @@ describe('check:css over a tree', () => {
     ]);
   });
 
+  it('accepts declared global runtime aliases but not aliases scoped to another component', async () => {
+    await fs.writeFile(
+      path.join(root, 'src', 'globals.css'),
+      ':root { --dbs-global: 100%; } .owner { --dbs-private: 100%; }',
+    );
+    await fs.writeFile(
+      path.join(root, 'src', 'consumer.css'),
+      '.consumer { width: var(--dbs-global); height: var(--dbs-private); }',
+    );
+    const violations = await findViolations(root);
+    expect(violations).toHaveLength(1);
+    expect(violations[0].message).toContain('--dbs-private');
+  });
+
   it('fails when the token source has no type scale', async () => {
     await writeTokenSource({base: {}});
     await expect(loadTypeStyles(root)).rejects.toThrow(/no base.typography.style/);

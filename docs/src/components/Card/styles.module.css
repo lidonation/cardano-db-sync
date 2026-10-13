@@ -95,8 +95,6 @@
   border: 0;
   background: none;
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-mono);
-  letter-spacing: var(--dbs-font-mono-tracking);
 }
 .evidence {
   composes: dbs-type-mono-sm from global;

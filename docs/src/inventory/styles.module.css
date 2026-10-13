@@ -13,6 +13,12 @@
   margin: 0;
 }
 
+.intro {
+  composes: dbs-type-body-sm from global;
+}
+.usage {
+  composes: dbs-type-body-sm from global;
+}
 .intro,
 .usage {
   display: flex;
@@ -21,8 +27,6 @@
   gap: var(--dbs-space-8);
   margin: 0;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
 }
 
 .palette {
@@ -36,7 +40,7 @@
 }
 
 .palette[aria-pressed='true'] {
-  border-width: 2px;
+  border-width: var(--dbs-border-width-emphasis);
   border-color: var(--dbs-border-selected);
 }
 
@@ -58,8 +62,7 @@
   border: 0;
   background: none;
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-mono-sm);
-  letter-spacing: var(--dbs-font-mono-sm-tracking);
+  composes: dbs-type-mono-sm from global;
 }
 
 .was {

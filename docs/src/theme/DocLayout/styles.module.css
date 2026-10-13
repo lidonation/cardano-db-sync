@@ -27,9 +27,9 @@
 
 .sidebar {
   position: sticky;
-  inset-block-start: var(--dbs-navbar-block-size, var(--ifm-navbar-height));
+  inset-block-start: var(--dbs-navbar-block-size);
   align-self: start;
-  max-block-size: calc(100dvh - var(--dbs-navbar-block-size, var(--ifm-navbar-height)));
+  max-block-size: calc(100dvh - var(--dbs-navbar-block-size));
   overflow-y: auto;
   padding-block: var(--dbs-space-24);
   /* Keep the 2px outline and 2px offset inside both navigation scrollports. */
@@ -55,6 +55,12 @@
   margin-block-start: var(--dbs-space-16);
 }
 
+.groupHeading {
+  composes: dbs-type-eyebrow from global;
+}
+.groupLink {
+  composes: dbs-type-eyebrow from global;
+}
 .groupHeading,
 .groupLink {
   display: flex;
@@ -62,8 +68,7 @@
   min-block-size: var(--dbs-layout-target-min);
   padding-inline: var(--dbs-space-12);
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-eyebrow);
-  letter-spacing: var(--dbs-font-eyebrow-tracking);
+
   text-decoration: none;
 }
 
@@ -74,8 +79,7 @@
   min-block-size: var(--dbs-layout-target-min);
   padding: var(--dbs-space-8) var(--dbs-space-12) var(--dbs-space-8) var(--dbs-space-16);
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
+  composes: dbs-type-body-sm from global;
   text-decoration: none;
 }
 
@@ -96,8 +100,10 @@
 .groupLink[aria-current='page'] {
   background: var(--dbs-surface-accent-subtle);
   color: var(--dbs-accent-primary-text);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  --dbs-font-body-sm: var(--dbs-font-label);
+  --dbs-font-body-sm-tracking: var(--dbs-font-label-tracking);
+  --dbs-font-eyebrow: var(--dbs-font-label);
+  --dbs-font-eyebrow-tracking: var(--dbs-font-label-tracking);
 }
 
 .row[aria-current='page']::before {
@@ -206,6 +212,12 @@
   padding-inline-start: var(--dbs-space-24);
 }
 
+.tocLink {
+  composes: dbs-type-body-sm from global;
+}
+.tocMobileLink {
+  composes: dbs-type-body-sm from global;
+}
 .tocLink,
 .tocMobileLink {
   display: flex;
@@ -213,8 +225,7 @@
   min-block-size: var(--dbs-layout-target-min);
   padding: var(--dbs-space-8) var(--dbs-space-12);
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
+
   text-decoration: none;
 }
 
@@ -227,8 +238,7 @@
 
 .tocLinkActive {
   color: var(--dbs-accent-primary-text);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
 }
 
 .sectionDisclosure {
@@ -243,14 +253,10 @@
 
   .toc {
     position: sticky;
-    inset-block-start: calc(
-      var(--dbs-navbar-block-size, var(--ifm-navbar-height)) + var(--dbs-space-24)
-    );
+    inset-block-start: calc(var(--dbs-navbar-block-size) + var(--dbs-space-24));
     display: block;
     align-self: start;
-    max-block-size: calc(
-      100dvh - var(--dbs-navbar-block-size, var(--ifm-navbar-height)) - var(--dbs-space-48)
-    );
+    max-block-size: calc(100dvh - var(--dbs-navbar-block-size) - var(--dbs-space-48));
     padding: var(--dbs-space-4);
     scroll-padding-block: var(--dbs-space-8);
     overflow-y: auto;

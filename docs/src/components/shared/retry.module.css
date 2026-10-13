@@ -7,8 +7,7 @@
   background: none;
   color: var(--dbs-accent-primary-text);
   cursor: pointer;
-  font: var(--dbs-font-label-sm);
-  letter-spacing: var(--dbs-font-label-sm-tracking);
+  composes: dbs-type-label-sm from global;
   text-decoration: underline;
 }
 

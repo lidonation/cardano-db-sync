@@ -195,7 +195,7 @@
   .drawer:not([hidden]) {
     display: block;
     max-block-size: calc(
-      100dvh - var(--dbs-navbar-bar-size, var(--ifm-navbar-height)) - var(--dbs-navbar-top, 0px) -
+      100dvh - var(--dbs-navbar-bar-size, var(--ifm-navbar-height)) - var(--dbs-navbar-top) -
         var(--dbs-border-width-hairline)
     );
     overflow-y: auto;

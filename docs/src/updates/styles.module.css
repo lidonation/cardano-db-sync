@@ -78,8 +78,6 @@
   min-inline-size: 0;
   flex-direction: column;
   gap: var(--dbs-space-8);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
 }
 .fields input {
   box-sizing: border-box;
@@ -91,8 +89,6 @@
   border-radius: var(--dbs-radius-sm);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
 }
 .helper {
   composes: dbs-type-body-sm from global;

@@ -8,10 +8,6 @@
   max-inline-size: 100%;
   margin-block-end: var(--dbs-space-48);
 }
-.hero h1 {
-  font: var(--dbs-font-heading-lg);
-  letter-spacing: var(--dbs-font-heading-lg-tracking);
-}
 .kicker {
   composes: dbs-type-label from global;
   color: var(--dbs-text-secondary);
@@ -42,10 +38,11 @@
 .card dd {
   margin: var(--dbs-space-8) 0 var(--dbs-space-16);
 }
+.value {
+  composes: dbs-type-heading-md from global;
+}
 .metrics dd,
 .value {
-  font: var(--dbs-font-heading-md);
-  letter-spacing: var(--dbs-font-heading-md-tracking);
   font-variant-numeric: tabular-nums;
 }
 .section {
@@ -110,14 +107,6 @@
   }
 }
 
-.section h2 {
-  font: var(--dbs-font-heading-md);
-  letter-spacing: var(--dbs-font-heading-md-tracking);
-}
-.card h3 {
-  font: var(--dbs-font-title);
-  letter-spacing: var(--dbs-font-title-tracking);
-}
 .dateValue {
   composes: dbs-type-body from global;
 }

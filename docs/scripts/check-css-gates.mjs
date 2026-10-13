@@ -399,10 +399,22 @@ export async function findViolations(root = ROOT) {
   const skip = (dir) =>
     SKIP_DIRS.has(path.basename(dir)) ||
     (path.dirname(dir) === root && SKIP_ROOT_DIRS.has(path.basename(dir)));
+  const sources = [];
   for await (const full of walk(root, skip)) {
-    if (!SCAN_EXTENSIONS.has(path.extname(full))) {
-      continue;
+    if (!SCAN_EXTENSIONS.has(path.extname(full))) continue;
+    const source = await readFile(full, 'utf8');
+    sources.push({full, source});
+    // Runtime CSSOM measurements have global token aliases outside the generated palette.
+    // Only an explicit root declaration makes an alias available across stylesheets.
+    for (const decl of declarations(stripComments(source))) {
+      if (
+        decl.property.startsWith('--dbs-') &&
+        decl.selectors.some((s) => s === ':root' || s === ':global(:root)')
+      )
+        knownTokens.add(decl.property);
     }
+  }
+  for (const {full, source} of sources) {
     const file = path.relative(root, full).split(path.sep).join('/');
     const options = {
       definesColours: file === TOKENS_CSS,
@@ -410,7 +422,7 @@ export async function findViolations(root = ROOT) {
       knownTokens,
       ...(breakpoints.length ? {breakpoints} : {}),
     };
-    for (const v of checkCss(await readFile(full, 'utf8'), typeStyles, options)) {
+    for (const v of checkCss(source, typeStyles, options)) {
       violations.push({file, ...v});
     }
   }

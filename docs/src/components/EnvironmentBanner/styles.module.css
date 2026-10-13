@@ -9,8 +9,7 @@
   border-bottom: var(--dbs-border-width-hairline) solid var(--dbs-status-warning);
   background: var(--dbs-status-warning-subtle);
   color: var(--dbs-status-warning-text);
-  font: var(--dbs-font-body-sm);
-  letter-spacing: var(--dbs-font-body-sm-tracking);
+  composes: dbs-type-body-sm from global;
 }
 
 .label {
