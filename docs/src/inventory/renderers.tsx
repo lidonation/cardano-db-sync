@@ -2,17 +2,10 @@ import React, {type ReactNode} from 'react';
 
 import Avatar from '../components/Avatar';
 import Button, {type ButtonVariant} from '../components/Button';
-import {
-  ChoiceCard,
-  DataOptionCard,
-  OptionCard,
-  QueryCard,
-  SampleQueryCard,
-  StatCard,
-  TeamCard,
-  ToolCard,
-  UseCaseCard,
-} from '../components/Card';
+import {QueryCard, TeamCard, ToolCard, UseCaseCard} from '../components/Card';
+import {ChoiceCard, DataOptionCard, OptionCard} from '../components/Card/Select';
+import {SampleQueryCard} from '../components/Card/SampleQuery';
+import {StatCard} from '../components/Card/Stat';
 import CodeCopy from '../components/CodeCopy';
 import Footer from '../components/Footer';
 import KeyCap from '../components/KeyCap';

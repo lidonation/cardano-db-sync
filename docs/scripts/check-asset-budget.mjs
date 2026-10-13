@@ -6,7 +6,7 @@
  *
  *   totals   every file in the build, grouped by kind (js, css, html, image, font, other)
  *   page     the initial payload of each HTML page: the page itself plus the stylesheets and
- *            scripts it references directly. The largest page is held to `page.initial`.
+ *            scripts it references directly. HTML alone is held to page.html; the combined payload to `page.initial`.
  *
  * Limits live in `config/asset-budget.json`. A kind the budget does not name is measured and
  * reported but not limited. Run by `npm run check:budget` after a build, and by CI. With no
@@ -99,7 +99,7 @@ export function gzipSize(bytes) {
  *
  * @param {string} dir
  * @param {readonly string[]} [exclude] Directories under `dir` to leave out (other locales' sites).
- * @returns {Promise<{totals: Record<string, number>, pages: Array<{page: string, bytes: number}>}>}
+ * @returns {Promise<{totals: Record<string, number>, pages: Array<{page: string, bytes: number, htmlBytes?: number}>}>}
  */
 export async function measure(dir, exclude = []) {
   /** @type {Record<string, number>} */
@@ -132,7 +132,7 @@ export async function measure(dir, exclude = []) {
         bytes += sizes.get(asset) ?? 0;
       }
     }
-    pages.push({page: rel, bytes});
+    pages.push({page: rel, bytes, htmlBytes: sizes.get(rel) ?? 0});
   }
   pages.sort((a, b) => b.bytes - a.bytes);
 
@@ -189,7 +189,7 @@ function assetPath(url, sizes) {
 }
 
 /**
- * @typedef {{totals?: Record<string, number>, page?: {initial?: number}}} Budget
+ * @typedef {{totals?: Record<string, number>, page?: {initial?: number, html?: number}}} Budget
  *   Limits in gzip bytes.
  */
 
@@ -223,8 +223,8 @@ export function parseBudget(raw) {
     limit(`totals.${kind}`, value);
   }
   for (const [key, value] of Object.entries(budget.page ?? {})) {
-    if (key !== 'initial') {
-      problems.push(`page.${key} is not a page limit (initial)`);
+    if (!['initial', 'html'].includes(key)) {
+      problems.push(`page.${key} is not a page limit (initial, html)`);
     }
     limit(`page.${key}`, value);
   }
@@ -247,6 +247,15 @@ export function overBudget(measured, budget) {
     const bytes = measured.totals[kind] ?? 0;
     if (bytes > limit) {
       over.push({what: `total ${kind}`, bytes, limit});
+    }
+  }
+  const htmlLimit = budget.page?.html;
+  if (htmlLimit !== undefined) {
+    for (const {page, htmlBytes} of measured.pages) {
+      if (htmlBytes === undefined) throw new Error(`missing HTML measurement for ${page}`);
+      if (htmlBytes > htmlLimit) {
+        over.push({what: `HTML of ${page}`, bytes: htmlBytes, limit: htmlLimit});
+      }
     }
   }
   const pageLimit = budget.page?.initial;

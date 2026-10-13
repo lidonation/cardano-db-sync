@@ -129,7 +129,7 @@ describe('build hygiene', () => {
     expect(config.markdown?.hooks?.onBrokenMarkdownLinks).toBe('throw');
   });
 
-  it('registers the CNAME, route-manifest, environment, security, i18n, inventory and CSS-prune plugins', async () => {
+  it('registers the CNAME, route-manifest, environment, security, i18n, inventory, CSS-prune and shared-code plugins', async () => {
     const config = await loadConfig('prod');
     const {default: cnamePlugin} = await import('../../plugins/cname');
     const {default: routeManifestPlugin} = await import('../../plugins/route-manifest');
@@ -140,6 +140,7 @@ describe('build hygiene', () => {
     const {default: palettePlugin} = await import('../../plugins/palette');
     const {default: cssPrunePlugin} = await import('../../plugins/css-prune');
     const {default: surveyResultsPlugin} = await import('../../plugins/survey-results');
+    const {default: sharedCodePlugin} = await import('../../plugins/shared-code');
     expect(config.plugins).toEqual([
       surveyResultsPlugin,
       cnamePlugin,
@@ -150,6 +151,7 @@ describe('build hygiene', () => {
       inventoryPlugin,
       palettePlugin,
       cssPrunePlugin,
+      sharedCodePlugin,
     ]);
   });
 
@@ -181,5 +183,59 @@ describe('B30 - the three global controls share the navbar (THM-1, A11Y-29, DF-7
   it('leaves the theme switcher to the swizzled ColorModeToggle, not the navbar config', async () => {
     const items = await navbarItems();
     expect(items.map((item) => item.type)).not.toContain('colorModeToggle');
+  });
+});
+
+describe('B01 follow-up - brand assets in static/ and favicon (#63)', () => {
+  interface HeadTag {
+    readonly tagName?: string;
+    readonly attributes?: Record<string, string>;
+  }
+
+  async function headTags(profile?: string): Promise<HeadTag[]> {
+    const config = await loadConfig(profile);
+    return (config.headTags ?? []) as HeadTag[];
+  }
+
+  it('emits the global favicon directly, without locale resolution or an absolute URL', async () => {
+    for (const name of ['dev', 'prod'] as const) {
+      const config = await loadConfig(name);
+      expect(config.favicon).toBeUndefined();
+      const tags = await headTags(name);
+      const icons = tags.filter((tag) => tag.attributes?.rel === 'icon');
+      expect(icons).toHaveLength(1);
+      expect(icons[0].tagName).toBe('link');
+      expect(icons[0].attributes?.href).toBe(
+        `${PROFILES[name].baseUrl}brand/png/mark-badge-32.png`,
+      );
+    }
+  });
+
+  it('adds an Apple touch icon via headTags, baseUrl-relative per profile', async () => {
+    for (const name of ['dev', 'prod'] as const) {
+      const tags = await headTags(name);
+      const apple = tags.find((tag) => tag.attributes?.rel === 'apple-touch-icon');
+      expect(apple?.tagName).toBe('link');
+      expect(apple?.attributes?.href).toBe(`${PROFILES[name].baseUrl}brand/png/mark-badge-180.png`);
+    }
+  });
+
+  it('keeps the favicon and touch icon free of hardcoded environment values (ENV-1)', async () => {
+    const source = await fs.readFile(CONFIG_PATH, 'utf8');
+    expect(source).not.toContain('/cardano-db-sync/');
+    expect(source).not.toMatch(/favicon\s*:\s*['"`]\//);
+    expect(source).not.toMatch(/favicon\s*:\s*['"`]https?:/);
+    expect(source).toContain('profile.baseUrl');
+  });
+
+  it('ships the brand marks from static/ with no public/ tree left', async () => {
+    const docsRoot = path.resolve(CONFIG_PATH, '..');
+    await expect(
+      fs.stat(path.join(docsRoot, 'static/brand/png/mark-badge-32.png')),
+    ).resolves.toBeDefined();
+    await expect(
+      fs.stat(path.join(docsRoot, 'static/brand/png/mark-badge-180.png')),
+    ).resolves.toBeDefined();
+    await expect(fs.stat(path.join(docsRoot, 'public'))).rejects.toThrow(/ENOENT/);
   });
 });

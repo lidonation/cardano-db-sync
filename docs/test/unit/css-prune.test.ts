@@ -109,3 +109,21 @@ describe('CSS cache identity', () => {
     }
   });
 });
+
+import {pruneUnusedTokens} from '../../plugins/css-prune';
+it('removes only emitted tokens absent from CSS dependencies and runtime references', () => {
+  const css =
+    ':root{--dbs-unused:red;--dbs-parent:var(--dbs-child);--dbs-child:blue;--dbs-runtime:green}.x{color:var(--dbs-parent)}';
+  expect(pruneUnusedTokens(css, ['getPropertyValue("--dbs-runtime")'])).not.toContain(
+    '--dbs-unused',
+  );
+  expect(pruneUnusedTokens(css, ['getPropertyValue("--dbs-runtime")'])).toContain(
+    '--dbs-child:blue',
+  );
+  expect(pruneUnusedTokens(css, ['getPropertyValue("--dbs-runtime")'])).toContain(
+    '--dbs-runtime:green',
+  );
+  expect(pruneUnusedTokens(css, ['"--dbs-" + name'])).toBe(css);
+  expect(pruneUnusedTokens(css, ['"--dbs-font-" + name'])).toBe(css);
+  expect(pruneUnusedTokens(css, ['`--dbs-font-${name}`'])).toBe(css);
+});

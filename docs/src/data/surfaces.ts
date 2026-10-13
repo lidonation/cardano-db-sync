@@ -18,6 +18,7 @@ export const SURFACES = {
   ecosystem: '/ecosystem',
   config: '/config',
   faq: '/faq',
+  updates: '/updates',
 } as const;
 
 export type Surface = keyof typeof SURFACES;

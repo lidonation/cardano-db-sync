@@ -6,7 +6,7 @@ import {PROFILES, type ProfileName} from '../../config/profiles';
 import {PALETTES, type Palette} from '../../src/lib/palette';
 
 /** Functional chrome only. Full published-route recordings live outside the repository. */
-const ROUTES = ['', 'docs/intro/', '404.html'] as const;
+const ROUTES = ['', 'docs/intro/', 'updates/', '404.html'] as const;
 const CHROME_ROUTES = LOCALES.flatMap((locale) =>
   ROUTES.map((route) => `${locale === 'en' ? '' : locale + '/'}${route}`),
 );

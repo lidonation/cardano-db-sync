@@ -40,9 +40,9 @@ size    = 16 32 48 64 128 180 192 256 512 1024
 | `svg/lockup-dark.svg`  | all near-black (monochrome, light bg)        |
 | `svg/lockup-white.svg` | all white (dark bg)                          |
 
-Wordmark is **Space Grotesk** — "Cardano" Light (300), "DB Sync" Bold (700). The SVGs embed a Google Fonts `@import`, so they render the true wordmark in any browser with network; in tools without Space Grotesk they fall back to a system sans.
+Wordmark is **Space Grotesk** — "Cardano" Light (300), "DB Sync" Bold (700). The SVG wordmarks contain outlined glyphs from the self-hosted Space Grotesk font. They render offline without a remote font request or a system-font fallback.
 
-**Lockup PNGs are not pre-rendered** because Space Grotesk is not installed on the build machine and rendering with a fallback would misrepresent the wordmark. To get a PNG lockup, open the SVG in any tool that has Space Grotesk (Figma, browser, Illustrator) and export — the vector is final.
+**Lockup PNGs are not pre-rendered.** To get a PNG lockup, export the outlined SVG in a vector tool or browser. No font installation is needed.
 
 ## Usage
 
@@ -54,3 +54,7 @@ Wordmark is **Space Grotesk** — "Cardano" Light (300), "DB Sync" Bold (700). T
 ## Regenerating the PNGs
 
 The marks are drawn with ImageMagick native primitives (the SVGs use `fill-rule:evenodd` hexagon rings, so they also rasterise cleanly). See the mark geometry in `svg/mark-*.svg`; the 64-unit viewBox scales to any size.
+
+## Wordmark outlines
+
+The two wordmark spans are shaped with HarfBuzz at weights 300 and 700, using `@fontsource-variable/space-grotesk` (5.3.0). FontTools instantiates each weight and writes the glyph outlines as SVG paths, keeping the 28px size, baseline at (58, 38), and -0.5px letter spacing. The geometry and colours of the marks are unchanged. The font is licensed under the SIL Open Font License 1.1; its copyright and license ship in the font package.

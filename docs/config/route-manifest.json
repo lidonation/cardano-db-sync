@@ -15,6 +15,12 @@
     },
     "/survey/results": {
       "status": "live"
+    },
+    "/numbers": {
+      "status": "live"
+    },
+    "/updates": {
+      "status": "live"
     }
   }
 }

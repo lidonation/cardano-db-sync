@@ -360,3 +360,24 @@ test.describe('behaviour', () => {
     await expect(cell.getByRole('link')).toHaveAccessibleName('Kostas Dermentzis');
   });
 });
+
+for (const [kind, minimum] of [
+  ['Choice', 136],
+  ['Option', 150],
+  ['Data option', 108],
+] as const) {
+  test(`${kind} fallbacks retain their card dimensions`, async ({page}) => {
+    await open(page);
+    for (const state of ['default', 'loading', 'error', 'empty']) {
+      const card = page.locator(
+        `[data-inventory-entry="Card / ${kind}"] [data-inventory-state="${state}"] [data-kind="${kind}"]`,
+      );
+      const size = await card.evaluate((node) => ({
+        minimum: getComputedStyle(node).minBlockSize,
+        maximum: getComputedStyle(node).maxInlineSize,
+      }));
+      expect(size.minimum, `${kind} ${state}`).toBe(`${minimum}px`);
+      if (kind === 'Option') expect(size.maximum, state).toBe('282px');
+    }
+  });
+}

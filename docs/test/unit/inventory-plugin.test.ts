@@ -7,6 +7,7 @@ import inventoryPlugin, {
   INVENTORY_ENV_VAR,
   INVENTORY_PATH,
   LAYOUT_FIXTURE_PATH,
+  UPDATES_FIXTURE_PATH,
   inventoryEnabled,
   layoutFixturePlugins,
 } from '../../plugins/inventory';
@@ -40,6 +41,27 @@ describe('component inventory route (B29, VER-5)', () => {
     vi.stubEnv(INVENTORY_ENV_VAR, '1');
     vi.stubEnv('NODE_ENV', 'development');
     expect(await routes()).toEqual([
+      ...[
+        'ready',
+        'mainnet',
+        'missing',
+        'stale',
+        'invalid',
+        'network',
+        'no-model',
+        'empty',
+        'zero',
+        'single',
+      ].map((state) => ({
+        path: `/base/__numbers/${state}`,
+        component: path.resolve('/site', 'src/numbers/fixtures.ts'),
+        exact: true,
+      })),
+      {
+        path: `/base/${UPDATES_FIXTURE_PATH}`,
+        component: path.resolve('/site', 'test/fixtures/updates/UpdatesFixture.tsx'),
+        exact: true,
+      },
       {
         path: '/base/__survey-results',
         component: path.resolve('/site', 'src/survey-results/FixturePage.tsx'),
