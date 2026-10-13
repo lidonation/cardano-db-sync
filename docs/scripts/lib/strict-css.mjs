@@ -29,17 +29,29 @@ export function checkStrictCss(
   const local = new Set(ds.filter((d) => d.property.startsWith('--')).map((d) => d.property));
   const problems = [];
   const add = (d, rule, message) =>
-    problems.push({line: lineAt(d.offset), rule, message, text: `${d.property}: ${d.value}`});
+    problems.push({
+      line: lineAt(d.offset),
+      rule,
+      message,
+      text: `${d.property}: ${d.value}`,
+      selector: d.selectors.join(' '),
+    });
   const blocks = new Map();
   for (const media of css.matchAll(/@media\b([^{};]*)\{/g)) {
-    for (const m of media[1].matchAll(/(\d+(?:\.\d+)?)px\b/g)) {
-      if (!breakpoints.some((b) => Number(m[1]) === b || Number(m[1]) === b - 1))
+    for (const m of media[1].matchAll(
+      /(\d+(?:\.\d+)?)(px|em|rem|ch|ex|vw|vh|vmin|vmax|cm|mm|in|pt|pc|q)\b/gi,
+    )) {
+      if (
+        m[2].toLowerCase() !== 'px' ||
+        !breakpoints.some((b) => Number(m[1]) === b || Number(m[1]) === b - 1)
+      )
         problems.push({
           line: lineAt(media.index),
           rule: 'TOK-16',
           message: `media threshold ${m[0]} - use breakpoint.sm/md/lg (${breakpoints.join('/')}px), or its value minus 1px`,
           text: media[0],
           threshold: m[0],
+          selector: media[0].slice(0, -1).trim(),
         });
     }
   }
@@ -125,6 +137,7 @@ export function checkStrictCss(
         (e) =>
           e.file === file &&
           e.rule === p.rule &&
+          e.selector === p.selector &&
           (e.text === p.text || (e.threshold && e.threshold === p.threshold)) &&
           e.reason?.trim(),
       ),

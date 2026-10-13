@@ -39,13 +39,10 @@ export function findJsxTokenProblems(file, source) {
       rule,
       message,
     });
-  const bindings = new Map();
-  const collect = (node) => {
-    if (ts.isVariableDeclaration(node) && ts.isIdentifier(node.name) && node.initializer)
-      bindings.set(node.name.text, node.initializer);
-    ts.forEachChild(node, collect);
-  };
-  collect(ast);
+  // The compiler binder preserves lexical scopes, including parameter/destructuring shadows.
+  const host = ts.createCompilerHost({noLib: true});
+  host.getSourceFile = (name) => (name === file ? ast : undefined);
+  const checker = ts.createProgram([file], {noLib: true}, host).getTypeChecker();
   const resolve = (node, seen = new Set()) => {
     if (
       ts.isParenthesizedExpression(node) ||
@@ -53,9 +50,17 @@ export function findJsxTokenProblems(file, source) {
       ts.isSatisfiesExpression(node)
     )
       return resolve(node.expression, seen);
-    if (ts.isIdentifier(node) && bindings.has(node.text) && !seen.has(node.text)) {
-      seen.add(node.text);
-      return resolve(bindings.get(node.text), seen);
+    if (ts.isIdentifier(node)) {
+      const declaration = checker.getSymbolAtLocation(node)?.valueDeclaration;
+      if (
+        declaration &&
+        ts.isVariableDeclaration(declaration) &&
+        declaration.initializer &&
+        !seen.has(declaration)
+      ) {
+        seen.add(declaration);
+        return resolve(declaration.initializer, seen);
+      }
     }
     return node;
   };
@@ -63,14 +68,28 @@ export function findJsxTokenProblems(file, source) {
     ts.isStringLiteralLike(node) ||
     ts.isNumericLiteral(node) ||
     (ts.isPrefixUnaryExpression(node) && ts.isNumericLiteral(node.operand));
-  const inspectObject = (node) => {
-    if (!ts.isObjectLiteralExpression(node)) return;
+  const inspectObject = (node, seen = new Set()) => {
+    if (!ts.isObjectLiteralExpression(node) || seen.has(node)) return;
+    seen.add(node);
     for (const p of node.properties) {
-      if (!ts.isPropertyAssignment(p)) continue;
+      if (ts.isSpreadAssignment(p)) {
+        inspectObject(resolve(p.expression), seen);
+        continue;
+      }
+      if (!ts.isPropertyAssignment(p) && !ts.isShorthandPropertyAssignment(p)) continue;
       const name = p.name.getText(ast).replace(/^['"]|['"]$/g, '');
-      const v = resolve(p.initializer);
+      const v = ts.isShorthandPropertyAssignment(p)
+        ? (() => {
+            const declaration = checker.getShorthandAssignmentValueSymbol(p)?.valueDeclaration;
+            return declaration && ts.isVariableDeclaration(declaration) && declaration.initializer
+              ? resolve(declaration.initializer)
+              : p.name;
+          })()
+        : resolve(p.initializer);
       if (!literal(v)) continue;
-      const value = ts.isStringLiteralLike(v) ? v.text : v.getText(ast);
+      const value = (ts.isStringLiteralLike(v) ? v.text : v.getText(ast))
+        .replace(/url\([^)]*\)/gi, '')
+        .replace(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/g, '');
       if (value.startsWith('var(') && !RAW.test(value)) continue;
       if (
         RAW.test(value) ||

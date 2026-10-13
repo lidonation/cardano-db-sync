@@ -169,3 +169,76 @@ it('permits only the documented content breakpoint in its reviewed file', () => 
     ),
   ).toEqual(['TOK-16']);
 });
+
+describe('scope, spreads and precise exceptions', () => {
+  it('resolves lexical bindings without unrelated shadowing', () => {
+    expect(
+      findJsxTokenProblems(
+        'a.tsx',
+        'const gap=4;const x=<div style={{gap:gap}}/>;function A(){const gap=props.gap;}',
+      ),
+    ).toHaveLength(1);
+    expect(
+      findJsxTokenProblems(
+        'a.tsx',
+        'function A({size}){return <svg width={size}/>};function B(){const size=24;}',
+      ),
+    ).toEqual([]);
+  });
+  it.each([
+    'const padding=4;const x=<div style={{padding}}/>',
+    'const styles={padding:4};const x=<div style={{...styles}}/>',
+  ])('checks static object members %s', (source) =>
+    expect(findJsxTokenProblems('a.tsx', source)).toHaveLength(1),
+  );
+  it('ignores colour names in asset URLs', () =>
+    expect(
+      findJsxTokenProblems('a.tsx', 'const x=<div style={{background:"url(red.svg)"}}/>'),
+    ).toEqual([]));
+  it('rejects nonpixel layout media thresholds, not resolution', () => {
+    expect(rules('@media (min-width:50em){}')).toContain('TOK-16');
+    expect(rules('@media (resolution:2dppx){}')).toEqual([]);
+  });
+  it('does not extend an exception to unrelated selectors', () => {
+    expect(
+      checkStrictCss(
+        'a {font:var(--dbs-font-label);letter-spacing:var(--dbs-font-label-tracking)}',
+        {file: 'src/css/switchers.css'},
+      ).map((p) => p.rule),
+    ).toContain('REUSE-1');
+    expect(
+      checkStrictCss('@media (min-width:440px){}', {file: 'src/updates/styles.module.css'}).map(
+        (p) => p.rule,
+      ),
+    ).toContain('TOK-16');
+  });
+});
+
+describe('additional static-resolution safety', () => {
+  it.each([
+    'const padding=4;function A({padding}){return <div style={{padding}}/>}',
+    'const style={padding:4};function A({style}){return <div style={{...style}}/>}',
+    'const a=b;const b=a;const x=<div style={{...a}}/>',
+  ])('preserves dynamic inputs and terminates cycles: %s', (source) =>
+    expect(findJsxTokenProblems('a.tsx', source)).toEqual([]),
+  );
+  it('finds a colour beside a URL', () =>
+    expect(
+      findJsxTokenProblems('a.tsx', 'const x=<div style={{background:"url(red.svg) blue"}}/>'),
+    ).toHaveLength(1));
+  it.each(['50rem', '50vw', '50cm'])('rejects nonpixel breakpoint %s', (length) =>
+    expect(rules(`@media (width >= ${length}){}`)).toContain('TOK-16'),
+  );
+  it.each([
+    '.navbar__item.dropdown > .navbar__link',
+    '.dropdown__link',
+    '.dropdown__link--active,\n.dropdown__link--active:hover',
+  ])('allows only reviewed switcher selector %s', (selector) =>
+    expect(
+      checkStrictCss(
+        `${selector} {font: var(--dbs-font-label);letter-spacing:var(--dbs-font-label-tracking)}`,
+        {file: 'src/css/switchers.css'},
+      ),
+    ).toEqual([]),
+  );
+});
