@@ -136,9 +136,10 @@ describe('theme tokens reach the built CSS with their precedence intact (TOK-1, 
         expect(part, selector).toMatch(/^:root\[data-dbs-palette=/);
       }
     }
-    // No token rule keys off data-theme: that attribute belongs to Infima (§14.2).
+    // No token is defined under data-theme: that attribute belongs to Infima (§14.2). The Infima
+    // bridge may read --dbs-* tokens there to out-rank Infima's dark rule, but never define one.
     const stray = [...css.matchAll(/([^{}]*data-theme[^{}]*)\{([^{}]*)\}/g)]
-      .filter(([, , body]) => body.includes('--dbs-'))
+      .filter(([, , body]) => /(?:^|;)\s*--dbs-[\w-]+\s*:/.test(body))
       .map(([, selector]) => selector.trim());
     expect(stray).toEqual([]);
   });
