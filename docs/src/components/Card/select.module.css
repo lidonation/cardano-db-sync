@@ -1,0 +1,205 @@
+/* Reuse the frame and text roles without coupling production cards to form controls. */
+.card {
+  composes: card from './styles.module.css';
+}
+.title {
+  composes: title from './styles.module.css';
+}
+.body {
+  composes: body from './styles.module.css';
+}
+.configKey {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-mono);
+  letter-spacing: var(--dbs-font-mono-tracking);
+}
+.tables {
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-mono-sm);
+  letter-spacing: var(--dbs-font-mono-sm-tracking);
+}
+.card[data-kind='Data option'] {
+  min-block-size: 108px;
+}
+.card[data-kind='Choice'] {
+  min-block-size: 136px;
+}
+.card[data-kind='Option'] {
+  max-inline-size: 282px;
+  min-block-size: 150px;
+}
+/* Selectable cards: Choice, Option and Data option. */
+
+.selectWrap {
+  inline-size: 100%;
+  max-inline-size: 384px;
+}
+.selectWrap:has([data-kind='Option']) {
+  max-inline-size: 282px;
+}
+.select {
+  cursor: pointer;
+}
+.card.select {
+  border-color: var(--dbs-border-interactive);
+}
+.input {
+  position: absolute;
+  inline-size: 1px;
+  block-size: 1px;
+  margin: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.selectText {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dbs-space-4);
+}
+.select:hover,
+.select[data-dbs-demo='hover'] {
+  background: var(--dbs-surface-sunken);
+}
+.select:active,
+.select[data-dbs-demo='pressed'] {
+  border-color: var(--dbs-accent-primary);
+  background: var(--dbs-surface-accent-subtle);
+}
+.select:has(.input:focus-visible),
+.select[data-dbs-demo='focus'] {
+  outline: var(--dbs-focus-ring);
+  outline-offset: var(--dbs-focus-offset);
+}
+.select:has(.input:checked) {
+  border: 2px solid var(--dbs-border-selected);
+  background: var(--dbs-surface-accent-subtle);
+}
+.select[data-error] {
+  border: 2px solid var(--dbs-status-danger-text);
+}
+.select:has(.input:disabled) {
+  cursor: not-allowed;
+  /* TOK-6: a disabled choice is still a choice card — the control role, not the hairline.
+     The disabled signal comes from the sunken fill, the disabled label and the cursor. */
+  border-color: var(--dbs-border-interactive);
+  background: var(--dbs-surface-sunken);
+}
+.select:has(.input:disabled) .title,
+.select:has(.input:disabled) .body,
+.select:has(.input:disabled) .configKey,
+.select:has(.input:disabled) .tables,
+.select:has(.input:disabled) .optionIcon {
+  color: var(--dbs-text-disabled);
+}
+
+/* the tick: an empty interactive box, filled and ticked when selected */
+.tick {
+  position: absolute;
+  inset-block-start: var(--dbs-space-16);
+  inset-inline-end: var(--dbs-space-16);
+  display: grid;
+  place-items: center;
+  inline-size: 24px;
+  block-size: 24px;
+  border: 1px solid var(--dbs-border-interactive);
+  background: var(--dbs-surface-base);
+  color: var(--dbs-text-on-selected);
+}
+.tick > svg {
+  visibility: hidden;
+}
+.select:has(.input:checked) .tick > svg {
+  visibility: visible;
+}
+.select:has(.input:checked) .tick {
+  border-color: var(--dbs-border-selected);
+  background: var(--dbs-surface-selected);
+  color: var(--dbs-text-on-selected);
+}
+.select[data-error] .tick {
+  border-color: var(--dbs-status-danger-text);
+}
+.choice {
+  justify-content: flex-end;
+}
+
+.option {
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+.option .tick {
+  visibility: hidden;
+}
+.select:has(.input:checked).option .tick {
+  visibility: visible;
+}
+.optionIcon {
+  color: var(--dbs-accent-primary-text);
+}
+
+/* Data option: the switch */
+.dataOption {
+  padding-inline-end: 120px;
+}
+.switch {
+  position: absolute;
+  inset-block-start: var(--dbs-space-16);
+  inset-inline-end: var(--dbs-space-16);
+  display: flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+}
+.track {
+  position: relative;
+  display: block;
+  inline-size: 38px;
+  block-size: 22px;
+  border: 1px solid var(--dbs-border-interactive);
+  background: var(--dbs-surface-sunken);
+}
+.knob {
+  position: absolute;
+  inset-block-start: 2px;
+  inset-inline-start: 2px;
+  inline-size: 16px;
+  block-size: 16px;
+  border: 1px solid var(--dbs-border-interactive);
+  border-radius: 50%;
+  background: var(--dbs-surface-base);
+  transition: transform 150ms ease-out;
+}
+.select:has(.input:checked) .track {
+  border-color: var(--dbs-border-selected);
+  background: var(--dbs-surface-selected);
+}
+.select:has(.input:checked) .knob {
+  border-color: var(--dbs-border-selected);
+  transform: translateX(16px);
+}
+[dir='rtl'] .select:has(.input:checked) .knob {
+  transform: translateX(-16px);
+}
+.switchWord {
+  min-inline-size: 3ch;
+  color: var(--dbs-text-secondary);
+  font: var(--dbs-font-label-sm);
+  letter-spacing: var(--dbs-font-label-sm-tracking);
+}
+.switchWord[data-word='on'],
+.select:has(.input:checked) .switchWord[data-word='off'] {
+  display: none;
+}
+.select:has(.input:checked) .switchWord[data-word='on'] {
+  display: inline;
+  color: var(--dbs-text-primary);
+}

@@ -132,8 +132,9 @@ test.describe('content', () => {
       const response = await page.request.get(new URL(href, page.url()).toString());
       expect(response.status(), href).toBe(200);
     }
+    await expect(page.locator(`main a[href$="${SURFACES.numbers}"]`)).toHaveCount(1);
     // the surfaces not built yet are not linked at all
-    for (const surface of [SURFACES.schema, SURFACES.numbers, SURFACES.survey, SURFACES.config]) {
+    for (const surface of [SURFACES.schema, SURFACES.survey, SURFACES.config]) {
       await expect(page.locator(`main a[href$="${surface}"]`)).toHaveCount(0);
     }
   });

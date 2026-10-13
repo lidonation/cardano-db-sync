@@ -1,0 +1,26 @@
+.label {
+  composes: title from './styles.module.css';
+}
+.detail {
+  composes: evidence from './styles.module.css';
+}
+.value {
+  color: var(--dbs-text-primary);
+  font: var(--dbs-font-heading-lg);
+  letter-spacing: var(--dbs-font-heading-lg-tracking);
+  font-variant-numeric: tabular-nums;
+}
+/* Stat bar: decorative, the figure is in the text */
+
+.bar {
+  display: block;
+  inline-size: 100%;
+  block-size: 8px;
+  margin-block: var(--dbs-space-8);
+}
+.barTrack {
+  fill: var(--dbs-surface-sunken);
+}
+.barFill {
+  fill: var(--dbs-accent-secondary);
+}

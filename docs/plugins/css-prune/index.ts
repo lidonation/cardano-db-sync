@@ -97,6 +97,22 @@ export function pruneCss(
   return {css: root.toString(), removed};
 }
 
+/** Canonical tokens stay complete. Only drop unused declarations from emitted CSS.
+ * All CSS var() dependencies are retained, even in otherwise unused token declarations.
+ * Runtime literals are retained; dynamic token-name construction disables this optimization. */
+export function pruneUnusedTokens(css: string, runtimeTexts: readonly string[]): string {
+  if (runtimeTexts.some((text) => /["'`]--dbs-(?:[\w]+-)*["'`]|["'`]--dbs-[\w-]*\$\{/.test(text)))
+    return css;
+  const used = new Set([...css.matchAll(/var\(\s*(--dbs-[\w-]+)/g)].map((match) => match[1]));
+  for (const text of runtimeTexts)
+    for (const match of text.matchAll(/--dbs-[\w-]+/g)) used.add(match[0]);
+  const root = postcss.parse(css);
+  root.walkDecls((declaration) => {
+    if (declaration.prop.startsWith('--dbs-') && !used.has(declaration.prop)) declaration.remove();
+  });
+  return root.toString();
+}
+
 /** Optimize emitted client CSS before webpack updates content hashes and asset references. */
 export const cssPruneOptimization = {
   apply(compiler: Compiler): void {
@@ -106,6 +122,9 @@ export const cssPruneOptimization = {
         {name: 'dbsync-css-prune', stage: Compilation.PROCESS_ASSETS_STAGE_OPTIMIZE_SIZE + 1},
         () => {
           const assets = compilation.getAssets();
+          const runtimeTexts = assets
+            .filter(({name}) => /\.(html|js)$/.test(name))
+            .map(({source}) => source.source().toString());
           const used = usedBy(
             contentTokens(
               assets
@@ -116,7 +135,10 @@ export const cssPruneOptimization = {
           for (const {name, source} of assets) {
             if (!name.startsWith('assets/css/') || !name.endsWith('.css')) continue;
             const result = pruneCss(source.source().toString(), used);
-            compilation.updateAsset(name, new sources.RawSource(result.css));
+            compilation.updateAsset(
+              name,
+              new sources.RawSource(pruneUnusedTokens(result.css, runtimeTexts)),
+            );
           }
         },
       );
