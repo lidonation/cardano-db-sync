@@ -19,6 +19,8 @@
 
 /* The locale/version toggles read as controls, like the theme switcher. */
 .navbar__item.dropdown > .navbar__link {
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
   gap: var(--dbs-space-8);
   margin-inline-start: var(--dbs-space-8);
   padding: 0 var(--dbs-space-12);
@@ -26,8 +28,6 @@
   border-radius: var(--dbs-radius-md);
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
   text-decoration: none;
 }
 
@@ -47,13 +47,13 @@
 }
 
 .dropdown__link {
+  font: var(--dbs-font-label);
+  letter-spacing: var(--dbs-font-label-tracking);
   display: flex;
   align-items: center;
   min-block-size: var(--dbs-layout-target-min);
   border-radius: var(--dbs-radius-sm);
   color: var(--dbs-text-primary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
 }
 
 .dropdown__link:hover {
@@ -65,10 +65,10 @@
 /* The current locale/version: an underline bar plus the label, never colour alone. */
 .dropdown__link--active,
 .dropdown__link--active:hover {
-  position: relative;
-  color: var(--dbs-text-primary);
   font: var(--dbs-font-label);
   letter-spacing: var(--dbs-font-label-tracking);
+  position: relative;
+  color: var(--dbs-text-primary);
 }
 
 .dropdown__link--active::after {

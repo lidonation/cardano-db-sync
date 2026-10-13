@@ -19,8 +19,7 @@
   background: var(--dbs-surface-base);
   color: var(--dbs-text-primary);
   cursor: pointer;
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
   white-space: nowrap;
 }
 
@@ -84,8 +83,7 @@
   border-radius: var(--dbs-radius-sm);
   color: var(--dbs-text-primary);
   cursor: pointer;
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
 }
 
 .option:hover {
@@ -96,8 +94,7 @@
   inline-size: var(--dbs-space-16);
   flex: none;
   color: var(--dbs-text-secondary);
-  font: var(--dbs-font-label);
-  letter-spacing: var(--dbs-font-label-tracking);
+  composes: dbs-type-label from global;
   text-align: center;
 }
 

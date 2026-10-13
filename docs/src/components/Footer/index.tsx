@@ -48,7 +48,7 @@ export default function Footer({
   return (
     <footer className={styles.footer} data-dbs-component="Footer">
       <div className={styles.brand}>
-        <Wordmark />
+        <Wordmark className={styles.brandWordmark} />
         <span className={styles.meta}>{meta}</span>
       </div>
       <nav
