@@ -156,8 +156,11 @@ FOCUS_BLOCK = """
 """
 
 INFIMA_BRIDGE = """
-/* ---- Infima bridge — the ONLY place --ifm-* is assigned ---- */
-:root {
+/* ---- Infima bridge — the ONLY place --ifm-* is assigned ----
+   html[data-theme]:root (0,2,1) out-ranks Infima's [data-theme='dark']:root (0,2,0), which
+   otherwise resets the page and surface backgrounds to its own greys in dark and navy. */
+:root,
+html[data-theme]:root {
   --ifm-color-primary: var(--dbs-accent-primary);
   --ifm-link-color: var(--dbs-accent-primary-text);
   --ifm-background-color: var(--dbs-surface-base);
@@ -172,9 +175,9 @@ INFIMA_BRIDGE = """
   --ifm-code-font-size: var(--dbs-font-mono-size);
   --ifm-global-radius: var(--dbs-radius-md);
   --ifm-toc-border-color: var(--dbs-border-default);
-  --ifm-navbar-height: 72px;
+  --ifm-navbar-height: var(--dbs-layout-navbar-height);
   --ifm-navbar-background-color: var(--dbs-surface-base);
-  --ifm-footer-background-color: var(--dbs-brand-intersect-navy);
+  --ifm-footer-background-color: var(--dbs-surface-footer);
   --ifm-footer-link-color: var(--dbs-text-on-navy);
   --ifm-spacing-horizontal: var(--dbs-space-24);
   /* the design has no shadows — neutralise Infima's */

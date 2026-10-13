@@ -11,6 +11,8 @@
   --dbs-surface-selected: #17c3a5;
   --dbs-surface-inverse-tip: #0e2a25;
   --dbs-surface-navy-raised: #0b1b45;
+  --dbs-surface-footer: #011555;
+  --dbs-surface-band: #0f1117;
   --dbs-border-default: #e1e4e8;
   --dbs-border-strong: #d0d7de;
   --dbs-border-warm: #e4dfd2;
@@ -27,6 +29,8 @@
   --dbs-text-on-selected: #1a1a2e;
   --dbs-text-on-accent: #ffffff;
   --dbs-text-disabled: #9aa4b2;
+  --dbs-text-kicker: #0b7c68;
+  --dbs-text-accent-display: #0e6ff7;
   --dbs-accent-primary: #0e6ff7;
   --dbs-accent-primary-hover: #0b57c4;
   --dbs-accent-primary-active: #0a4ba8;
@@ -65,6 +69,38 @@
   --dbs-radius-xl: 12px;
   --dbs-radius-xxl: 16px;
   --dbs-radius-pill: 999px;
+  --dbs-border-width-hairline: 1px;
+  --dbs-border-width-emphasis: 2px;
+  --dbs-border-width-marker: 3px;
+  --dbs-border-width-graphic: 4px;
+  --dbs-layout-content-max: 1200px;
+  --dbs-layout-navbar-height: 72px;
+  --dbs-layout-target-min: 44px;
+  --dbs-layout-measure-intro: 65ch;
+  --dbs-layout-measure-lead: 60ch;
+  --dbs-layout-hero-copy-max: 600px;
+  --dbs-layout-hero-graphic-max: 500px;
+  --dbs-layout-command-max: 560px;
+  --dbs-layout-step-command-max: 580px;
+  --dbs-layout-stage-min: 170px;
+  --dbs-layout-badge-inline: 40px;
+  --dbs-layout-badge-block: 46px;
+  --dbs-layout-use-card-min: 190px;
+  --dbs-layout-faq-control: 64px;
+  --dbs-breakpoint-sm: 768px;
+  --dbs-breakpoint-md: 1024px;
+  --dbs-breakpoint-lg: 1280px;
+  --dbs-icon-size-xs: 12px;
+  --dbs-icon-size-sm: 16px;
+  --dbs-icon-size-md: 24px;
+  --dbs-icon-size-lg: 32px;
+  --dbs-icon-size-xl: 48px;
+  --dbs-icon-stroke: 1.5;
+  --dbs-motion-feedback: 150ms;
+  --dbs-motion-spinner: 900ms;
+  --dbs-layer-below: -1;
+  --dbs-layer-raised: 10;
+  --dbs-layer-navbar: 100;
   --dbs-code-surface: #0f1117;
   --dbs-code-surface-raised: #161b22;
   --dbs-code-border: #30363d;
@@ -142,6 +178,7 @@
   --dbs-surface-accent-subtle: #10233f;
   --dbs-surface-warm: #0e2a25;
   --dbs-surface-selected: #2dd4b5;
+  --dbs-surface-band: #161b22;
   --dbs-border-default: #30363d;
   --dbs-border-strong: #30363d;
   --dbs-border-warm: #30363d;
@@ -155,6 +192,8 @@
   --dbs-text-on-accent: #0f1117;
   --dbs-text-warm-tertiary: #8b949e;
   --dbs-text-disabled: #59616a;
+  --dbs-text-kicker: #2dd4b5;
+  --dbs-text-accent-display: #4493f8;
   --dbs-accent-primary: #4493f8;
   --dbs-accent-primary-hover: #79b8ff;
   --dbs-accent-primary-active: #79b8ff;
@@ -192,6 +231,7 @@
   --dbs-surface-accent-subtle: #0e2a6b;
   --dbs-surface-warm: #010e33;
   --dbs-surface-selected: #2dd4b5;
+  --dbs-surface-footer: #010e33;
   --dbs-border-default: #21356e;
   --dbs-border-strong: #2e4589;
   --dbs-border-warm: #21356e;
@@ -202,9 +242,11 @@
   --dbs-text-tertiary: #748dd0;
   --dbs-text-placeholder: #748dd0;
   --dbs-text-on-selected: #0f1117;
-  --dbs-text-on-accent: #011555;
+  --dbs-text-on-accent: #0f1117;
   --dbs-text-warm-tertiary: #8fa3d9;
   --dbs-text-disabled: #4364bf;
+  --dbs-text-kicker: #2dd4b5;
+  --dbs-text-accent-display: #4493f8;
   --dbs-accent-primary: #4493f8;
   --dbs-accent-primary-hover: #79b8ff;
   --dbs-accent-primary-active: #79b8ff;
@@ -276,8 +318,11 @@
   letter-spacing: var(--dbs-font-eyebrow-tracking);
 }
 
-/* ---- Infima bridge — the ONLY place --ifm-* is assigned ---- */
-:root {
+/* ---- Infima bridge — the ONLY place --ifm-* is assigned ----
+   html[data-theme]:root (0,2,1) out-ranks Infima's [data-theme='dark']:root (0,2,0), which
+   otherwise resets the page and surface backgrounds to its own greys in dark and navy. */
+:root,
+html[data-theme]:root {
   --ifm-color-primary: var(--dbs-accent-primary);
   --ifm-link-color: var(--dbs-accent-primary-text);
   --ifm-background-color: var(--dbs-surface-base);
@@ -292,9 +337,9 @@
   --ifm-code-font-size: var(--dbs-font-mono-size);
   --ifm-global-radius: var(--dbs-radius-md);
   --ifm-toc-border-color: var(--dbs-border-default);
-  --ifm-navbar-height: 72px;
+  --ifm-navbar-height: var(--dbs-layout-navbar-height);
   --ifm-navbar-background-color: var(--dbs-surface-base);
-  --ifm-footer-background-color: var(--dbs-brand-intersect-navy);
+  --ifm-footer-background-color: var(--dbs-surface-footer);
   --ifm-footer-link-color: var(--dbs-text-on-navy);
   --ifm-spacing-horizontal: var(--dbs-space-24);
   /* the design has no shadows — neutralise Infima's */
