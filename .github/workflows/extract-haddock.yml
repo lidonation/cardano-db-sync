@@ -49,15 +49,25 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: extract-haddock-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  site-runner:
+    name: Choose balanced runner
+    uses: ./.github/workflows/blacksmith-selector.yml
+    permissions:
+      contents: read
+      actions: read
+
   extract:
     name: Extract, test and diff
-    runs-on: ubuntu-latest
+    needs: site-runner
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
 

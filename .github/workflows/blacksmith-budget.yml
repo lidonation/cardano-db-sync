@@ -1,0 +1,43 @@
+name: Blacksmith PR budget
+# Trusted target-branch code ONLY. Never check out or execute the PR head here.
+on:
+  pull_request_target:
+    branches: [release/community-site]
+    types: [opened, synchronize, reopened, ready_for_review]
+permissions:
+  contents: read
+concurrency:
+  group: blacksmith-budget-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+jobs:
+  budget:
+    if: github.repository == 'lidonation/cardano-db-sync' && vars.BLACKSMITH_SITE_ENABLED == 'true'
+    runs-on: ubuntu-24.04
+    environment: blacksmith-usage
+    timeout-minutes: 3
+    steps:
+      - name: Check out trusted base only
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.sha }}
+          persist-credentials: false
+      - name: Sign organization budget decision
+        id: select
+        env:
+          PR_BASE_REF: ${{ github.event.pull_request.base.ref }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          BLACKSMITH_SITE_ENABLED: ${{ vars.BLACKSMITH_SITE_ENABLED }}
+          BLACKSMITH_ORG: ${{ vars.BLACKSMITH_ORG }}
+          BLACKSMITH_ORG_TOKEN: ${{ secrets.BLACKSMITH_ORG_TOKEN }}
+          BLACKSMITH_PR_SIGNING_KEY: ${{ secrets.BLACKSMITH_PR_SIGNING_KEY }}
+        run: python3 .github/scripts/blacksmith-budget.py
+      - name: Publish signed non-secret decision
+        if: steps.select.outputs.allowed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: blacksmith-budget-pr-${{ github.event.pull_request.number }}-${{ github.event.pull_request.head.sha }}
+          path: ${{ runner.temp }}/blacksmith-budget/
+          if-no-files-found: error
+          retention-days: 1

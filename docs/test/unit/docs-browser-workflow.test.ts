@@ -24,7 +24,7 @@ describe('docs browser runner compatibility', () => {
     if (!job.steps?.some((step) => step.run?.includes('playwright install'))) continue;
     it(`${name} pins the OS supported by the locked Playwright version`, () => {
       const expected = "${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}";
-      expect(job['runs-on']).toBe(expected);
+      expect(job['runs-on']).toBe(name === 'unit-tests' ? 'ubuntu-24.04' : expected);
       const selector = readFileSync(
         path.resolve(import.meta.dirname, '../../../.github/scripts/blacksmith-runner.py'),
         'utf8',
@@ -45,10 +45,12 @@ describe('fork-only runner selection', () => {
     }
   >;
 
-  it('skips selector provisioning outside the enabled trusted push policy', () => {
-    expect(jobs['site-runner'].if?.replace(/\s+/g, ' ').trim()).toBe(
-      "github.repository == 'lidonation/cardano-db-sync' && github.event_name == 'push' && github.ref == 'refs/heads/release/community-site' && vars.BLACKSMITH_SITE_ENABLED == 'true'",
+  it('uses the shared policy without passing secrets from the PR workflow', () => {
+    expect(jobs['site-runner']).toHaveProperty(
+      'uses',
+      './.github/workflows/blacksmith-selector.yml',
     );
+    expect(jobs['site-runner']).not.toHaveProperty('secrets');
   });
 
   it('runs selector regressions as a required CI step from the repository root', () => {
@@ -73,14 +75,24 @@ describe('fork-only runner selection', () => {
     }
   });
 
-  it('limits credential use to trusted release pushes and preserves fallback', () => {
-    const step = jobs['site-runner'].steps?.find((item) => item.id === 'select');
-    expect(step?.if).toContain("github.repository == 'lidonation/cardano-db-sync'");
-    expect(step?.if).toContain("github.event_name == 'push'");
-    expect(step?.if).toContain("github.ref == 'refs/heads/release/community-site'");
-    for (const name of ['unit-tests', 'build']) {
-      expect(jobs[name].needs).toBe('site-runner');
-      expect(jobs[name].if).toBe('${{ !cancelled() }}');
-    }
+  it('limits credential use to the protected release environment and preserves fallback', () => {
+    const selector = yaml.load(
+      readFileSync(
+        path.resolve(import.meta.dirname, '../../../.github/workflows/blacksmith-selector.yml'),
+        'utf8',
+      ),
+    ) as {
+      jobs: Record<
+        string,
+        {environment?: string; if?: string; steps?: Array<{env?: Record<string, string>}>}
+      >;
+    };
+    expect(selector.jobs.push.environment).toBe('blacksmith-usage');
+    expect(selector.jobs.push.if).toContain("github.event_name == 'push'");
+    expect(selector.jobs.push.if).toContain("github.ref == 'refs/heads/release/community-site'");
+    expect(selector.jobs.pr.environment).toBeUndefined();
+    expect(JSON.stringify(selector.jobs.pr)).not.toContain('BLACKSMITH_ORG_TOKEN');
+    expect(jobs.build.needs).toBe('site-runner');
+    expect(jobs.build.if).toBe('${{ !cancelled() }}');
   });
 });
