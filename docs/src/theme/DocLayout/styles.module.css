@@ -336,6 +336,11 @@
   padding-inline: 0;
 }
 
+/* Prose links must remain distinguishable without relying on color (WCAG 1.4.1). */
+.article :global(.markdown) a:not(:global(.hash-link)) {
+  text-decoration: underline;
+}
+
 /* heading anchors: a 44px box that does not grow the heading's line */
 .article :global(.hash-link) {
   display: inline-flex;
