@@ -18,7 +18,7 @@ import qualified Data.Text as Text
 import Test.Cardano.Db.Mock.Config
 import Test.Cardano.Db.Mock.UnifiedApi
 import Test.Cardano.Db.Mock.Validate
-import Test.Tasty.HUnit (Assertion, assertBool)
+import Test.Tasty.HUnit (Assertion, assertBool, (@?=))
 
 ------------------------------------------------------------------------------
 -- Main Schema Validation Test
@@ -50,6 +50,7 @@ validateSchemaColumns =
     validateCall dbSync (Proxy @DB.SlotLeader)
     validateCall dbSync (Proxy @DB.SchemaVersion)
     validateCall dbSync (Proxy @DB.Meta)
+    validateCall dbSync (Proxy @DB.SyncFilterConfig)
     validateCall dbSync (Proxy @DB.Withdrawal)
     validateCall dbSync (Proxy @DB.ExtraMigrations)
 
@@ -173,3 +174,32 @@ assertColumnsMatch result = do
   assertBool
     ("Column mismatch for table " <> tableName <> " (type: " <> typeName <> ")")
     (expected == actual)
+
+-- A different selection must never reuse a partially populated filtered database.
+filterConfigRestartGuard :: IOManager -> [(Text, Text)] -> Assertion
+filterConfigRestartGuard =
+  withFullConfigDropDB conwayConfigDir "filterConfigRestartGuard" $ \_ _ dbSync -> do
+    let run = DB.runDbStandaloneTransSilent (getDBSyncPGPass dbSync)
+    firstResult <- run $ DB.validateSyncFilterConfig "selected-a" True
+    firstResult @?= True
+    same <- run $ DB.validateSyncFilterConfig "selected-a" True
+    same @?= True
+    changed <- run $ DB.validateSyncFilterConfig "selected-b" True
+    changed @?= False
+    removed <- run $ DB.validateSyncFilterConfig "none" False
+    removed @?= False
+
+-- An upgraded database with historic blocks cannot adopt a selective contract without a replay.
+filterConfigExistingDatabase :: IOManager -> [(Text, Text)] -> Assertion
+filterConfigExistingDatabase =
+  withFullConfigDropDB conwayConfigDir "filterConfigExistingDatabase" $ \interpreter mockServer dbSync -> do
+    startDBSync dbSync
+    void $ withConwayFindLeaderAndSubmitTx interpreter mockServer $ Conway.mkPaymentTx (UTxOIndex 0) (UTxOIndex 1) 10_000 10_000 0
+    assertBlockNoBackoff dbSync 1
+    stopDBSync dbSync
+    let run = DB.runDbStandaloneTransSilent (getDBSyncPGPass dbSync)
+    run DB.clearSyncFilterConfigForTest
+    selected <- run $ DB.validateSyncFilterConfig "selected-a" True
+    selected @?= False
+    legacy <- run $ DB.validateSyncFilterConfig "none" False
+    legacy @?= True

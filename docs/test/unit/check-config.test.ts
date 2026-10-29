@@ -310,6 +310,90 @@ describe('config schema safety regressions', () => {
     );
   });
 
+  it('validates selection values and rejects the retired JSON selector', () => {
+    const policy = 'ab'.repeat(28);
+    const stake = 'stake_test1uz7nhfssw7e2p8pr4hwvlsv9x920famnd5ngz42zpk7rh2q3rg0ut';
+    expect(
+      validateWizardOutput({insert_options: {multi_asset: {enable: true, policies: [policy]}}}),
+    ).toEqual([]);
+    expect(
+      validateWizardOutput({insert_options: {plutus: {enable: true, script_hashes: [policy]}}}),
+    ).toEqual([]);
+    expect(
+      validateWizardOutput({insert_options: {shelley: {enable: true, stake_addresses: [stake]}}}),
+    ).toEqual([]);
+    expect(
+      validateWizardOutput({insert_options: {multi_asset: {enable: true, policies: ['bad']}}}).join(
+        ' ',
+      ),
+    ).toContain('28-byte');
+    expect(
+      validateWizardOutput({insert_options: {plutus: {enable: true, script_hashes: ['bad']}}}).join(
+        ' ',
+      ),
+    ).toContain('28-byte');
+    expect(
+      validateWizardOutput({
+        insert_options: {shelley: {enable: true, stake_addresses: ['not-an-address']}},
+      }).join(' '),
+    ).toContain('bech32');
+    expect(validateWizardOutput({insert_options: {json_type: 'disable'}}).join(' ')).toContain(
+      'json_type',
+    );
+  });
+
+  it('validates bounded generated policy hashes and disabled-selection overrides', () => {
+    let state = 121;
+    const next = () => (state = (state * 1664525 + 1013904223) >>> 0) & 255;
+    for (let i = 0; i < 64; i++) {
+      const hash = Array.from({length: 28}, () => next().toString(16).padStart(2, '0')).join('');
+      expect(
+        validateWizardOutput({insert_options: {multi_asset: {enable: true, policies: [hash]}}}),
+      ).toEqual([]);
+      expect(
+        validateWizardOutput({
+          insert_options: {plutus: {enable: true, script_hashes: [hash.slice(1)]}},
+        }).join(' '),
+      ).toContain('28-byte');
+    }
+    expect(
+      validateWizardOutput({insert_options: {multi_asset: {enable: false, policies: ['ignored']}}}),
+    ).toEqual([]);
+    expect(
+      validateWizardOutput({insert_options: {plutus: {enable: false, script_hashes: ['ignored']}}}),
+    ).toEqual([]);
+    expect(
+      validateWizardOutput({
+        insert_options: {shelley: {enable: false, stake_addresses: ['ignored']}},
+      }),
+    ).toEqual([]);
+    expect(
+      validateWizardOutput({
+        insert_options: {
+          shelley: {
+            enable: true,
+            stake_addresses: ['stake_test1uz7nhfssw7e2p8pr4hwvlsv9x920famnd5ngz42zpk7rh2q3rg0ux'],
+          },
+        },
+      }).join(' '),
+    ).toContain('bech32');
+  });
+
+  it('does not apply selection rules to unrelated same-named fields', () => {
+    const s = schema();
+    s.config.keys.push({
+      name: 'other',
+      required: false,
+      shape: {
+        type: 'object',
+        haskell: 'Other',
+        line: 1,
+        keys: [{name: 'policies', required: true, shape: {type: 'array', items: {type: 'string'}}}],
+      },
+    });
+    expect(validateConfig(s, {...FULL, other: {policies: ['not-a-hash']}})).toEqual([]);
+  });
+
   it('accepts explicit null for optional .:? keys, including defaulted ones', () => {
     for (const output of [
       {insert_options: null},

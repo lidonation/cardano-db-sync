@@ -21,7 +21,7 @@ describe('command-line reference annotations', () => {
     ['pForceIndexes', '--force-indexes', 'start'],
     ['pHasCache', '--disable-cache', 'memory'],
     ['pRollbackSlotNo', '--rollback-to-slot', 'next greater slot'],
-    ['pHasInOut', '--disable-in-out', 'tx_in'],
+    ['pRejectDisableInOut', '--disable-in-out', 'tx_in'],
     ['pAllowPrivateOffChainUrls', '--allow-private-offchain-urls', 'private'],
   ])('%s exposes %s in the extracted reference', (name, option, fact) => {
     const module = artifact.files.find(
@@ -505,17 +505,14 @@ describe('current implementation audit', () => {
       expect(doc).not.toContain('without scripts');
     },
   );
-  it.each(['ShelleyInsertConfig', 'MultiAssetConfig', 'PlutusConfig'])(
-    '%s discloses parsed but unenforced filters',
-    (name) => {
-      expect(get('/Config/Types.hs', name).doc).toContain('not enforced');
-    },
-  );
-  it('distinguishes parsed json_type and CLI flags from effective options', () => {
-    expect(get('/Config/Types.hs', 'JsonTypeConfig').doc).toContain('not consumed');
-    const doc = get('/app/cardano-db-sync.hs', 'pHasInOut').doc;
-    expect(doc).toContain('not used');
-    expect(doc).toContain('tx_out.value');
+  it('documents the selection contracts and independent identity/data handling', () => {
+    expect(get('/Config/Types.hs', 'ShelleyInsertConfig').doc).toContain('Identity rows');
+    expect(get('/Config/Types.hs', 'MultiAssetConfig').doc).toContain('minted and output');
+    expect(get('/Config/Types.hs', 'PlutusConfig').doc).toContain('reference scripts');
+    expect(get('/Config/Types.hs', 'SyncInsertConfig').doc).toContain('json_type');
+    const cli = get('/app/cardano-db-sync.hs', 'pRejectDisableInOut').doc;
+    expect(cli).toContain('retired');
+    expect(cli).toContain('tx_out.value');
   });
   it('does not falsely promise null transaction deposits without the ledger', () => {
     const doc = get('/Config/Types.hs', 'LedgerInsertConfig').doc;
@@ -536,8 +533,8 @@ describe('current implementation audit', () => {
   });
 });
 
-// If these consumers change, the documented limitations need to be re-audited too.
-describe('runtime evidence for documented configuration limitations', () => {
+// Source-level guards supplement, but do not replace, runtime and mock-database tests.
+describe('runtime evidence for configuration contracts', () => {
   const sourceRoot = path.resolve(import.meta.dirname, '../../../cardano-db-sync/src');
   const sources = fs
     .readdirSync(sourceRoot, {recursive: true, withFileTypes: true})
@@ -546,18 +543,20 @@ describe('runtime evidence for documented configuration limitations', () => {
       file: path.join(entry.parentPath, entry.name),
       code: maskHaskell(fs.readFileSync(path.join(entry.parentPath, entry.name), 'utf8')),
     }));
-  it.each([
-    'ShelleyStakeAddrs',
-    'MultiAssetPolicies',
-    'PlutusScripts',
-    'sioJsonType',
-    'enpHasInOut',
-  ])('%s has no runtime consumer outside its parser/type module', (symbol) => {
-    const consumers = sources.filter(
-      ({file, code}) =>
-        !file.endsWith('/Config/Types.hs') && new RegExp(`\\b${symbol}\\b`).test(code),
-    );
-    expect(consumers.map(({file}) => path.relative(sourceRoot, file))).toEqual([]);
+  it.each(['ShelleyStakeAddrs', 'MultiAssetPolicies', 'PlutusScripts'])(
+    '%s is propagated into runtime options',
+    (symbol) => {
+      const builder = sources.find(({file}) => file.endsWith('/DbSync.hs'))!.code;
+      expect(builder).toContain(symbol);
+    },
+  );
+  it('rejects retired JSON and CLI selectors rather than accepting no-ops', () => {
+    const config = fs.readFileSync(path.join(sourceRoot, 'Cardano/DbSync/Config/Types.hs'), 'utf8');
+    const cli = fs.readFileSync(path.resolve(sourceRoot, '../app/cardano-db-sync.hs'), 'utf8');
+    expect(config).toContain('KeyMap.member "json_type" obj');
+    expect(config).toContain('insert_options.json_type is retired');
+    expect(cli).toContain('Opt.abortOption');
+    expect(cli).toContain('--disable-in-out is retired');
   });
   it('metadata keys are actually passed into the runtime and filtered', () => {
     const builder = sources.find(({file}) => file.endsWith('/DbSync.hs'))!.code;

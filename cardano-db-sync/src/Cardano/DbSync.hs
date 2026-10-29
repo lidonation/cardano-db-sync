@@ -23,11 +23,15 @@ module Cardano.DbSync (
   OffChainFetchError (..),
   SimplifiedOffChainPoolData (..),
   extractSyncOptions,
+  validateLegacyInOut,
 ) where
 
 import Cardano.Network.NodeToClient (IOManager, withIOManager)
 import Control.Concurrent.Async
 import Control.Monad.Extra (whenJust)
+import qualified Data.ByteString.Base16 as Base16
+import Data.ByteString.Short (fromShort)
+import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict
 import qualified Data.Text as Text
 import Data.Time.Clock (UTCTime, getCurrentTime)
@@ -38,7 +42,7 @@ import Ouroboros.Consensus.Cardano (CardanoHardForkTrigger (..))
 import Ouroboros.Network.Magic (NetworkMagic (..))
 import Paths_cardano_db_sync (version)
 import System.Directory (createDirectoryIfMissing)
-import Prelude (id)
+import Prelude (id, userError)
 
 import qualified Cardano.Chain.Genesis as Byron
 import qualified Cardano.Crypto as Crypto
@@ -64,8 +68,17 @@ import Cardano.DbSync.Sync (runSyncNodeClient)
 import Cardano.DbSync.Tracing.Setup (DbSyncTracers (..), mkDbSyncTracers)
 import Cardano.DbSync.Types
 
+-- | The old field is retained for API compatibility, but false was never effective.
+-- Reject it before migrations, connections or rollback rather than silently ignoring it.
+validateLegacyInOut :: SyncNodeParams -> IO ()
+validateLegacyInOut params =
+  unless (enpHasInOut params) $
+    throwIO $
+      userError "The legacy disable-in-out option is retired; configure insert_options.tx_out.value as disable instead."
+
 runDbSyncNode :: MetricSetters -> [(Text, Text)] -> SyncNodeParams -> SyncNodeConfig -> IO ()
-runDbSyncNode metricsSetters knownMigrations params syncNodeConfigFromFile =
+runDbSyncNode metricsSetters knownMigrations params syncNodeConfigFromFile = do
+  validateLegacyInOut params
   withIOManager $ \iomgr -> do
     -- The genesis config is read before the tracers are created, because the
     -- network magic and system start time are needed for forwarding to
@@ -108,6 +121,7 @@ runMigrationsOnly ::
   SyncNodeConfig ->
   IO ()
 runMigrationsOnly knownMigrations trce params syncNodeConfigFromFile = do
+  validateLegacyInOut params
   logInfo trce $ textShow syncOpts
 
   -- Read the PG connection info
@@ -156,6 +170,7 @@ runDbSync ::
   GenesisConfig ->
   IO ()
 runDbSync metricsSetters iomgr tracers params syncNodeConfigFromFile abortOnPanic genCfg = do
+  validateLegacyInOut params
   logInfo trce $ textShow syncOpts
 
   -- Read the PG connection info
@@ -167,6 +182,14 @@ runDbSync metricsSetters iomgr tracers params syncNodeConfigFromFile abortOnPani
       logError trce $ show syncNodeErr
       throwIO syncNodeErr
     Right setting -> pure setting
+
+  -- Refuse to mix rows indexed under different selective-ingestion contracts.
+  let (filterSignature, selective) = syncFilterSignature (soptInsertOptions syncOpts)
+  compatible <- DB.runDbStandaloneTransSilent (enpPGPassSource params) $ DB.validateSyncFilterConfig filterSignature selective
+  unless compatible $ do
+    let message = "Selective insertion settings differ from the database history; use a fresh database and resync before changing stake, policy or script filters."
+    logError trce message
+    throwIO $ userError (Text.unpack message)
 
   -- For testing and debugging.
   whenJust (enpMaybeRollback params) $ \slotNo ->
@@ -356,18 +379,36 @@ extractSyncOptions snp aop snc =
         MetadataEnable -> Strict.Nothing
         MetadataDisable -> Strict.Nothing
 
+    maybeKeepStakeAddresses =
+      case sioShelley (dncInsertOptions snc) of
+        ShelleyStakeAddrs addrs -> Strict.Just (Set.fromList $ toList addrs)
+        _ -> Strict.Nothing
+
+    maybeKeepScripts =
+      case sioPlutus (dncInsertOptions snc) of
+        PlutusScripts hashes -> Strict.Just (Set.fromList $ toList hashes)
+        _ -> Strict.Nothing
+
+    maybeKeepPolicies =
+      case sioMultiAsset (dncInsertOptions snc) of
+        MultiAssetPolicies ps -> Strict.Just (Set.fromList $ toList ps)
+        _ -> Strict.Nothing
+
     iopts =
       InsertOptions
         { ioInOut = isTxOutEnabled'
         , ioTxCBOR = isTxCBOREnabled (sioTxCBOR (dncInsertOptions snc))
         , ioUseLedger = useLedger
         , ioShelley = isShelleyEnabled (sioShelley (dncInsertOptions snc))
+        , ioKeepStakeAddresses = maybeKeepStakeAddresses
         , -- Rewards are only disabled on "disable_all" and "only_gov" presets
           ioRewards = True
         , ioMultiAssets = isMultiAssetEnabled (sioMultiAsset (dncInsertOptions snc))
+        , ioKeepPolicies = maybeKeepPolicies
         , ioMetadata = isMetadataEnabled (sioMetadata (dncInsertOptions snc))
         , ioKeepMetadataNames = maybeKeepMNames
         , ioPlutusExtra = isPlutusEnabled (sioPlutus (dncInsertOptions snc))
+        , ioKeepScripts = maybeKeepScripts
         , ioOffChainPoolData = useOffchainPoolData
         , ioOffChainVoteData = useOffchainVoteData
         , ioPoolStats = isPoolStatsEnabled (sioPoolStats (dncInsertOptions snc))
@@ -390,6 +431,18 @@ extractSyncOptions snp aop snc =
     isTxOutEnabled' = isTxOutEnabled . sioTxOut . dncInsertOptions $ snc
     forceTxIn' = forceTxIn . sioTxOut . dncInsertOptions $ snc
     ioTxOutVariantType' = txOutConfigToTableType $ sioTxOut $ dncInsertOptions snc
+
+-- | Stable across duplicate values and input ordering; enabling/disabling an unfiltered category
+-- retains its pre-existing behaviour. A changed selection needs a fresh database and replay.
+syncFilterSignature :: InsertOptions -> (Text, Bool)
+syncFilterSignature opts =
+  (Text.intercalate "|" $ map render selections, any isSelected selections)
+  where
+    selections = [ioKeepStakeAddresses opts, ioKeepPolicies opts, ioKeepScripts opts]
+    render Strict.Nothing = "-"
+    render (Strict.Just values) = Text.intercalate "," $ map (decodeUtf8 . Base16.encode . fromShort) $ Set.toAscList values
+    isSelected Strict.Nothing = False
+    isSelected (Strict.Just _) = True
 
 startupReport :: Trace IO LogMessage -> Bool -> SyncNodeParams -> IO ()
 startupReport trce aop params = do

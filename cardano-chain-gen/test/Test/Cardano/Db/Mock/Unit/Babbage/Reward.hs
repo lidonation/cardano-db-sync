@@ -9,14 +9,20 @@ module Test.Cardano.Db.Mock.Unit.Babbage.Reward (
   mirRewardDereg,
   rollbackBoundary,
   singleMIRCertMultiOut,
+  selectedMIRRecipients,
 ) where
 
+import qualified Cardano.Db as DB
+import Cardano.DbSync.Config.Types (ShelleyInsertConfig (..), SyncInsertOptions (..), SyncNodeConfig (..))
+import Cardano.DbSync.Era.Shelley.Generic.Util (annotateStakingCred, renderRewardAccount)
 import Cardano.Ledger.Address (Withdrawals (..))
+import qualified Cardano.Ledger.Address as Ledger
+import Cardano.Ledger.BaseTypes (Network (..))
 import Cardano.Ledger.Coin (Coin (Coin), DeltaCoin (DeltaCoin))
 import Cardano.Ledger.Keys (KeyHash (KeyHash))
 import Cardano.Ledger.Shelley.TxCert
 import Cardano.Mock.ChainSync.Server (IOManager, addBlock)
-import Cardano.Mock.Forging.Interpreter (withShelleyLedgerState)
+import Cardano.Mock.Forging.Interpreter (withBabbageLedgerState, withShelleyLedgerState)
 import qualified Cardano.Mock.Forging.Tx.Babbage as Babbage
 import Cardano.Mock.Forging.Tx.Babbage.Scenarios (delegateAndSendBlocks)
 import Cardano.Mock.Forging.Tx.Generic (resolvePool, resolveStakeCreds)
@@ -28,10 +34,13 @@ import Cardano.Mock.Forging.Types (
  )
 import Control.Concurrent.Class.MonadSTM.Strict (MonadSTM (atomically))
 import Control.Monad (forM_, void)
+import Data.ByteString.Short (toShort)
+import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.Map as Map
 import Data.Text (Text)
+import Data.Text.Encoding (encodeUtf8)
 import Ouroboros.Network.Block (blockPoint)
-import Test.Cardano.Db.Mock.Config (babbageConfigDir, startDBSync, stopDBSync, withFullConfig, withFullConfigDropDB)
+import Test.Cardano.Db.Mock.Config (DBSyncEnv (..), babbageConfigDir, startDBSync, stopDBSync, withFullConfig, withFullConfigDropDB)
 import Test.Cardano.Db.Mock.UnifiedApi (
   fillEpochPercentage,
   fillEpochs,
@@ -48,6 +57,7 @@ import Test.Cardano.Db.Mock.UnifiedApi (
 import Test.Cardano.Db.Mock.Validate (
   assertBlockNoBackoff,
   assertCurrentEpoch,
+  assertEqQuery,
   assertRewardCount,
   assertRewardCounts,
   assertRewardRestCount,
@@ -521,3 +531,24 @@ singleMIRCertMultiOut =
     assertRewardRestCount dbSync 4
   where
     testLabel = "singleMIRCertMultiOut"
+
+-- MIR certificates can contain mixed recipients; filtering does not alter ledger rewards.
+selectedMIRRecipients :: IOManager -> [(Text, Text)] -> Assertion
+selectedMIRRecipients =
+  withFullConfigDropDB babbageConfigDir "selectedMIRRecipients" $ \interpreter mockServer original -> do
+    first <- withBabbageLedgerState interpreter $ resolveStakeCreds (StakeIndex 0)
+    second <- withBabbageLedgerState interpreter $ resolveStakeCreds (StakeIndex 1)
+    let account = annotateStakingCred Testnet first
+        chosen = toShort . encodeUtf8 $ renderRewardAccount account
+        cfg = dbSyncConfig original
+        selected = original {dbSyncConfig = cfg {dncInsertOptions = (dncInsertOptions cfg) {sioShelley = ShelleyStakeAddrs (chosen :| [])}}}
+    startDBSync selected
+    void $ withBabbageFindLeaderAndSubmitTx interpreter mockServer $ \_ ->
+      Babbage.mkDCertTx [ShelleyTxCertMir $ MIRCert ReservesMIR (SendToOppositePotMIR (Coin 100000))] (Withdrawals mempty) Nothing
+    epoch <- fillUntilNextEpoch interpreter mockServer
+    void $ withBabbageFindLeaderAndSubmitTx interpreter mockServer $ \_ ->
+      let recipients = StakeAddressesMIR $ Map.fromList [(first, DeltaCoin 10), (second, DeltaCoin 20)]
+       in Babbage.mkDCertTx [ShelleyTxCertMir $ MIRCert ReservesMIR recipients, ShelleyTxCertMir $ MIRCert TreasuryMIR recipients] (Withdrawals mempty) Nothing
+    assertBlockNoBackoff selected (2 + length epoch)
+    assertEqQuery selected (DB.queryMIRCountsForStake $ Ledger.serialiseAccountAddress account) (1, 1) "selected MIR recipient"
+    assertEqQuery selected (DB.queryMIRCountsForStake $ Ledger.serialiseAccountAddress $ annotateStakingCred Testnet second) (0, 0) "unselected MIR recipient"

@@ -154,6 +154,20 @@ queryMultiAssetCount =
   runSession mkDbCallStack $
     HsqlSes.statement () queryMultiAssetCountStmt
 
+-- | Counts identity, mint and output rows for an exact policy, used by chain-gen integration tests.
+queryPolicyRowCounts :: ByteString -> DbM (Word64, Word64, Word64)
+queryPolicyRowCounts policy =
+  runSession mkDbCallStack $ HsqlSes.statement policy statement
+  where
+    statement = HsqlStmt.Statement sql encoder decoder True
+    sql =
+      "SELECT (SELECT COUNT(*) FROM multi_asset WHERE policy = $1)::bigint, \
+      \(SELECT COUNT(*) FROM ma_tx_mint m JOIN multi_asset a ON a.id = m.ident WHERE a.policy = $1)::bigint, \
+      \(SELECT COUNT(*) FROM ma_tx_out o JOIN multi_asset a ON a.id = o.ident WHERE a.policy = $1)::bigint"
+    encoder = HsqlE.param (HsqlE.nonNullable HsqlE.bytea)
+    count = HsqlD.column (HsqlD.nonNullable (fromIntegral <$> HsqlD.int8))
+    decoder = HsqlD.singleRow $ (,,) <$> count <*> count <*> count
+
 ------------------------------------------------------------------------------------------------
 
 queryTxMetadataCountStmt :: HsqlStmt.Statement () Word
@@ -932,3 +946,20 @@ queryTableColumns proxy = do
       , ccrTypeName = typeName
       , ccrDatabaseColumns = dbCols
       }
+
+-- | Test-only helper for emulating a database upgraded from before filter tracking.
+clearSyncFilterConfigForTest :: DbM ()
+clearSyncFilterConfigForTest = runSession mkDbCallStack $ HsqlSes.sql "DELETE FROM sync_filter_config"
+
+-- | MIR certificate row counts for an exact reward account, used by chain-gen tests.
+queryMIRCountsForStake :: ByteString -> DbM (Word64, Word64)
+queryMIRCountsForStake stake =
+  runSession mkDbCallStack $ HsqlSes.statement stake statement
+  where
+    statement = HsqlStmt.Statement sql encoder decoder True
+    sql =
+      "SELECT (SELECT COUNT(*) FROM \"reserve\" r JOIN stake_address a ON a.id = r.addr_id WHERE a.hash_raw = $1)::bigint, \
+      \(SELECT COUNT(*) FROM \"treasury\" t JOIN stake_address a ON a.id = t.addr_id WHERE a.hash_raw = $1)::bigint"
+    encoder = HsqlE.param (HsqlE.nonNullable HsqlE.bytea)
+    count = HsqlD.column (HsqlD.nonNullable (fromIntegral <$> HsqlD.int8))
+    decoder = HsqlD.singleRow $ (,) <$> count <*> count

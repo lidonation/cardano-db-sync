@@ -89,10 +89,21 @@ Stats for configuration:
       "enable": true
     },
     "governance": "enable",
-    "offchain_pool_data": "enable",
-    "json_type": "text"
+    "offchain_pool_data": "enable"
   }
 ```
+
+**Configuration migration:** Older examples may include `insert_options.json_type` or the
+`--disable-in-out` flag. Both are rejected with an actionable error; remove `json_type` and use
+`remove_jsonb_from_schema` to select text columns (`enable`) or JSONB columns (`disable`, the
+existing default). JSON payload insertion remains enabled. Schema conversion is performed at
+startup and can take time on an existing database. To disable input/output insertion, set
+`insert_options.tx_out.value` to `disable` instead of the retired flag.
+
+Stake-address, policy and script selections must be set before syncing a fresh database. Restarting
+with the same selections is supported; changing or removing a selection requires a fresh database
+and replay, as does adopting selective insertion on an already-populated database. An older db-sync
+binary does not enforce these selections and must not write to a selectively indexed database.
 
 ### `mainnet`
 

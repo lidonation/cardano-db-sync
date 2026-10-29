@@ -43,6 +43,26 @@ main = do
       putStrLn "ok: fixture matches the golden schema"
   check "fixture: every part read" (null (schemaUnresolved fixtureSchema))
 
+  guarded <- expectSchema "." ["test/config-fixtures/GuardSample.hs"] "Root"
+  check "retired-key guard extracts without accepting the retired key" $ case schemaRoot guarded of
+    SObject _ _ keys _ -> null (schemaUnresolved guarded) && map keyName keys == ["enabled"]
+    _ -> False
+
+  traversed <- expectSchema "." ["test/config-fixtures/TraverseSample.hs"] "Root"
+  check "validated nonempty text lists retain their input shape" $ case schemaRoot traversed of
+    SObject _ _ keys _ -> any (\k -> keyName k == "values" && keyShape k == SNullable (SArray 1 SString)) keys
+    _ -> False
+
+  unsafe <- extractConfig "." ["test/config-fixtures/UnsafeGuardSample.hs"] "Root"
+  check "unrecognised guards remain unresolved" $ case unsafe of
+    Right schema -> not (null (schemaUnresolved schema))
+    Left _ -> False
+
+  conflicting <- extractConfig "." ["test/config-fixtures/ConflictingGuardSample.hs"] "Root"
+  check "a rejected key cannot also be advertised as accepted" $ case conflicting of
+    Right schema -> not (null (schemaUnresolved schema))
+    Left _ -> False
+
   real <- expectSchema "../.." configSources configRoot
   check "real config: every part read" (null (schemaUnresolved real))
   check "real config: root is an object with keys" $ case schemaRoot real of

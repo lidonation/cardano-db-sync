@@ -1,3 +1,4 @@
+{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
@@ -134,7 +135,6 @@ syncInsertOptions =
     <*> (OffchainPoolDataConfig <$> Gen.bool)
     <*> (OffchainVoteDataConfig <$> Gen.bool)
     <*> (PoolStatsConfig <$> Gen.bool)
-    <*> Gen.element [JsonTypeText, JsonTypeJsonb, JsonTypeDisable]
     <*> (RemoveJsonbFromSchemaConfig <$> Gen.bool)
     <*> (EpochConfig <$> Gen.bool)
     <*> pure Nothing
@@ -182,16 +182,22 @@ plutusConfig =
     ]
 
 addr :: Gen ShortByteString
-addr = toShort <$> Gen.utf8 (Range.linear 1 5) Gen.unicode
+addr =
+  toShort
+    <$> Gen.element
+      [ "stake_test1uz7nhfssw7e2p8pr4hwvlsv9x920famnd5ngz42zpk7rh2q3rg0ut"
+      , "stake_test1uz6l0mutn439r8028wqz23k4kp7tdhsrpkvfe7pw3xd8rhgepv79v"
+      , "stake1uxtyt8vgvn2wm4xljnsf9jpcxfy5fxsla8lc6tr3w89mwqs422x5g"
+      ]
 
 multiAssetPolicy :: Gen ShortByteString
-multiAssetPolicy = toShort <$> Gen.utf8 (Range.linear 1 5) Gen.unicode
+multiAssetPolicy = toShort <$> Gen.bytes (Range.singleton 28)
 
 metadataKey :: Gen Word
 metadataKey = Gen.word (Range.linear minBound maxBound)
 
 scriptHash :: Gen ShortByteString
-scriptHash = toShort <$> Gen.utf8 (Range.linear 1 5) Gen.unicode
+scriptHash = toShort <$> Gen.bytes (Range.singleton 28)
 
 networkName :: Gen NetworkName
 networkName = NetworkName <$> Gen.text (Range.linear 0 100) Gen.alpha

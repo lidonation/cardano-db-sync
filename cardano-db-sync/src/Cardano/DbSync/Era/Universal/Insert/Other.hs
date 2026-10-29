@@ -10,6 +10,7 @@ module Cardano.DbSync.Era.Universal.Insert.Other (
   insertRedeemer,
   insertDatum,
   insertWithdrawals,
+  stakeAddressSelected,
   insertRedeemerData,
   insertStakeAddressRefIfMissing,
   insertMultiAsset,
@@ -19,7 +20,8 @@ module Cardano.DbSync.Era.Universal.Insert.Other (
 
 import qualified Cardano.Db as DB
 import Cardano.Db.Log (LogMessage)
-import Cardano.DbSync.Api.Types (SyncEnv (..), UnicodeNullSource (..))
+import Cardano.DbSync.Api (getInsertOptions)
+import Cardano.DbSync.Api.Types (InsertOptions (..), SyncEnv (..), UnicodeNullSource (..))
 import Cardano.DbSync.Cache (insertDatumAndCache, queryDatum, queryMAWithCache, queryOrInsertRewardAccount, queryOrInsertStakeAddress)
 import Cardano.DbSync.Cache.Types (CacheAction (..))
 import qualified Cardano.DbSync.Era.Shelley.Generic as Generic
@@ -35,6 +37,9 @@ import qualified Cardano.Ledger.Credential as Ledger
 import Cardano.Ledger.Mary.Value (AssetName (..), PolicyID (..))
 import Cardano.Logging (Trace)
 import Cardano.Prelude
+import Data.ByteString.Short (toShort)
+import qualified Data.Set as Set
+import qualified Data.Strict.Maybe as Strict
 
 --------------------------------------------------------------------------------------------
 -- Insert Redeemer
@@ -115,13 +120,19 @@ insertDatum syncEnv txId txd = do
           , DB.datumBytes = Generic.txDataBytes txd
           }
 
+stakeAddressSelected :: SyncEnv -> Ledger.AccountAddress -> Bool
+stakeAddressSelected syncEnv account =
+  case ioKeepStakeAddresses (getInsertOptions syncEnv) of
+    Strict.Nothing -> True
+    Strict.Just addresses -> Set.member (toShort $ encodeUtf8 $ Generic.renderRewardAccount account) addresses
+
 insertWithdrawals ::
   SyncEnv ->
   DB.TxId ->
   Map Word64 DB.RedeemerId ->
   Generic.TxWithdrawal ->
   ExceptT SyncNodeError DB.DbM ()
-insertWithdrawals syncEnv txId redeemers txWdrl = do
+insertWithdrawals syncEnv txId redeemers txWdrl = when (stakeAddressSelected syncEnv $ Generic.txwRewardAccount txWdrl) $ do
   addrId <-
     queryOrInsertRewardAccount syncEnv UpdateCache $ Generic.txwRewardAccount txWdrl
   void . lift $

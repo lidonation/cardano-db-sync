@@ -139,8 +139,7 @@ genDefaultJson =
             "script_hashes": null
           },
           "governance": "enable",
-          "offchain_pool_data": "disable",
-          "json_type": "text"
+          "offchain_pool_data": "disable"
         }
       |]
     , [aesonQQ|
@@ -166,8 +165,7 @@ genDefaultJson =
             "enable": true
           },
           "governance": "enable",
-          "offchain_pool_data": "disable",
-          "json_type": "text"
+          "offchain_pool_data": "disable"
         }
       |]
     ]

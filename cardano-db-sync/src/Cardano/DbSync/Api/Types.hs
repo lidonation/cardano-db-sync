@@ -20,7 +20,9 @@ import Cardano.Prelude (Bool, Eq, IO, Ord, Show, Text, Word64)
 import Cardano.Slotting.Slot (EpochNo (..))
 import Control.Concurrent.Class.MonadSTM.Strict (StrictTVar)
 import Control.Concurrent.Class.MonadSTM.Strict.TBQueue (StrictTBQueue)
+import Data.ByteString.Short (ShortByteString)
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict
 import Data.Time.Clock (UTCTime)
 import Ouroboros.Consensus.BlockchainTime.WallClock.Types (SystemStart (..))
@@ -84,11 +86,14 @@ data InsertOptions = InsertOptions
   , ioInOut :: !Bool
   , ioUseLedger :: !Bool
   , ioShelley :: !Bool
+  , ioKeepStakeAddresses :: Strict.Maybe (Set.Set ShortByteString)
   , ioRewards :: !Bool
   , ioMultiAssets :: !Bool
+  , ioKeepPolicies :: Strict.Maybe (Set.Set ShortByteString)
   , ioMetadata :: !Bool
   , ioKeepMetadataNames :: Strict.Maybe [Word64]
   , ioPlutusExtra :: !Bool
+  , ioKeepScripts :: Strict.Maybe (Set.Set ShortByteString)
   , ioOffChainPoolData :: !Bool
   , ioOffChainVoteData :: !Bool
   , ioPoolStats :: !Bool

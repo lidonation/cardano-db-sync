@@ -30,6 +30,7 @@ module Cardano.Mock.Forging.Tx.Conway (
   mkScriptTx,
   mkSimpleTx,
   mkAuxDataTx,
+  mkAuxDataTxWithScripts,
   mkDCertTx,
   mkDCertPoolTx,
   mkDCertTxPools,
@@ -368,13 +369,21 @@ mkAuxDataTx ::
   TxBody Core.TopTx ConwayEra ->
   Map Word64 Metadatum ->
   Core.Tx Core.TopTx ConwayEra
-mkAuxDataTx isValid' txBody auxData =
+mkAuxDataTx isValid' txBody auxData = mkAuxDataTxWithScripts isValid' txBody auxData []
+
+mkAuxDataTxWithScripts ::
+  Bool ->
+  TxBody Core.TopTx ConwayEra ->
+  Map Word64 Metadatum ->
+  [Core.Script ConwayEra] ->
+  Core.Tx Core.TopTx ConwayEra
+mkAuxDataTxWithScripts isValid' txBody auxData scripts =
   MkConwayTx $
     AlonzoTx
       { atBody = txBody
       , atWits = mempty
       , atIsValid = IsValid isValid'
-      , atAuxData = SJust (mkAlonzoTxAuxData auxData [])
+      , atAuxData = SJust (mkAlonzoTxAuxData auxData scripts)
       }
 
 mkSimpleDCertTx ::

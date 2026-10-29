@@ -1494,3 +1494,38 @@ queryWithdrawalAddressesStmt =
 queryWithdrawalAddresses :: HasCallStack => DbM [Id.StakeAddressId]
 queryWithdrawalAddresses =
   runSession mkDbCallStack $ HsqlSes.statement () queryWithdrawalAddressesStmt
+
+-- | Atomically establish or verify the selective-ingestion contract. Call inside a transaction.
+-- Existing databases without a marker may adopt unfiltered defaults, but cannot safely adopt
+-- selective insertion without replay: their historic rows may already contain excluded data.
+validateSyncFilterConfig :: Text.Text -> Bool -> DbM Bool
+validateSyncFilterConfig selection selective =
+  runSession mkDbCallStack $ do
+    HsqlSes.sql "LOCK TABLE sync_filter_config IN EXCLUSIVE MODE"
+    current <- HsqlSes.statement () readSelection
+    case current of
+      Just old -> pure (old == selection)
+      Nothing -> do
+        populated <- HsqlSes.statement () hasBlocks
+        if selective && populated
+          then pure False
+          else HsqlSes.statement selection insertSelection >> pure True
+  where
+    readSelection =
+      HsqlStmt.Statement
+        "SELECT selection FROM sync_filter_config WHERE id = 1"
+        HsqlE.noParams
+        (HsqlD.rowMaybe $ HsqlD.column $ HsqlD.nonNullable HsqlD.text)
+        True
+    hasBlocks =
+      HsqlStmt.Statement
+        "SELECT EXISTS (SELECT 1 FROM block LIMIT 1)"
+        HsqlE.noParams
+        (HsqlD.singleRow $ HsqlD.column $ HsqlD.nonNullable HsqlD.bool)
+        True
+    insertSelection =
+      HsqlStmt.Statement
+        "INSERT INTO sync_filter_config (id, selection) VALUES (1, $1)"
+        (HsqlE.param $ HsqlE.nonNullable HsqlE.text)
+        HsqlD.noResult
+        True

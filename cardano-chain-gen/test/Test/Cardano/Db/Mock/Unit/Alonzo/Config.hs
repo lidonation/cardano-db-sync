@@ -33,7 +33,6 @@ insertConfig = do
           , sioOffchainPoolData = OffchainPoolDataConfig False
           , sioOffchainVoteData = OffchainVoteDataConfig False
           , sioPoolStats = PoolStatsConfig False
-          , sioJsonType = JsonTypeDisable
           , sioRemoveJsonbFromSchema = RemoveJsonbFromSchemaConfig False
           , sioEpoch = EpochConfig False
           , sioStopAtBlock = Nothing

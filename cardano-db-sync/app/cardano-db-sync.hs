@@ -102,19 +102,21 @@ pCommandLine =
     ]
 
 pRunDbSyncNode :: Parser SyncNodeParams
-pRunDbSyncNode = do
-  SyncNodeParams
-    <$> pConfigFile
-    <*> pSocketPath
-    <*> optional pTracerSocketPath
-    <*> optional pLedgerStateDir
-    <*> pMigrationDir
-    <*> pPGPassSource
-    <*> pHasCache
-    <*> pForceIndexes
-    <*> pHasInOut
-    <*> optional pRollbackSlotNo
-    <*> pAllowPrivateOffChainUrls
+pRunDbSyncNode =
+  pRejectDisableInOut
+    <*> ( SyncNodeParams
+            <$> pConfigFile
+            <*> pSocketPath
+            <*> optional pTracerSocketPath
+            <*> optional pLedgerStateDir
+            <*> pMigrationDir
+            <*> pPGPassSource
+            <*> pHasCache
+            <*> pForceIndexes
+            <*> pure True
+            <*> optional pRollbackSlotNo
+            <*> pAllowPrivateOffChainUrls
+        )
 
 -- | @--config FILEPATH@: path to the db-sync node config file.
 pConfigFile :: Parser ConfigFile
@@ -229,16 +231,16 @@ pRollbackSlotNo =
           <> Opt.metavar "WORD"
       )
 
--- | @--disable-in-out@ is accepted for compatibility, but its parsed value is not used by the
--- current runtime option builder. Use @insert_options.tx_out.value = "disable"@ to disable @tx_in@
--- and @tx_out@ insertion.
-pHasInOut :: Parser Bool
-pHasInOut =
-  Opt.flag
-    True
-    False
+-- | @--disable-in-out@ has been retired because it did not affect insertion.
+-- Configure @insert_options.tx_out.value = "disable"@ to disable @tx_in@ and @tx_out@ instead.
+-- The flag is rejected
+-- before startup even when the configuration already disables inputs and outputs.
+pRejectDisableInOut :: Parser (a -> a)
+pRejectDisableInOut =
+  Opt.abortOption
+    (Opt.ErrorMsg "--disable-in-out is retired; set insert_options.tx_out.value to disable in the configuration instead")
     ( Opt.long "disable-in-out"
-        <> Opt.help "Disables the tx_in and tx_out table"
+        <> Opt.help "Retired: use insert_options.tx_out.value = disable instead"
     )
 
 -- | The @version@ command and hidden @--version@ flag print the program version.

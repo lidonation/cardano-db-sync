@@ -426,12 +426,29 @@ data ObjectAnalysis = ObjectAnalysis
 -- | Read one object parser body. @o@ is the object variable.
 analyseObject :: Env -> Scope -> Text -> Ex -> ObjectAnalysis
 analyseObject env scope o body = case body of
+  EDo stmts
+    | let rejected = mapMaybe rejectedKeyGuard stmts
+    , not (null rejected) ->
+        let analysed = analyseObject env scope o (EDo $ filter (isNothing . rejectedKeyGuard) stmts)
+            conflicts = ["rejected key also read: " <> key | key <- rejected, any ((== key) . kiName) (oaKeys analysed)]
+         in analysed {oaErrors = conflicts ++ oaErrors analysed}
   EDo [SBody e] -> analyseObject env scope o e
   EDo stmts -> doBlock stmts
+  _ | (EVar fn, args@(EVar obj : _)) <- spine body, obj == o, Just helper <- lookupBind scope fn -> analyseHelper helper args
   _ -> case applicative body of
     Just (con, args) -> applicativeObject con args
     Nothing -> ObjectAnalysis ["object body: unrecognised form"] [] [] []
   where
+    -- An explicit @when (member "key" obj) (fail "message")@ rejects a key rather
+    -- than reading one. Unknown keys already fail the generated validator, so the
+    -- guard contributes no accepted key or default. Other guards remain unresolved.
+    rejectedKeyGuard (SBody e) = case spine e of
+      (EVar "when", [predicate, failure]) -> case (spine predicate, spine failure) of
+        ((EVar "member", [EStr key, EVar obj]), (EVar "fail", [EStr _])) | obj == o -> Just key
+        _ -> Nothing
+      _ -> Nothing
+    rejectedKeyGuard _ = Nothing
+
     -- C <$> a1 <*> a2 ...
     applicativeObject con args =
       let fieldTys = map snd (conFields env con) ++ repeat TOther
@@ -589,15 +606,21 @@ analyseObject env scope o body = case body of
       where
         use e = case spine e of
           (ECon c, args) -> listToMaybe [ty | (a, (_, ty)) <- zip args (conFields env c), a == EVar p]
-          (EVar "map", [EVar f, EVar p']) | p' == p -> case Map.lookup f (msSigs (envMod env)) of
+          (EVar op, [EVar f, EVar p']) | op `elem` ["map", "traverse"] && p' == p -> case Map.lookup f (msSigs (envMod env)) of
             Just (TFun argTy _) ->
-              let container =
-                    listToMaybe
-                      [ cty
-                      | (ECon c, args) <- map spine (universe b)
-                      , (a, (_, cty)) <- zip args (conFields env c)
-                      , a == e
-                      ]
+              let direct =
+                    [ cty
+                    | (ECon c, args) <- map spine (universe b)
+                    , (a, (_, cty)) <- zip args (conFields env c)
+                    , a == e
+                    ]
+                  traversedContainers =
+                    [ cty
+                    | EOp "<$>" (ECon c) a <- universe b
+                    , a == e
+                    , (_, cty) <- conFields env c
+                    ]
+                  container = listToMaybe (direct ++ traversedContainers)
                in Just $ case container of
                     Just (TApp (TCon "NonEmpty") _) -> TApp (TCon "NonEmpty") argTy
                     _ -> TList argTy

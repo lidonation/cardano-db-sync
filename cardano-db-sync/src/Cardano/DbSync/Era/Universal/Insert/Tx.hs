@@ -15,7 +15,9 @@ module Cardano.DbSync.Era.Universal.Insert.Tx (
 import Control.Monad.Extra (mapMaybeM)
 import qualified Data.Aeson as Aeson
 import qualified Data.ByteString.Lazy.Char8 as LBS
+import Data.ByteString.Short (toShort)
 import qualified Data.Map.Strict as Map
+import qualified Data.Set as Set
 import qualified Data.Strict.Maybe as Strict
 
 import Cardano.Db.Log (LogMessage)
@@ -190,7 +192,7 @@ insertTx syncEnv isMember blkId epochNo slotNo applyResult blockIndex tx grouped
 
       when (ioPlutusExtra iopts) $
         mapM_ (insertScript syncEnv txId) $
-          Generic.txScripts tx
+          filter (scriptSelected iopts) (Generic.txScripts tx)
 
       when (ioPlutusExtra iopts) $
         mapM_ (insertExtraKeyWitness tracer txId) $
@@ -226,7 +228,7 @@ insertTxOut syncEnv iopts (txId, txHash) (Generic.TxOut index addr value maMap m
         insertDatum syncEnv txId
   mScriptId <-
     whenFalseEmpty (ioPlutusExtra iopts) Nothing $
-      whenMaybe mScript $
+      whenMaybe (mScript >>= keepScript iopts) $
         insertScript syncEnv txId
   !txOut <-
     case ioTxOutVariantType iopts of
@@ -331,6 +333,21 @@ insertTxMetadata syncEnv txId inOpts mmetadata = do
 --------------------------------------------------------------------------------------
 -- INSERT MULTI ASSET
 --------------------------------------------------------------------------------------
+scriptSelected :: InsertOptions -> Generic.TxScript -> Bool
+scriptSelected iopts script =
+  case ioKeepScripts iopts of
+    Strict.Nothing -> True
+    Strict.Just hashes -> Set.member (toShort $ Generic.txScriptHash script) hashes
+
+keepScript :: InsertOptions -> Generic.TxScript -> Maybe Generic.TxScript
+keepScript iopts script = if scriptSelected iopts script then Just script else Nothing
+
+policySelected :: SyncEnv -> PolicyID -> Bool
+policySelected syncEnv policy =
+  case ioKeepPolicies (getInsertOptions syncEnv) of
+    Strict.Nothing -> True
+    Strict.Just policies -> Set.member (toShort $ Generic.unScriptHash $ policyID policy) policies
+
 insertMaTxMint ::
   SyncEnv ->
   DB.TxId ->
@@ -342,8 +359,9 @@ insertMaTxMint syncEnv txId (MultiAsset mintMap) =
     prepareOuter ::
       (PolicyID, Map AssetName Integer) ->
       ExceptT SyncNodeError DB.DbM [DB.MaTxMint]
-    prepareOuter (policy, aMap) =
-      mapM (prepareInner policy) $ Map.toList aMap
+    prepareOuter (policy, aMap)
+      | policySelected syncEnv policy = mapM (prepareInner policy) $ Map.toList aMap
+      | otherwise = pure []
 
     prepareInner ::
       PolicyID ->
@@ -368,8 +386,9 @@ insertMaTxOuts syncEnv maMap =
     prepareOuter ::
       (PolicyID, Map AssetName Integer) ->
       ExceptT SyncNodeError DB.DbM [MissingMaTxOut]
-    prepareOuter (policy, aMap) =
-      mapM (prepareInner policy) $ Map.toList aMap
+    prepareOuter (policy, aMap)
+      | policySelected syncEnv policy = mapM (prepareInner policy) $ Map.toList aMap
+      | otherwise = pure []
 
     prepareInner ::
       PolicyID ->
@@ -401,7 +420,7 @@ insertCollateralTxOut syncEnv iopts (txId, _txHash) (Generic.TxOut index addr va
         insertDatum syncEnv txId
   mScriptId <-
     whenFalseEmpty (ioPlutusExtra iopts) Nothing $
-      whenMaybe mScript $
+      whenMaybe (mScript >>= keepScript iopts) $
         insertScript syncEnv txId
   _ <-
     case ioTxOutVariantType iopts of
@@ -418,7 +437,7 @@ insertCollateralTxOut syncEnv iopts (txId, _txHash) (Generic.TxOut index addr va
                 , VC.collateralTxOutCoreStakeAddressId = mSaId
                 , VC.collateralTxOutCoreValue = Generic.coinToDbLovelace value
                 , VC.collateralTxOutCoreDataHash = Generic.dataHashToBytes <$> Generic.getTxOutDatumHash dt
-                , VC.collateralTxOutCoreMultiAssetsDescr = textShow maMap
+                , VC.collateralTxOutCoreMultiAssetsDescr = textShow selectedMaMap
                 , VC.collateralTxOutCoreInlineDatumId = mDatumId
                 , VC.collateralTxOutCoreReferenceScriptId = mScriptId
                 }
@@ -441,13 +460,16 @@ insertCollateralTxOut syncEnv iopts (txId, _txHash) (Generic.TxOut index addr va
                 , VA.collateralTxOutAddressStakeAddressId = mSaId
                 , VA.collateralTxOutAddressValue = Generic.coinToDbLovelace value
                 , VA.collateralTxOutAddressDataHash = Generic.dataHashToBytes <$> Generic.getTxOutDatumHash dt
-                , VA.collateralTxOutAddressMultiAssetsDescr = textShow maMap
+                , VA.collateralTxOutAddressMultiAssetsDescr = textShow selectedMaMap
                 , VA.collateralTxOutAddressInlineDatumId = mDatumId
                 , VA.collateralTxOutAddressReferenceScriptId = mScriptId
                 , VA.collateralTxOutAddressAddressId = addrId
                 }
   pure ()
   where
+    -- The collateral output stores a textual multi-asset description rather than ma_tx_out rows.
+    selectedMaMap = Map.filterWithKey (\policy _ -> policySelected syncEnv policy) maMap
+
     -- TODO: Is there any reason to add new tables for collateral multi-assets/multi-asset-outputs
     hasScript :: Bool
     hasScript = maybe False Generic.hasCredScript (Generic.getPaymentCred addr)
