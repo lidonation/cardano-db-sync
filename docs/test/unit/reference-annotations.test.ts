@@ -91,6 +91,18 @@ describe('configuration reference annotations', () => {
   });
 });
 
+describe('bootstrap compatibility', () => {
+  it('documents supported eras and the LSM restriction', () => {
+    const module = artifact.files.find(
+      (file: {path: string}) => file.path === 'cardano-db-sync/src/Cardano/DbSync/Config/Types.hs',
+    );
+    const doc =
+      module?.annotations.find((entry: {name: string}) => entry.name === 'TxOutConfig')?.doc ?? '';
+    expect(doc).toContain('Dijkstra');
+    expect(doc).toContain('LSM backend is not supported');
+  });
+});
+
 describe('SMASH and off-chain reference annotations', () => {
   it.each([
     ['cardano-db-sync/app/http-get-json-metadata.hs', 'main', 'drep', 'local file'],

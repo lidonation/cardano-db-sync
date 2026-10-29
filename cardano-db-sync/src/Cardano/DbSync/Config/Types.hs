@@ -249,9 +249,9 @@ newtype EpochConfig = EpochConfig
 --
 -- With disable, tx_in, tx_out and ma_tx_out remain empty; tx.fee may be zero and redeemer.script_hash
 -- null. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap
--- requires ledger state and a Babbage or Conway network; it loads the UTxO in bulk and leaves tx.fee
--- and redeemer.script_hash incomplete during bootstrap. Reusing a database with incompatible modes can
--- cause failures.
+-- requires in-memory ledger state; it supports Babbage, Conway and Dijkstra. The LSM backend is not supported.
+-- It loads the UTxO in bulk and leaves tx.fee and redeemer.script_hash incomplete during bootstrap.
+-- Reusing a database with incompatible modes can cause failures.
 data TxOutConfig
   = TxOutEnable UseTxOutAddress
   | TxOutDisable
