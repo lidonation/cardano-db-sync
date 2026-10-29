@@ -98,6 +98,7 @@ test.describe('content', () => {
   });
 
   test('repository figures, people and country table come from the fixture', async ({page}) => {
+    test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
     await page.route('**/repository-avatars/*.png', async (route) => {
       await route.fulfill({
         path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
@@ -210,6 +211,7 @@ test('empty tools fixture names the state and offers recovery without accessibil
 });
 
 test('activity ranges change the chart, summary and table with the keyboard', async ({page}) => {
+  test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
   await open(page, 1440);
   const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
   const tabs = section.getByRole('tablist');
@@ -231,6 +233,7 @@ test('activity ranges change the chart, summary and table with the keyboard', as
 });
 
 test('heatmap weekly table agrees with its day cells', async ({page}) => {
+  test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
   await open(page, 1440);
   const section = page.locator('section[aria-labelledby="ecosystem-activity-title"]');
   const cells = await section.locator('[data-week][data-count]').evaluateAll((nodes) => {
@@ -248,6 +251,7 @@ test('heatmap weekly table agrees with its day cells', async ({page}) => {
 
 for (const palette of ['light', 'dark', 'cream', 'navy']) {
   test(`each activity range is accessible in ${palette}`, async ({page}) => {
+    test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
     await open(page, 375, palette);
     const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
     for (const name of ['12 months', '30 days', '7 days']) {
@@ -259,3 +263,18 @@ for (const palette of ['light', 'dark', 'cream', 'navy']) {
     }
   });
 }
+
+test('built page reports missing repository data instead of inventing charts', async ({page}) => {
+  test.skip(!test.info().project.use.baseURL, 'Built profile check');
+  await open(page, 1440);
+  const facts = page.locator('section[aria-labelledby="ecosystem-facts"]');
+  if (
+    (await facts.getByText('Repository activity data is unavailable in this build.').count()) > 0
+  ) {
+    await expect(page.locator('#ecosystem-code-title')).toHaveCount(0);
+    await expect(page.locator('#ecosystem-activity-title')).toHaveCount(0);
+  } else {
+    await expect(page.locator('#ecosystem-code-title')).toBeVisible();
+    await expect(page.locator('#ecosystem-activity-title')).toBeVisible();
+  }
+});
