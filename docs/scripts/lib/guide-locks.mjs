@@ -142,7 +142,7 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
     const configExists = Object.keys(keys).some((key) => key === id || key.endsWith(`.${id}`));
     if (!columnExists && !configExists)
       errors.push(`${name}: body references unknown column ${id}`);
-    else if (columnExists && !declared.has(`columns:${id}`) && !declared.has(`config:${id}`))
+    else if (columnExists && !declared.has(`columns:${id}`))
       warnings.push(`${name}: body references undeclared column ${id}`);
   }
   const reported = new Set();
@@ -170,6 +170,26 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
         warnings.push(`${name}: body references undeclared config ${id}`);
       reported.add(`config:${id}`);
     }
+  }
+  const columnOwners = new Map();
+  for (const table of tables)
+    for (const column of table.columns) {
+      if (!columnOwners.has(column.name)) columnOwners.set(column.name, new Set());
+      columnOwners.get(column.name).add(table.name);
+    }
+  const bareNames = new Set([
+    ...Array.from(
+      body.matchAll(/(?<![A-Za-z0-9_.])([a-z][a-z0-9_]*_[a-z0-9_]+)(?![A-Za-z0-9_.])/g),
+      (match) => match[1],
+    ),
+    ...Array.from(body.matchAll(/`([a-z][a-z0-9_]*)`/g), (match) => match[1]),
+  ]);
+  for (const column of bareNames) {
+    const owners = columnOwners.get(column);
+    if (owners?.size !== 1) continue;
+    const id = `${owners.values().next().value}.${column}`;
+    if (!declared.has(`columns:${id}`))
+      warnings.push(`${name}: body references undeclared column ${id}`);
   }
   const changes = [];
   if (previous) {

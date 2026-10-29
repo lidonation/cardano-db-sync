@@ -226,7 +226,9 @@ fingerprints; it fails on changes and names every affected guide. After updating
 or explicitly re-affirming the prose, run `npm run guide-locks:update` and commit
 `generated/guide-locks.json`. A short configuration path must resolve uniquely;
 otherwise use the full path. An undeclared known body reference is a warning;
-a reference to a nonexistent column is an error.
+a qualified reference to a nonexistent column on a known table is an error.
+Qualified references in fenced code are checked too. Unqualified snake-case or
+inline-code column names warn when they map unambiguously to one table.
 
 The applicable release set comes from intersecting actual tagged schema and
 configuration snapshots, plus the current schema. To intentionally document a

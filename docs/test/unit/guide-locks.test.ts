@@ -562,3 +562,53 @@ it('fails closed on malformed guide metadata, ambiguous config and invalid histo
     }).errors.length,
   ).toBeGreaterThan(0);
 });
+
+it('warns about unqualified columns only when their table is unambiguous', () => {
+  const sample = {
+    tables: [
+      {
+        name: 'tx_out',
+        variant: 'core',
+        columns: [
+          {name: 'unique_field', fingerprint: 'x'},
+          {name: 'id', fingerprint: 'y'},
+        ],
+      },
+      {name: 'tx_in', variant: 'core', columns: [{name: 'id', fingerprint: 'z'}]},
+    ],
+  };
+  const source = guide('Use unique_field and `id`.', 'requires:\n  tables: [tx_out]');
+  const result = evaluateGuide('a.md', source, sample, config);
+  expect(result.warnings.join('\n')).toContain('tx_out.unique_field');
+  expect(result.warnings.join('\n')).not.toContain('tx_out.id');
+  expect(result.warnings.join('\n')).not.toContain('tx_in.id');
+});
+
+it('does not warn when an unqualified unique column is declared, even across variants', () => {
+  const sample = {
+    tables: [
+      {name: 'tx_out', variant: 'core', columns: [{name: 'unique_field', fingerprint: 'x'}]},
+      {name: 'tx_out', variant: 'address', columns: [{name: 'unique_field', fingerprint: 'y'}]},
+    ],
+  };
+  const result = evaluateGuide(
+    'a.md',
+    guide('Use unique_field.', 'requires:\n  columns: [tx_out.unique_field]'),
+    sample,
+    config,
+  );
+  expect(result.warnings).toEqual([]);
+});
+
+it('still warns when a name is both a declared config key and an undeclared column', () => {
+  const cfg = {
+    config: {keys: [{name: 'tx_out', shape: {keys: [{name: 'value', shape: {type: 'string'}}]}}]},
+  };
+  const result = evaluateGuide(
+    'a.md',
+    guide('`tx_out.value`', 'requires:\n  config: [tx_out.value]'),
+    schema,
+    cfg,
+  );
+  expect(result.warnings.join('\n')).toContain('undeclared column tx_out.value');
+});
