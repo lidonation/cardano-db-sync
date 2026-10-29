@@ -1,4 +1,5 @@
 import {expect, test} from '@playwright/test';
+import optimized from '../../data/static-guides.json';
 
 test('static legacy guide retains visible prose and code controls after hydration', async ({
   page,
@@ -27,30 +28,6 @@ test('client navigation to a static guide preserves its content', async ({page})
   await expect(page.locator('main pre code').first()).toContainText('PGPASSFILE');
 });
 
-const optimized = [
-  'building-running',
-  'database-encode-decode',
-  'docker',
-  'installing',
-  'interesting-queries',
-  'manual-rollbacks',
-  'migrations',
-  'schema-management',
-  'state-snapshot',
-  'troubleshooting',
-  'upgrading-postgresql',
-  'validation',
-  'first-queries',
-  'kubernetes',
-  'monitoring-rollback',
-  'pool-metadata',
-  'restore-from-snapshot',
-  'running',
-  'smash-operations',
-  'trimming',
-  'ubuntu-systemd',
-  'installing-with-nix',
-];
 for (const name of optimized) {
   test(`${name}: server HTML hydrates without errors and keeps content`, async ({page}) => {
     const errors: string[] = [];
@@ -251,4 +228,20 @@ test('ordinary homepage does not request guide reconstruction chunks', async ({p
   await expect(page.locator('html')).toHaveAttribute('data-has-hydrated', 'true');
   await page.waitForTimeout(1200);
   expect(chunks).toEqual([]);
+});
+
+test('a stalled guide request ends with a usable recovery link', async ({page}) => {
+  await page.goto('docs/intro/');
+  await page.route('**/docs/guides/validation', () => {
+    // Leave the connection open to model a stalled static host.
+  });
+  await page
+    .locator('a[href$="/docs/guides/validation"]')
+    .first()
+    .evaluate((node) => (node as HTMLAnchorElement).click());
+  await expect(page.getByRole('alert')).toContainText('Unable to load guide', {timeout: 20_000});
+  await expect(page.getByRole('link', {name: 'Open guide'})).toHaveAttribute(
+    'href',
+    /docs\/guides\/validation/,
+  );
 });

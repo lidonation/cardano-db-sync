@@ -72,7 +72,7 @@ export async function prepareStaticGuide(metadata: Metadata): Promise<StaticDocu
     ) {
       const url = new URL(metadata.permalink, location.origin);
       if (!safeGuideRequest(url.href, location.origin)) throw new Error('Cross-origin guide');
-      const response = await fetch(url.href);
+      const response = await fetch(url.href, {signal: AbortSignal.timeout(15_000)});
       if (!response.ok || !safeGuideRequest(response.url, location.origin))
         throw new Error('Guide unavailable');
       const parsed = new DOMParser().parseFromString(await response.text(), 'text/html');
