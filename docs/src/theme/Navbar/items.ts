@@ -90,6 +90,12 @@ export function deriveNav(
   baseUrl: string,
   docs: DocsState,
 ): DerivedNav {
+  // A nested document section gets the active marker instead of its broader sidebar.
+  const activeDocSection = items.some((item) => {
+    if (item.type !== 'doc' || !item.docId) return false;
+    const href = docs.docPaths[item.docId];
+    return Boolean(href && isUnder(pathname, href));
+  });
   const links: {label: string; href: string; active: boolean}[] = [];
   const actions: NavbarItemConfig[] = [];
   const preferences: NavbarItemConfig[] = [];
@@ -102,7 +108,10 @@ export function deriveNav(
           links.push({
             label: item.label || docs.sidebarLabels?.[item.sidebarId!] || item.sidebarId!,
             href,
-            active: docs.activeSidebar !== undefined && docs.activeSidebar === item.sidebarId,
+            active:
+              docs.activeSidebar !== undefined &&
+              docs.activeSidebar === item.sidebarId &&
+              !activeDocSection,
           });
         }
         break;
@@ -113,7 +122,7 @@ export function deriveNav(
           links.push({
             label: item.label || item.docId!,
             href,
-            active: docs.activeDocId === item.docId,
+            active: docs.activeDocId === item.docId || isUnder(pathname, href),
           });
         }
         break;

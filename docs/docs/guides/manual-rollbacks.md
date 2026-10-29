@@ -48,7 +48,7 @@ requires:
       voting_procedure,
       withdrawal,
     ]
-  columns: []
+  columns: [block.id, block.slot_no, block.block_no, block.epoch_no, block.time]
   config: []
 ---
 

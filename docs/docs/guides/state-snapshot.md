@@ -55,7 +55,7 @@ For LSM, the script auto-detects and bundles `lsm/snapshots/<slot>/` and `lsm/me
 
 Restore only a trusted, verified snapshot into a prepared empty database and state directory.
 The restore extracts archive content and runs database statements. Stop db-sync and keep a
-verified backup of the existing deployment; see [Restore from a snapshot](../../docs/guides/restore-from-snapshot.md)
+verified backup of the existing deployment; see [Restore from a snapshot](./restore-from-snapshot.md)
 for the safety checks and recovery procedure.
 
 ```

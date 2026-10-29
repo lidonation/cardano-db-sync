@@ -4,16 +4,40 @@
     "/": {
       "status": "live"
     },
+    "/docs/guides": {
+      "status": "live"
+    },
+    "/docs/guides/building-running": {
+      "status": "live"
+    },
+    "/docs/guides/database-encode-decode": {
+      "status": "live"
+    },
+    "/docs/guides/docker": {
+      "status": "live"
+    },
     "/docs/guides/first-queries": {
       "status": "live"
     },
     "/docs/guides/installation": {
       "status": "live"
     },
+    "/docs/guides/installing": {
+      "status": "live"
+    },
     "/docs/guides/installing-with-nix": {
       "status": "live"
     },
+    "/docs/guides/interesting-queries": {
+      "status": "live"
+    },
     "/docs/guides/kubernetes": {
+      "status": "live"
+    },
+    "/docs/guides/manual-rollbacks": {
+      "status": "live"
+    },
+    "/docs/guides/migrations": {
       "status": "live"
     },
     "/docs/guides/monitoring-rollback": {
@@ -28,13 +52,28 @@
     "/docs/guides/running": {
       "status": "live"
     },
+    "/docs/guides/schema-management": {
+      "status": "live"
+    },
     "/docs/guides/smash-operations": {
+      "status": "live"
+    },
+    "/docs/guides/state-snapshot": {
       "status": "live"
     },
     "/docs/guides/trimming": {
       "status": "live"
     },
+    "/docs/guides/troubleshooting": {
+      "status": "live"
+    },
     "/docs/guides/ubuntu-systemd": {
+      "status": "live"
+    },
+    "/docs/guides/upgrading-postgresql": {
+      "status": "live"
+    },
+    "/docs/guides/validation": {
       "status": "live"
     },
     "/docs/intro": {

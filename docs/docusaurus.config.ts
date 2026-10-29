@@ -1,5 +1,6 @@
 import pagefindProse from './plugins/pagefind-prose';
 import roadmapPlugin from './plugins/roadmap';
+import staticGuidePlugin from './plugins/static-guide-content';
 import guideMarkdown from './plugins/guide-markdown/index.mjs';
 import surveyResultsPlugin from './plugins/survey-results';
 import repositoryActivityPlugin from './plugins/repository-activity';
@@ -18,7 +19,7 @@ import inventoryPlugin, {layoutFixturePlugins} from './plugins/inventory';
 import palettePlugin from './plugins/palette';
 import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
-import {NAVBAR_MENU, FOOTER_MENU} from './src/data/surfaces';
+import {NAVBAR_MENU, FOOTER_MENU, SURFACES} from './src/data/surfaces';
 import {releaseFacts} from './src/data/release-facts';
 import {loadReleaseHistory} from './src/data/release-history';
 
@@ -115,6 +116,7 @@ const config: Config = {
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
     pagefindProse,
+    staticGuidePlugin,
     roadmapPlugin,
     surveyResultsPlugin,
     repositoryActivityPlugin,
@@ -138,7 +140,9 @@ const config: Config = {
         ...NAVBAR_MENU.map((item) => ({
           ...(item.href === NAVBAR_MENU[0].href
             ? {type: 'docSidebar' as const, sidebarId: 'docsSidebar'}
-            : {to: item.href}),
+            : item.href === SURFACES.guides
+              ? {type: 'doc' as const, docId: 'guides/index'}
+              : {to: item.href}),
           label: item.label,
           position: 'left' as const,
         })),

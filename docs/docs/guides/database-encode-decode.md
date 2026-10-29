@@ -2,8 +2,18 @@
 title: 'Creating Hasql Encoders, Decoders, and DbInfo Instances'
 description: 'Migrated operational guidance from the project documentation.'
 requires:
-  tables: []
-  columns: []
+  tables: [address, event_info, ma_tx_out]
+  columns:
+    [
+      tx_out.address_id,
+      ma_tx_out.quantity,
+      ma_tx_out.tx_out_id,
+      ma_tx_out.ident,
+      event_info.tx_id,
+      event_info.epoch,
+      event_info.type,
+      event_info.explanation,
+    ]
   config: []
 ---
 
@@ -152,6 +162,10 @@ type instance Key MaTxOutAddress = Id.MaTxOutAddressId
 
 ## DbInfo Instance
 
+This is an illustrative skeleton: replace the placeholder unique and JSON column names with
+fields that actually exist in your schema before adapting it. The `MaTxOutAddress` example uses
+the address-table schema variant.
+
 ```haskell
 instance DbInfo MaTxOutAddress where
   -- Explicit table name (overrides default snake_case conversion)
@@ -163,7 +177,7 @@ instance DbInfo MaTxOutAddress where
   -- For bulk operations: (column_name, postgres_array_type)
   unnestParamTypes _ =
     [ ("ident", "bigint[]")
-    , ("quantity", "bigint[]")
+    , ("quantity", "numeric[]")
     , ("tx_out_id", "bigint[]")
     ]
 
@@ -216,13 +230,16 @@ entityMaTxOutAddressDecoder =
 
 ## Record Decoder
 
+Decode in the query’s column order (`quantity`, `tx_out_id`, `ident`), then arrange the
+constructor arguments in the data type’s order.
+
 ```haskell
 maTxOutAddressDecoder :: D.Row MaTxOutAddress
 maTxOutAddressDecoder =
-  MaTxOutAddress
-    <$> Id.idDecoder Id.MultiAssetId  -- Foreign key ID
-    <*> D.column (D.nonNullable $ DbWord64 . fromIntegral <$> D.int8)  -- DbWord64
-    <*> Id.idDecoder Id.TxOutAddressId  -- Another foreign key ID
+  (\quantity outputId assetId -> MaTxOutAddress assetId quantity outputId)
+    <$> dbWord64Decoder
+    <*> Id.idDecoder Id.TxOutAddressId
+    <*> Id.idDecoder Id.MultiAssetId
 ```
 
 ### Decoder Patterns
@@ -248,7 +265,7 @@ maTxOutAddressDecoder =
 <*> rewardSourceDecoder                       -- Custom enum
 
 -- Wrapped types
-<*> D.column (D.nonNullable $ DbWord64 . fromIntegral <$> D.int8)  -- DbWord64
+<*> dbWord64Decoder                         -- DbWord64
 ```
 
 ## Entity Encoder
@@ -264,13 +281,16 @@ entityMaTxOutAddressEncoder =
 
 ## Record Encoder
 
+The encoder parameter order must match the declared database column order. `DbWord64` uses
+PostgreSQL `numeric`, not a signed `bigint`; use the project’s numeric codec to avoid overflow.
+
 ```haskell
 maTxOutAddressEncoder :: E.Params MaTxOutAddress
 maTxOutAddressEncoder =
   mconcat
-    [ maTxOutAddressIdent >$< Id.idEncoder Id.getMultiAssetId
-    , maTxOutAddressQuantity >$< E.param (E.nonNullable $ fromIntegral . unDbWord64 >$< E.int8)
+    [ maTxOutAddressQuantity >$< dbWord64Encoder
     , maTxOutAddressTxOutId >$< Id.idEncoder Id.getTxOutAddressId
+    , maTxOutAddressIdent >$< Id.idEncoder Id.getMultiAssetId
     ]
 ```
 
@@ -297,18 +317,18 @@ field >$< E.param (E.nonNullable utcTimeAsTimestampEncoder)  -- UTCTime
 field >$< rewardSourceEncoder                       -- Custom enum
 
 -- Wrapped types
-field >$< E.param (E.nonNullable $ fromIntegral . unDbWord64 >$< E.int8)  -- DbWord64
+field >$< dbWord64Encoder                         -- DbWord64
 ```
 
 ## Bulk Encoder
 
 ```haskell
-maTxOutAddressBulkEncoder :: E.Params ([Id.MultiAssetId], [DbWord64], [Id.TxOutAddressId])
+maTxOutAddressBulkEncoder :: E.Params ([DbWord64], [Id.TxOutAddressId], [Id.MultiAssetId])
 maTxOutAddressBulkEncoder =
   contrazip3
-    (bulkEncoder $ E.nonNullable $ Id.getMultiAssetId >$< E.int8)
-    (bulkEncoder $ E.nonNullable $ fromIntegral . unDbWord64 >$< E.int8)
+    (bulkEncoder $ E.nonNullable dbWord64ValueEncoder)
     (bulkEncoder $ E.nonNullable $ Id.getTxOutAddressId >$< E.int8)
+    (bulkEncoder $ E.nonNullable $ Id.getMultiAssetId >$< E.int8)
 ```
 
 ### Bulk Encoder Utilities
@@ -408,17 +428,17 @@ eventInfoBulkEncoder =
 
 ## Type Mapping Reference
 
-| Haskell Type      | Decoder                              | Encoder                                |
-| ----------------- | ------------------------------------ | -------------------------------------- |
-| `Text`            | `D.text`                             | `E.text`                               |
-| `Bool`            | `D.bool`                             | `E.bool`                               |
-| `ByteString`      | `D.bytea`                            | `E.bytea`                              |
-| `Word64`          | `fromIntegral <$> D.int8`            | `fromIntegral >$< E.int8`              |
-| `UTCTime`         | `utcTimeAsTimestampDecoder`          | `utcTimeAsTimestampEncoder`            |
-| `DbLovelace`      | `dbLovelaceDecoder`                  | `dbLovelaceEncoder`                    |
-| `DbWord64`        | `DbWord64 . fromIntegral <$> D.int8` | `fromIntegral . unDbWord64 >$< E.int8` |
-| `Id.SomeId`       | `Id.idDecoder Id.SomeId`             | `Id.idEncoder Id.getSomeId`            |
-| `Maybe Id.SomeId` | `Id.maybeIdDecoder Id.SomeId`        | `Id.maybeIdEncoder Id.getSomeId`       |
+| Haskell Type      | Decoder                       | Encoder                          |
+| ----------------- | ----------------------------- | -------------------------------- |
+| `Text`            | `D.text`                      | `E.text`                         |
+| `Bool`            | `D.bool`                      | `E.bool`                         |
+| `ByteString`      | `D.bytea`                     | `E.bytea`                        |
+| `Word64`          | `fromIntegral <$> D.int8`     | `fromIntegral >$< E.int8`        |
+| `UTCTime`         | `utcTimeAsTimestampDecoder`   | `utcTimeAsTimestampEncoder`      |
+| `DbLovelace`      | `dbLovelaceDecoder`           | `dbLovelaceEncoder`              |
+| `DbWord64`        | `dbWord64Decoder`             | `dbWord64Encoder`                |
+| `Id.SomeId`       | `Id.idDecoder Id.SomeId`      | `Id.idEncoder Id.getSomeId`      |
+| `Maybe Id.SomeId` | `Id.maybeIdDecoder Id.SomeId` | `Id.maybeIdEncoder Id.getSomeId` |
 
 ## Common Patterns
 

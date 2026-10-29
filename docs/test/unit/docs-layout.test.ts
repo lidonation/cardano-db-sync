@@ -181,3 +181,17 @@ describe('version selector visibility', () => {
     expect(showVersionSelector([{name: 'current'}, {name: '13.6.0.0'}])).toBe(true);
   });
 });
+
+it('marks Guides rather than Docs active within the guide section', () => {
+  const items = [
+    {type: 'docSidebar', sidebarId: 'docsSidebar', label: 'Docs'},
+    {type: 'doc', docId: 'guides/index', label: 'Guides'},
+  ];
+  const nav = deriveNav(items, '/base/docs/guides/running', '/base/', {
+    sidebarLinks: {docsSidebar: '/base/docs/intro'},
+    docPaths: {'guides/index': '/base/docs/guides'},
+    activeSidebar: 'docsSidebar',
+    activeDocId: 'guides/running',
+  });
+  expect(nav.links.filter((link) => link.active).map((link) => link.label)).toEqual(['Guides']);
+});
