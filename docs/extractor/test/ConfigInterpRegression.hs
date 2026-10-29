@@ -128,6 +128,7 @@ main = do
           , "  def = Options { flag = True, hidden = False }"
           ]
   let legacyObject = schema legacySource
+  check "legacy object-wrapper rejects duplicate preset keys" (bad (schema (Text.replace "\"flag\"" "\"preset\"" legacySource)))
   check "legacy object-wrapper rejects non-exhaustive presets" (bad (schema (Text.replace "      Just x -> fail x\n" "" legacySource)))
   check "legacy object-wrapper rejects open-ended presets" (bad (schema (Text.replace "Just x -> fail x" "Just x -> pure Basic" legacySource)))
   check "legacy object-wrapper parser fully resolved" (not (bad legacyObject))
