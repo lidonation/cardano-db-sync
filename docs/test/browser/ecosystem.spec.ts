@@ -97,52 +97,53 @@ test.describe('content', () => {
     );
   });
 
-  test('repository figures, people and country table come from the fixture', async ({page}) => {
-    if (test.info().project.use.baseURL) {
-      await open(page, 1440);
-      const section = page.locator('section[aria-labelledby="ecosystem-facts"]');
-      const facts = section.locator('[data-dbs-component="Metric"]');
+  test('repository figures match their source and images stay on the site origin', async ({
+    page,
+  }) => {
+    const built = Boolean(test.info().project.use.baseURL);
+    const siteOrigin = new URL(test.info().project.use.baseURL ?? SITE_URL).origin;
+    const externalImages: string[] = [];
+    page.on('request', (request) => {
+      if (request.resourceType() === 'image' && new URL(request.url()).origin !== siteOrigin)
+        externalImages.push(request.url());
+    });
+    if (!built) {
+      await page.route('**/repository-avatars/*.png', async (route) => {
+        await route.fulfill({
+          path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
+          contentType: 'image/png',
+        });
+      });
+    }
+    await open(page, 1440);
+    const section = page.locator('section[aria-labelledby="ecosystem-facts"]');
+    const facts = section.locator('[data-dbs-component="Metric"]');
+    if (built) {
       if ((await facts.count()) === 0) {
         await expect(section).toContainText('Repository activity data is unavailable');
       } else {
         await expect(facts).toHaveCount(5);
         await expect(section.locator('time')).toHaveCount(1);
       }
-      return;
+    } else {
+      await expect(facts).toHaveCount(5);
+      expect(
+        await facts.evaluateAll((nodes) =>
+          nodes.map((node) => node.firstElementChild?.textContent),
+        ),
+      ).toEqual(['2', '1', '17', '2', '5']);
+      await expect(page.locator('#ecosystem-title')).toContainText('Built by 2 people.');
+      await expect(
+        page.locator('section[aria-labelledby="ecosystem-origins"] table'),
+      ).toContainText('Kenya');
+      await expect(
+        page.locator('section[aria-labelledby="ecosystem-origins"] table'),
+      ).toContainText('Unknown');
+      await expect(
+        page.locator('section[aria-labelledby="ecosystem-people"] [data-dbs-component="Avatar"]'),
+      ).toHaveCount(7);
+      await expect(page.locator('section[aria-labelledby="ecosystem-people"] img')).toHaveCount(1);
     }
-    await page.route('**/repository-avatars/*.png', async (route) => {
-      await route.fulfill({
-        path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
-        contentType: 'image/png',
-      });
-    });
-    const externalImages: string[] = [];
-    page.on('request', (request) => {
-      if (
-        request.resourceType() === 'image' &&
-        new URL(request.url()).origin !== new URL(SITE_URL).origin
-      )
-        externalImages.push(request.url());
-    });
-    await open(page, 1440);
-    const facts = page.locator(
-      'section[aria-labelledby="ecosystem-facts"] [data-dbs-component="Metric"]',
-    );
-    await expect(facts).toHaveCount(5);
-    expect(
-      await facts.evaluateAll((nodes) => nodes.map((node) => node.firstElementChild?.textContent)),
-    ).toEqual(['2', '1', '17', '2', '5']);
-    await expect(page.locator('#ecosystem-title')).toContainText('Built by 2 people.');
-    await expect(page.locator('section[aria-labelledby="ecosystem-origins"] table')).toContainText(
-      'Kenya',
-    );
-    await expect(page.locator('section[aria-labelledby="ecosystem-origins"] table')).toContainText(
-      'Unknown',
-    );
-    await expect(
-      page.locator('section[aria-labelledby="ecosystem-people"] [data-dbs-component="Avatar"]'),
-    ).toHaveCount(7);
-    await expect(page.locator('section[aria-labelledby="ecosystem-people"] img')).toHaveCount(1);
     expect(externalImages).toEqual([]);
   });
 
