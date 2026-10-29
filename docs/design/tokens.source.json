@@ -129,7 +129,8 @@
       "below": "-1",
       "raised": "10",
       "navbar": "100",
-      "skip": "201"
+      "skip": "201",
+      "behind": -1
     },
     "code": {
       "surface": "#0f1117",
@@ -283,7 +284,11 @@
       "chrome-search-medium": "240px",
       "chrome-search-small": "180px",
       "chrome-dropdown": "200px",
-      "chrome-footer-column-min": "160px"
+      "chrome-footer-column-min": "160px",
+      "chrome-control-height": "32px",
+      "chrome-theme-control": "96px",
+      "chrome-caret-width": "10px",
+      "chrome-caret-height": "6px"
     }
   },
   "dark": {
