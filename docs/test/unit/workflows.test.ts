@@ -134,3 +134,13 @@ describe('accessibility recording archive (B43)', () => {
     expect(archive?.with?.['if-no-files-found']).toBe('error');
   });
 });
+
+describe('browser runner compatibility', () => {
+  it('pins Playwright jobs to its supported Ubuntu release', async () => {
+    const workflow = yaml.load(
+      await fs.readFile(path.join(ROOT, '.github/workflows/docs-site.yml'), 'utf8'),
+    ) as {jobs: Record<string, Record<string, unknown>>};
+    expect(workflow.jobs['unit-tests']['runs-on']).toBe('ubuntu-24.04');
+    expect(workflow.jobs.build['runs-on']).toBe('ubuntu-24.04');
+  });
+});
