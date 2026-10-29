@@ -16,6 +16,19 @@ def main():
     base = os.environ.get("BASE_SHA" if event == "pull_request" else "BEFORE", "")
     head = os.environ.get("HEAD_SHA", "")
     full = True
+    if event == "push" and base and set(base) == {"0"} and head:
+        # A new branch has no previous SHA. Only use the community-site branch
+        # if its current tip is an ancestor; otherwise the baseline is uncertain.
+        candidate = os.environ.get("NEW_BRANCH_BASE", "")
+        if candidate:
+            try:
+                subprocess.check_call(
+                    ["git", "merge-base", "--is-ancestor", candidate, head],
+                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                )
+                base = candidate
+            except (subprocess.CalledProcessError, OSError):
+                pass
     if event in ("push", "pull_request") and base and head and set(base) != {"0"}:
         try:
             if event == "pull_request":
