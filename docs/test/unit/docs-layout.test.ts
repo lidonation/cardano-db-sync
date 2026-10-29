@@ -2,7 +2,13 @@ import {describe, expect, it} from 'vitest';
 import type {PropSidebarItem} from '@docusaurus/plugin-content-docs';
 
 import {currentSection} from '../../src/theme/DocLayout/sections';
-import {deriveNav, isUnder, resolveDocsState, type DocsState} from '../../src/theme/Navbar/items';
+import {
+  deriveNav,
+  isUnder,
+  resolveDocsState,
+  showVersionSelector,
+  type DocsState,
+} from '../../src/theme/Navbar/items';
 
 const DOCS: DocsState = {
   sidebarLinks: {docsSidebar: '/cardano-db-sync/docs/intro', guides: undefined},
@@ -165,5 +171,13 @@ describe('currentSection', () => {
 
   it('is the whole sidebar when the page is under no category', () => {
     expect(currentSection(sidebar, activeOn('/intro'))).toEqual({label: null, items: sidebar});
+  });
+});
+
+describe('version selector visibility', () => {
+  it('appears only when more than one version is built', () => {
+    expect(showVersionSelector([])).toBe(false);
+    expect(showVersionSelector([{name: 'current'}])).toBe(false);
+    expect(showVersionSelector([{name: 'current'}, {name: '13.6.0.0'}])).toBe(true);
   });
 });

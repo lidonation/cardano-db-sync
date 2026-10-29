@@ -82,6 +82,7 @@ const config: Config = {
         docs: {
           sidebarPath: './sidebars.ts',
           routeBasePath: 'docs',
+          versions: {current: {label: 'Unreleased'}},
           editUrl: `${profile.repoUrl}/tree/master/docs/`,
         },
         blog: false,

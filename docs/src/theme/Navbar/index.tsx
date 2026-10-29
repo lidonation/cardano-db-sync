@@ -9,13 +9,14 @@ import {useThemeConfig} from '@docusaurus/theme-common';
 import {
   useActiveDocContext,
   useDocsVersionCandidates,
+  useVersions,
 } from '@docusaurus/plugin-content-docs/client';
 import NavbarColorModeToggle from '@theme/Navbar/ColorModeToggle';
 import NavbarItem from '@theme/NavbarItem';
 
 import {NavbarFull} from '../../components/Navbar';
 
-import {deriveNav, resolveDocsState, type NavbarItemConfig} from './items';
+import {deriveNav, resolveDocsState, showVersionSelector, type NavbarItemConfig} from './items';
 import styles from './styles.module.css';
 
 /**
@@ -79,10 +80,13 @@ export default function Navbar(): ReactNode {
   const baseUrl = useBaseUrl('/');
   // The version the stock navbar items link into: the active one, else the preferred, else latest.
   const versions = useDocsVersionCandidates(undefined);
+  const allVersions = useVersions(undefined);
   const {activeDoc} = useActiveDocContext(undefined);
   const nav = deriveNav(
     (items as NavbarItemConfig[]).filter(
-      (item) => !item.to || gateMenu([{href: item.to}], PATHS, baseUrl).length > 0,
+      (item) =>
+        (item.type !== 'docsVersionDropdown' || showVersionSelector(allVersions)) &&
+        (!item.to || gateMenu([{href: item.to}], PATHS, baseUrl).length > 0),
     ),
     pathname,
     baseUrl,
