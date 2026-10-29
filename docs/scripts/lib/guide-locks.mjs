@@ -158,7 +158,35 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
           const current =
             renamed.kind === 'column' ? `${renamed.table}.${renamed.name}` : renamed.name;
           errors.push(`${name}: ${id} was renamed to ${current}; review the declaration`);
-        } else errors.push(`${name}: unknown ${kind} entity ${id}`);
+        } else {
+          const [table, column] = id.split('.');
+          const movedTable =
+            kind === 'columns' &&
+            renames.entities?.find(
+              (entity) =>
+                entity.kind === 'table' &&
+                entity.formerNames?.some((entry) => entry.name === table),
+            );
+          if (movedTable) {
+            const movedColumn = renames.entities?.find(
+              (entity) =>
+                entity.kind === 'column' &&
+                entity.table === movedTable.name &&
+                entity.formerNames?.some((entry) => entry.name === column),
+            );
+            const current = `${movedTable.name}.${movedColumn?.name ?? column}`;
+            const exists = tables.some(
+              (entry) =>
+                entry.name === movedTable.name &&
+                entry.columns.some((entry) => entry.name === (movedColumn?.name ?? column)),
+            );
+            errors.push(
+              exists
+                ? `${name}: ${id} was renamed to ${current}; review the declaration`
+                : `${name}: table ${table} was renamed to ${movedTable.name}; review the declaration ${id}`,
+            );
+          } else errors.push(`${name}: unknown ${kind} entity ${id}`);
+        }
       } else lock[`${kind}:${id}`] = value;
     }
   }
@@ -171,7 +199,7 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
     // SQL permits whitespace around dots. Limit that rewrite to SQL fences so a prose
     // sentence ending in a table name cannot turn into a spurious column reference.
     .replace(
-      /(`{3,}|~{3,})(sql|postgresql|postgres)[^\n]*\n([\s\S]*?)\1/g,
+      /(`{3,}|~{3,})(sql|postgresql|postgres)\b[^\n]*\n([\s\S]*?)\1/g,
       (_, fence, language, sql) =>
         `${fence}${language}\n${sql.replace(/([a-z0-9_])[ \t]*\.[ \t]*(?=[a-z])/g, '$1.')}${fence}`,
     );

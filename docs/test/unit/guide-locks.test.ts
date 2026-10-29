@@ -813,3 +813,53 @@ it('warns for undeclared quoted SQL columns but accepts declared ones', () => {
   ).toContain('undeclared column tx_out.value');
   expect(evaluateGuide('a.md', guide(body), schema, config).errors).toEqual([]);
 });
+
+it('explains a table rename for a guide declaring only one of its columns', () => {
+  const renames = {
+    entities: [{kind: 'table', name: 'new_table', formerNames: [{name: 'old_table'}]}],
+  };
+  const next = {
+    tables: [{name: 'new_table', variant: 'core', columns: [{name: 'value', fingerprint: 'new'}]}],
+  };
+  const result = evaluateGuide(
+    'a.md',
+    guide('', 'requires:\n  columns: [old_table.value]'),
+    next,
+    config,
+    undefined,
+    renames,
+  );
+  expect(result.errors.join('\n')).toContain('old_table.value was renamed to new_table.value');
+});
+
+it('follows both rename-map entries and never invents a dropped target column', () => {
+  const renames = {
+    entities: [
+      {kind: 'table', name: 'new_table', formerNames: [{name: 'old_table'}]},
+      {kind: 'column', table: 'new_table', name: 'value', formerNames: [{name: 'amount'}]},
+    ],
+  };
+  const next = {
+    tables: [{name: 'new_table', variant: 'core', columns: [{name: 'value', fingerprint: 'new'}]}],
+  };
+  expect(
+    evaluateGuide(
+      'a.md',
+      guide('', 'requires:\n  columns: [old_table.amount]'),
+      next,
+      config,
+      undefined,
+      renames,
+    ).errors.join('\n'),
+  ).toContain('renamed to new_table.value');
+  const dropped = evaluateGuide(
+    'a.md',
+    guide('', 'requires:\n  columns: [old_table.missing]'),
+    next,
+    config,
+    undefined,
+    renames,
+  );
+  expect(dropped.errors.join('\n')).toContain('table old_table was renamed to new_table');
+  expect(dropped.errors.join('\n')).not.toContain('renamed to new_table.missing');
+});
