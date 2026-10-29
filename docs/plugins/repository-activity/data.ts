@@ -1,3 +1,4 @@
+import {chartData} from '../../src/ecosystem/chart-data';
 import type {
   RepositoryData,
   RepositorySnapshotState,
@@ -109,6 +110,7 @@ export function summarizeActivity(state: RepositorySnapshotState): RepositorySta
     status: 'available',
     data: {
       builtAt,
+      charts: chartData(state.data),
       contributors,
       coreTeam,
       countries,

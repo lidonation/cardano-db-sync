@@ -84,9 +84,13 @@ for (const palette of PALETTES) {
       const locale = header.locator('.navbar__item.dropdown > .navbar__link').first();
       const plates = [];
       for (const control of [theme, locale]) {
-        const box = await control.boundingBox();
-        expect(box!.height).toBeGreaterThanOrEqual(44);
-        expect(box!.width).toBeGreaterThanOrEqual(44);
+        // The hydrated theme control may still be hidden after fonts are ready.
+        await expect
+          .poll(async () => {
+            const box = await control.boundingBox();
+            return box ? Math.min(box.height, box.width) : 0;
+          })
+          .toBeGreaterThanOrEqual(44);
         const plate = await control.evaluate((el) => {
           const style = getComputedStyle(el, '::before');
           const root = getComputedStyle(document.documentElement);
