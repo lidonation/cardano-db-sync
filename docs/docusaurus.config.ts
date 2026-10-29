@@ -9,6 +9,7 @@ import sharedCodePlugin from './plugins/shared-code';
 import cssPrunePlugin from './plugins/css-prune';
 import environmentPlugin from './plugins/environment';
 import i18nPlugin from './plugins/i18n';
+import lazyPrismPlugin from './plugins/lazy-prism';
 import inventoryPlugin, {layoutFixturePlugins} from './plugins/inventory';
 import palettePlugin from './plugins/palette';
 import routeManifestPlugin from './plugins/route-manifest';
@@ -113,6 +114,7 @@ const config: Config = {
     environmentPlugin,
     securityPlugin,
     i18nPlugin,
+    lazyPrismPlugin,
     inventoryPlugin,
     palettePlugin,
     cssPrunePlugin,

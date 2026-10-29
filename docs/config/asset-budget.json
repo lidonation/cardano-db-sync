@@ -1,5 +1,5 @@
 {
-  "$comment": "PERF-1 gzip-byte limits per profile and locale, not a combined five-language total. Audit 2026-10-13 against PR90 9fd5b297: maxima JS 194004 B, CSS 19379 B, font 254847 B, image 220730 B, HTML 37175 B (7 pages), initial 181028 B. JS 240 KiB reserves ~50 KiB for lazy search, Config and survey UI; CSS 24 KiB reserves ~5 KiB for those controls. Initial raised from 180 to 220 KiB on 2026-10-13 (Darlington) after PR93 measured 180.2 KiB on localized dev homepages; new route code still must not enter global chrome. Font 280 KiB accommodates the existing fixed families/subsets plus ~12%; image 512 KiB reserves ~296 KiB for optimised diagrams/social art. HTML 8 MiB is a staged ceiling: ~130 pages x 5 retained versions x 10 KiB gzip/page = 6.35 MiB, plus schema/app/retired-route allowance. These are estimates, not a verified completed-site size. Reaudit at B18, B20, B32/B33 and B38; large wallet/search dependencies require measured route-scoped budgets, not automatic cap increases. The deployment raw-size cap and per-page image justification are separate checks. Each HTML file is also capped at 20 KiB gzip independently of its combined initial payload.",
+  "$comment": "PERF-1 gzip-byte limits per profile and locale, not a combined five-language total. Audit 2026-10-13 against PR90 9fd5b297: maxima JS 194004 B, CSS 19379 B, font 254847 B, image 220730 B, HTML 37175 B (7 pages), initial 181028 B. JS 240 KiB reserves ~50 KiB for lazy search, Config and survey UI; CSS 24 KiB reserves ~5 KiB for those controls. Initial restored to 180 KiB after route-scoping Prism; new route code must not enter global chrome. Font 280 KiB accommodates the existing fixed families/subsets plus ~12%; image 512 KiB reserves ~296 KiB for optimised diagrams/social art. HTML 8 MiB is a staged ceiling: ~130 pages x 5 retained versions x 10 KiB gzip/page = 6.35 MiB, plus schema/app/retired-route allowance. These are estimates, not a verified completed-site size. Reaudit at B18, B20, B32/B33 and B38; large wallet/search dependencies require measured route-scoped budgets, not automatic cap increases. The deployment raw-size cap and per-page image justification are separate checks. Each HTML file is also capped at 20 KiB gzip independently of its combined initial payload.",
   "totals": {
     "js": 245760,
     "css": 24576,
@@ -8,7 +8,7 @@
     "html": 8388608
   },
   "page": {
-    "initial": 225280,
+    "initial": 184320,
     "html": 20480
   }
 }

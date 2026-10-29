@@ -99,7 +99,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup
@@ -112,6 +112,8 @@ jobs:
         run: npx playwright install --with-deps chromium
       - name: Components (THM-5, THM-6, FLOOR-4, FLOOR-5, DF-2, DF-4, A11Y-28, NAV-3)
         run: npm run test:components
+      - name: Built code highlighting (B51)
+        run: npm run test:prism:built
       - name: Built switchers (THM-1, A11Y-29, locale navigation)
         run: npm run test:switchers:built
       - if: failure()
@@ -123,7 +125,7 @@ jobs:
 
   build:
     name: Build both profiles
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup
