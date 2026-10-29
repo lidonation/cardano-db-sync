@@ -62,7 +62,7 @@ def api_get(path, token):
     request = urllib.request.Request(API_ORIGIN + path, headers={
         'Authorization': 'Bearer ' + token,
         'Accept': 'application/json',
-        'User-Agent': 'dbsync-ci-usage/1.0',
+        'User-Agent': 'blacksmith-ci/1.0',
     })
     opener = urllib.request.build_opener(NoRedirect)
     with opener.open(request, timeout=20) as response:
