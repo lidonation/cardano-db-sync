@@ -227,3 +227,46 @@ it('does not silently ignore MDX guides', () => {
   );
   expect(result.status).not.toBe(0);
 });
+
+it('records variant applicability and detects a changed variant range', () => {
+  mkdirSync(path.join(root, 'generated'), {recursive: true});
+  mkdirSync(path.join(root, 'docs/guides'), {recursive: true});
+  const schema = {
+    tables: [
+      {
+        name: 'tx_out',
+        variant: 'core',
+        kind: 'table',
+        columns: [{name: 'core_only', fingerprint: 'a'}],
+      },
+      {
+        name: 'tx_out',
+        variant: 'address',
+        kind: 'table',
+        columns: [{name: 'address_only', fingerprint: 'b'}],
+      },
+    ],
+  };
+  const config = {config: {keys: []}};
+  const write = (file: string, value: unknown) =>
+    writeFileSync(path.join(root, 'generated', file), JSON.stringify(value));
+  write('schema.json', schema);
+  write('config-schema.json', config);
+  write('versions.json', {versions: [{tag: 'v1'}]});
+  write('guide-history.json', packHistory({versions: [{tag: 'v1', schema, config}]}));
+  writeFileSync(
+    path.join(root, 'docs/guides/example.md'),
+    '---\nrequires:\n  columns: [tx_out.core_only]\n---\nBody\n',
+  );
+  const run = (...args: string[]) =>
+    spawnSync(process.execPath, [path.resolve('scripts/check-guide-locks.mjs'), ...args], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+  expect(run('--update').status).toBe(0);
+  const lock = JSON.parse(readFileSync(path.join(root, 'generated/guide-locks.json'), 'utf8'));
+  expect(lock.variants['docs/guides/example.md']).toEqual({v1: ['core'], current: ['core']});
+  lock.variants['docs/guides/example.md'].current = ['address'];
+  write('guide-locks.json', lock);
+  expect(run().stderr).toContain('variants changed');
+});

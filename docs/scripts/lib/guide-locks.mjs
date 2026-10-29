@@ -218,7 +218,14 @@ export function deriveApplicability(history, required) {
       !snapshot.version ||
       names.has(snapshot.version) ||
       !Array.isArray(snapshot.entities) ||
-      snapshot.entities.some((id) => typeof id !== 'string' || !id)
+      snapshot.entities.some((id) => typeof id !== 'string' || !id) ||
+      (snapshot.variants !== undefined &&
+        (!Array.isArray(snapshot.variants) ||
+          !snapshot.variants.length ||
+          snapshot.variants.some(
+            (entities) =>
+              !Array.isArray(entities) || entities.some((id) => typeof id !== 'string' || !id),
+          )))
     )
       return {versions: [], errors: ['invalid or duplicate historical snapshot']};
     names.add(snapshot.version);
@@ -228,7 +235,11 @@ export function deriveApplicability(history, required) {
   );
   if (unknown.length) return {versions: [], errors: unknown.map((id) => `unknown entity ${id}`)};
   const versions = history
-    .filter((snapshot) => required.every((id) => snapshot.entities.includes(id)))
+    .filter((snapshot) =>
+      snapshot.variants
+        ? snapshot.variants.some((entities) => required.every((id) => entities.includes(id)))
+        : required.every((id) => snapshot.entities.includes(id)),
+    )
     .map((snapshot) => snapshot.version);
   return {versions, errors: versions.length ? [] : ['empty version intersection']};
 }
@@ -282,13 +293,18 @@ export function evaluateHistoricalGuide(name, source, history, previous, renames
       warnings: [],
       lock: {},
       versions: [],
+      variants: {},
     };
   const match = source.match(/^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/);
   let front;
   try {
     front = match && yaml.load(match[1]);
   } catch {
-    return {...evaluateGuide(name, source, history[0].schema, history[0].config), versions: []};
+    return {
+      ...evaluateGuide(name, source, history[0].schema, history[0].config),
+      versions: [],
+      variants: {},
+    };
   }
   if (
     !front ||
@@ -298,7 +314,11 @@ export function evaluateHistoricalGuide(name, source, history, previous, renames
     typeof front.requires !== 'object' ||
     Array.isArray(front.requires)
   )
-    return {...evaluateGuide(name, source, history[0].schema, history[0].config), versions: []};
+    return {
+      ...evaluateGuide(name, source, history[0].schema, history[0].config),
+      versions: [],
+      variants: {},
+    };
   const required = [];
   for (const [kind, list] of Object.entries(front.requires)) {
     if (
@@ -306,13 +326,41 @@ export function evaluateHistoricalGuide(name, source, history, previous, renames
       !Array.isArray(list) ||
       list.some((id) => typeof id !== 'string')
     )
-      return {...evaluateGuide(name, source, history[0].schema, history[0].config), versions: []};
+      return {
+        ...evaluateGuide(name, source, history[0].schema, history[0].config),
+        versions: [],
+        variants: {},
+      };
     required.push(...list.map((id) => `${kind}:${id}`));
   }
-  const snapshots = history.map((snapshot) => ({
-    version: snapshot.tag,
-    entities: Object.keys(evaluateGuide(name, match[0], snapshot.schema, snapshot.config).lock),
-  }));
+  const snapshots = history.map((snapshot) => {
+    const names = [
+      ...new Set(
+        snapshot.schema.tables
+          .map((table) => table.variant)
+          .filter((variant) => variant && variant !== 'all'),
+      ),
+    ];
+    names.sort();
+    if (!names.length) names.push('all');
+    const variants = names.map((variant) => {
+      const tables = snapshot.schema.tables.filter(
+        (table) => table.variant === 'all' || table.variant === variant,
+      );
+      return {
+        variant,
+        entities: Object.keys(
+          evaluateGuide(name, match[0], {...snapshot.schema, tables}, snapshot.config).lock,
+        ),
+      };
+    });
+    return {
+      version: snapshot.tag,
+      names,
+      variants: variants.map((variant) => variant.entities),
+      entities: [...new Set(variants.flatMap((variant) => variant.entities))],
+    };
+  });
   const range = resolveGuideRange(snapshots, required, front.range_override);
   if (range.errors.length) {
     const current = history.find((snapshot) => snapshot.tag === 'current');
@@ -331,6 +379,7 @@ export function evaluateHistoricalGuide(name, source, history, previous, renames
       warnings: [],
       lock: {},
       versions: [],
+      variants: {},
     };
   }
   if (
@@ -347,9 +396,31 @@ export function evaluateHistoricalGuide(name, source, history, previous, renames
         `${name}: removed current entity requires a reasoned range override`,
       ],
       versions: [],
+      variants: {},
     };
   }
   const selected = history.find((snapshot) => snapshot.tag === range.versions.at(-1));
-  const result = evaluateGuide(name, source, selected.schema, selected.config, previous, renames);
-  return {...result, versions: range.versions};
+  const variants = Object.fromEntries(
+    snapshots
+      .filter((snapshot) => range.versions.includes(snapshot.version))
+      .map((snapshot) => [
+        snapshot.version,
+        snapshot.names.filter((_, index) =>
+          required.every((id) => snapshot.variants[index].includes(id)),
+        ),
+      ]),
+  );
+  const selectedVariants = variants[selected.tag];
+  const tables = selected.schema.tables.filter(
+    (table) => table.variant === 'all' || selectedVariants.includes(table.variant),
+  );
+  const result = evaluateGuide(
+    name,
+    source,
+    {...selected.schema, tables},
+    selected.config,
+    previous,
+    renames,
+  );
+  return {...result, versions: range.versions, variants};
 }

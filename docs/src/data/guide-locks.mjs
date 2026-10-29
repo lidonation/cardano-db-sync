@@ -13,3 +13,13 @@ export function guidesForTable(artifact, table) {
 export function versionsForGuide(artifact, guide) {
   return [...(artifact.ranges?.[guide] ?? [])];
 }
+
+/** Variant availability is kept alongside the same release range. */
+export function variantsForGuide(artifact, guide) {
+  return Object.fromEntries(
+    Object.entries(artifact.variants?.[guide] ?? {}).map(([version, variants]) => [
+      version,
+      [...variants],
+    ]),
+  );
+}

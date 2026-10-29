@@ -155,7 +155,7 @@ it('reports unreviewed guides, warnings, changed ranges and invalid history', as
   write('versions.json', {versions: [{tag: 'v1'}]});
   const packed = packHistory({versions: [{tag: 'v1', schema, config}]});
   write('guide-history.json', packed);
-  write('guide-locks.json', {schemaVersion: 1, guides: {}, ranges: {}});
+  write('guide-locks.json', {schemaVersion: 1, guides: {}, ranges: {}, variants: {}});
   writeFileSync(
     path.join(root, 'docs/guides/example.md'),
     '---\nrequires:\n  tables: [tx_out]\n---\n`tx_out.value`\n',
@@ -176,6 +176,10 @@ it('reports unreviewed guides, warnings, changed ranges and invalid history', as
   await invoke(true);
   const lock = JSON.parse(readFileSync(path.join(root, 'generated/guide-locks.json'), 'utf8'));
   lock.ranges['docs/guides/example.md'] = ['v1'];
+  write('guide-locks.json', lock);
+  await expect(invoke()).rejects.toThrow('exit:1');
+  lock.ranges['docs/guides/example.md'] = ['v1', 'current'];
+  lock.variants['docs/guides/example.md'].current = ['address'];
   write('guide-locks.json', lock);
   await expect(invoke()).rejects.toThrow('exit:1');
   packed.schemas[Object.keys(packed.schemas)[0]].tables = [];

@@ -231,7 +231,8 @@ Qualified references in fenced code are checked too. Unqualified snake-case or
 inline-code column names warn when they map unambiguously to one table.
 
 The applicable release set comes from intersecting actual tagged schema and
-configuration snapshots, plus the current schema. To intentionally document a
+configuration snapshots, plus the current schema. Dependencies must coexist in
+one schema variant; the lock records which variants satisfy each release. To intentionally document a
 removed behaviour, use a `range_override` with a nonempty `versions` list and
 `reason`; every selected version must still satisfy every declaration. An
 override cannot make an unknown dependency valid or widen the derived range:

@@ -612,3 +612,82 @@ it('still warns when a name is both a declared config key and an undeclared colu
   );
   expect(result.warnings.join('\n')).toContain('undeclared column tx_out.value');
 });
+
+it('does not claim a release supports dependencies split across incompatible schema variants', async () => {
+  const {evaluateHistoricalGuide} = await import('../../scripts/lib/guide-locks.mjs');
+  const variantSchema = {
+    tables: [
+      {name: 'tx_out', variant: 'core', columns: [{name: 'core_only', fingerprint: 'a'}]},
+      {name: 'tx_out', variant: 'address', columns: [{name: 'address_only', fingerprint: 'b'}]},
+    ],
+  };
+  const source = guide('', 'requires:\n  columns: [tx_out.core_only, tx_out.address_only]');
+  const result = evaluateHistoricalGuide('a.md', source, [
+    {tag: 'current', schema: variantSchema, config},
+  ]);
+  expect(result.errors.join('\n')).toContain('intersection');
+});
+
+it('records which schema variants satisfy each release for consumers', async () => {
+  const {evaluateHistoricalGuide} = await import('../../scripts/lib/guide-locks.mjs');
+  const sample = {
+    tables: [
+      {name: 'tx_out', variant: 'core', columns: [{name: 'address', fingerprint: 'a'}]},
+      {name: 'tx_out', variant: 'address', columns: [{name: 'address_id', fingerprint: 'b'}]},
+    ],
+  };
+  const result = evaluateHistoricalGuide(
+    'a.md',
+    guide('', 'requires:\n  columns: [tx_out.address_id]'),
+    [{tag: 'current', schema: sample, config}],
+  );
+  expect(result.errors).toEqual([]);
+  expect(result.variants).toEqual({current: ['address']});
+});
+
+it('exposes variant applicability through the shared data layer', async () => {
+  const {variantsForGuide} = await import('../../src/data/guide-locks.mjs');
+  expect(variantsForGuide({variants: {'a.md': {current: ['core']}}}, 'a.md')).toEqual({
+    current: ['core'],
+  });
+});
+
+it('rejects malformed variant histories instead of guessing compatibility', async () => {
+  const {deriveApplicability} = await import('../../scripts/lib/guide-locks.mjs');
+  expect(
+    deriveApplicability([{version: 'v1', entities: ['x'], variants: ['x']}], ['x']).errors.length,
+  ).toBeGreaterThan(0);
+});
+
+it('does not lock an incompatible variant for a variant-specific guide', async () => {
+  const {evaluateHistoricalGuide} = await import('../../scripts/lib/guide-locks.mjs');
+  const original = {
+    tables: [
+      {
+        name: 'tx_out',
+        variant: 'core',
+        kind: 'table',
+        columns: [{name: 'core_only', fingerprint: 'a'}],
+      },
+      {
+        name: 'tx_out',
+        variant: 'address',
+        kind: 'table',
+        columns: [{name: 'address_only', fingerprint: 'b'}],
+      },
+    ],
+  };
+  const source = guide('', 'requires:\n  tables: [tx_out]\n  columns: [tx_out.core_only]');
+  const first = evaluateHistoricalGuide('a.md', source, [
+    {tag: 'current', schema: original, config},
+  ]);
+  const changed = structuredClone(original);
+  changed.tables[1].kind = 'view';
+  const result = evaluateHistoricalGuide(
+    'a.md',
+    source,
+    [{tag: 'current', schema: changed, config}],
+    first.lock,
+  );
+  expect(result.changes).toEqual([]);
+});

@@ -24,8 +24,18 @@ if (
     old.schemaVersion !== 1 ||
     !isMap(old.guides) ||
     !isMap(old.ranges) ||
+    !isMap(old.variants) ||
     JSON.stringify(Object.keys(old.guides).sort()) !==
       JSON.stringify(Object.keys(old.ranges).sort()) ||
+    JSON.stringify(Object.keys(old.guides).sort()) !==
+      JSON.stringify(Object.keys(old.variants).sort()) ||
+    Object.values(old.variants).some(
+      (entry) =>
+        !isMap(entry) ||
+        Object.values(entry).some(
+          (values) => !Array.isArray(values) || values.some((value) => typeof value !== 'string'),
+        ),
+    ) ||
     Object.values(old.guides).some((entry) => !isMap(entry)) ||
     Object.values(old.ranges).some(
       (range) => !Array.isArray(range) || range.some((tag) => typeof tag !== 'string'),
@@ -99,7 +109,7 @@ if (files.length) {
   }
   history = [...extracted, {tag: 'current', schema, config}];
 }
-const next = {schemaVersion: 1, guides: {}, ranges: {}};
+const next = {schemaVersion: 1, guides: {}, ranges: {}, variants: {}};
 const problems = [...filesystemErrors];
 const drift = new Map();
 for (const file of files) {
@@ -123,6 +133,9 @@ for (const file of files) {
   for (const warning of result.warnings) console.warn(`warning: ${warning}`);
   next.guides[name] = result.lock;
   next.ranges[name] = result.versions;
+  next.variants[name] = result.variants ?? {};
+  if (!updating && JSON.stringify(old.variants?.[name]) !== JSON.stringify(result.variants ?? {}))
+    problems.push(`${name}: supported schema variants changed; update the lock after review`);
   if (!updating && JSON.stringify(old.ranges?.[name]) !== JSON.stringify(result.versions))
     problems.push(`${name}: derived version range changed; update the lock after review`);
 }
