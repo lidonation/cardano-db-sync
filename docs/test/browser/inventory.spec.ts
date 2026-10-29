@@ -88,8 +88,8 @@ test.describe('axe, WCAG 2.2 AA', () => {
           .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
           .analyze();
         // axe cannot see a background painted on a clipped pseudo-element, so it leaves those
-        // nodes "incomplete" rather than failing them. Only the hexagon buttons paint that way, and
-        // they are measured directly below; anything else left unchecked is a failure here.
+        // nodes "incomplete" rather than failing them. Hexagon buttons and the theme control's
+        // plate are measured directly; anything else left unchecked is a failure here.
         const unchecked = await Promise.all(
           results.incomplete
             .filter((result) => result.id === 'color-contrast')
@@ -99,13 +99,27 @@ test.describe('axe, WCAG 2.2 AA', () => {
                 .locator(node.target.join(' '))
                 .first()
                 .evaluate((element) =>
-                  element.closest('[data-dbs-component="Button"]')
+                  element.closest('[data-dbs-component="Button"]') ||
+                  element.closest('[data-dbs-component="Theme switcher"] .dbs-control-plate')
                     ? null
                     : element.outerHTML.slice(0, 80),
                 ),
             ),
         );
         expect(unchecked.filter(Boolean)).toEqual([]);
+        // The theme plate paints its fill on ::before, which axe cannot resolve. Measure its
+        // actual computed text and fill colours at every audited palette and width instead.
+        const plates = await page
+          .locator('#inventory [data-dbs-component="Theme switcher"] .dbs-control-plate')
+          .evaluateAll((elements) =>
+            elements.map((element) => ({
+              text: getComputedStyle(element).color,
+              fill: getComputedStyle(element, '::before').backgroundColor,
+            })),
+          );
+        expect(plates.length).toBeGreaterThan(0);
+        for (const plate of plates)
+          expect(contrast(plate.text, plate.fill)).toBeGreaterThanOrEqual(4.5);
         const found = results.violations.flatMap((violation) =>
           violation.nodes.map(
             (node) => `${violation.id}: ${node.target.join(' ')} — ${node.failureSummary}`,
