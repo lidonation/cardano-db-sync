@@ -46,8 +46,24 @@ describe('Docusaurus repository plugin', () => {
     expect(result.summary.status).toBe('available');
     expect(result.summary.data.contributors).toHaveLength(2);
     expect(result.summary.data.commits).toBeUndefined();
+    expect(result.summary.data.charts.monthly).toHaveLength(12);
+    expect(result.summary.data.charts.daily).toHaveLength(30);
+    expect(result.summary.data.charts.weeks).toHaveLength(52);
+    expect(JSON.stringify(result.summary.data.charts)).not.toContain('Erik');
     expect(result.history.data.commits).toHaveLength(2);
     expect(result.history.data.dailyLines).toHaveLength(1);
+  });
+  it('builds charts from accepted cache timestamps using their UTC date', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'activity-timestamp-'));
+    dirs.push(dir);
+    const fixture = JSON.parse(
+      await readFile('test/fixtures/repository-activity/data.json', 'utf8'),
+    );
+    fixture.builtAt = 'June 1, 2026 23:30:00 GMT-0300';
+    await writeFile(path.join(dir, 'data.json'), JSON.stringify(fixture));
+    const result = await load(dir);
+    expect(result.summary.status).toBe('available');
+    expect(result.summary.data.charts.daily.at(-1).date).toBe('2026-06-02');
   });
   it('publishes only referenced avatars, never unrelated cache files', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'activity-publish-'));

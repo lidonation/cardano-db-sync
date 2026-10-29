@@ -1,0 +1,64 @@
+.graph {
+  display: block;
+  inline-size: 100%;
+  block-size: auto;
+  margin-block: var(--dbs-space-24);
+}
+/* Keep the pale design fill, with a visible boundary at every viewport size. */
+.bar,
+.barRecent {
+  stroke: var(--dbs-accent-primary);
+  stroke-width: var(--dbs-border-width-emphasis);
+  vector-effect: non-scaling-stroke;
+}
+.bar {
+  fill: var(--dbs-accent-primary-tint);
+}
+.barRecent {
+  fill: var(--dbs-accent-primary);
+}
+.level0 {
+  fill: var(--dbs-surface-sunken);
+  background: var(--dbs-surface-sunken);
+}
+.level1 {
+  fill: var(--dbs-accent-primary-tint);
+  background: var(--dbs-accent-primary-tint);
+}
+.level2 {
+  fill: var(--dbs-accent-primary);
+  background: var(--dbs-accent-primary);
+}
+.level3 {
+  fill: var(--dbs-accent-primary-hover);
+  background: var(--dbs-accent-primary-hover);
+}
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-16);
+  list-style: none;
+  padding: 0;
+}
+.legend li {
+  display: flex;
+  align-items: center;
+  gap: var(--dbs-space-8);
+}
+.swatch {
+  display: inline-block;
+  inline-size: var(--dbs-space-16);
+  block-size: var(--dbs-space-16);
+}
+.alternative summary {
+  padding-block: var(--dbs-space-12);
+  cursor: pointer;
+}
+.tableWrap {
+  overflow-x: auto;
+}
+
+.axisLabel {
+  fill: var(--dbs-text-secondary);
+  composes: dbs-type-caption from global;
+}
