@@ -19,6 +19,7 @@ import styles from '../landing/styles.module.css';
 
 import {teams, tools, toolsView, type Tool} from './entries';
 import {ECOSYSTEM_IDS} from './ids';
+import {UPDATES_IDS} from '../updates/messages';
 import state from '@generated/repository-activity/default/resolved.json';
 import {RepositoryFacts, RepositoryPeople} from './People';
 import {Roadmap} from './Roadmap';
@@ -32,7 +33,13 @@ function useEcosystemTranslate() {
   const {
     i18n: {currentLocale, defaultLocale},
   } = useDocusaurusContext();
-  return pageTranslator(ECOSYSTEM_IDS, codeTranslations, currentLocale, defaultLocale, translate);
+  return pageTranslator(
+    [...ECOSYSTEM_IDS, ...UPDATES_IDS],
+    codeTranslations,
+    currentLocale,
+    defaultLocale,
+    translate,
+  );
 }
 
 /** A single grid, with alternatives marked and an actionable empty state. */

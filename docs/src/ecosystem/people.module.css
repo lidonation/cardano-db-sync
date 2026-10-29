@@ -1,3 +1,8 @@
+.work {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: var(--dbs-space-32);
+}
 .facts {
   display: grid;
   grid-template-columns: repeat(5, minmax(0, 1fr));
@@ -57,6 +62,9 @@
   }
 }
 @media (max-width: 767px) {
+  .work {
+    grid-template-columns: 1fr;
+  }
   .facts {
     grid-template-columns: 1fr;
   }

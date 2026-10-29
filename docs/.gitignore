@@ -22,3 +22,6 @@
 
 # Build-time public roadmap cache
 /.cache/roadmap
+
+# Deterministic browser builds, separate from uploaded profiles
+/.cache/browser-fixtures

@@ -8,3 +8,8 @@ declare module '@generated/repository-activity/default/history.json' {
   const state: import('./types').RepositorySnapshotState;
   export default state;
 }
+
+declare module '@generated/repository-activity/default/commits.json?commit-feed' {
+  const url: string;
+  export default url;
+}

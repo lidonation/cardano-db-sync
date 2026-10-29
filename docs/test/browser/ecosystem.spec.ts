@@ -65,7 +65,9 @@ test.describe('content', () => {
   test('every tool and team links its source', async ({page}) => {
     await open(page, 1440);
     const hrefs = await page
-      .locator('main section li a')
+      .locator(
+        'section[aria-labelledby="ecosystem-tools"] li a, section[aria-labelledby="ecosystem-teams"] li a',
+      )
       .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
     const expected = [
       ...tools(english).flatMap((tool) =>
