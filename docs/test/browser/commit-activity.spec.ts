@@ -19,7 +19,11 @@ test('commit filters use keyboard, show counts and reject reversed dates', async
     }),
   );
   await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
-  const activity = page.getByRole('region', {name: 'Commit activity'});
+  const activity = page.getByRole('region', {name: 'Commit history', exact: true});
+  await expect(activity).toHaveCount(1);
+  await expect(
+    page.locator('section[aria-labelledby="ecosystem-activity-title"]'),
+  ).toHaveAccessibleName('Commit activity');
   const month = activity.getByRole('tab', {name: 'Month'});
   await expect(month).toHaveAttribute('aria-selected', 'true');
   await expect(activity.getByRole('status')).toContainText('0 updates');
@@ -49,7 +53,7 @@ test('hostile subjects remain text and the capped list reports the full count', 
     route.fulfill({json: {status: 'available', data: {asOf: '2026-06-01', entries}}}),
   );
   await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
-  const activity = page.getByRole('region', {name: 'Commit activity'});
+  const activity = page.getByRole('region', {name: 'Commit history', exact: true});
   await expect(activity.getByRole('status')).toContainText('10 updates');
   await expect(activity.getByRole('status')).toContainText('Showing the latest eight');
   await expect(activity.locator('li')).toHaveCount(8);
@@ -67,7 +71,7 @@ test('empty and unavailable feeds are distinguished', async ({page}) => {
     route.fulfill({json: {status: 'available', data: {asOf: '2026-06-01', entries: []}}}),
   );
   await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
-  const activity = page.getByRole('region', {name: 'Commit activity'});
+  const activity = page.getByRole('region', {name: 'Commit history', exact: true});
   await expect(activity).toContainText('No commits yet in this snapshot.');
   expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
   await page.unrouteAll();
@@ -95,7 +99,7 @@ test('custom dates retain their values and accessible validation across tab swit
     }),
   );
   await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
-  const activity = page.getByRole('region', {name: 'Commit activity'});
+  const activity = page.getByRole('region', {name: 'Commit history', exact: true});
   await activity.getByRole('tab', {name: 'Custom'}).click();
   const from = activity.getByLabel('From', {exact: true});
   const to = activity.getByLabel('To', {exact: true});
@@ -128,7 +132,7 @@ test('a malformed future snapshot fails closed instead of leaking custom-only ro
     }),
   );
   await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
-  const activity = page.getByRole('region', {name: 'Commit activity'});
+  const activity = page.getByRole('region', {name: 'Commit history', exact: true});
   await expect(activity).toContainText('Commit activity is unavailable in this build.');
   await activity.getByRole('tab', {name: 'Custom'}).click();
   await activity.getByLabel('From', {exact: true}).fill('2026-06-02');
