@@ -1,7 +1,7 @@
 import {describe, expect, it, vi} from 'vitest';
 import {indexVersions} from '../../plugins/pagefind-prose/index';
 import {bundlePath} from '../../src/search/version';
-import {searchProse} from '../../src/search/prose';
+import {proseAdapter, searchProse} from '../../src/search/prose';
 
 describe('Pagefind prose bundles', () => {
   it('uses locale-aware bundle URLs and safe version segments', () => {
@@ -201,11 +201,103 @@ it('shares only identical Pagefind runtimes between versions', async () => {
       if (name === 'v3') await expect(shareRuntime(dir)).rejects.toThrow('runtime differs');
       else await shareRuntime(dir);
     }
-    expect(await fs.readFile(path.join(root, '_runtime/pagefind.js'), 'utf8')).toBe('same');
-    expect(await fs.readFile(path.join(root, 'v2/pagefind-worker.js'), 'utf8')).toContain(
-      '_runtime/pagefind-worker.js',
+    expect(await fs.readFile(path.join(root, '_runtime/pagefind.js'), 'utf8')).toBe('same;');
+    await expect(fs.readFile(path.join(root, 'v2/pagefind-worker.js'))).rejects.toThrow();
+    expect(await fs.readFile(path.join(root, '_runtime/prose-worker.js'), 'utf8')).toContain(
+      './pagefind.js',
     );
   } finally {
     await fs.rm(root, {recursive: true, force: true});
   }
+});
+
+describe('search lifecycle regressions', () => {
+  const makeApi = () => ({
+    destroy: vi.fn(async () => {}),
+    options: vi.fn(async () => {}),
+    init: vi.fn(async () => {}),
+    search: vi.fn(async () => ({
+      results: [] as Array<{data(): Promise<import('../../src/search/prose').ProseResult>}>,
+    })),
+  });
+
+  it('retains a warm index for repeated queries and resets on a bundle change', async () => {
+    const api = makeApi();
+    await searchProse(api, '/pagefind/v1/', 'first');
+    await searchProse(api, '/pagefind/v1/', 'second');
+    expect(api.destroy).toHaveBeenCalledTimes(1);
+    expect(api.init).toHaveBeenCalledTimes(1);
+    await searchProse(api, '/pagefind/v2/', 'third');
+    expect(api.destroy).toHaveBeenCalledTimes(2);
+    expect(api.options).toHaveBeenLastCalledWith({basePath: '/pagefind/v2/', baseUrl: '/'});
+  });
+
+  it('holds the bundle lock until every hydration settles after a failure', async () => {
+    const api = makeApi();
+    let finish!: (value: import('../../src/search/prose').ProseResult) => void;
+    const pending = new Promise<import('../../src/search/prose').ProseResult>((resolve) => {
+      finish = resolve;
+    });
+    api.search.mockResolvedValueOnce({
+      results: [
+        {
+          data: async () => {
+            throw new Error('fragment failed');
+          },
+        },
+        {data: () => pending},
+      ],
+    });
+    const first = searchProse(api, '/pagefind/v1/', 'first');
+    const rejected = expect(first).rejects.toThrow('fragment failed');
+    const second = searchProse(api, '/pagefind/v2/', 'second');
+    await new Promise((resolve) => setTimeout(resolve, 20));
+    expect(api.destroy).toHaveBeenCalledTimes(1);
+    finish({url: '/guide', excerpt: '', sub_results: []});
+    await rejected;
+    await second;
+    expect(api.destroy).toHaveBeenCalledTimes(2);
+  });
+
+  it('reinitializes the same bundle after a failed search', async () => {
+    const api = makeApi();
+    api.search.mockRejectedValueOnce(new Error('offline'));
+    await expect(searchProse(api, '/pagefind/v1/', 'first')).rejects.toThrow('offline');
+    await expect(searchProse(api, '/pagefind/v1/', 'retry')).resolves.toEqual([]);
+    expect(api.init).toHaveBeenCalledTimes(2);
+  });
+});
+
+it('snapshots hydrated results before Pagefind mutates its cached fragments', async () => {
+  const fragment = {url: '/guide', excerpt: 'first', sub_results: [{url: '/guide#first'}]};
+  const api = {
+    destroy: async () => {},
+    options: async () => {},
+    init: async () => {},
+    search: async () => ({results: [{data: async () => fragment}]}),
+  };
+  const first = await searchProse(api, '/pagefind/v1/', 'first');
+  fragment.excerpt = 'second';
+  fragment.sub_results[0].url = '/guide#second';
+  await searchProse(api, '/pagefind/v1/', 'second');
+  expect(first[0].excerpt).toBe('first');
+  expect(first[0].sub_results[0].url).toBe('/guide#first');
+});
+
+it('invalidates the warm bundle on external cleanup or option changes', async () => {
+  const raw = {
+    destroy: vi.fn(async () => {}),
+    options: vi.fn(async () => {}),
+    init: vi.fn(async () => {}),
+    search: async () => null,
+  };
+  const api = proseAdapter(raw);
+  expect(proseAdapter(raw)).toBe(api);
+  await searchProse(api, '/pagefind/v1/', 'first');
+  await api.destroy();
+  await searchProse(api, '/pagefind/v1/', 'second');
+  await api.options({basePath: '/pagefind/v2/', baseUrl: '/'});
+  await searchProse(api, '/pagefind/v1/', 'third');
+  expect(raw.init).toHaveBeenCalledTimes(3);
+  expect(raw.options).toHaveBeenLastCalledWith({basePath: '/pagefind/v1/', baseUrl: '/'});
 });

@@ -26,7 +26,7 @@ test.beforeAll(async () => {
     await mkdir(dir, {recursive: true});
     await writeFile(
       path.join(dir, 'index.html'),
-      `<html lang="en"><body><article><div class="markdown"><h1>Database guide</h1><h2 id="pruning">Pruning</h2><p>${text}</p></div></article></body></html>`,
+      `<html lang="en"><body><nav>Navigationonlyquartz</nav><article><div class="markdown"><h1>Database guide</h1><h2 id="pruning">Pruning</h2><p>${text}</p></div></article></body></html>`,
     );
   }
   try {
@@ -118,6 +118,7 @@ test('real headless search preserves identifiers, excerpts, deep links and versi
       whole: await search('v1', 'tx_out'),
       split: await search('v1', 'tx'),
       absent: await search('v1', 'zebraquartz'),
+      navigation: await search('v1', 'Navigationonlyquartz'),
       present: await search('v2', 'zebraquartz'),
       concurrent: await Promise.all([search('v1', 'tx_out'), search('v2', 'zebraquartz')]),
     };
@@ -131,6 +132,7 @@ test('real headless search preserves identifiers, excerpts, deep links and versi
   expect(results.whole).toHaveLength(1);
   expect(results.split).toHaveLength(1);
   expect(results.absent).toHaveLength(0);
+  expect(results.navigation).toHaveLength(0);
   expect(results.present).toHaveLength(1);
   expect(results.concurrent[0][0].url).toBe('/preview/ja/docs/v1/guide');
   expect(results.concurrent[1][0].url).toBe('/preview/ja/docs/v2/guide');
@@ -165,7 +167,7 @@ test('identical source regenerates byte-identical headless bundles', async () =>
     const jsBytes = files
       .filter(([name]) => name.endsWith('.js'))
       .reduce((total, [, encoded]) => total + gzipSync(Buffer.from(encoded, 'base64')).length, 0);
-    expect(jsBytes).toBeLessThan(28 * 1024);
+    expect(jsBytes).toBeLessThan(11 * 1024);
     expect(files.filter(([name]) => name.endsWith('/pagefind.js'))).toHaveLength(1);
   } finally {
     await pagefind.close();

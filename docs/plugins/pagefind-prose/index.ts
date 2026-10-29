@@ -1,6 +1,7 @@
 import path from 'node:path';
 import fs from 'node:fs/promises';
 import {createRequire} from 'node:module';
+import {minify} from 'terser';
 import type {LoadedContent} from '@docusaurus/plugin-content-docs';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 import {versionSegment} from '../../src/search/version';
@@ -18,27 +19,39 @@ function check(errors: string[]): void {
   if (errors.length) throw new Error(`Pagefind: ${errors.join('; ')}`);
 }
 
-/** Keep the immutable runtime once per locale; Pagefind workers still resolve each index path. */
+/** Share a worker-only engine once per locale, not two engine copies per version. */
 export async function shareRuntime(outputPath: string): Promise<void> {
   const runtime = path.join(path.dirname(outputPath), '_runtime');
   await fs.mkdir(runtime, {recursive: true});
-  for (const file of ['pagefind.js', 'pagefind-worker.js']) {
-    const source = await fs.readFile(path.join(outputPath, file));
+  const sources = {
+    'pagefind.js': await fs.readFile(path.join(outputPath, 'pagefind.js'), 'utf8'),
+    'prose-worker.js': await fs.readFile(path.join(__dirname, 'worker.mjs'), 'utf8'),
+  };
+  for (const [file, source] of Object.entries(sources)) {
+    const result = await minify(source, {
+      module: true,
+      compress: {
+        passes: 3,
+        // This artifact runs only inside a module worker. Keep errors and warnings, but
+        // remove verbose console.log diagnostics and unreachable DOM/Worker fallbacks.
+        global_defs: {window: undefined, document: undefined, Worker: undefined},
+        drop_console: ['log'],
+      },
+      mangle: true,
+    });
+    if (!result.code) throw new Error(`Pagefind emitted an empty runtime: ${file}`);
     const destination = path.join(runtime, file);
     try {
-      await fs.writeFile(destination, source, {flag: 'wx'});
+      await fs.writeFile(destination, result.code, {flag: 'wx'});
     } catch (error) {
       if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
-      if (!source.equals(await fs.readFile(destination))) {
+      if (result.code !== (await fs.readFile(destination, 'utf8'))) {
         throw new Error(`Pagefind runtime differs across versions: ${file}`);
       }
     }
   }
   await fs.rm(path.join(outputPath, 'pagefind.js'));
-  await fs.writeFile(
-    path.join(outputPath, 'pagefind-worker.js'),
-    'importScripts("../_runtime/pagefind-worker.js");\n',
-  );
+  await fs.rm(path.join(outputPath, 'pagefind-worker.js'));
 }
 
 /** Index the rendered documentation, not navigation, retired redirects, or other versions. */

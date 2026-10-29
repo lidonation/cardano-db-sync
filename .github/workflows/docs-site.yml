@@ -188,6 +188,8 @@ jobs:
           npm run build:prod -- --out-dir .cache/browser-fixtures/prod
         env:
           REPOSITORY_ACTIVITY_CACHE: test/fixtures/repository-activity
+      - name: Pagefind on both shipped profiles and all locales (SRCH-10, SEC-2)
+        run: npm run test:pagefind:profiles
       - name: Landing on shipped assets (B44-a, PERF-1, A11Y-18)
         run: npm run test:landing:built
         env:

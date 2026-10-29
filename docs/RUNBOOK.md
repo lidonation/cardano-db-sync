@@ -132,13 +132,20 @@ path as a failed request, rather than keeping a build waiting on an unstable end
 
 The production and development builds emit one Pagefind 1.5.2 index for each Docusaurus
 `(version, locale)` under the locale's `pagefind/<version>/` directory, with one shared runtime per locale. Only rendered docs
-are indexed, not navigation or redirects. The build fails if indexing fails. The Pagefind UI
-and highlighter are not shipped: the planned search interface consumes the headless API.
+are indexed, not navigation or redirects. The build fails if indexing fails. The engine is minified for a same-origin module worker using Pagefind's public instance API,
+with no second engine copy for main-thread fallback. Errors and warnings are retained; verbose
+console logging is removed. Browsers must support module workers. Worker failure or a 30-second
+request timeout rejects the query and allows a retry, rather than weakening the page CSP.
+The Pagefind UI and highlighter are not shipped: the planned search interface consumes the headless API.
 
 Use `bundlePath` from `src/search/version.ts` with the active locale base URL and Docusaurus
 version name, then `loadProseApi` and `searchProse` from `src/search/prose.ts`. The latter
-serializes bundle switches and returns hydrated results, including heading-level `sub_results`.
+serializes searches and returns independent hydrated results, including heading-level `sub_results`.
+Repeated queries reuse the active worker and its cache. A bundle change or failure resets it;
+failed hydration drains every pending result before the next bundle can begin.
 Load it only when a prose query is needed. Pagefind's actual 1.5.2 option is `basePath` (not
 `bundlePath`); the adapter also prevents profile/locale prefixes being duplicated in results.
 Treat returned excerpts as untrusted HTML when rendering. Run `npm run test:pagefind:built`
 for real-browser indexing, identifier, version-isolation, CSP and reproducibility regressions.
+After building both profiles, run `npm run test:pagefind:profiles` to query their actual indexes
+under the emitted CSP in all five locales.
