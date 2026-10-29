@@ -46,11 +46,11 @@ export function validateFeed(value: unknown): UpdatesFeed {
   return {asOf: feed.asOf, entries};
 }
 /** Stable, inclusive UTC calendar windows, anchored to the feed snapshot, not hydration time. */
-export function selectEntries(
-  feed: UpdatesFeed,
+export function selectDatedEntries<T extends {readonly id: string; readonly date: string}>(
+  feed: {readonly asOf: string; readonly entries: readonly T[]},
   period: Period,
   range: DateRange,
-): readonly UpdateEntry[] {
+): readonly T[] {
   if (period === 'custom' && rangeError(range)) return [];
   const days = period === 'week' ? 7 : 30;
   const from =
@@ -65,4 +65,13 @@ export function selectEntries(
   return feed.entries
     .filter((e) => e.date >= from && e.date <= to)
     .sort((a, b) => b.date.localeCompare(a.date) || a.id.localeCompare(b.id));
+}
+
+/** Apply the shared calendar windows to the curated Updates feed. */
+export function selectEntries(
+  feed: UpdatesFeed,
+  period: Period,
+  range: DateRange,
+): readonly UpdateEntry[] {
+  return selectDatedEntries(feed, period, range);
 }

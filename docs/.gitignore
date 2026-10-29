@@ -19,3 +19,6 @@
 
 # Build-time repository activity cache
 /.cache/repository-activity
+
+# Deterministic browser builds, separate from uploaded profiles
+/.cache/browser-fixtures

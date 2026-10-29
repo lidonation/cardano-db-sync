@@ -1,9 +1,10 @@
-import React, {useId, useState} from 'react';
+import React, {useState} from 'react';
 
 import Tabs from '../components/Tabs';
-import {EmptyState, ErrorMessage} from '../components/shared/Status';
+import {EmptyState} from '../components/shared/Status';
 import useFallbackLang from '../i18n/useFallbackLang';
 
+import DateRangeFields from './DateRangeFields';
 import useUpdatesMessages, {UPDATES_IDS} from './messages';
 import {rangeError, selectEntries} from './model';
 import type {DateRange, Period, UpdatesFeed} from './types';
@@ -15,7 +16,6 @@ const PERIODS: readonly Period[] = ['week', 'month', 'total', 'custom'];
 export default function Updates({feed}: {readonly feed: UpdatesFeed | null}): React.JSX.Element {
   const messages = useUpdatesMessages();
   const lang = useFallbackLang(UPDATES_IDS);
-  const base = useId();
   const [period, setPeriod] = useState<Period>('week');
   const [range, setRange] = useState<DateRange>({from: '', to: ''});
   const error = rangeError(range);
@@ -34,38 +34,7 @@ export default function Updates({feed}: {readonly feed: UpdatesFeed | null}): Re
     return (
       <>
         {selected === 'custom' && (
-          <div className={styles.range}>
-            <div className={styles.fields}>
-              {(['from', 'to'] as const).map((endpoint) => (
-                <label className="dbs-type-label" key={endpoint} htmlFor={`${base}-${endpoint}`}>
-                  {messages[endpoint]}
-                  <input
-                    className="dbs-type-body-sm"
-                    id={`${base}-${endpoint}`}
-                    type="date"
-                    value={range[endpoint]}
-                    aria-invalid={(error !== null && error !== 'required') || undefined}
-                    aria-describedby={`${base}-utc${error ? ` ${base}-error` : ''}`}
-                    onChange={(event) =>
-                      setRange({...range, [endpoint]: event.currentTarget.value})
-                    }
-                  />
-                </label>
-              ))}
-            </div>
-            <p id={`${base}-utc`} className={styles.helper}>
-              {messages.utc}
-            </p>
-            {error === 'required' ? (
-              <p id={`${base}-error`} className={styles.helper}>
-                {messages.required}
-              </p>
-            ) : error ? (
-              <ErrorMessage id={`${base}-error`} live>
-                {messages[error]}
-              </ErrorMessage>
-            ) : null}
-          </div>
+          <DateRangeFields range={range} onChange={setRange} messages={messages} />
         )}
         {feed === null ? (
           <EmptyState framed={false}>{messages.unavailableBody}</EmptyState>

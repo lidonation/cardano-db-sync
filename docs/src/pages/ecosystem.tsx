@@ -5,12 +5,13 @@ import {translate} from '@docusaurus/Translate';
 
 import Ecosystem from '../ecosystem/Ecosystem';
 import {ECOSYSTEM_IDS} from '../ecosystem/ids';
+import {UPDATES_IDS} from '../updates/messages';
 import useFallbackLang from '../i18n/useFallbackLang';
 import {MAIN_CONTENT_ID} from '../lib/accessibility';
 
 /** The Ecosystem page (B44-b). CON-11: an app-like surface, a React page; content in `src/ecosystem/`. */
 export default function EcosystemPage(): React.JSX.Element {
-  const lang = useFallbackLang(ECOSYSTEM_IDS);
+  const lang = useFallbackLang([...ECOSYSTEM_IDS, ...UPDATES_IDS]);
   return (
     <Layout
       title={translate({id: 'ecosystem.meta.title', message: 'Ecosystem'})}

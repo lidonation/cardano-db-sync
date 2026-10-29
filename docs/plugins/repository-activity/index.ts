@@ -22,6 +22,20 @@ export default function repositoryActivity(context: LoadContext): Plugin {
   let avatarNames: string[] = [];
   return {
     name: 'repository-activity',
+    configureWebpack() {
+      return {
+        module: {
+          rules: [
+            {
+              test: /commits\.json$/,
+              resourceQuery: /^\?commit-feed$/,
+              type: 'asset/resource',
+              generator: {filename: 'assets/data/[contenthash][ext]'},
+            },
+          ],
+        },
+      };
+    },
     async contentLoaded({actions: {createData}}) {
       const key = `${cacheDir}\0${process.env.REPOSITORY_CHECKOUT ?? ''}\0${Boolean(process.env.GITHUB_TOKEN)}`;
       let snapshot = snapshots.get(key);
@@ -79,6 +93,21 @@ export default function repositoryActivity(context: LoadContext): Plugin {
       } else console.warn('repository-activity: data unavailable');
       await createData('resolved.json', JSON.stringify(summarizeActivity(state)));
       await createData('history.json', JSON.stringify(state));
+      const commits =
+        state.status === 'unavailable'
+          ? state
+          : {
+              status: 'available',
+              data: {
+                asOf: new Date(state.data.builtAt).toISOString().slice(0, 10),
+                entries: state.data.commits.map(({sha, date, subject}) => ({
+                  id: sha,
+                  date,
+                  subject,
+                })),
+              },
+            };
+      await createData('commits.json', JSON.stringify(commits));
     },
     async postBuild({outDir}) {
       // Never publish the cache directory wholesale: only validated, referenced raster names.

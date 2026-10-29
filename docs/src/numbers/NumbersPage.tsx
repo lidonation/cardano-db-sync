@@ -1,5 +1,6 @@
 import React from 'react';
 import Metric from '../components/Metric';
+import Chart, {ChartGraphic} from '../components/Chart';
 import Frame from '../components/Card/Frame';
 import Layout from '@theme/Layout';
 import {MAIN_CONTENT_ID} from '../lib/accessibility';
@@ -114,62 +115,70 @@ export default function NumbersPage({
                         <Frame kind="Stat" skeleton={null} className={styles.card}>
                           <h3 className="dbs-type-title">{t(messages.growth)}</h3>
                           <p>{t(messages.modelled)}</p>
-                          <p id="numbers-growth-summary">
-                            {growth.length === 0
-                              ? t(messages.growthEmpty)
-                              : t(messages.growthSummary)
-                                  .replace('{count}', formatNumber(growth.length))
-                                  .replace('{firstEpoch}', formatNumber(growth[0].epoch))
-                                  .replace('{firstGB}', formatNumber(growth[0].gigabytes))
-                                  .replace('{lastEpoch}', formatNumber(growth.at(-1)!.epoch))
-                                  .replace('{lastGB}', formatNumber(growth.at(-1)!.gigabytes))}
-                          </p>
-                          {growth.length > 0 && (
-                            <svg
-                              className={styles.chart}
-                              viewBox="0 0 600 180"
-                              role="img"
-                              aria-labelledby="numbers-growth-summary"
-                            >
-                              <polyline
-                                className={styles.line}
-                                points={growth.map((point) => `${point.x},${point.y}`).join(' ')}
-                              />
-                              {growth.map((point) => (
-                                <circle
-                                  key={point.epoch}
-                                  className={styles.point}
-                                  cx={point.x}
-                                  cy={point.y}
-                                  r="4"
-                                />
-                              ))}
-                            </svg>
-                          )}
-                          <details className={styles.alternative}>
-                            <summary>{t(messages.growthData)}</summary>
-                            <div className={styles.tableWrap}>
-                              <table>
-                                <caption>
-                                  {t(messages.growthCaption)} · {t(messages.modelled)}
-                                </caption>
-                                <thead>
-                                  <tr>
-                                    <th scope="col">{t(messages.epoch)}</th>
-                                    <th scope="col">{t(messages.growthSize)}</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
+                          <Chart
+                            summaryId="numbers-growth-summary"
+                            summary={
+                              growth.length === 0
+                                ? t(messages.growthEmpty)
+                                : t(messages.growthSummary)
+                                    .replace('{count}', formatNumber(growth.length))
+                                    .replace('{firstEpoch}', formatNumber(growth[0].epoch))
+                                    .replace('{firstGB}', formatNumber(growth[0].gigabytes))
+                                    .replace('{lastEpoch}', formatNumber(growth.at(-1)!.epoch))
+                                    .replace('{lastGB}', formatNumber(growth.at(-1)!.gigabytes))
+                            }
+                            graphic={
+                              growth.length > 0 && (
+                                <ChartGraphic
+                                  className={styles.chart}
+                                  viewBox="0 0 600 180"
+                                  summaryId="numbers-growth-summary"
+                                >
+                                  <polyline
+                                    className={styles.line}
+                                    points={growth
+                                      .map((point) => `${point.x},${point.y}`)
+                                      .join(' ')}
+                                  />
                                   {growth.map((point) => (
-                                    <tr key={point.epoch}>
-                                      <th scope="row">{formatNumber(point.epoch)}</th>
-                                      <td>{formatNumber(point.gigabytes)}</td>
-                                    </tr>
+                                    <circle
+                                      key={point.epoch}
+                                      className={styles.point}
+                                      cx={point.x}
+                                      cy={point.y}
+                                      r="4"
+                                    />
                                   ))}
-                                </tbody>
-                              </table>
-                            </div>
-                          </details>
+                                </ChartGraphic>
+                              )
+                            }
+                            table={
+                              <details className={styles.alternative}>
+                                <summary>{t(messages.growthData)}</summary>
+                                <div className={styles.tableWrap}>
+                                  <table>
+                                    <caption>
+                                      {t(messages.growthCaption)} · {t(messages.modelled)}
+                                    </caption>
+                                    <thead>
+                                      <tr>
+                                        <th scope="col">{t(messages.epoch)}</th>
+                                        <th scope="col">{t(messages.growthSize)}</th>
+                                      </tr>
+                                    </thead>
+                                    <tbody>
+                                      {growth.map((point) => (
+                                        <tr key={point.epoch}>
+                                          <th scope="row">{formatNumber(point.epoch)}</th>
+                                          <td>{formatNumber(point.gigabytes)}</td>
+                                        </tr>
+                                      ))}
+                                    </tbody>
+                                  </table>
+                                </div>
+                              </details>
+                            }
+                          />
                         </Frame>
                         <Frame kind="Stat" skeleton={null} className={styles.card}>
                           <p className={styles.kicker}>{t(messages.modelled)}</p>

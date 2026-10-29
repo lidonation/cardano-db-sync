@@ -1,4 +1,5 @@
 import type {NumbersSnapshot} from './types';
+import {linearScale} from '../components/Chart/scale';
 
 /** Visual coordinates only. Never alters B23's model values; epoch gaps remain proportional. */
 export function growthPoints(rows: NonNullable<NumbersSnapshot['storage']>['growth']) {
@@ -8,7 +9,7 @@ export function growthPoints(rows: NonNullable<NumbersSnapshot['storage']>['grow
   const max = Math.max(...sorted.map((row) => row.gigabytes), 0) || 1;
   return sorted.map((row) => ({
     ...row,
-    x: 20 + ((row.epoch - first) / span) * 560,
-    y: 160 - (row.gigabytes / max) * 140,
+    x: linearScale(row.epoch, first, first + span, 20, 580),
+    y: linearScale(row.gigabytes, 0, max, 160, 20),
   }));
 }

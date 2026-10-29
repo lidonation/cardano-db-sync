@@ -5,6 +5,7 @@ import {SITE_URL} from '../../playwright.config';
 import {CORE_TEAM, teams, tools} from '../../src/ecosystem/entries';
 
 import {smallTargets} from './audits';
+import {contrast, paintedBackground} from './contrast';
 
 /**
  * B44-b — the Ecosystem page in a browser: margins and reflow per tier, 44px targets, every entry
@@ -12,6 +13,13 @@ import {smallTargets} from './audits';
  * in four palettes.
  */
 const english = ({message}: {message: string}) => message;
+
+function requireRepositoryFixture() {
+  test.skip(
+    Boolean(test.info().project.use.baseURL) && process.env.DBS_REPOSITORY_FIXTURE_BUILT !== '1',
+    'Repository fixture not included in this build',
+  );
+}
 
 async function open(page: Page, width: number, palette = 'light') {
   await page.setViewportSize({width, height: 900});
@@ -57,7 +65,9 @@ test.describe('content', () => {
   test('every tool and team links its source', async ({page}) => {
     await open(page, 1440);
     const hrefs = await page
-      .locator('main section li a')
+      .locator(
+        'section[aria-labelledby="ecosystem-tools"] li a, section[aria-labelledby="ecosystem-teams"] li a',
+      )
       .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
     const expected = [
       ...tools(english).flatMap((tool) =>
@@ -259,4 +269,104 @@ test('empty tools fixture names the state and offers recovery without accessibil
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();
   expect(results.violations).toEqual([]);
+});
+
+test('activity ranges change the chart, summary and table with the keyboard', async ({page}) => {
+  requireRepositoryFixture();
+  await open(page, 1440);
+  const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
+  const tabs = section.getByRole('tablist');
+  const selected = tabs.getByRole('tab', {name: '12 months'});
+  await expect(selected).toHaveAttribute('aria-selected', 'true');
+  await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(12);
+  await expect(section.locator('[role=tabpanel]:visible svg rect')).toHaveCount(12);
+  await expect(section.locator('[role=tabpanel]:visible svg text').first()).toHaveText('17');
+  await expect(section.locator('[role=tabpanel]:visible svg text').nth(1)).toHaveText('Jul');
+  await selected.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(tabs.getByRole('tab', {name: '30 days'})).toHaveAttribute('aria-selected', 'true');
+  await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(30);
+  await expect(section.locator('[role=tabpanel]:visible svg rect')).toHaveCount(30);
+  await expect(section.locator('[role=tabpanel]:visible [id^=code-summary]')).toContainText('30');
+  await page.keyboard.press('ArrowRight');
+  await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(7);
+  await expect(section.locator('[role=tabpanel]:visible svg rect')).toHaveCount(7);
+  await expect(section.locator('[role=tabpanel]:visible [id^=code-summary]')).toContainText('7');
+});
+
+test('heatmap weekly table agrees with its day cells', async ({page}) => {
+  requireRepositoryFixture();
+  await open(page, 1440);
+  const section = page.locator('section[aria-labelledby="ecosystem-activity-title"]');
+  const cells = await section.locator('[data-week][data-count]').evaluateAll((nodes) => {
+    const sums = Array.from({length: 52}, () => 0);
+    nodes.forEach((node) => {
+      sums[Number(node.getAttribute('data-week'))] += Number(node.getAttribute('data-count'));
+    });
+    return sums;
+  });
+  const table = await section.locator('tbody tr td').allTextContents();
+  expect(table.map(Number)).toEqual(cells);
+  expect(cells).toHaveLength(52);
+  await expect(section.locator('[data-week][data-count]')).toHaveCount(364);
+});
+
+for (const palette of ['light', 'dark', 'cream', 'navy']) {
+  test(`each activity range is accessible in ${palette}`, async ({page}) => {
+    requireRepositoryFixture();
+    await open(page, 375, palette);
+    const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
+    for (const name of ['12 months', '30 days', '7 days']) {
+      await section.getByRole('tab', {name}).click();
+      const results = await new AxeBuilder({page})
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    }
+  });
+}
+
+for (const palette of ['light', 'dark', 'cream', 'navy']) {
+  test(`chart marks stay visible and intensity increases in ${palette}`, async ({page}) => {
+    requireRepositoryFixture();
+    await open(page, 375, palette);
+    const code = page.locator('section[aria-labelledby="ecosystem-code-title"]');
+    const backdrop = await code.evaluate(paintedBackground);
+    const bars = await code.locator('[role=tabpanel]:visible svg rect').evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const style = getComputedStyle(node);
+        return {fill: style.fill, stroke: style.stroke, width: parseFloat(style.strokeWidth)};
+      }),
+    );
+    expect(bars).toHaveLength(12);
+    for (const bar of bars) {
+      const boundary = bar.stroke !== 'none' && bar.width > 0 ? bar.stroke : bar.fill;
+      expect.soft(contrast(boundary, backdrop)).toBeGreaterThanOrEqual(3);
+    }
+    const activity = page.locator('section[aria-labelledby="ecosystem-activity-title"]');
+    const background = await activity.evaluate(paintedBackground);
+    const swatches = await activity
+      .locator('ul span[aria-hidden]')
+      .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).backgroundColor));
+    const steps = swatches.map((colour) => contrast(colour, background));
+    expect(steps).toHaveLength(4);
+    for (let index = 1; index < steps.length; index++) {
+      expect(steps[index]).toBeGreaterThan(steps[index - 1]);
+    }
+  });
+}
+
+test('built page reports missing repository data instead of inventing charts', async ({page}) => {
+  test.skip(!test.info().project.use.baseURL, 'Built profile check');
+  await open(page, 1440);
+  const facts = page.locator('section[aria-labelledby="ecosystem-facts"]');
+  if (
+    (await facts.getByText('Repository activity data is unavailable in this build.').count()) > 0
+  ) {
+    await expect(page.locator('#ecosystem-code-title')).toHaveCount(0);
+    await expect(page.locator('#ecosystem-activity-title')).toHaveCount(0);
+  } else {
+    await expect(page.locator('#ecosystem-code-title')).toBeVisible();
+    await expect(page.locator('#ecosystem-activity-title')).toBeVisible();
+  }
 });

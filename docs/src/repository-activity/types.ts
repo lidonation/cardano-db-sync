@@ -1,3 +1,5 @@
+import type {ActivityCharts} from '../ecosystem/chart-data';
+
 /** Public build artifact: never include contributor email addresses or profile locations. */
 export type Language = 'haskell' | 'sql' | 'nix' | 'cabal' | 'docs';
 export type DailyLines = {date: string} & Record<Language, number>;
@@ -23,6 +25,7 @@ export type RepositorySnapshotState =
 /** Compact page data; full history is available to later build-time consumers. */
 export interface RepositorySummary {
   builtAt: string;
+  charts: ActivityCharts;
   contributors: Contributor[];
   coreTeam: Contributor[];
   countries: {country: string; count: number}[];
@@ -37,3 +40,11 @@ export interface RepositorySummary {
 }
 export type RepositoryState =
   {status: 'available'; data: RepositorySummary} | {status: 'unavailable'};
+
+/** Minimal public commit feed; never sends author or contributor profiles to the client. */
+export type CommitFeedState =
+  | {status: 'unavailable'}
+  | {
+      status: 'available';
+      data: {asOf: string; entries: {id: string; date: string; subject: string}[]};
+    };

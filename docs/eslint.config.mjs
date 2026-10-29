@@ -5,6 +5,7 @@ export default tseslint.config(
   {
     ignores: [
       'build/**',
+      '.cache/browser-fixtures/**',
       '.docusaurus/**',
       'node_modules/**',
       'coverage/**',
