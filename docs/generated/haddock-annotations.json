@@ -744,44 +744,44 @@
           "position": "before"
         },
         {
-          "doc": "Fetch governance-anchor metadata, validating its hash when supplied. An @ipfs://@ URL is resolved\nthrough configured gateway prefixes; an empty gateway list cannot resolve it.",
+          "doc": "Fetch governance-anchor metadata, validating its hash when supplied. An @ipfs://@ URL is resolved\nthrough configured gateway prefixes; an empty gateway list cannot resolve it. The db-sync config\ndefault is @https://ipfs.io/ipfs@.",
           "kind": "function",
-          "line": 91,
+          "line": 92,
           "name": "httpGetOffChainVoteData",
           "position": "before"
         },
         {
-          "doc": "Fetch bytes from a successful HTTP response subject to a size limit. A missing content-type is\naccepted; JSON, JSON-LD, plain text and supported binary types are accepted. @text/html@ is accepted\nonly when the first non-whitespace character is an opening brace. Other content types are rejected.",
+          "doc": "Fetch bytes from a successful HTTP response subject to a size limit. A missing content-type is\naccepted. Headers containing @application/json@, @application/ld+json@, @text/plain@,\n@application/octet-stream@, @binary/octet-stream@ or @application/binary@ are accepted.\n@text/html@ is accepted only when the first non-whitespace character is an opening brace. Other\ncontent types are rejected.",
           "kind": "function",
-          "line": 167,
+          "line": 170,
           "name": "httpGetBytes",
           "position": "before"
         },
         {
           "doc": "Is the provided ByteSring possibly JSON object?\nIgnoring any leading whitespace, if the ByteString starts with a '{` character it might possibly\nbe a JSON object. We are are really only interested in differentiating between JSON and HTML\n(where the first non-whitespace character will be '<'.",
           "kind": "function",
-          "line": 224,
+          "line": 227,
           "name": "isPossiblyJsonObject",
           "position": "before"
         },
         {
           "doc": "Accept HTTP or HTTPS GET URLs. Private, loopback and link-local address restrictions are applied by\nthe restricted manager unless the testing-only private-URL flag is enabled.",
           "kind": "function",
-          "line": 236,
+          "line": 239,
           "name": "parseOffChainUrl",
           "position": "before"
         },
         {
           "doc": "Create the off-chain HTTP manager. When 'allowPrivate' is 'False' (the\ndefault), connections to private, loopback, and link-local IP addresses are\nblocked at connect time via 'offchainRestriction'. The restriction is checked\non the resolved IP, so it applies to redirects and prevents DNS rebinding\nattacks. When 'allowPrivate' is 'True' the restriction is replaced with a\nno-op that allows every address — this is intended for local-cluster testing\nonly and is wired in from the @--allow-private-offchain-urls@ CLI flag.",
           "kind": "function",
-          "line": 309,
+          "line": 312,
           "name": "newRestrictedManager",
           "position": "before"
         },
         {
           "doc": "A 'Restriction' that allows every resolved address. Selected by\n'newRestrictedManager' when @--allow-private-offchain-urls@ is set.",
           "kind": "function",
-          "line": 323,
+          "line": 326,
           "name": "permissiveRestriction",
           "position": "before"
         }

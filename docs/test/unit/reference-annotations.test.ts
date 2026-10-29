@@ -151,6 +151,31 @@ describe('SMASH and off-chain reference annotations', () => {
   });
 });
 
+describe('off-chain content-type reference', () => {
+  it('lists the accepted content types in the extracted annotation', () => {
+    const module = artifact.files.find(
+      (file: {path: string}) => file.path === 'cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs',
+    );
+    const doc =
+      module?.annotations.find((entry: {name: string}) => entry.name === 'httpGetBytes')?.doc ?? '';
+    const vote =
+      module?.annotations.find((entry: {name: string}) => entry.name === 'httpGetOffChainVoteData')
+        ?.doc ?? '';
+    expect(vote).toContain('https://ipfs.io/ipfs');
+    for (const type of [
+      'application/json',
+      'application/ld+json',
+      'text/plain',
+      'application/octet-stream',
+      'binary/octet-stream',
+      'application/binary',
+      'text/html',
+    ]) {
+      expect(doc, type).toContain(type);
+    }
+  });
+});
+
 describe('schema reference coverage', () => {
   it('extracts the documented records and their fields independently of the legacy doc tree', () => {
     const schema = JSON.parse(

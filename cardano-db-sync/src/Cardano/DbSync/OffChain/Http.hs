@@ -87,7 +87,8 @@ httpGetOffChainPoolData manager request purl expectedMetaHash = do
     url = OffChainPoolUrl purl
 
 -- | Fetch governance-anchor metadata, validating its hash when supplied. An @ipfs://@ URL is resolved
--- through configured gateway prefixes; an empty gateway list cannot resolve it.
+-- through configured gateway prefixes; an empty gateway list cannot resolve it. The db-sync config
+-- default is @https://ipfs.io/ipfs@.
 httpGetOffChainVoteData ::
   Bool ->
   [Text] ->
@@ -162,8 +163,10 @@ parseAndValidateVoteData bs lbs metaHash anchorType murl = do
   pure (ocvd, decodedValue, metadataHash, mWarning, isValidJson)
 
 -- | Fetch bytes from a successful HTTP response subject to a size limit. A missing content-type is
--- accepted; JSON, JSON-LD, plain text and supported binary types are accepted. @text/html@ is accepted
--- only when the first non-whitespace character is an opening brace. Other content types are rejected.
+-- accepted. Headers containing @application/json@, @application/ld+json@, @text/plain@,
+-- @application/octet-stream@, @binary/octet-stream@ or @application/binary@ are accepted.
+-- @text/html@ is accepted only when the first non-whitespace character is an opening brace. Other
+-- content types are rejected.
 httpGetBytes ::
   Http.Manager ->
   Http.Request ->
