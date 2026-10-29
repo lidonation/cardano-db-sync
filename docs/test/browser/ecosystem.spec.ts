@@ -124,6 +124,9 @@ test.describe('content', () => {
     if (built && (await facts.count()) === 0) {
       await expect(section).toContainText('Repository activity data is unavailable');
       await expect(page.locator('#ecosystem-origins')).toHaveCount(0);
+      await expect(page.locator('#ecosystem-people')).toHaveCount(0);
+      await expect(page.locator('#ecosystem-title')).not.toContainText(/Built by \d+ people/);
+      await expect(section.locator('time')).toHaveCount(0);
     } else {
       await expect(facts).toHaveCount(5);
       const values = await facts.evaluateAll((nodes) =>
