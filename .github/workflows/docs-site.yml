@@ -7,12 +7,12 @@ on:
   workflow_dispatch:
 permissions:
   contents: read
-  actions: write
-  issues: write
 jobs:
   dispatch:
     name: Start the release-branch documentation workflow
     runs-on: ubuntu-latest
+    permissions:
+      actions: write
     steps:
       - name: Dispatch the release branch
         env:
