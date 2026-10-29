@@ -61,6 +61,11 @@ for (const guide of [
   'smash-operations',
   'trimming',
   'ubuntu-systemd',
+  'running',
+  'installing-with-nix',
+  'troubleshooting',
+  'state-snapshot',
+  'validation',
 ]) {
   test(`${guide} guide has no WCAG A/AA violations`, async ({page}) => {
     await page.goto(`docs/guides/${guide}/`);

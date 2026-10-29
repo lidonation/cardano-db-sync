@@ -1,4 +1,4 @@
-import {readFileSync, readdirSync} from 'node:fs';
+import {existsSync, readFileSync, readdirSync} from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
 import {describe, expect, it} from 'vitest';
@@ -20,6 +20,30 @@ const sourceNames = [
   'upgrading-postgresql',
   'validation',
 ];
+const newlyPublished = [
+  'running',
+  'installing-with-nix',
+  'troubleshooting',
+  'state-snapshot',
+  'validation',
+];
+function migratedPath(name: string): string {
+  const paths = [
+    path.join(root, 'docs/docs/guides', `${name}.md`),
+    path.join(root, 'docs/migration/guides', `${name}.md`),
+  ];
+  const present = paths.filter((file) => existsSync(file));
+  expect(present, `${name} must exist exactly once`).toHaveLength(1);
+  return present[0];
+}
+
+it('publishes the five budget-verified legacy procedures', () => {
+  for (const name of newlyPublished) {
+    expect(existsSync(path.join(root, 'docs/docs/guides', `${name}.md`)), name).toBe(true);
+    expect(existsSync(path.join(root, 'docs/migration/guides', `${name}.md`)), name).toBe(false);
+  }
+});
+
 const schema = JSON.parse(readFileSync(path.join(root, 'docs/generated/schema.json'), 'utf8')) as {
   tables: {name: string; columns: {name: string}[]}[];
 };
@@ -27,7 +51,7 @@ const schema = JSON.parse(readFileSync(path.join(root, 'docs/generated/schema.js
 describe('legacy procedural migration (CON-8, GDE-1)', () => {
   it.each(sourceNames)('preserves the headings of %s and declares known dependencies', (name) => {
     const source = readFileSync(path.join(root, 'doc', `${name}.md`), 'utf8');
-    const guide = readFileSync(path.join(root, 'docs/migration/guides', `${name}.md`), 'utf8');
+    const guide = readFileSync(migratedPath(name), 'utf8');
     const front = /^---\n([\s\S]*?)\n---\n/.exec(guide);
     expect(front).not.toBeNull();
     const {requires} = yaml.load(front![1]) as {
@@ -97,15 +121,15 @@ it('every guide declares valid known entities without hand-authored version rang
 });
 
 it('does not instruct operators to overwrite Nix configuration or publish example admin credentials', () => {
-  const nix = readFileSync(path.join(root, 'docs/migration/guides/installing-with-nix.md'), 'utf8');
-  const docker = readFileSync(path.join(root, 'docs/migration/guides/docker.md'), 'utf8');
+  const nix = readFileSync(migratedPath('installing-with-nix'), 'utf8');
+  const docker = readFileSync(migratedPath('docker'), 'utf8');
   expect(nix).not.toContain('sudo tee /etc/nix/nix.conf');
   expect(docker).not.toContain('SMASH_PASSWORD=smash-password');
   expect(docker).toContain('127.0.0.1:3100:3100');
 });
 
 it('keeps node and db-sync example paths consistent and executable', () => {
-  const guide = readFileSync(path.join(root, 'docs/migration/guides/running.md'), 'utf8');
+  const guide = readFileSync(migratedPath('running'), 'utf8');
   expect(guide).toContain('--config ~/src/cardano-environments/mainnet/config.json \\\n');
   expect(guide).toContain('--topology ~/src/cardano-environments/mainnet/topology.json \\\n');
   expect(guide).toContain('--socket-path ~/src/cardano-environments/mainnet/node.socket');
@@ -113,10 +137,7 @@ it('keeps node and db-sync example paths consistent and executable', () => {
 });
 
 it('requires a reversible PostgreSQL upgrade rather than deleting the old cluster', () => {
-  const guide = readFileSync(
-    path.join(root, 'docs/migration/guides/upgrading-postgresql.md'),
-    'utf8',
-  );
+  const guide = readFileSync(migratedPath('upgrading-postgresql'), 'utf8');
   expect(guide).not.toContain('sudo pkill -f');
   expect(guide).not.toContain('./delete-old-cluster.sh');
   expect(guide).not.toContain('sudo apt remove postgresql');
@@ -125,7 +146,7 @@ it('requires a reversible PostgreSQL upgrade rather than deleting the old cluste
 });
 
 it('does not suggest creating a system-wide PostgreSQL socket symlink', () => {
-  const guide = readFileSync(path.join(root, 'docs/migration/guides/troubleshooting.md'), 'utf8');
+  const guide = readFileSync(migratedPath('troubleshooting'), 'utf8');
   expect(guide).not.toContain('sudo ln -s /tmp/.s.PGSQL.5432');
   expect(guide).toContain('PGHOST=/tmp');
 });
