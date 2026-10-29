@@ -4,6 +4,10 @@ on:
   push:
   merge_group: {}
 
+permissions:
+  contents: read
+  actions: read
+
 jobs:
   changes:
     name: Detect community-site-only changes
@@ -28,11 +32,20 @@ jobs:
           HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
         run: python3 .github/scripts/classify-ci-diff.py
 
-  build:
+  site-runner:
+    name: Choose balanced runner
     needs: changes
+    if: ${{ always() && needs.changes.outputs.run != 'false' }}
+    uses: ./.github/workflows/blacksmith-selector.yml
+    permissions:
+      contents: read
+      actions: read
+
+  build:
+    needs: [changes, site-runner]
     # Fail open: detection errors and non-diff events run the full checks.
     if: always() && needs.changes.outputs.run != 'false'
-    runs-on: ubuntu-latest
+    runs-on: ${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}
 
     defaults:
       run:

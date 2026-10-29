@@ -10,8 +10,10 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
-      - ".github/scripts/blacksmith-runner.py"
-      - ".github/tests/test_blacksmith_runner.py"
+      - ".github/scripts/blacksmith-*.py"
+      - ".github/scripts/blacksmith-*.pem"
+      - ".github/tests/test_blacksmith_*.py"
+      - ".github/workflows/blacksmith-*.yml"
       # B44-b release history is counted from this committed source.
       - "cardano-db-sync/CHANGELOG.md"
       # read by check:config (CON-4)
@@ -23,8 +25,10 @@ on:
     paths:
       - "docs/**"
       - ".github/workflows/docs-site.yml"
-      - ".github/scripts/blacksmith-runner.py"
-      - ".github/tests/test_blacksmith_runner.py"
+      - ".github/scripts/blacksmith-*.py"
+      - ".github/scripts/blacksmith-*.pem"
+      - ".github/tests/test_blacksmith_*.py"
+      - ".github/workflows/blacksmith-*.yml"
       # B44-b release history is counted from this committed source.
       - "cardano-db-sync/CHANGELOG.md"
       # read by check:config (CON-4)
@@ -38,6 +42,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: docs-site-${{ github.ref }}
@@ -48,43 +53,19 @@ defaults:
     working-directory: docs
 
 jobs:
-  # Fork-only, opt-in; never expose the organization token to PR code. A skipped
-  # or failed selector yields the original GitHub-hosted runner label.
+  # Fork-only selection: PRs receive only a trusted, non-secret budget decision.
   site-runner:
-    name: Choose site runner
-    if: >-
-      github.repository == 'lidonation/cardano-db-sync' &&
-      github.event_name == 'push' && github.ref == 'refs/heads/release/community-site' &&
-      vars.BLACKSMITH_SITE_ENABLED == 'true'
-    runs-on: ubuntu-24.04
-    timeout-minutes: 3
-    outputs:
-      runner: ${{ steps.select.outputs.runner || 'ubuntu-24.04' }}
-    steps:
-      - name: Check out trusted release branch
-        if: >-
-          github.repository == 'lidonation/cardano-db-sync' &&
-          github.event_name == 'push' && github.ref == 'refs/heads/release/community-site' &&
-          vars.BLACKSMITH_SITE_ENABLED == 'true'
-        uses: actions/checkout@v4
-        continue-on-error: true
-      - name: Select runner within usage budget
-        id: select
-        if: >-
-          always() && github.repository == 'lidonation/cardano-db-sync' &&
-          github.event_name == 'push' && github.ref == 'refs/heads/release/community-site' &&
-          vars.BLACKSMITH_SITE_ENABLED == 'true'
-        working-directory: .
-        env:
-          BLACKSMITH_SITE_ENABLED: ${{ vars.BLACKSMITH_SITE_ENABLED }}
-          BLACKSMITH_ORG: ${{ vars.BLACKSMITH_ORG }}
-          BLACKSMITH_ORG_TOKEN: ${{ secrets.BLACKSMITH_ORG_TOKEN }}
-        run: |
-          python3 .github/scripts/blacksmith-runner.py || echo 'runner=ubuntu-24.04' >> "$GITHUB_OUTPUT"
+    name: Choose balanced runner
+    uses: ./.github/workflows/blacksmith-selector.yml
+    permissions:
+      contents: read
+      actions: read
 
   format:
     name: Format
-    runs-on: ubuntu-latest
+    needs: site-runner
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup
@@ -93,7 +74,9 @@ jobs:
 
   static-analysis:
     name: Static analysis
-    runs-on: ubuntu-latest
+    needs: site-runner
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup
@@ -142,10 +125,8 @@ jobs:
 
   unit-tests:
     name: Unit tests
-    needs: site-runner
-    if: ${{ !cancelled() }}
-    # Both choices use Ubuntu 24.04 for Playwright compatibility.
-    runs-on: ${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}
+    # Keep the paired unit job on GitHub Ubuntu 24.04 for Playwright.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
         with:
@@ -259,9 +240,9 @@ jobs:
 
   links:
     name: Link check
-    needs: build
+    needs: [build, site-runner]
     if: ${{ !cancelled() && needs.build.result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup

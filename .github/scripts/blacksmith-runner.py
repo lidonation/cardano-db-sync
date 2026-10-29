@@ -1,12 +1,9 @@
 """Select a runner for trusted site builds; every uncertainty fails back to GitHub."""
 import datetime as dt
-import hashlib
 import json
 import math
 import os
-from pathlib import Path
-import subprocess
-import tempfile
+import urllib.parse
 import urllib.request
 
 GITHUB = 'ubuntu-24.04'
@@ -14,8 +11,8 @@ BLACKSMITH = 'blacksmith-4vcpu-ubuntu-2404'
 # CLI describes billing_minutes as rate-normalized vCPU-minutes; the 3,000 free
 # minutes are 2-vCPU equivalents. 4,800 billing minutes = 2,400 equivalents.
 BILLING_THRESHOLD = 4800
-CLI_URL = 'https://clireleases.blacksmith.sh/cli/latest/linux/amd64/blacksmith'
-CLI_SHA256 = '089a301ea5cc93a7560c7f1106911547fdfd46fc5c0cef7079e2a62a22e971ce'
+API_ORIGIN = 'https://backend.blacksmith.sh'
+MAX_RESPONSE_BYTES = 1_000_000
 
 
 def enabled(env):
@@ -45,34 +42,58 @@ def choose_runner(data, org, start, end):
         minutes = summary['billing_minutes']
         if isinstance(minutes, bool) or not isinstance(minutes, (int, float)):
             return GITHUB
-        if not math.isfinite(minutes) or minutes <= 0:
+        if not math.isfinite(minutes) or minutes < 0:
             return GITHUB
         return BLACKSMITH if minutes < BILLING_THRESHOLD else GITHUB
     except (KeyError, TypeError, ValueError, AttributeError, OverflowError):
         return GITHUB
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Never forward the organization bearer token to another origin."""
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        return None
+
+
+def api_get(path, token):
+    # Fixed host and path; reject all redirects, including same-host redirects.
+    if not path.startswith('/api/cli/') or not token:
+        raise ValueError('invalid usage request')
+    request = urllib.request.Request(API_ORIGIN + path, headers={
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/json',
+        'User-Agent': 'dbsync-ci-usage/1.0',
+    })
+    opener = urllib.request.build_opener(NoRedirect)
+    with opener.open(request, timeout=20) as response:
+        body = response.read(MAX_RESPONSE_BYTES + 1)
+    if len(body) > MAX_RESPONSE_BYTES:
+        raise ValueError('usage response too large')
+    result = json.loads(body)
+    if not isinstance(result, dict):
+        raise ValueError('invalid usage response')
+    return result
+
+
 def usage_report(env, start, end):
-    with tempfile.TemporaryDirectory(prefix='blacksmith-usage-') as tmp:
-        binary = Path(tmp) / 'blacksmith'
-        with urllib.request.urlopen(CLI_URL, timeout=20) as response:
-            content = response.read(100_000_001)
-        if len(content) > 100_000_000 or hashlib.sha256(content).hexdigest() != CLI_SHA256:
-            raise ValueError('unverified CLI')
-        binary.write_bytes(content)
-        binary.chmod(0o700)
-        cli_env = dict(env, HOME=tmp, BLACKSMITH_DISABLE_AUTO_UPDATE='1')
-        cli_env.pop('BLACKSMITH_ORG_TOKEN', None)
-        # Do not let ambient CLI settings redirect the organization token.
-        cli_env.pop('BLACKSMITH_API_URL', None)
-        cli_env.pop('BLACKSMITH_DASHBOARD_URL', None)
-        subprocess.run([str(binary), 'auth', 'login', '--api-token', '-', '--non-interactive',
-                        '--organization', env['BLACKSMITH_ORG']], input=env['BLACKSMITH_ORG_TOKEN'] + '\n',
-                       text=True, env=cli_env, capture_output=True, check=True, timeout=30)
-        result = subprocess.run([str(binary), 'usage', '--start-time', start, '--end-time', end,
-                                 '--format', 'json'], text=True, env=cli_env, capture_output=True,
-                                check=True, timeout=30)
-        return json.loads(result.stdout)
+    # The CLI's JSON serializer turns absent fields into zeros. Read the raw
+    # response so a genuine monthly reset is distinguishable from missing data.
+    # This API is not documented; strict schema checks and failure fallback are
+    # mandatory if the vendor changes it.
+    token = env['BLACKSMITH_ORG_TOKEN']
+    who = api_get('/api/cli/whoami', token)
+    ident = who.get('installation_model_id')
+    if (not isinstance(ident, int) or isinstance(ident, bool) or ident <= 0
+            or not isinstance(who.get('org'), str)
+            or who['org'].casefold() != env['BLACKSMITH_ORG'].casefold()):
+        raise ValueError('invalid organization identity')
+    query = urllib.parse.urlencode({'start_time': start, 'end_time': end,
+                                    'breakdown_by': 'runner_type,repo',
+                                    'limit': 50, 'sort_by': 'cost'})
+    report = api_get(f'/api/cli/installations/{ident}/usage/actions?{query}', token)
+    if not isinstance(report.get('installation'), dict) or report['installation'].get('installation_model_id') != ident:
+        raise ValueError('inconsistent installation')
+    return report
 
 
 def main():

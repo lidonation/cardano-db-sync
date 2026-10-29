@@ -25,7 +25,7 @@ class BlacksmithRunnerTests(unittest.TestCase):
         self.assertEqual(self.select(self.report(4799)), module.BLACKSMITH)
         self.assertEqual(self.select(self.report(4800)), module.GITHUB)
         self.assertEqual(self.select(self.report(6000)), module.GITHUB)
-        self.assertEqual(self.select(self.report(0)), module.GITHUB)
+        self.assertEqual(self.select(self.report(0)), module.BLACKSMITH)
 
     def test_bad_or_wrong_usage_falls_back(self):
         for obj in [None, {}, {'summary': {}}, self.report(-1), self.report(float('nan')),
@@ -48,43 +48,34 @@ class BlacksmithRunnerTests(unittest.TestCase):
             env = dict(good); env[key] = value
             self.assertFalse(module.enabled(env))
 
-    def test_usage_client_pins_binary_and_keeps_token_out_of_environment(self):
-        import hashlib
-        from types import SimpleNamespace
-        binary = b'test executable'
-        env = {'BLACKSMITH_ORG':'lidonation', 'BLACKSMITH_ORG_TOKEN':'private-token',
-               'BLACKSMITH_API_URL':'https://untrusted.invalid',
-               'BLACKSMITH_DASHBOARD_URL':'https://untrusted.invalid'}
-        response = mock.MagicMock()
-        response.__enter__.return_value.read.return_value = binary
-        calls = []
-        def run(args, **kwargs):
-            calls.append((args, kwargs))
-            self.assertNotIn('BLACKSMITH_ORG_TOKEN', kwargs['env'])
-            self.assertNotIn('BLACKSMITH_API_URL', kwargs['env'])
-            self.assertNotIn('BLACKSMITH_DASHBOARD_URL', kwargs['env'])
-            if 'login' in args:
-                self.assertEqual(kwargs['input'], 'private-token\n')
-                return SimpleNamespace(stdout='')
-            return SimpleNamespace(stdout=json.dumps(self.report(50)))
-        with mock.patch.object(module, 'CLI_SHA256', hashlib.sha256(binary).hexdigest()), \
-             mock.patch.object(module.urllib.request, 'urlopen', return_value=response), \
-             mock.patch.object(module.subprocess, 'run', side_effect=run):
+    def test_raw_usage_fetch_validates_whoami(self):
+        env = {'BLACKSMITH_ORG': 'lidonation', 'BLACKSMITH_ORG_TOKEN': 'private-token'}
+        responses = [{'org': 'lidonation', 'installation_model_id': 42}, self.report(0)]
+        with mock.patch.object(module, 'api_get', side_effect=responses) as get:
             result = module.usage_report(env, '2026-10-01T00:00:00Z', '2026-10-29T21:35:00Z')
-        self.assertEqual(result, self.report(50))
-        self.assertEqual(len(calls), 2)
-        self.assertNotIn('private-token', str(calls[0][0]))
+        self.assertEqual(result, self.report(0))
+        self.assertEqual(get.call_count, 2)
+        self.assertEqual(get.call_args_list[0].args[0], '/api/cli/whoami')
+        self.assertTrue(get.call_args_list[1].args[0].startswith('/api/cli/installations/42/usage/actions?'))
 
-    def test_unverified_download_never_reaches_authentication(self):
-        response = mock.MagicMock()
-        for content in [b'changed executable', b'']:
-            response.__enter__.return_value.read.return_value = content
-            with self.subTest(content=content), \
-                 mock.patch.object(module.urllib.request, 'urlopen', return_value=response), \
-                 mock.patch.object(module.subprocess, 'run') as run:
+    def test_bad_identity_never_requests_usage(self):
+        env = {'BLACKSMITH_ORG': 'lidonation', 'BLACKSMITH_ORG_TOKEN': 'private-token'}
+        for identity in [{}, {'org': 'other', 'installation_model_id': 42},
+                         {'org': 'lidonation', 'installation_model_id': True},
+                         {'org': 'lidonation', 'installation_model_id': 0}]:
+            with self.subTest(identity=identity), mock.patch.object(module, 'api_get', return_value=identity) as get:
                 with self.assertRaises(ValueError):
-                    module.usage_report({}, 'start', 'end')
-                run.assert_not_called()
+                    module.usage_report(env, 'start', 'end')
+                self.assertEqual(get.call_count, 1)
+
+    def test_reject_redirects_to_prevent_token_leak(self):
+        handler = module.NoRedirect()
+        self.assertIsNone(handler.redirect_request(None, None, 302, 'redirect', {}, 'https://other.invalid/'))
+
+    def test_absent_billing_field_is_not_genuine_zero(self):
+        obj = self.report(0)
+        del obj['summary']['billing_minutes']
+        self.assertEqual(self.select(obj), module.GITHUB)
 
     def test_ineligible_main_never_fetches_usage_or_exposes_details(self):
         good = {'GITHUB_REPOSITORY':'lidonation/cardano-db-sync', 'GITHUB_EVENT_NAME':'push',
@@ -118,7 +109,7 @@ class BlacksmithRunnerTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmp:
             output = Path(tmp) / 'out'
             env['GITHUB_OUTPUT'] = str(output)
-            for minutes, expected in [(4000, module.BLACKSMITH), (4800, module.GITHUB), (0, module.GITHUB)]:
+            for minutes, expected in [(4000, module.BLACKSMITH), (4800, module.GITHUB), (0, module.BLACKSMITH)]:
                 output.write_text('')
                 def report(_, start, end):
                     data = self.report(minutes)
