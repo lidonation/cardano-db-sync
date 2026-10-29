@@ -13,6 +13,8 @@ describe('staged guide safety regressions', () => {
     expect(docker).toContain('127.0.0.1:5432:5432');
     expect(docker).toContain('ports: !override');
     expect(docker).not.toContain('psql -h 0.0.0.0');
+    expect(docker).toContain('-f docker-test.yml -f docker-compose.local.yml up');
+    expect(docker).not.toContain('echo "localhost:5432:cexplorer:postgres:');
   });
   it('uses complete container commands, qualified image names and shared socket mounts', () => {
     const docker = read('docker');
@@ -20,6 +22,7 @@ describe('staged guide safety regressions', () => {
     expect(docker).not.toMatch(/--volume node-ipc\s*\\/);
     expect(docker).not.toMatch(/--volume \$PWD:\/data\n\s+ghcr/);
     expect(docker).not.toContain('run --config');
+    expect(docker).toContain('cabal run cardano-db-tool -- run-migrations');
     expect(docker).toMatch(/ghcr.io\/intersectmbo\/cardano-smash-server:[^\n]+ \\\n {2}--config/);
   });
   it('checks the rollback tip before the deletion point while writers remain stopped', () => {

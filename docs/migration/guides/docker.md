@@ -368,24 +368,28 @@ docker run cardano-db-sync
 
 ## Running Tests with Docker PostgreSQL
 
-Create a `pgpass-test` file with the credentials of (taken from config/secrets/postgres_* files):
+Use a disposable local test database, not a deployment database. Replace the public example
+values in `config/secrets/postgres_*` through your approved secret-management process and
+prepare `config/pgpass-test` securely with matching connection fields; never put a password in
+a shell command. Protect that file, then export its path:
 
 ```bash
-echo "localhost:5432:cexplorer:postgres:v8hlDV0yMAHHlIurYupj" > config/pgpass-test
 chmod 0600 config/pgpass-test
 export PGPASSFILE=$PWD/config/pgpass-test
 ```
 
-Start PostgreSQL via Docker Compose:
+Start PostgreSQL via Docker Compose with the same loopback-only override defined above.
+Stop any earlier test/Compose deployment holding port 5432; do not reuse its populated volumes
+as a test target:
 
 ```bash
-docker compose -f docker-test.yml up
+docker compose -f docker-test.yml -f docker-compose.local.yml up
 ```
 
 Run the migrations:
 
 ```bash
-cabal run cardano-db-tool run-migrations -- --mdir schema/ --ldir .
+cabal run cardano-db-tool -- run-migrations --mdir schema/ --ldir .
 ```
 
 Run the tests:
@@ -397,5 +401,5 @@ cabal test cardano-db
 When you've finished with testing, stop and remove the test containers:
 
 ```bash
-docker compose -f docker-test.yml down
+docker compose -f docker-test.yml -f docker-compose.local.yml down
 ```
