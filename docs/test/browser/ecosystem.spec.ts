@@ -57,7 +57,9 @@ test.describe('content', () => {
   test('every tool and team links its source', async ({page}) => {
     await open(page, 1440);
     const hrefs = await page
-      .locator('main section li a')
+      .locator(
+        'section[aria-labelledby="ecosystem-tools"] li a, section[aria-labelledby="ecosystem-teams"] li a',
+      )
       .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
     const expected = [
       ...tools(english).flatMap((tool) =>
@@ -108,7 +110,8 @@ test.describe('content', () => {
     page.on('request', (request) => {
       if (
         request.resourceType() === 'image' &&
-        new URL(request.url()).origin !== new URL(SITE_URL).origin
+        new URL(request.url()).origin !==
+          new URL(test.info().project.use.baseURL ?? SITE_URL).origin
       )
         externalImages.push(request.url());
     });

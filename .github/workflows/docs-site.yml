@@ -165,6 +165,12 @@ jobs:
       # B43: run against both profiles' actual static CSP-protected HTML, not the dev server.
       - name: Install Chromium for built landing and chrome
         run: npx playwright install --with-deps chromium
+      # Landing tests assert the fixed repository fixture, not the live checkout used above.
+      # Build both published profiles with the fixture without changing the release artifacts.
+      - name: Build deterministic browser fixtures
+        run: npm run build
+        env:
+          REPOSITORY_ACTIVITY_CACHE: test/fixtures/repository-activity
       - name: Landing on shipped assets (B44-a, PERF-1, A11Y-18)
         run: npm run test:landing:built
       - name: Global accessibility chrome (A11Y-2..5, A11Y-12, A11Y-14/15/17/21, FLOOR-4/7)

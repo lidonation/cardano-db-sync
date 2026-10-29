@@ -10,7 +10,7 @@ if (!Number.isInteger(PORT) || PORT < 1024 || PORT > 65534) {
 /** Runs the landing, FAQ and Ecosystem contracts on shipped CSS, which is optimized only in builds. */
 export default defineConfig({
   testDir: 'test/browser',
-  testMatch: ['landing.spec.ts', 'faq.spec.ts', 'ecosystem.spec.ts'],
+  testMatch: ['landing.spec.ts', 'faq.spec.ts', 'ecosystem.spec.ts', 'commit-activity.spec.ts'],
   fullyParallel: true,
   workers: 4,
   timeout: 60_000,

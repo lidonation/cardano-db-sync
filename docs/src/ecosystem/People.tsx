@@ -9,6 +9,7 @@ import Eyebrow from '../landing/Eyebrow';
 import layout from '../landing/styles.module.css';
 import {CORE_TEAM} from './entries';
 import styles from './people.module.css';
+import CommitActivity from './CommitActivity';
 
 type Translate = (message: PageMessage) => string;
 function Face({person, core = false}: {person: Contributor; core?: boolean}) {
@@ -73,7 +74,14 @@ export function RepositoryFacts({state, t}: {state: RepositoryState; t: Translat
 }
 
 export function RepositoryPeople({state, t}: {state: RepositoryState; t: Translate}) {
-  if (state.status === 'unavailable') return null;
+  if (state.status === 'unavailable')
+    return (
+      <section className={layout.section}>
+        <div className={layout.inner}>
+          <CommitActivity t={t} />
+        </div>
+      </section>
+    );
   const data = state.data;
   const core = CORE_TEAM.map((entry) => {
     const person = data.coreTeam.find(
@@ -105,42 +113,55 @@ export function RepositoryPeople({state, t}: {state: RepositoryState; t: Transla
               .replace('{people}', String(data.contributors.length))
               .replace('{unknown}', String(data.unknownCountries))}
           </p>
-          <div className={styles.map} aria-hidden="true">
-            <span className={styles.land} />
-            <svg className={styles.mapDots} viewBox="0 0 720 360" focusable="false">
-              {data.countries.map(({country}) => {
-                const point = Object.hasOwn(COUNTRY_POINTS, country)
-                  ? COUNTRY_POINTS[country]
-                  : undefined;
-                return point ? (
-                  <circle className={styles.dot} key={country} cx={point[0]} cy={point[1]} r="3" />
-                ) : null;
-              })}
-            </svg>
+          <div className={styles.work}>
+            <div>
+              <div className={styles.map} aria-hidden="true">
+                <span className={styles.land} />
+                <svg className={styles.mapDots} viewBox="0 0 720 360" focusable="false">
+                  {data.countries.map(({country}) => {
+                    const point = Object.hasOwn(COUNTRY_POINTS, country)
+                      ? COUNTRY_POINTS[country]
+                      : undefined;
+                    return point ? (
+                      <circle
+                        className={styles.dot}
+                        key={country}
+                        cx={point[0]}
+                        cy={point[1]}
+                        r="3"
+                      />
+                    ) : null;
+                  })}
+                </svg>
+              </div>
+              <table className={styles.table} aria-describedby="ecosystem-origins-summary">
+                <caption>
+                  {t({id: 'ecosystem.origins.table', message: 'Contributors by country'})}
+                </caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{t({id: 'ecosystem.origins.country', message: 'Country'})}</th>
+                    <th scope="col">
+                      {t({id: 'ecosystem.origins.count', message: 'Contributors'})}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {data.countries.map(({country, count}) => (
+                    <tr key={country}>
+                      <th scope="row">{country}</th>
+                      <td>{count}</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <th scope="row">{t({id: 'ecosystem.origins.unknown', message: 'Unknown'})}</th>
+                    <td>{data.unknownCountries}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <CommitActivity t={t} />
           </div>
-          <table className={styles.table} aria-describedby="ecosystem-origins-summary">
-            <caption>
-              {t({id: 'ecosystem.origins.table', message: 'Contributors by country'})}
-            </caption>
-            <thead>
-              <tr>
-                <th scope="col">{t({id: 'ecosystem.origins.country', message: 'Country'})}</th>
-                <th scope="col">{t({id: 'ecosystem.origins.count', message: 'Contributors'})}</th>
-              </tr>
-            </thead>
-            <tbody>
-              {data.countries.map(({country, count}) => (
-                <tr key={country}>
-                  <th scope="row">{country}</th>
-                  <td>{count}</td>
-                </tr>
-              ))}
-              <tr>
-                <th scope="row">{t({id: 'ecosystem.origins.unknown', message: 'Unknown'})}</th>
-                <td>{data.unknownCountries}</td>
-              </tr>
-            </tbody>
-          </table>
         </div>
       </section>
       <section className={layout.section} aria-labelledby="ecosystem-people">

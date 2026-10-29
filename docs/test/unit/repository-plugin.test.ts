@@ -29,10 +29,15 @@ async function load(cache: string, outDir?: string) {
     NonNullable<Plugin['contentLoaded']>
   >[0]);
   if (outDir) await plugin.postBuild!({outDir} as Parameters<NonNullable<Plugin['postBuild']>>[0]);
-  expect(createData.mock.calls.map(([name]) => name)).toEqual(['resolved.json', 'history.json']);
+  expect(createData.mock.calls.map(([name]) => name)).toEqual([
+    'resolved.json',
+    'history.json',
+    'commits.json',
+  ]);
   return {
     summary: JSON.parse(createData.mock.calls[0][1]),
     history: JSON.parse(createData.mock.calls[1][1]),
+    commits: JSON.parse(createData.mock.calls[2][1]),
   };
 }
 
@@ -47,6 +52,13 @@ describe('Docusaurus repository plugin', () => {
     expect(result.summary.data.contributors).toHaveLength(2);
     expect(result.summary.data.commits).toBeUndefined();
     expect(result.history.data.commits).toHaveLength(2);
+    expect(result.commits.data.entries).toHaveLength(2);
+    expect(result.commits.data.entries[0]).toEqual({
+      id: 'a'.repeat(40),
+      date: '2025-06-01',
+      subject: 'first',
+    });
+    expect(result.commits.data.entries[0].author).toBeUndefined();
     expect(result.history.data.dailyLines).toHaveLength(1);
   });
   it('publishes only referenced avatars, never unrelated cache files', async () => {
@@ -74,6 +86,7 @@ describe('Docusaurus repository plugin', () => {
       expect(await load(dir)).toEqual({
         summary: {status: 'unavailable'},
         history: {status: 'unavailable'},
+        commits: {status: 'unavailable'},
       });
     } finally {
       warn.mockRestore();

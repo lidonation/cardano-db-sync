@@ -37,3 +37,11 @@ export interface RepositorySummary {
 }
 export type RepositoryState =
   {status: 'available'; data: RepositorySummary} | {status: 'unavailable'};
+
+/** Minimal public commit feed; never sends author or contributor profiles to the client. */
+export type CommitFeedState =
+  | {status: 'unavailable'}
+  | {
+      status: 'available';
+      data: {asOf: string; entries: {id: string; date: string; subject: string}[]};
+    };

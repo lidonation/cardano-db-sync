@@ -26,3 +26,40 @@ describe('repository commit windows', () => {
     ).toEqual([]);
   });
 });
+
+describe('commit feed validation', () => {
+  it('accepts markup as text and rejects unsafe identifiers or malformed snapshots', async () => {
+    const {parseCommitFeed} = await import('../../src/ecosystem/commitFeed');
+    const entry = {id: 'a'.repeat(40), date: '2026-06-01', subject: '<img src=x>'};
+    expect(
+      parseCommitFeed({status: 'available', data: {asOf: '2026-06-01', entries: [entry]}}),
+    ).toEqual({status: 'available', data: {asOf: '2026-06-01', entries: [entry]}});
+    expect(() =>
+      parseCommitFeed({
+        status: 'available',
+        data: {asOf: '2026-06-01', entries: [{...entry, id: '../../evil'}]},
+      }),
+    ).toThrow();
+    expect(() =>
+      parseCommitFeed({status: 'available', data: {asOf: 'invalid', entries: []}}),
+    ).toThrow();
+    expect(() =>
+      parseCommitFeed({status: 'available', data: {asOf: '2026-06-01', entries: [entry, entry]}}),
+    ).toThrow();
+    expect(parseCommitFeed({status: 'unavailable'})).toEqual({status: 'unavailable'});
+  });
+  it('rejects seeded malformed commit identifiers', async () => {
+    const {parseCommitFeed} = await import('../../src/ecosystem/commitFeed');
+    let seed = 97;
+    for (let i = 0; i < 64; i++) {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      const invalid = seed.toString(16).padStart(40, '0') + (i % 2 ? '/' : 'G');
+      expect(() =>
+        parseCommitFeed({
+          status: 'available',
+          data: {asOf: '2026-06-01', entries: [{id: invalid, date: '2026-06-01', subject: 'x'}]},
+        }),
+      ).toThrow();
+    }
+  });
+});

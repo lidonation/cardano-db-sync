@@ -25,12 +25,12 @@ export const UPDATES_IDS = [
   'updates.range.reversed',
 ] as const;
 
-export default function useUpdatesMessages() {
+export default function useUpdatesMessages(extraIds: readonly string[] = []) {
   const {
     i18n: {currentLocale, defaultLocale},
   } = useDocusaurusContext();
   const translate = pageTranslator(
-    UPDATES_IDS,
+    [...UPDATES_IDS, ...extraIds],
     codeTranslations,
     currentLocale,
     defaultLocale,
