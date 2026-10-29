@@ -48,6 +48,10 @@ import qualified Network.Socket as Socket
 -------------------------------------------------------------------------------------
 -- Get OffChain data
 -------------------------------------------------------------------------------------
+
+-- | Fetch and decode pool metadata. Responses are limited to 512 bytes; when an expected hash is
+-- supplied, the blake2b-256 hash must match. The result stores the original bytes and JSON
+-- representation.
 httpGetOffChainPoolData ::
   Http.Manager ->
   Http.Request ->
@@ -82,6 +86,9 @@ httpGetOffChainPoolData manager request purl expectedMetaHash = do
     req = httpGetBytes manager request 600 512 url
     url = OffChainPoolUrl purl
 
+-- | Fetch governance-anchor metadata, validating its hash when supplied. An @ipfs://@ URL is resolved
+-- through configured gateway prefixes; an empty gateway list cannot resolve it. The db-sync config
+-- default is @https://ipfs.io/ipfs@.
 httpGetOffChainVoteData ::
   Bool ->
   [Text] ->
@@ -155,6 +162,11 @@ parseAndValidateVoteData bs lbs metaHash anchorType murl = do
           else (Nothing, Nothing) -- Not valid JSON, so can't parse as CIP
   pure (ocvd, decodedValue, metadataHash, mWarning, isValidJson)
 
+-- | Fetch bytes from a successful HTTP response subject to a size limit. A missing content-type is
+-- accepted. Headers containing @application/json@, @application/ld+json@, @text/plain@,
+-- @application/octet-stream@, @binary/octet-stream@ or @application/binary@ are accepted.
+-- @text/html@ is accepted only when the first non-whitespace character is an opening brace. Other
+-- content types are rejected.
 httpGetBytes ::
   Http.Manager ->
   Http.Request ->
@@ -221,6 +233,9 @@ isPossiblyJsonObject bs =
 -------------------------------------------------------------------------------------
 -- Url
 -------------------------------------------------------------------------------------
+
+-- | Accept HTTP or HTTPS GET URLs. Private, loopback and link-local address restrictions are applied by
+-- the restricted manager unless the testing-only private-URL flag is enabled.
 parseOffChainUrl :: Bool -> OffChainUrlType -> ExceptT OffChainFetchError IO Http.Request
 parseOffChainUrl allowPrivate url = do
   let urlText = Text.pack $ showUrl url

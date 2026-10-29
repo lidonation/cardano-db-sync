@@ -18,6 +18,12 @@ on:
       - "cardano-db/src/**"
       - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
       - "cardano-db-sync/src/Cardano/DbSync/Config.hs"
+      - "cardano-db-sync/app/cardano-db-sync.hs"
+      - "cardano-db-sync/app/http-get-json-metadata.hs"
+      - "cardano-db-sync/app/test-http-get-json-metadata.hs"
+      - "cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs"
+      - "cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs"
+      - "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs"
       - "docs/extractor/**"
       # the migration SQL the rename map is scanned from (B09)
       - "schema/**"
@@ -28,6 +34,12 @@ on:
       - "cardano-db/src/**"
       - "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
       - "cardano-db-sync/src/Cardano/DbSync/Config.hs"
+      - "cardano-db-sync/app/cardano-db-sync.hs"
+      - "cardano-db-sync/app/http-get-json-metadata.hs"
+      - "cardano-db-sync/app/test-http-get-json-metadata.hs"
+      - "cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs"
+      - "cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs"
+      - "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs"
       - "docs/extractor/**"
       # the migration SQL the rename map is scanned from (B09)
       - "schema/**"
@@ -75,7 +87,7 @@ jobs:
           sh test/cli.sh "$(cabal list-bin extract-haddock)"
           sh test/renames-cli.sh "$(cabal list-bin extract-renames)"
 
-      - name: Extract schema and config annotations
+      - name: Extract reference annotations
         working-directory: docs/extractor
         # `shell: bash` runs with `-o pipefail`, so the extractor's exit code is not
         # swallowed by `tee`; the extractor fails the step on any unparseable file.
@@ -87,6 +99,12 @@ jobs:
             --out ../generated/haddock-annotations.json \
             --input cardano-db/src \
             --input cardano-db-sync/src/Cardano/DbSync/Config/Types.hs \
+            --input cardano-db-sync/app/cardano-db-sync.hs \
+            --input cardano-db-sync/app/http-get-json-metadata.hs \
+            --input cardano-db-sync/app/test-http-get-json-metadata.hs \
+            --input cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs \
+            --input cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs \
+            --input cardano-smash-server/src/Cardano/SMASH/Server/Api.hs \
             2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
 
       - name: Extract the schema rename map (B09, GDE-9)

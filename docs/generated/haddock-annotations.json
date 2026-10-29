@@ -3,6 +3,142 @@
     {
       "annotations": [
         {
+          "doc": "Flags",
+          "kind": "section",
+          "line": 86,
+          "name": "",
+          "position": "section",
+          "sectionLevel": 1
+        },
+        {
+          "doc": "Command-line entry point. Historical documentation listed @--skip-fix@\nand @--fix-only@ for datum and redeemer repair; neither is accepted by this\nparser. Other historical switches replaced by configuration include\n@--disable-ledger@, @--dont-use-ledger@, @--disable-epoch@,\n@--disable-shelley@, @--disable-multiassets@, @--disable-metadata@,\n@--disable-plutus-extra@, @--disable-gov@, @--disable-offchain-pool-data@,\n@--disable-offline-data@, @--keep-tx-metadata@, @--force-tx-in@,\n@--disable-all@, @--full@, @--only-utxo@, @--only-gov@,\n@--consumed-tx-out@, @--prune-tx-out@ and @--bootstrap-tx-out@.",
+          "kind": "function",
+          "line": 97,
+          "name": "pCommandLine",
+          "position": "before"
+        },
+        {
+          "doc": "@--config FILEPATH@: path to the db-sync node config file.",
+          "kind": "function",
+          "line": 120,
+          "name": "pConfigFile",
+          "position": "before"
+        },
+        {
+          "doc": "@--state-dir FILEPATH@: directory for persisting ledger state.",
+          "kind": "function",
+          "line": 131,
+          "name": "pLedgerStateDir",
+          "position": "before"
+        },
+        {
+          "doc": "@--schema-dir FILEPATH@: directory containing the database migrations.",
+          "kind": "function",
+          "line": 142,
+          "name": "pMigrationDir",
+          "position": "before"
+        },
+        {
+          "doc": "@--pg-pass-env ENV@: alternative environment variable for PostgreSQL credentials; defaults to @PGPASSFILE@.",
+          "kind": "function",
+          "line": 153,
+          "name": "pPGPassSource",
+          "position": "before"
+        },
+        {
+          "doc": "@--force-indexes@: create indexes at the start of db-sync instead of later.",
+          "kind": "function",
+          "line": 164,
+          "name": "pForceIndexes",
+          "position": "before"
+        },
+        {
+          "doc": "@--disable-cache@: disable db-sync caches, reducing memory usage at the cost of sync speed.",
+          "kind": "function",
+          "line": 174,
+          "name": "pHasCache",
+          "position": "before"
+        },
+        {
+          "doc": "@--allow-private-offchain-urls@: allow off-chain pool and vote metadata fetches to private, loopback, or link-local hosts and IPs. Off by default; intended for local-cluster testing.",
+          "kind": "function",
+          "line": 184,
+          "name": "pAllowPrivateOffChainUrls",
+          "position": "before"
+        },
+        {
+          "doc": "@--socket-path FILEPATH@: path to a cardano-node socket.",
+          "kind": "function",
+          "line": 198,
+          "name": "pSocketPath",
+          "position": "before"
+        },
+        {
+          "doc": "@--tracer-socket-path-connect FILEPATH@: connect to cardano-tracer for logs and metrics.",
+          "kind": "function",
+          "line": 209,
+          "name": "pTracerSocketPath",
+          "position": "before"
+        },
+        {
+          "doc": "@--rollback-to-slot SLOTNO@: force deletion of the block at this slot and all descendants,\ninclusive. If there is no block at that slot, deletion starts at the next greater slot with a\nblock; the resulting tip is the preceding block. If no block exists at or after the requested\nslot, no blocks are removed. Primarily for testing and debugging.",
+          "kind": "function",
+          "line": 222,
+          "name": "pRollbackSlotNo",
+          "position": "before"
+        },
+        {
+          "doc": "@--disable-in-out@ is accepted for compatibility, but its parsed value is not used by the\ncurrent runtime option builder. Use @insert_options.tx_out.value = \"disable\"@ to disable @tx_in@\nand @tx_out@ insertion.",
+          "kind": "function",
+          "line": 235,
+          "name": "pHasInOut",
+          "position": "before"
+        },
+        {
+          "doc": "The @version@ command and hidden @--version@ flag print the program version.",
+          "kind": "function",
+          "line": 245,
+          "name": "pVersionCommand",
+          "position": "before"
+        }
+      ],
+      "cpp": true,
+      "header": null,
+      "module": null,
+      "path": "cardano-db-sync/app/cardano-db-sync.hs"
+    },
+    {
+      "annotations": [
+        {
+          "doc": "Test the off-chain metadata fetcher. With no type keyword, pass a pool URL\nand an optional hexadecimal metadata hash. Governance types are @drep@,\n@ga@, @vote@, @committee_dereg@, @const@ and @other@. Add @url@ to fetch a\ngovernance anchor over the network; without it the argument is a local file.\nThis tool supplies no IPFS gateway, so rewrite an @ipfs://@ URL through a\ngateway before using network mode. Local-file mode prints validation details,\nincluding the computed hash and an @Is valid JSON@ result.",
+          "kind": "function",
+          "line": 37,
+          "name": "main",
+          "position": "before"
+        }
+      ],
+      "header": null,
+      "module": null,
+      "path": "cardano-db-sync/app/http-get-json-metadata.hs"
+    },
+    {
+      "annotations": [
+        {
+          "doc": "Check stored pool metadata references in the database selected by\n@PGPASSFILE@. The tool refetches references and reports grouped errors such as\nhash mismatches, timeouts and invalid content types; it does not check vote\nmetadata.",
+          "kind": "function",
+          "line": 35,
+          "name": "main",
+          "position": "before"
+        }
+      ],
+      "cpp": true,
+      "header": null,
+      "module": null,
+      "path": "cardano-db-sync/app/test-http-get-json-metadata.hs"
+    },
+    {
+      "annotations": [
+        {
           "constructors": [
             {
               "doc": "",
@@ -65,6 +201,266 @@
           "constructors": [
             {
               "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "sicPreset"
+                },
+                {
+                  "doc": "",
+                  "name": "sicOptions"
+                }
+              ],
+              "name": "SyncInsertConfig"
+            }
+          ],
+          "doc": "The optional @insert_options.preset@ selects base settings: @full@, @only_utxo@, @only_governance@,\nor @disable_all@. Explicit sibling options override the selected preset. Without a preset the\nstandard defaults apply.",
+          "kind": "data",
+          "line": 180,
+          "name": "SyncInsertConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "FullInsertPreset"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "OnlyUTxOInsertPreset"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "OnlyGovInsertPreset"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "DisableAllInsertPreset"
+            }
+          ],
+          "doc": "Preset choices are @full@, @only_utxo@, @only_governance@ and @disable_all@. These establish base\ninsert options; individual keys may override them.\n\nThe full preset enables pool statistics but leaves transaction CBOR and both off-chain fetchers\ndisabled. The only_utxo preset uses bootstrap outputs and ignores ledger data; only_governance\nretains governance with ledger enabled; disable_all disables the optional insertion categories.",
+          "kind": "data",
+          "line": 192,
+          "name": "SyncInsertPreset",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "sioTxCBOR"
+                },
+                {
+                  "doc": "",
+                  "name": "sioTxOut"
+                },
+                {
+                  "doc": "",
+                  "name": "sioLedger"
+                },
+                {
+                  "doc": "",
+                  "name": "sioShelley"
+                },
+                {
+                  "doc": "",
+                  "name": "sioRewards"
+                },
+                {
+                  "doc": "",
+                  "name": "sioMultiAsset"
+                },
+                {
+                  "doc": "",
+                  "name": "sioMetadata"
+                },
+                {
+                  "doc": "",
+                  "name": "sioPlutus"
+                },
+                {
+                  "doc": "",
+                  "name": "sioGovernance"
+                },
+                {
+                  "doc": "",
+                  "name": "sioOffchainPoolData"
+                },
+                {
+                  "doc": "",
+                  "name": "sioOffchainVoteData"
+                },
+                {
+                  "doc": "",
+                  "name": "sioPoolStats"
+                },
+                {
+                  "doc": "",
+                  "name": "sioJsonType"
+                },
+                {
+                  "doc": "",
+                  "name": "sioRemoveJsonbFromSchema"
+                },
+                {
+                  "doc": "",
+                  "name": "sioEpoch"
+                },
+                {
+                  "doc": "",
+                  "name": "sioStopAtBlock"
+                }
+              ],
+              "name": "SyncInsertOptions"
+            }
+          ],
+          "doc": "The @insert_options@ object controls which chain data db-sync inserts. Optional @stop_at_block@\nstops after the specified block number; absent means no configured stop. Individual settings\noverride a selected preset.",
+          "kind": "data",
+          "line": 202,
+          "name": "SyncInsertOptions",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "isTxCBOREnabled"
+                }
+              ],
+              "name": "TxCBORConfig"
+            }
+          ],
+          "doc": "@tx_cbor@ accepts @enable@ or @disable@ to control collection of transaction CBOR; the default is\n@disable@.",
+          "kind": "newtype",
+          "line": 224,
+          "name": "TxCBORConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "isPoolStatsEnabled"
+                }
+              ],
+              "name": "PoolStatsConfig"
+            }
+          ],
+          "doc": "@pool_stat@ accepts @enable@ or @disable@ to control pool statistics. It defaults to @disable@\nwithout a preset and is enabled by the @full@ preset.",
+          "kind": "newtype",
+          "line": 231,
+          "name": "PoolStatsConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "isEpochDisabled"
+                }
+              ],
+              "name": "EpochConfig"
+            }
+          ],
+          "doc": "@disable_epoch@ defaults to false. When true, the public @epoch@ view and @epoch_current@ view\nreturn no rows; @epoch_finalized@ contains finalized aggregates. Epoch views are also disabled\nduring bootstrap or when transaction output insertion is disabled, even if this flag is false.",
+          "kind": "newtype",
+          "line": 239,
+          "name": "EpochConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "TxOutEnable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "TxOutDisable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "TxOutConsumed"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "TxOutConsumedPrune"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "TxOutConsumedBootstrap"
+            }
+          ],
+          "doc": "@tx_out.value@ is required when the object is supplied. @enable@ stores inputs and outputs;\n@disable@ leaves them empty; @consumed@ tracks consuming transactions; @prune@ removes consumed\noutputs; @bootstrap@ defers UTxO insertion until near tip using the ledger. The optional\n@force_tx_in@ and @use_address_table@ booleans default to false. Changing from prune or consumed\nmodes requires care on subsequent runs.\n\nWith disable, tx_in, tx_out and ma_tx_out remain empty; tx.fee may be zero and redeemer.script_hash\nnull. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap\nrequires in-memory ledger state; it supports Babbage, Conway and Dijkstra. The LSM backend is not supported.\nIt loads the UTxO in bulk and leaves tx.fee and redeemer.script_hash incomplete during bootstrap.\nOnce used, consumed mode must remain enabled on subsequent runs unless switching to pruning.\nOnce used, pruning must remain enabled on subsequent runs; dropping it is rejected and can cause\nfailures. Bootstrap must remain selected until the UTxO migration completes. After completion,\nbootstrap can be changed, but the database's consumed/pruning requirements still apply.",
+          "kind": "data",
+          "line": 259,
+          "name": "TxOutConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "unForceTxIn"
+                }
+              ],
+              "name": "ForceTxIn"
+            }
+          ],
+          "doc": "@tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is\nignored for @enable@ and @disable@. Once input/output insertion is active, setting it to true\npopulates @tx_in@ in consumed, prune and bootstrap modes, which otherwise omit transaction\ninputs. It does not override the disabled insertion phase before bootstrap's UTxO migration.",
+          "kind": "newtype",
+          "line": 271,
+          "name": "ForceTxIn",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "unUseTxOutAddress"
+                }
+              ],
+              "name": "UseTxOutAddress"
+            }
+          ],
+          "doc": "@tx_out.use_address_table@ defaults to false. When enabled, address details live in a separate\n@address@ table referenced by outputs. This schema variant requires an empty database.\n\nThe normalized address table stores address, raw bytes, script flag, payment credential and stake\naddress. Both tx_out and collateral_tx_out then refer to address_id; the variant has payment\ncredential and raw-address indexes. Once selected, this schema variant cannot be reverted on\nthe same database; keep @use_address_table@ enabled on subsequent runs.",
+          "kind": "newtype",
+          "line": 282,
+          "name": "UseTxOutAddress",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
               "fields": [],
               "name": "LedgerBackendInMemory"
             },
@@ -74,16 +470,332 @@
               "name": "LedgerBackendLSM"
             }
           ],
-          "doc": "Choose the backend for storing ledger tables (UTxO set).\n'LedgerBackendInMemory' keeps everything in RAM (current default).\n'LedgerBackendLSM' uses LSM trees on disk for lower memory usage.",
+          "doc": "Choose the backend for storing ledger tables (UTxO set).\n'LedgerBackendInMemory' keeps everything in RAM (current default).\n'LedgerBackendLSM' uses LSM trees on disk for lower memory usage.\nThe top-level @ledger_backend@ selects @inmemory@ (default) or @lsm@. The former keeps the UTxO set\nin RAM; the latter uses disk-backed LSM trees.",
           "kind": "data",
-          "line": 245,
+          "line": 291,
           "name": "LedgerBackend",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "LedgerEnable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "LedgerDisable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "LedgerIgnore"
+            }
+          ],
+          "doc": "@ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable\ndoes not maintain one; ignore maintains it for UTxO loading but does not use its other data.\n\nWith disable or ignore, new ledger-derived @reward@, @epoch_stake@, @ada_pots@, @epoch_param@ and\n@drep_distr@ data are unavailable. @redeemer.fee@ is null; stake-registration and pool-update\ndeposits and ledger-derived governance epochs may be absent. @tx.deposit@ can be computed from resolved inputs,\noutputs, withdrawals, fees and treasury donations even without ledger data; it is null when the\nrequired values cannot be resolved, rather than always null in these modes.\n\nStarting with either disable or ignore irreversibly clears existing @reward@, @epoch_stake@,\n@ada_pots@ and @epoch_param@ rows and redeemer fees through the no-ledger migration. Do not change\nledger mode casually on an existing database. A supplied @--state-dir@ with ledger disabled\nproduces a warning, not an error; disable does not maintain ledger snapshots, while ignore does.",
+          "kind": "data",
+          "line": 315,
+          "name": "LedgerInsertConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "ShelleyEnable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "ShelleyDisable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "ShelleyStakeAddrs"
+            }
+          ],
+          "doc": "@shelley.enable@ controls transaction-era stake/pool certificates, withdrawals and parameter\nproposals, not epoch stake or rewards. Genesis-era stake and pool registrations are still inserted.\nGovernance certificates and vote delegations use the separate @governance@ option.\nThe non-empty @stake_addresses@ list is parsed but not enforced by the current insertion pipeline;\nwith @enable = true@ it does not restrict addresses. Do not treat it as a filter.",
+          "kind": "data",
+          "line": 326,
+          "name": "ShelleyInsertConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MultiAssetEnable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MultiAssetDisable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MultiAssetPolicies"
+            }
+          ],
+          "doc": "@multi_asset.enable@ controls multi-asset entries. The optional non-empty @policies@ list is\nparsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is\nnot restricted to these policy hashes. Do not rely on it for selective ingestion.",
+          "kind": "data",
+          "line": 339,
+          "name": "MultiAssetConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MetadataEnable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MetadataDisable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MetadataKeys"
+            }
+          ],
+          "doc": "@metadata.enable@ controls transaction metadata. An optional non-empty @keys@ list restricts enabled\ninsertion to those integer metadata keys.",
+          "kind": "data",
+          "line": 347,
+          "name": "MetadataConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "PlutusEnable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "PlutusDisable"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "PlutusScripts"
+            }
+          ],
+          "doc": "@plutus.enable@ controls Plutus and script data. The optional non-empty @script_hashes@ list is\nparsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is\nnot restricted to these script hashes. Do not rely on it for selective ingestion.",
+          "kind": "data",
+          "line": 356,
+          "name": "PlutusConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "isGovernanceEnabled"
+                }
+              ],
+              "name": "GovernanceConfig"
+            }
+          ],
+          "doc": "@governance@ accepts @enable@ or @disable@ for governance data; off-chain vote metadata has its own\nindependent setting.",
+          "kind": "newtype",
+          "line": 364,
+          "name": "GovernanceConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "isOffchainPoolDataEnabled"
+                }
+              ],
+              "name": "OffchainPoolDataConfig"
+            }
+          ],
+          "doc": "@offchain_pool_data@ accepts @enable@ or @disable@ for fetching stake-pool metadata and defaults to\n@disable@. Fetch restrictions and the testing-only private-URL flag also apply.\n\nPool metadata includes the registered name, ticker, homepage and description. Fetches are subject to\nnetwork-address restrictions; the private-URL switch is intended only for local-cluster tests.",
+          "kind": "newtype",
+          "line": 374,
+          "name": "OffchainPoolDataConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "isOffchainVoteDataEnabled"
+                }
+              ],
+              "name": "OffchainVoteDataConfig"
+            }
+          ],
+          "doc": "@offchain_vote_data@ accepts @enable@ or @disable@ for governance-anchor metadata and defaults to\n@disable@. It is independent of the @governance@ option.\n\nGovernance anchors include DRep registrations (CIP-119), governance action proposals (CIP-108), and\nvote metadata (CIP-100). Prior releases coupled fetching to the governance option.",
+          "kind": "newtype",
+          "line": 384,
+          "name": "OffchainVoteDataConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "isRemoveJsonbFromSchemaEnabled"
+                }
+              ],
+              "name": "RemoveJsonbFromSchemaConfig"
+            }
+          ],
+          "doc": "@remove_jsonb_from_schema@ accepts @enable@ or @disable@. Enabling removes JSONB types from\nsupported schema columns to improve insertion performance; changing an existing schema requires\ncare. Disabling this option or removing it converts the affected columns back to JSONB on startup;\neither conversion can take time.\n\nAffected JSONB columns include tx_metadata.json, script.json, datum.value, redeemer_data.value,\ncost_model.costs, gov_action_proposal.description, off_chain_pool_data.json and\noff_chain_vote_data.json.",
+          "kind": "newtype",
+          "line": 397,
+          "name": "RemoveJsonbFromSchemaConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "JsonTypeText"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "JsonTypeJsonb"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "JsonTypeDisable"
+            }
+          ],
+          "doc": "@json_type@ accepts @text@, @jsonb@ or @disable@; the default is @text@. It is parsed and serialized\nbut not consumed by the current runtime option builder. It does not select storage types or\ndisable JSON insertion; @remove_jsonb_from_schema@ controls the schema conversion.",
+          "kind": "data",
+          "line": 410,
+          "name": "JsonTypeConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "sicNearTipEpoch"
+                }
+              ],
+              "name": "SnapshotIntervalConfig"
+            }
+          ],
+          "doc": "The top-level @snapshot_interval.near_tip_epoch@ threshold defaults to 580. Snapshot frequency\nchanges when syncing near the tip; earlier syncing uses less frequent snapshots.\n\nAt an epoch boundary above zero, snapshots are taken every epoch at or above this threshold,\neven while lagging. Below it, snapshots occur on multiples of ten epochs, or on every epoch when\nthe database is consistent and the chain time is within ten days of current time.",
+          "kind": "newtype",
+          "line": 422,
+          "name": "SnapshotIntervalConfig",
           "position": "before"
         }
       ],
       "header": null,
       "module": "Cardano.DbSync.Config.Types",
       "path": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
+    },
+    {
+      "annotations": [
+        {
+          "doc": "Start an immediately eligible metadata fetch. Pool registrations create @pool_metadata_ref@\nentries; the fetch queue selects new or previously failed references. Successful pool fetches are\nstored in @off_chain_pool_data@; failures go to @off_chain_pool_fetch_error@ for a later retry.",
+          "kind": "function",
+          "line": 15,
+          "name": "newRetry",
+          "position": "before"
+        },
+        {
+          "doc": "Schedule a retry after a failed off-chain metadata fetch. The first retry delay is 150 seconds;\ndelays increase with the retry count and reach 24 hours at count five.",
+          "kind": "function",
+          "line": 25,
+          "name": "retryAgain",
+          "position": "before"
+        }
+      ],
+      "header": null,
+      "module": "Cardano.DbSync.OffChain.FetchQueue",
+      "path": "cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs"
+    },
+    {
+      "annotations": [
+        {
+          "doc": "Fetch and decode pool metadata. Responses are limited to 512 bytes; when an expected hash is\nsupplied, the blake2b-256 hash must match. The result stores the original bytes and JSON\nrepresentation.",
+          "kind": "function",
+          "line": 55,
+          "name": "httpGetOffChainPoolData",
+          "position": "before"
+        },
+        {
+          "doc": "Fetch governance-anchor metadata, validating its hash when supplied. An @ipfs://@ URL is resolved\nthrough configured gateway prefixes; an empty gateway list cannot resolve it. The db-sync config\ndefault is @https://ipfs.io/ipfs@.",
+          "kind": "function",
+          "line": 92,
+          "name": "httpGetOffChainVoteData",
+          "position": "before"
+        },
+        {
+          "doc": "Fetch bytes from a successful HTTP response subject to a size limit. A missing content-type is\naccepted. Headers containing @application/json@, @application/ld+json@, @text/plain@,\n@application/octet-stream@, @binary/octet-stream@ or @application/binary@ are accepted.\n@text/html@ is accepted only when the first non-whitespace character is an opening brace. Other\ncontent types are rejected.",
+          "kind": "function",
+          "line": 170,
+          "name": "httpGetBytes",
+          "position": "before"
+        },
+        {
+          "doc": "Is the provided ByteSring possibly JSON object?\nIgnoring any leading whitespace, if the ByteString starts with a '{` character it might possibly\nbe a JSON object. We are are really only interested in differentiating between JSON and HTML\n(where the first non-whitespace character will be '<'.",
+          "kind": "function",
+          "line": 227,
+          "name": "isPossiblyJsonObject",
+          "position": "before"
+        },
+        {
+          "doc": "Accept HTTP or HTTPS GET URLs. Private, loopback and link-local address restrictions are applied by\nthe restricted manager unless the testing-only private-URL flag is enabled.",
+          "kind": "function",
+          "line": 239,
+          "name": "parseOffChainUrl",
+          "position": "before"
+        },
+        {
+          "doc": "Create the off-chain HTTP manager. When 'allowPrivate' is 'False' (the\ndefault), connections to private, loopback, and link-local IP addresses are\nblocked at connect time via 'offchainRestriction'. The restriction is checked\non the resolved IP, so it applies to redirects and prevents DNS rebinding\nattacks. When 'allowPrivate' is 'True' the restriction is replaced with a\nno-op that allows every address — this is intended for local-cluster testing\nonly and is wired in from the @--allow-private-offchain-urls@ CLI flag.",
+          "kind": "function",
+          "line": 312,
+          "name": "newRestrictedManager",
+          "position": "before"
+        },
+        {
+          "doc": "A 'Restriction' that allows every resolved address. Selected by\n'newRestrictedManager' when @--allow-private-offchain-urls@ is set.",
+          "kind": "function",
+          "line": 326,
+          "name": "permissiveRestriction",
+          "position": "before"
+        }
+      ],
+      "header": null,
+      "module": "Cardano.DbSync.OffChain.Http",
+      "path": "cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs"
     },
     {
       "annotations": [],
@@ -585,47 +1297,122 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The hash identifier of the block.",
+                  "name": "blockHash"
+                },
+                {
+                  "doc": "The epoch number.",
+                  "name": "blockEpochNo"
+                },
+                {
+                  "doc": "The slot number.",
+                  "name": "blockSlotNo"
+                },
+                {
+                  "doc": "The slot number within an epoch (resets to zero at the start of each epoch).",
+                  "name": "blockEpochSlotNo"
+                },
+                {
+                  "doc": "The block number.",
+                  "name": "blockBlockNo"
+                },
+                {
+                  "doc": "The Block table index of the previous block.",
+                  "name": "blockPreviousId"
+                },
+                {
+                  "doc": "The SlotLeader table index of the creator of this block.",
+                  "name": "blockSlotLeaderId"
+                },
+                {
+                  "doc": "The block size (in bytes). Note, this size value is not expected to be the same as the sum of\nthe tx sizes due to the fact that txs being stored in segwit format and oddities in the CBOR\nencoding.",
+                  "name": "blockSize"
+                },
+                {
+                  "doc": "The block time (UTCTime).",
+                  "name": "blockTime"
+                },
+                {
+                  "doc": "The number of transactions in this block.",
+                  "name": "blockTxCount"
+                },
+                {
+                  "doc": "The block's major protocol number.",
+                  "name": "blockProtoMajor"
+                },
+                {
+                  "doc": "The block's minor protocol number.",
+                  "name": "blockProtoMinor"
+                },
+                {
+                  "doc": "The VRF key of the creator of this block.",
+                  "name": "blockVrfKey"
+                },
+                {
+                  "doc": "The raw KES hot verification key from the block producer's operational certificate.",
+                  "name": "blockOpCert"
+                },
+                {
+                  "doc": "The value of the counter used to produce the operational certificate.",
+                  "name": "blockOpCertCounter"
+                }
+              ],
+              "name": "Block"
+            }
+          ],
+          "doc": "Schema reference for @block@:\nA table for blocks on the chain.",
+          "kind": "data",
+          "line": 64,
+          "name": "Block",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The hash identifier of the transaction.",
                   "name": "txHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Block table index of the block that contains this transaction.",
                   "name": "txBlockId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this transaction with the block (zero based).",
                   "name": "txBlockIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The sum of the transaction outputs (in Lovelace).",
                   "name": "txOutSum"
                 },
                 {
-                  "doc": "",
+                  "doc": "The fees paid for this transaction.",
                   "name": "txFee"
                 },
                 {
-                  "doc": "",
+                  "doc": "Deposit (or deposit refund) in this transaction. Deposits are positive, refunds negative.",
                   "name": "txDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "The size of the transaction in bytes.",
                   "name": "txSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "Transaction in invalid before this slot number.",
                   "name": "txInvalidBefore"
                 },
                 {
-                  "doc": "",
+                  "doc": "Transaction in invalid at or after this slot number.",
                   "name": "txInvalidHereafter"
                 },
                 {
-                  "doc": "",
+                  "doc": "False if the contract is invalid. True if the contract is valid or there is no contract.",
                   "name": "txValidContract"
                 },
                 {
-                  "doc": "",
+                  "doc": "The sum of the script sizes (in bytes) of scripts in the transaction.",
                   "name": "txScriptSize"
                 },
                 {
@@ -636,19 +1423,487 @@
               "name": "Tx"
             }
           ],
-          "doc": "Table Name: tx\nDescription: Contains data related to transactions, such as transaction ID, inputs, outputs, and metadata",
+          "doc": "Schema reference for @tx@:\nA table for transactions within a block on the chain.",
           "kind": "data",
-          "line": 135,
+          "line": 167,
           "name": "Tx",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The metadata key (a Word64/unsigned 64 bit number).",
+                  "name": "txMetadataKey"
+                },
+                {
+                  "doc": "The JSON payload if it can be decoded as JSON.",
+                  "name": "txMetadataJson"
+                },
+                {
+                  "doc": "The raw bytes of the payload.",
+                  "name": "txMetadataBytes"
+                },
+                {
+                  "doc": "The Tx table index of the transaction where this metadata was included.",
+                  "name": "txMetadataTxId"
+                }
+              ],
+              "name": "TxMetadata"
+            }
+          ],
+          "doc": "Schema reference for @tx_metadata@:\nA table for metadata attached to a transaction.",
+          "kind": "data",
+          "line": 255,
+          "name": "TxMetadata",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Tx table index of the transaction that contains this transaction input.",
+                  "name": "txInTxInId"
+                },
+                {
+                  "doc": "The Tx table index of the transaction that contains the referenced transaction output.",
+                  "name": "txInTxOutId"
+                },
+                {
+                  "doc": "The index within the transaction outputs.",
+                  "name": "txInTxOutIndex"
+                },
+                {
+                  "doc": "The Redeemer table index which is used to validate this input.",
+                  "name": "txInRedeemerId"
+                }
+              ],
+              "name": "TxIn"
+            }
+          ],
+          "doc": "Schema reference for @tx_in@:\nA table for transaction inputs.",
+          "kind": "data",
+          "line": 297,
+          "name": "TxIn",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Tx table index of the transaction that contains this transaction input",
+                  "name": "collateralTxInTxInId"
+                },
+                {
+                  "doc": "The Tx table index of the transaction that contains the referenced transaction output.",
+                  "name": "collateralTxInTxOutId"
+                },
+                {
+                  "doc": "The index within the transaction outputs.",
+                  "name": "collateralTxInTxOutIndex"
+                }
+              ],
+              "name": "CollateralTxIn"
+            }
+          ],
+          "doc": "Schema reference for @collateral_tx_in@:\nA table for transaction collateral inputs.",
+          "kind": "data",
+          "line": 367,
+          "name": "CollateralTxIn",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Tx table index of the transaction that contains this transaction input",
+                  "name": "referenceTxInTxInId"
+                },
+                {
+                  "doc": "The Tx table index of the transaction that contains the referenced output.",
+                  "name": "referenceTxInTxOutId"
+                },
+                {
+                  "doc": "The index within the transaction outputs.",
+                  "name": "referenceTxInTxOutIndex"
+                }
+              ],
+              "name": "ReferenceTxIn"
+            }
+          ],
+          "doc": "Schema reference for @reference_tx_in@:\nA table for reference transaction inputs. New in v13.",
+          "kind": "data",
+          "line": 398,
+          "name": "ReferenceTxIn",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Block table index related with these indexes",
+                  "name": "reverseIndexBlockId"
+                },
+                {
+                  "doc": "The Reverse indexes associated with this block, as Text separated by :",
+                  "name": "reverseIndexMinIds"
+                }
+              ],
+              "name": "ReverseIndex"
+            }
+          ],
+          "doc": "Schema reference for @reverse_index@:\nA table for reverse indexes for the minimum input output and multi asset output related with this\nblock. New in v13.1",
+          "kind": "data",
+          "line": 430,
+          "name": "ReverseIndex",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Tx table index of the transaction encoded in this table.",
+                  "name": "txCborTxId"
+                },
+                {
+                  "doc": "CBOR encoded transaction.",
+                  "name": "txCborBytes"
+                }
+              ],
+              "name": "TxCbor"
+            }
+          ],
+          "doc": "Schema reference for @tx_cbor@:\nA table holding raw CBOR encoded transactions.",
+          "kind": "data",
+          "line": 464,
+          "name": "TxCbor",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Hash of the Datum",
+                  "name": "datumHash"
+                },
+                {
+                  "doc": "The Tx table index for the transaction where this datum first became available.",
+                  "name": "datumTxId"
+                },
+                {
+                  "doc": "The actual data in JSON format (detailed schema)",
+                  "name": "datumValue"
+                },
+                {
+                  "doc": "The actual data in CBOR format",
+                  "name": "datumBytes"
+                }
+              ],
+              "name": "Datum"
+            }
+          ],
+          "doc": "Schema reference for @datum@:\nA table containing Plutus Datum, found in witnesses or inlined in outputs",
+          "kind": "data",
+          "line": 491,
+          "name": "Datum",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Tx table index for the transaction where this script first became available.",
+                  "name": "scriptTxId"
+                },
+                {
+                  "doc": "The Hash of the Script.",
+                  "name": "scriptHash"
+                },
+                {
+                  "doc": "The schema type: @multisig@, @timelock@, @plutusV1@, @plutusV2@ or @plutusV3@. The Haskell\ntype also defines @plutusV4@, which is not yet in the SQL enum.",
+                  "name": "scriptType"
+                },
+                {
+                  "doc": "JSON representation of native multisig or timelock scripts where supplied by the era converter;\nnull for Plutus and Dijkstra scripts, or when JSON decoding fails.",
+                  "name": "scriptJson"
+                },
+                {
+                  "doc": "CBOR script bytes when supplied by the era converter, including Plutus and Dijkstra native\nscripts. Earlier native scripts have no stored CBOR bytes.",
+                  "name": "scriptBytes"
+                },
+                {
+                  "doc": "The size of the CBOR serialised script, if it is a Plutus script.",
+                  "name": "scriptSerialisedSize"
+                }
+              ],
+              "name": "Script"
+            }
+          ],
+          "doc": "Schema reference for @script@:\nA table containing scripts available, found in witnesses, inlined in outputs (reference outputs) or\nauxdata of transactions.",
+          "kind": "data",
+          "line": 529,
+          "name": "Script",
           "position": "before"
         },
         {
           "doc": "enormous* amount a memory which would cost a fortune.",
           "kind": "section",
-          "line": 446,
+          "line": 580,
           "name": "",
           "position": "section",
           "sectionLevel": 1
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Tx table index that contains this redeemer.",
+                  "name": "redeemerTxId"
+                },
+                {
+                  "doc": "The budget in Memory to run a script.",
+                  "name": "redeemerUnitMem"
+                },
+                {
+                  "doc": "The budget in Cpu steps to run a script.",
+                  "name": "redeemerUnitSteps"
+                },
+                {
+                  "doc": "The budget in fees to run a script. The fees depend on the ExUnits and the current prices. Is\nnull when ledger is disabled. New in v13: became nullable.",
+                  "name": "redeemerFee"
+                },
+                {
+                  "doc": "The SQL script purpose: @spend@, @mint@, @cert@, @reward@, @vote@ or @propose@.",
+                  "name": "redeemerPurpose"
+                },
+                {
+                  "doc": "The index of the redeemer pointer in the transaction.",
+                  "name": "redeemerIndex"
+                },
+                {
+                  "doc": "The script hash this redeemer is used for.",
+                  "name": "redeemerScriptHash"
+                },
+                {
+                  "doc": "The data related to this redeemer. New in v13: renamed from datum_id.",
+                  "name": "redeemerRedeemerDataId"
+                }
+              ],
+              "name": "Redeemer"
+            }
+          ],
+          "doc": "Schema reference for @redeemer@:\nA table containing redeemers. Redeemers supply data and execution budgets for Plutus script validation.",
+          "kind": "data",
+          "line": 584,
+          "name": "Redeemer",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The Hash of the Plutus Data",
+                  "name": "redeemerDataHash"
+                },
+                {
+                  "doc": "The Tx table index for the transaction where this redeemer data first became available.",
+                  "name": "redeemerDataTxId"
+                },
+                {
+                  "doc": "The actual data in JSON format (detailed schema)",
+                  "name": "redeemerDataValue"
+                },
+                {
+                  "doc": "The actual data in CBOR format",
+                  "name": "redeemerDataBytes"
+                }
+              ],
+              "name": "RedeemerData"
+            }
+          ],
+          "doc": "Schema reference for @redeemer_data@:\nA table containing Plutus Redeemer Data. These are always referenced by at least one redeemer. New\nin v13: split from datum table.",
+          "kind": "data",
+          "line": 639,
+          "name": "RedeemerData",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The hash of the witness.",
+                  "name": "extraKeyWitnessHash"
+                },
+                {
+                  "doc": "The id of the tx this witness belongs to.",
+                  "name": "extraKeyWitnessTxId"
+                }
+              ],
+              "name": "ExtraKeyWitness"
+            }
+          ],
+          "doc": "Schema reference for @extra_key_witness@:\nA table containing transaction extra key witness hashes.",
+          "kind": "data",
+          "line": 676,
+          "name": "ExtraKeyWitness",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The hash of of the block producer identifier.",
+                  "name": "slotLeaderHash"
+                },
+                {
+                  "doc": "If the slot leader is a pool, an index into the @PoolHash@ table.",
+                  "name": "slotLeaderPoolHashId"
+                },
+                {
+                  "doc": "An auto-generated description of the slot leader.",
+                  "name": "slotLeaderDescription"
+                }
+              ],
+              "name": "SlotLeader"
+            }
+          ],
+          "doc": "Schema reference for @slot_leader@:\nEvery unique slot leader (ie an entity that mines a block). It could be a pool or a leader defined\nin genesis.",
+          "kind": "data",
+          "line": 704,
+          "name": "SlotLeader",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "Set up PostgreSQL data types (using SQL 'DOMAIN' statements).",
+                  "name": "schemaVersionStageOne"
+                },
+                {
+                  "doc": "Apply ordered stage-two schema migrations.",
+                  "name": "schemaVersionStageTwo"
+                },
+                {
+                  "doc": "Set up database views, indices etc.",
+                  "name": "schemaVersionStageThree"
+                }
+              ],
+              "name": "SchemaVersion"
+            }
+          ],
+          "doc": "Schema reference for @schema_version@:\nThe version of the database schema. Schema versioning is split into three stages as detailed below.\nThis table should only ever have a single row.",
+          "kind": "data",
+          "line": 747,
+          "name": "SchemaVersion",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The start time of the network.",
+                  "name": "metaStartTime"
+                },
+                {
+                  "doc": "The network name.",
+                  "name": "metaNetworkName"
+                },
+                {
+                  "doc": "",
+                  "name": "metaVersion"
+                }
+              ],
+              "name": "Meta"
+            }
+          ],
+          "doc": "Schema reference for @meta@:\nA table containing metadata about the chain. There will probably only ever be one row in this table.",
+          "kind": "data",
+          "line": 774,
+          "name": "Meta",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "The StakeAddress table index for the stake address for which the withdrawal is for.",
+                  "name": "withdrawalAddrId"
+                },
+                {
+                  "doc": "The withdrawal amount (in Lovelace).",
+                  "name": "withdrawalAmount"
+                },
+                {
+                  "doc": "The Redeemer table index that is related with this withdrawal.",
+                  "name": "withdrawalRedeemerId"
+                },
+                {
+                  "doc": "The Tx table index for the transaction that contains this withdrawal.",
+                  "name": "withdrawalTxId"
+                }
+              ],
+              "name": "Withdrawal"
+            }
+          ],
+          "doc": "Schema reference for @withdrawal@:\nA table for withdrawals from a reward account.",
+          "kind": "data",
+          "line": 816,
+          "name": "Withdrawal",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "extraMigrationsToken"
+                },
+                {
+                  "doc": "A description of the migration",
+                  "name": "extraMigrationsDescription"
+                }
+              ],
+              "name": "ExtraMigrations"
+            }
+          ],
+          "doc": "Schema reference for @extra_migrations@:\nExtra optional migrations. New in 13.2.",
+          "kind": "data",
+          "line": 861,
+          "name": "ExtraMigrations",
+          "position": "before"
         }
       ],
       "header": null,
@@ -663,40 +1918,40 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The sum of the transaction output values (in Lovelace) in this epoch.",
                   "name": "epochOutSum"
                 },
                 {
-                  "doc": "",
+                  "doc": "The sum of the fees (in Lovelace) in this epoch.",
                   "name": "epochFees"
                 },
                 {
-                  "doc": "",
+                  "doc": "The number of transactions in this epoch.",
                   "name": "epochTxCount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The number of blocks in this epoch.",
                   "name": "epochBlkCount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch number.",
                   "name": "epochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch start time.",
                   "name": "epochStartTime"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch end time.",
                   "name": "epochEndTime"
                 }
               ],
               "name": "Epoch"
             }
           ],
-          "doc": "Table Name: epoch\nDescription: The Epoch table is an aggregation of data in the 'Block' table, but is kept in this form\n  because having it as a 'VIEW' is incredibly slow and inefficient.\n  The 'outsum' type in the PostgreSQL world is 'bigint >= 0' so it will error out if an\n  overflow (sum of tx outputs in an epoch) is detected. 'maxBound :: !Int` is big enough to\n  hold 204 times the total Lovelace distribution. The chance of that much being transacted\n  in a single epoch is relatively low.",
+          "doc": "Schema reference for @epoch@:\nA view aggregating data within an epoch. As of schema stage-two v49 (migration-2-0049) @epoch@ is a\nview, not a table: the @UNION ALL@ of @epoch_finalized@ (materialised past epochs) and\n@epoch_current@ (the live, in-progress epoch). It returns rows only when epoch sync is enabled (see\n@epoch_sync_enabled@); otherwise it is empty.",
           "kind": "data",
-          "line": 57,
+          "line": 54,
           "name": "Epoch",
           "position": "before"
         },
@@ -706,211 +1961,211 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The first epoch for which these parameters are valid.",
                   "name": "epochParamEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The 'a' parameter to calculate the minimum transaction fee.",
                   "name": "epochParamMinFeeA"
                 },
                 {
-                  "doc": "",
+                  "doc": "The 'b' parameter to calculate the minimum transaction fee.",
                   "name": "epochParamMinFeeB"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum block size (in bytes).",
                   "name": "epochParamMaxBlockSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum transaction size (in bytes).",
                   "name": "epochParamMaxTxSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum block header size (in bytes).",
                   "name": "epochParamMaxBhSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) require for a deposit to register a StakeAddress.",
                   "name": "epochParamKeyDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) require for a deposit to register a stake pool.",
                   "name": "epochParamPoolDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of epochs in the future that a pool retirement is allowed to be scheduled\nfor.",
                   "name": "epochParamMaxEpoch"
                 },
                 {
-                  "doc": "",
+                  "doc": "The optimal number of stake pools.",
                   "name": "epochParamOptimalPoolCount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The influence of the pledge on a stake pool's probability on minting a block.",
                   "name": "epochParamInfluence"
                 },
                 {
-                  "doc": "",
+                  "doc": "The monetary expansion rate.",
                   "name": "epochParamMonetaryExpandRate"
                 },
                 {
-                  "doc": "",
+                  "doc": "The treasury growth rate.",
                   "name": "epochParamTreasuryGrowthRate"
                 },
                 {
-                  "doc": "",
+                  "doc": "The decentralisation parameter (1 fully centralised, 0 fully decentralised).",
                   "name": "epochParamDecentralisation"
                 },
                 {
-                  "doc": "",
+                  "doc": "The protocol major number.",
                   "name": "epochParamProtocolMajor"
                 },
                 {
-                  "doc": "",
+                  "doc": "The protocol minor number.",
                   "name": "epochParamProtocolMinor"
                 },
                 {
-                  "doc": "",
+                  "doc": "The minimum value of a UTxO entry.",
                   "name": "epochParamMinUtxoValue"
                 },
                 {
-                  "doc": "",
+                  "doc": "The minimum pool cost.",
                   "name": "epochParamMinPoolCost"
                 },
                 {
-                  "doc": "",
+                  "doc": "The nonce value for this epoch.",
                   "name": "epochParamNonce"
                 },
                 {
-                  "doc": "",
+                  "doc": "The CostModel table index for the params.",
                   "name": "epochParamCostModelId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The per word cost of script memory usage.",
                   "name": "epochParamPriceMem"
                 },
                 {
-                  "doc": "",
+                  "doc": "The cost of script execution step usage.",
                   "name": "epochParamPriceStep"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution memory allowed to be used in a single transaction.",
                   "name": "epochParamMaxTxExMem"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution steps allowed to be used in a single transaction.",
                   "name": "epochParamMaxTxExSteps"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution memory allowed to be used in a single block.",
                   "name": "epochParamMaxBlockExMem"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution steps allowed to be used in a single block.",
                   "name": "epochParamMaxBlockExSteps"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum Val size.",
                   "name": "epochParamMaxValSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The percentage of the txfee which must be provided as collateral when including non-native\nscripts.",
                   "name": "epochParamCollateralPercent"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of collateral inputs allowed in a transaction.",
                   "name": "epochParamMaxCollateralInputs"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Block table index for the first block where these parameters are valid.",
                   "name": "epochParamBlockId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The 32 byte string of extra random-ness to be added into the protocol's entropy pool. New in\nv13: renamed from entopy.",
                   "name": "epochParamExtraEntropy"
                 },
                 {
-                  "doc": "",
+                  "doc": "For Alonzo this is the cost per UTxO word. For Babbage and later per UTxO byte. New in v13:\nRenamed from coins_per_utxo_word.",
                   "name": "epochParamCoinsPerUtxoSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for motion of no-confidence. New in 13.2-Conway.",
                   "name": "epochParamPvtMotionNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for new committee/threshold (normal state). New in 13.2-Conway.",
                   "name": "epochParamPvtCommitteeNormal"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.",
                   "name": "epochParamPvtCommitteeNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for hard-fork initiation. New in 13.2-Conway.",
                   "name": "epochParamPvtHardForkInitiation"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for motion of no-confidence. New in 13.2-Conway.",
                   "name": "epochParamDvtMotionNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for new committee/threshold (normal state). New in 13.2-Conway.",
                   "name": "epochParamDvtCommitteeNormal"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.",
                   "name": "epochParamDvtCommitteeNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for update to the Constitution. New in 13.2-Conway.",
                   "name": "epochParamDvtUpdateToConstitution"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for hard-fork initiation. New in 13.2-Conway.",
                   "name": "epochParamDvtHardForkInitiation"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, network group. New in 13.2-Conway.",
                   "name": "epochParamDvtPPNetworkGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, economic group. New in 13.2-Conway.",
                   "name": "epochParamDvtPPEconomicGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, technical group. New in 13.2-Conway.",
                   "name": "epochParamDvtPPTechnicalGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, governance group. New in 13.2-Conway.",
                   "name": "epochParamDvtPPGovGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for treasury withdrawal. New in 13.2-Conway.",
                   "name": "epochParamDvtTreasuryWithdrawal"
                 },
                 {
-                  "doc": "",
+                  "doc": "Minimal constitutional committee size. New in 13.2-Conway.",
                   "name": "epochParamCommitteeMinSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "Constitutional committee term limits. New in 13.2-Conway.",
                   "name": "epochParamCommitteeMaxTermLength"
                 },
                 {
-                  "doc": "",
+                  "doc": "Governance action expiration. New in 13.2-Conway.",
                   "name": "epochParamGovActionLifetime"
                 },
                 {
-                  "doc": "",
+                  "doc": "Governance action deposit. New in 13.2-Conway.",
                   "name": "epochParamGovActionDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep deposit amount. New in 13.2-Conway.",
                   "name": "epochParamDrepDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep activity period. New in 13.2-Conway.",
                   "name": "epochParamDrepActivity"
                 },
                 {
@@ -925,9 +2180,9 @@
               "name": "EpochParam"
             }
           ],
-          "doc": "Table Name: epochparam\nDescription: Stores parameters relevant to each epoch, such as the number of slots per epoch or the block size limit.",
+          "doc": "Schema reference for @epoch_param@:\nThe accepted protocol parameters for an epoch.",
           "kind": "data",
-          "line": 94,
+          "line": 104,
           "name": "EpochParam",
           "position": "before"
         },
@@ -937,28 +2192,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The reference to the current committee.",
                   "name": "epochStateCommitteeId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference to the enacted no-confidence governance proposal when the committee is absent; otherwise null.",
                   "name": "epochStateNoConfidenceId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference to the current constitution. Should never be null.",
                   "name": "epochStateConstitutionId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch in question (unique).",
                   "name": "epochStateEpochNo"
                 }
               ],
               "name": "EpochState"
             }
           ],
-          "doc": "Table Name: epochstate\nDescription: Contains the state of the blockchain at the end of each epoch, including the committee, constitution, and no-confidence votes.",
+          "doc": "Schema reference for @epoch_state@:\nTable with governance (and in the future other) stats per epoch.",
           "kind": "data",
-          "line": 284,
+          "line": 381,
           "name": "EpochState",
           "position": "before"
         },
@@ -968,24 +2223,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The epoch number for this sync time.",
                   "name": "epochSyncTimeNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The time (in seconds) recorded for syncing this epoch. This column is non-nullable.",
                   "name": "epochSyncTimeSeconds"
                 },
                 {
-                  "doc": "",
+                  "doc": "The sync state when the sync time is recorded (either 'lagging' or 'following').",
                   "name": "epochSyncTimeState"
                 }
               ],
               "name": "EpochSyncTime"
             }
           ],
-          "doc": "Table Name: epochsync_time\nDescription: Tracks synchronization times for epochs, ensuring nodes are in consensus regarding the current state.",
+          "doc": "Schema reference for @epoch_sync_time@:\nA table containing the time required to fully sync an epoch.",
           "kind": "data",
-          "line": 317,
+          "line": 421,
           "name": "EpochSyncTime",
           "position": "before"
         },
@@ -995,56 +2250,56 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The slot number where this AdaPots snapshot was taken.",
                   "name": "adaPotsSlotNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch number where this AdaPots snapshot was taken.",
                   "name": "adaPotsEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the treasury pot.",
                   "name": "adaPotsTreasury"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the reserves pot.",
                   "name": "adaPotsReserves"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the rewards pot.",
                   "name": "adaPotsRewards"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the UTxO set.",
                   "name": "adaPotsUtxo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the obligation pot coming from stake key and pool deposits. Renamed\nfrom deposits in 13.3.",
                   "name": "adaPotsDepositsStake"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the fee pot.",
                   "name": "adaPotsFees"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Block table index of the block for which this snapshot was taken.",
                   "name": "adaPotsBlockId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the obligation pot coming from drep registrations deposits. New in\n13.3.",
                   "name": "adaPotsDepositsDrep"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) in the obligation pot coming from governance proposal deposits. New in\n13.3.",
                   "name": "adaPotsDepositsProposal"
                 }
               ],
               "name": "AdaPots"
             }
           ],
-          "doc": "Table Name: ada_pots\nDescription: A table with all the different types of total balances.\n  This is only populated for the Shelley and later eras, and only on epoch boundaries.\n  The treasury and rewards fields will be correct for the whole epoch, but all other\n  fields change block by block.",
+          "doc": "Schema reference for @ada_pots@:\nA table with all the different types of total balances (Shelley and later eras, with ledger data). The treasury and rewards\nfields will be correct for the whole epoch, but all other fields change block by block.",
           "kind": "data",
-          "line": 345,
+          "line": 452,
           "name": "AdaPots",
           "position": "before"
         },
@@ -1054,28 +2309,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The index of this transfer certificate within the certificates of this transaction.",
                   "name": "potTransferCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) the treasury balance changes by.",
                   "name": "potTransferTreasury"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) the reserves balance changes by.",
                   "name": "potTransferReserves"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index for the transaction that contains this transfer.",
                   "name": "potTransferTxId"
                 }
               ],
               "name": "PotTransfer"
             }
           ],
-          "doc": "Table Name: pot_transfer\nDescription: Records transfers between different pots (e.g., from the rewards pot to the treasury pot).",
+          "doc": "Schema reference for @pot_transfer@:\nA table containing transfers between the reserves pot and the treasury pot.",
           "kind": "data",
-          "line": 405,
+          "line": 536,
           "name": "PotTransfer",
           "position": "before"
         },
@@ -1085,28 +2340,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address for this Treasury entry.",
                   "name": "treasuryAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this payment certificate within the certificates of this transaction.",
                   "name": "treasuryCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payment amount (in Lovelace).",
                   "name": "treasuryAmount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index for the transaction that contains this payment.",
                   "name": "treasuryTxId"
                 }
               ],
               "name": "Treasury"
             }
           ],
-          "doc": "Table Name: treasury\nDescription: Holds funds allocated to the treasury, which can be used for network upgrades or other community initiatives.",
+          "doc": "Schema reference for @treasury@:\nA table for payments from the treasury to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)\nif more than one payment was made to a stake address in a single epoch, only the last payment was\nkept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a\nsingle reward with type @treasury@.",
           "kind": "data",
-          "line": 430,
+          "line": 570,
           "name": "Treasury",
           "position": "before"
         },
@@ -1116,28 +2371,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address for this Treasury entry.",
                   "name": "reserveAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this payment certificate within the certificates of this transaction.",
                   "name": "reserveCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payment amount (in Lovelace).",
                   "name": "reserveAmount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index for the transaction that contains this payment.",
                   "name": "reserveTxId"
                 }
               ],
               "name": "Reserve"
             }
           ],
-          "doc": "Table Name: reserve\nDescription: Stores reserves set aside by the protocol to stabilize the cryptocurrency's value or fund future activities.",
+          "doc": "Schema reference for @reserve@:\nA table for payments from the reserves to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)\nif more than one payment was made to a stake address in a single epoch, only the last payment was\nkept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a\nsingle reward with type @reserves@",
           "kind": "data",
-          "line": 455,
+          "line": 604,
           "name": "Reserve",
           "position": "before"
         },
@@ -1147,20 +2402,20 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The actual costs formatted as json.",
                   "name": "costModelCosts"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash of cost model. It ensures uniqueness of entries. New in v13.",
                   "name": "costModelHash"
                 }
               ],
               "name": "CostModel"
             }
           ],
-          "doc": "Table Name: cost_model\nDescription: Defines the cost model used for estimating transaction fees, ensuring efficient resource allocation on the network.",
+          "doc": "Schema reference for @cost_model@:\nCostModel for EpochParam and ParamProposal.",
           "kind": "data",
-          "line": 480,
+          "line": 635,
           "name": "CostModel",
           "position": "before"
         }
@@ -1177,22 +2432,22 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The raw bytes of the DRep.",
                   "name": "drepHashRaw"
                 },
                 {
-                  "doc": "",
+                  "doc": "The human readable encoding of the Drep.",
                   "name": "drepHashView"
                 },
                 {
-                  "doc": "",
+                  "doc": "Flag which shows if this DRep credentials are a script hash",
                   "name": "drepHashHasScript"
                 }
               ],
               "name": "DrepHash"
             }
           ],
-          "doc": "Table Name: drep_hash\nDescription: Stores hashes of DRep (Decentralized Reputation) records, which are used in governance processes.",
+          "doc": "Schema reference for @drep_hash@:\nA table for every unique drep key hash. The existance of an entry doesn't mean the DRep is\nregistered. New in 13.2-Conway.",
           "kind": "data",
           "line": 49,
           "name": "DrepHash",
@@ -1204,19 +2459,19 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the tx that includes this certificate.",
                   "name": "drepRegistrationTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this registration within the certificates of this transaction.",
                   "name": "drepRegistrationCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The deposits payed if this is an initial registration.",
                   "name": "drepRegistrationDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Drep hash index of this registration.",
                   "name": "drepRegistrationDrepHashId"
                 },
                 {
@@ -1227,9 +2482,9 @@
               "name": "DrepRegistration"
             }
           ],
-          "doc": "Table Name: drep_registration\nDescription: Contains details about the registration of DReps, including their public keys and other identifying information.",
+          "doc": "Schema reference for @drep_registration@:\nA table for DRep registrations, deregistrations or updates. Registration have positive deposit\nvalues, deregistrations have negative and updates have null. Based on this distinction, for a\nspecific DRep, getting the latest entry gives its registration state. New in 13.2-Conway.",
           "kind": "data",
-          "line": 71,
+          "line": 76,
           "name": "DrepRegistration",
           "position": "before"
         },
@@ -1239,28 +2494,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The DrepHash table index that this distribution entry has information about.",
                   "name": "drepDistrHashId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The total amount of voting power this DRep is delegated.",
                   "name": "drepDistrAmount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch no this distribution is about.",
                   "name": "drepDistrEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch until which this drep is active.",
                   "name": "drepDistrActiveUntil"
                 }
               ],
               "name": "DrepDistr"
             }
           ],
-          "doc": "Table Name: drep_distr\nDescription: Contains information about the distribution of DRep tokens, including the amount distributed and the epoch in which the distribution occurred.",
+          "doc": "Schema reference for @drep_distr@:\nThe distribution of delegated voting power per DRep and epoch. Entries are aggregate amounts,\nnot individual delegations. New in 13.2-Conway.",
           "kind": "data",
-          "line": 96,
+          "line": 107,
           "name": "DrepDistr",
           "position": "before"
         },
@@ -1270,32 +2525,32 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address.",
                   "name": "delegationVoteAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this delegation within the certificates of this transaction.",
                   "name": "delegationVoteCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The DrepHash table index for the drep being delegated to.",
                   "name": "delegationVoteDrepHashId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that contained this delegation.",
                   "name": "delegationVoteTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Redeemer table index that is related with this certificate. TODO: can vote redeemers index\nthese delegations?",
                   "name": "delegationVoteRedeemerId"
                 }
               ],
               "name": "DelegationVote"
             }
           ],
-          "doc": "Table Name: delegation_vote\nDescription: Tracks votes cast by stakeholders to delegate their voting rights to other entities within the governance framework.",
+          "doc": "Schema reference for @delegation_vote@:\nA table containing delegations from a stake address to a drep. New in 13.2-Conway.",
           "kind": "data",
-          "line": 124,
+          "line": 141,
           "name": "DelegationVote",
           "position": "before"
         },
@@ -1305,68 +2560,68 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the tx that includes this certificate.",
                   "name": "govActionProposalTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this proposal procedure within its transaction.",
                   "name": "govActionProposalIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The previous related governance action proposal, if any.",
                   "name": "govActionProposalPrevGovActionProposal"
                 },
                 {
-                  "doc": "",
+                  "doc": "The deposit amount payed for this proposal.",
                   "name": "govActionProposalDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress index of the reward address to receive the deposit when it is repaid.",
                   "name": "govActionProposalReturnAddress"
                 },
                 {
-                  "doc": "",
+                  "doc": "Shows the epoch at which this governance action will expire.",
                   "name": "govActionProposalExpiration"
                 },
                 {
-                  "doc": "",
+                  "doc": "The VotingAnchor table index related to this proposal.",
                   "name": "govActionProposalVotingAnchorId"
                 },
                 {
-                  "doc": "",
+                  "doc": "Can be one of ParameterChange, HardForkInitiation, TreasuryWithdrawals, NoConfidence,\nNewCommittee, NewConstitution, InfoAction",
                   "name": "govActionProposalType"
                 },
                 {
-                  "doc": "",
+                  "doc": "The JSON encoding of the proposed governance action, not a free-form description.",
                   "name": "govActionProposalDescription"
                 },
                 {
-                  "doc": "",
+                  "doc": "If this is a param proposal action, this has the index of the param_proposal table.",
                   "name": "govActionProposalParamProposal"
                 },
                 {
-                  "doc": "",
+                  "doc": "If not null, then this proposal has been ratified at the specfied epoch.",
                   "name": "govActionProposalRatifiedEpoch"
                 },
                 {
-                  "doc": "",
+                  "doc": "If not null, then this proposal has been enacted at the specfied epoch.",
                   "name": "govActionProposalEnactedEpoch"
                 },
                 {
-                  "doc": "",
+                  "doc": "If not null, then this proposal has been dropped at the specfied epoch. A proposal is dropped\nwhen it's expired or enacted or when one of its dependencies is expired.",
                   "name": "govActionProposalDroppedEpoch"
                 },
                 {
-                  "doc": "",
+                  "doc": "If not null, then this proposal has been expired at the specfied epoch.",
                   "name": "govActionProposalExpiredEpoch"
                 }
               ],
               "name": "GovActionProposal"
             }
           ],
-          "doc": "Table Name: gov_action_proposal\nDescription: Contains proposals for governance actions, including the type of action, the amount of the deposit, and the expiration date.",
+          "doc": "Schema reference for @gov_action_proposal@:\nA table for proposed GovActionProposal, aka ProposalProcedure, GovAction or GovProposal. This table\nmay be referenced by TreasuryWithdrawal or NewCommittee. New in 13.2-Conway.",
           "kind": "data",
-          "line": 149,
+          "line": 176,
           "name": "GovActionProposal",
           "position": "before"
         },
@@ -1376,52 +2631,52 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the tx that includes this VotingProcedure.",
                   "name": "votingProcedureTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this VotingProcedure within this transaction.",
                   "name": "votingProcedureIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of the GovActionProposal that this vote targets.",
                   "name": "votingProcedureGovActionProposalId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The role of the voter. Can be one of ConstitutionalCommittee, DRep, SPO.",
                   "name": "votingProcedureVoterRole"
                 },
                 {
-                  "doc": "",
+                  "doc": "A reference to the drep hash entry that voted",
                   "name": "votingProcedureDrepVoter"
                 },
                 {
-                  "doc": "",
+                  "doc": "A reference to the pool hash entry that voted",
                   "name": "votingProcedurePoolVoter"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Vote. Can be one of Yes, No, Abstain.",
                   "name": "votingProcedureVote"
                 },
                 {
-                  "doc": "",
+                  "doc": "The VotingAnchor table index associated with this VotingProcedure.",
                   "name": "votingProcedureVotingAnchorId"
                 },
                 {
-                  "doc": "",
+                  "doc": "A reference to the hot key committee hash entry that voted",
                   "name": "votingProcedureCommitteeVoter"
                 },
                 {
-                  "doc": "",
+                  "doc": "TODO: This is currently not implemented and always stays null. Not null if the vote is invalid.",
                   "name": "votingProcedureInvalid"
                 }
               ],
               "name": "VotingProcedure"
             }
           ],
-          "doc": "Table Name: voting_procedure\nDescription: Defines the procedures and rules governing the voting process, including quorum requirements and tallying mechanisms.",
+          "doc": "Schema reference for @voting_procedure@:\nA table for voting procedures, aka GovVote. A Vote can be Yes No or Abstain. New in 13.2-Conway.",
           "kind": "data",
-          "line": 195,
+          "line": 250,
           "name": "VotingProcedure",
           "position": "before"
         },
@@ -1431,28 +2686,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "A URL to a JSON payload of metadata",
                   "name": "votingAnchorUrl"
                 },
                 {
-                  "doc": "",
+                  "doc": "A hash of the contents of the metadata URL",
                   "name": "votingAnchorDataHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The type of the anchor. It can be gov_action, drep, other, vote, committee_dereg, constitution",
                   "name": "votingAnchorType"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Block table index of the tx that includes this anchor. This only exists to facilitate\nrollbacks",
                   "name": "votingAnchorBlockId"
                 }
               ],
               "name": "VotingAnchor"
             }
           ],
-          "doc": "Table Name: voting_anchor\nDescription: Acts as an anchor point for votes, ensuring they are securely recorded and linked to specific proposals.",
+          "doc": "Schema reference for @voting_anchor@:\nA table for every Anchor that appears on Governance Actions. These are pointers to offchain\nmetadata. The tuple of url and hash is unique. New in 13.2-Conway.",
           "kind": "data",
-          "line": 232,
+          "line": 306,
           "name": "VotingAnchor",
           "position": "before"
         },
@@ -1462,24 +2717,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The GovActionProposal table index for this constitution.",
                   "name": "constitutionGovActionProposalId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The VotingAnchor table index for this constitution.",
                   "name": "constitutionVotingAnchorId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Script Hash. It's associated script may not be already inserted in the script table.",
                   "name": "constitutionScriptHash"
                 }
               ],
               "name": "Constitution"
             }
           ],
-          "doc": "Table Name: constitution\nDescription: Holds the on-chain constitution, which defines the rules and principles of the blockchain's governance system.",
+          "doc": "Schema reference for @constitution@:\nA table for constitution attached to a GovActionProposal. New in 13.2-Conway.",
           "kind": "data",
-          "line": 258,
+          "line": 339,
           "name": "Constitution",
           "position": "before"
         },
@@ -1489,24 +2744,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The GovActionProposal table index for this new committee. This can be null for genesis\ncommittees.",
                   "name": "committeeGovActionProposalId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The proposed quorum numerator.",
                   "name": "committeeQuorumNumerator"
                 },
                 {
-                  "doc": "",
+                  "doc": "The proposed quorum denominator.",
                   "name": "committeeQuorumDenominator"
                 }
               ],
               "name": "Committee"
             }
           ],
-          "doc": "Table Name: committee\nDescription: Contains information about the committee, including the quorum requirements and the proposal being considered.",
+          "doc": "Schema reference for @committee@:\nA table for new committee proposed on a GovActionProposal. New in 13.2-Conway.",
           "kind": "data",
-          "line": 279,
+          "line": 365,
           "name": "Committee",
           "position": "before"
         },
@@ -1516,20 +2771,20 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The key or script hash",
                   "name": "committeeHashRaw"
                 },
                 {
-                  "doc": "",
+                  "doc": "Flag which shows if this credential is a script hash",
                   "name": "committeeHashHasScript"
                 }
               ],
               "name": "CommitteeHash"
             }
           ],
-          "doc": "Table Name: committee_hash\nDescription: Stores hashes of committee records, which are used in governance processes.",
+          "doc": "Schema reference for @committee_hash@:\nA table for all committee credentials hot or cold",
           "kind": "data",
-          "line": 309,
+          "line": 399,
           "name": "CommitteeHash",
           "position": "before"
         },
@@ -1539,24 +2794,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The reference to the committee",
                   "name": "committeeMemberCommitteeId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference to the committee hash",
                   "name": "committeeMemberCommitteeHashId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch this member expires",
                   "name": "committeeMemberExpirationEpoch"
                 }
               ],
               "name": "CommitteeMember"
             }
           ],
-          "doc": "Table Name: committeemember\nDescription: Contains information about committee members.",
+          "doc": "Schema reference for @committee_member@:\nA table for members of the committee. A committee can have multiple members. New in 13.3-Conway.",
           "kind": "data",
-          "line": 331,
+          "line": 423,
           "name": "CommitteeMember",
           "position": "before"
         },
@@ -1566,28 +2821,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the tx that includes this certificate.",
                   "name": "committeeRegistrationTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this registration within the certificates of this transaction.",
                   "name": "committeeRegistrationCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference to the registered cold key hash id",
                   "name": "committeeRegistrationColdKeyId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference to the registered hot key hash id",
                   "name": "committeeRegistrationHotKeyId"
                 }
               ],
               "name": "CommitteeRegistration"
             }
           ],
-          "doc": "Table Name: committeeregistration\nDescription: Contains information about the registration of committee members, including their public keys and other identifying information.",
+          "doc": "Schema reference for @committee_registration@:\nA table for every committee hot key registration. New in 13.2-Conway.",
           "kind": "data",
-          "line": 354,
+          "line": 451,
           "name": "CommitteeRegistration",
           "position": "before"
         },
@@ -1597,28 +2852,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the tx that includes this certificate.",
                   "name": "committeeDeRegistrationTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this deregistration within the certificates of this transaction.",
                   "name": "committeeDeRegistrationCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Voting anchor reference id",
                   "name": "committeeDeRegistrationVotingAnchorId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference to the the deregistered cold key hash id",
                   "name": "committeeDeRegistrationColdKeyId"
                 }
               ],
               "name": "CommitteeDeRegistration"
             }
           ],
-          "doc": "Table Name: committeede_registration\nDescription: Contains information about the deregistration of committee members, including their public keys and other identifying information.",
+          "doc": "Schema reference for @committee_de_registration@:\nA table for every committee key de-registration. New in 13.2-Conway.",
           "kind": "data",
-          "line": 379,
+          "line": 482,
           "name": "CommitteeDeRegistration",
           "position": "before"
         },
@@ -1628,147 +2883,147 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The epoch for which this parameter proposal in intended to become active. Changed in 13.2-Conway\nto nullable is always null in Conway era.",
                   "name": "paramProposalEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash of the crypto key used to sign this proposal. Changed in 13.2-Conway to nullable is\nalways null in Conway era.",
                   "name": "paramProposalKey"
                 },
                 {
-                  "doc": "",
+                  "doc": "The 'a' parameter to calculate the minimum transaction fee.",
                   "name": "paramProposalMinFeeA"
                 },
                 {
-                  "doc": "",
+                  "doc": "The 'b' parameter to calculate the minimum transaction fee.",
                   "name": "paramProposalMinFeeB"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum block size (in bytes).",
                   "name": "paramProposalMaxBlockSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum transaction size (in bytes).",
                   "name": "paramProposalMaxTxSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum block header size (in bytes).",
                   "name": "paramProposalMaxBhSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) require for a deposit to register a StakeAddress.",
                   "name": "paramProposalKeyDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) require for a deposit to register a stake pool.",
                   "name": "paramProposalPoolDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of epochs in the future that a pool retirement is allowed to be scheduled\nfor.",
                   "name": "paramProposalMaxEpoch"
                 },
                 {
-                  "doc": "",
+                  "doc": "The optimal number of stake pools.",
                   "name": "paramProposalOptimalPoolCount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The influence of the pledge on a stake pool's probability on minting a block.",
                   "name": "paramProposalInfluence"
                 },
                 {
-                  "doc": "",
+                  "doc": "The monetary expansion rate.",
                   "name": "paramProposalMonetaryExpandRate"
                 },
                 {
-                  "doc": "",
+                  "doc": "The treasury growth rate.",
                   "name": "paramProposalTreasuryGrowthRate"
                 },
                 {
-                  "doc": "",
+                  "doc": "The decentralisation parameter (1 fully centralised, 0 fully decentralised).",
                   "name": "paramProposalDecentralisation"
                 },
                 {
-                  "doc": "",
+                  "doc": "The 32 byte string of extra random-ness to be added into the protocol's entropy pool.",
                   "name": "paramProposalEntropy"
                 },
                 {
-                  "doc": "",
+                  "doc": "The protocol major number.",
                   "name": "paramProposalProtocolMajor"
                 },
                 {
-                  "doc": "",
+                  "doc": "The protocol minor number.",
                   "name": "paramProposalProtocolMinor"
                 },
                 {
-                  "doc": "",
+                  "doc": "The minimum value of a UTxO entry.",
                   "name": "paramProposalMinUtxoValue"
                 },
                 {
-                  "doc": "",
+                  "doc": "The minimum pool cost.",
                   "name": "paramProposalMinPoolCost"
                 },
                 {
-                  "doc": "",
+                  "doc": "The CostModel table index for the proposal.",
                   "name": "paramProposalCostModelId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The per word cost of script memory usage.",
                   "name": "paramProposalPriceMem"
                 },
                 {
-                  "doc": "",
+                  "doc": "The cost of script execution step usage.",
                   "name": "paramProposalPriceStep"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution memory allowed to be used in a single transaction.",
                   "name": "paramProposalMaxTxExMem"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution steps allowed to be used in a single transaction.",
                   "name": "paramProposalMaxTxExSteps"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution memory allowed to be used in a single block.",
                   "name": "paramProposalMaxBlockExMem"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of execution steps allowed to be used in a single block.",
                   "name": "paramProposalMaxBlockExSteps"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum Val size.",
                   "name": "paramProposalMaxValSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "The percentage of the txfee which must be provided as collateral when including non-native\nscripts.",
                   "name": "paramProposalCollateralPercent"
                 },
                 {
-                  "doc": "",
+                  "doc": "The maximum number of collateral inputs allowed in a transaction.",
                   "name": "paramProposalMaxCollateralInputs"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index for the transaction that contains this parameter proposal.",
                   "name": "paramProposalRegisteredTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "For Alonzo this is the cost per UTxO word. For Babbage and later per UTxO byte. New in v13:\nRenamed from coins_per_utxo_word.",
                   "name": "paramProposalCoinsPerUtxoSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for motion of no-confidence. New in 13.2-Conway.",
                   "name": "paramProposalPvtMotionNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for new committee/threshold (normal state). New in 13.2-Conway.",
                   "name": "paramProposalPvtCommitteeNormal"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.",
                   "name": "paramProposalPvtCommitteeNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "Pool Voting threshold for hard-fork initiation. New in 13.2-Conway.",
                   "name": "paramProposalPvtHardForkInitiation"
                 },
                 {
@@ -1776,67 +3031,67 @@
                   "name": "paramProposalPvtppSecurityGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for motion of no-confidence. New in 13.2-Conway.",
                   "name": "paramProposalDvtMotionNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for new committee/threshold (normal state). New in 13.2-Conway.",
                   "name": "paramProposalDvtCommitteeNormal"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.",
                   "name": "paramProposalDvtCommitteeNoConfidence"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for update to the Constitution. New in 13.2-Conway.",
                   "name": "paramProposalDvtUpdateToConstitution"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for hard-fork initiation. New in 13.2-Conway.",
                   "name": "paramProposalDvtHardForkInitiation"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, network group. New in 13.2-Conway.",
                   "name": "paramProposalDvtPPNetworkGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, economic group. New in 13.2-Conway.",
                   "name": "paramProposalDvtPPEconomicGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, technical group. New in 13.2-Conway.",
                   "name": "paramProposalDvtPPTechnicalGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for protocol parameter changes, governance group. New in 13.2-Conway.",
                   "name": "paramProposalDvtPPGovGroup"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep Vote threshold for treasury withdrawal. New in 13.2-Conway.",
                   "name": "paramProposalDvtTreasuryWithdrawal"
                 },
                 {
-                  "doc": "",
+                  "doc": "Minimal constitutional committee size. New in 13.2-Conway.",
                   "name": "paramProposalCommitteeMinSize"
                 },
                 {
-                  "doc": "",
+                  "doc": "Constitutional committee term limits. New in 13.2-Conway.",
                   "name": "paramProposalCommitteeMaxTermLength"
                 },
                 {
-                  "doc": "",
+                  "doc": "Governance action expiration. New in 13.2-Conway.",
                   "name": "paramProposalGovActionLifetime"
                 },
                 {
-                  "doc": "",
+                  "doc": "Governance action deposit. New in 13.2-Conway.",
                   "name": "paramProposalGovActionDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep deposit amount. New in 13.2-Conway.",
                   "name": "paramProposalDrepDeposit"
                 },
                 {
-                  "doc": "",
+                  "doc": "DRep activity period. New in 13.2-Conway.",
                   "name": "paramProposalDrepActivity"
                 },
                 {
@@ -1847,9 +3102,9 @@
               "name": "ParamProposal"
             }
           ],
-          "doc": "Table Name: param_proposal\nDescription: Contains proposals for changes to the protocol parameters, including the proposed values and the expiration date.",
+          "doc": "Schema reference for @param_proposal@:\nA table containing block chain parameter change proposals.",
           "kind": "data",
-          "line": 402,
+          "line": 511,
           "name": "ParamProposal",
           "position": "before"
         },
@@ -1859,24 +3114,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The GovActionProposal table index for this withdrawal.Multiple TreasuryWithdrawal may reference\nthe same GovActionProposal.",
                   "name": "treasuryWithdrawalGovActionProposalId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The address that benefits from this withdrawal.",
                   "name": "treasuryWithdrawalStakeAddressId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount for this withdrawl.",
                   "name": "treasuryWithdrawalAmount"
                 }
               ],
               "name": "TreasuryWithdrawal"
             }
           ],
-          "doc": "Table Name: treasury_withdrawal\nDescription:",
+          "doc": "Schema reference for @treasury_withdrawal@:\nA table for all treasury withdrawals proposed on a GovActionProposal. New in 13.2-Conway.",
           "kind": "data",
-          "line": 591,
+          "line": 788,
           "name": "TreasuryWithdrawal",
           "position": "before"
         },
@@ -1905,9 +3160,9 @@
               "name": "EventInfo"
             }
           ],
-          "doc": "Table Name: event_info\nDescription: Contains information about events, including the epoch in which they occurred and the type of event.",
+          "doc": "Schema reference for @event_info@:\nLedger event identifiers with an epoch and an optional transaction reference.",
           "kind": "data",
-          "line": 619,
+          "line": 822,
           "name": "EventInfo",
           "position": "before"
         }
@@ -1924,24 +3179,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The MultiAsset policy hash.",
                   "name": "multiAssetPolicy"
                 },
                 {
-                  "doc": "",
+                  "doc": "The MultiAsset name.",
                   "name": "multiAssetName"
                 },
                 {
-                  "doc": "",
+                  "doc": "The CIP14 fingerprint for the MultiAsset.",
                   "name": "multiAssetFingerprint"
                 }
               ],
               "name": "MultiAsset"
             }
           ],
-          "doc": "Table Name: multi_asset\nDescription: Contains information about multi-assets, including the policy and name of the asset.",
+          "doc": "Schema reference for @multi_asset@:\nA table containing all the unique policy/name pairs along with a CIP14 asset fingerprint",
           "kind": "data",
-          "line": 35,
+          "line": 34,
           "name": "MultiAsset",
           "position": "before"
         },
@@ -1951,24 +3206,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The amount of the Multi Asset to mint (can be negative to \"burn\" assets).",
                   "name": "maTxMintQuantity"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index for the transaction that contains this minting event.",
                   "name": "maTxMintTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The MultiAsset table index specifying the asset.",
                   "name": "maTxMintIdent"
                 }
               ],
               "name": "MaTxMint"
             }
           ],
-          "doc": "Table Name: ma_tx_mint\nDescription: Contains information about the minting of multi-assets, including the quantity of the asset and the transaction in which it was minted.",
+          "doc": "Schema reference for @ma_tx_mint@:\nA table containing Multi-Asset mint events.",
           "kind": "data",
-          "line": 59,
+          "line": 62,
           "name": "MaTxMint",
           "position": "before"
         }
@@ -1985,36 +3240,36 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index for the pool this offchain data refers.",
                   "name": "offChainPoolDataPoolId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The pool's ticker name (as many as 5 characters).",
                   "name": "offChainPoolDataTickerName"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash of the offchain data.",
                   "name": "offChainPoolDataHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payload as JSON.",
                   "name": "offChainPoolDataJson"
                 },
                 {
-                  "doc": "",
+                  "doc": "The raw bytes of the payload.",
                   "name": "offChainPoolDataBytes"
                 },
                 {
-                  "doc": "",
+                  "doc": "The PoolMetadataRef table index for this offchain data.",
                   "name": "offChainPoolDataPmrId"
                 }
               ],
               "name": "OffChainPoolData"
             }
           ],
-          "doc": "Table Name: off_chain_pool_data\nDescription:",
+          "doc": "Schema reference for @off_chain_pool_data@:\nThe pool offchain (ie not on chain) for a stake pool.",
           "kind": "data",
-          "line": 36,
+          "line": 35,
           "name": "OffChainPoolData",
           "position": "before"
         },
@@ -2024,32 +3279,32 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index for the pool this offchain fetch error refers.",
                   "name": "offChainPoolFetchErrorPoolId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The UTC time stamp of the error.",
                   "name": "offChainPoolFetchErrorFetchTime"
                 },
                 {
-                  "doc": "",
+                  "doc": "The PoolMetadataRef table index for this offchain data.",
                   "name": "offChainPoolFetchErrorPmrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The text of the error.",
                   "name": "offChainPoolFetchErrorFetchError"
                 },
                 {
-                  "doc": "",
+                  "doc": "The number of retries.",
                   "name": "offChainPoolFetchErrorRetryCount"
                 }
               ],
               "name": "OffChainPoolFetchError"
             }
           ],
-          "doc": "Table Name: off_chain_pool_fetch_error\nDescription:\nThe pool metadata fetch error. We duplicate the poolId for easy access.\nTODO(KS): Debatable whether we need to persist this between migrations!",
+          "doc": "Schema reference for @off_chain_pool_fetch_error@:\nA table containing pool offchain data fetch errors.",
           "kind": "data",
-          "line": 68,
+          "line": 75,
           "name": "OffChainPoolFetchError",
           "position": "before"
         },
@@ -2059,27 +3314,27 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The VotingAnchor table index this offchain data refers.",
                   "name": "offChainVoteDataVotingAnchorId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash of the offchain data.",
                   "name": "offChainVoteDataHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payload as JSON.",
                   "name": "offChainVoteDataJson"
                 },
                 {
-                  "doc": "",
+                  "doc": "The raw bytes of the payload.",
                   "name": "offChainVoteDataBytes"
                 },
                 {
-                  "doc": "",
+                  "doc": "A warning that occured while validating the metadata.",
                   "name": "offChainVoteDataWarning"
                 },
                 {
-                  "doc": "",
+                  "doc": "The langauge described in the context of the metadata. Described in CIP-100. New in 13.3-Conway.",
                   "name": "offChainVoteDataLanguage"
                 },
                 {
@@ -2087,16 +3342,16 @@
                   "name": "offChainVoteDataComment"
                 },
                 {
-                  "doc": "",
+                  "doc": "Validation status for the applicable CIP structure: TRUE if parsed, FALSE for valid JSON with\nan invalid structure, NULL for invalid JSON.",
                   "name": "offChainVoteDataIsValid"
                 }
               ],
               "name": "OffChainVoteData"
             }
           ],
-          "doc": "Table Name: off_chain_vote_data\nDescription: Stores off-chain voting anchor data with validation status\n\nThe is_valid column indicates the parsing status:\n  • TRUE: Content is valid JSON AND conforms to CIP schema\n          All related tables are populated\n  • FALSE: Content is valid JSON BUT does not conform to CIP schema\n          The json column contains the actual JSON, but related tables are empty\n  • NULL: Content is not valid JSON at all\n          The json column contains an error message, bytes column has raw data",
+          "doc": "Schema reference for @off_chain_vote_data@:\nOff-chain anchor bytes and JSON with validation status. The expected hash must match; mismatches\nare recorded in @off_chain_vote_fetch_error@ for retry, not in this table.\n\n@is_valid = TRUE@ means valid JSON parsed as the applicable CIP structure for its anchor type\n(CIP-100, CIP-108 or CIP-119). Related rows depend on the anchor type and optional payload fields:\na valid DRep anchor does not populate governance-action rows, or vice versa; authors, references\nand external updates may be absent. @is_valid = FALSE@ means JSON parsed but the applicable CIP\nstructure did not. @is_valid = NULL@ means invalid JSON: @json@ holds an error object, while @bytes@\nretains the original payload. In the latter two states language is an empty string, comment is\nnull and no related detail rows are inserted. New in 13.2-Conway.",
           "kind": "data",
-          "line": 102,
+          "line": 118,
           "name": "OffChainVoteData",
           "position": "before"
         },
@@ -2106,32 +3361,32 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The vote metadata table index this offchain data belongs to.",
                   "name": "offChainVoteGovActionDataOffChainVoteDataId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The title",
                   "name": "offChainVoteGovActionDataTitle"
                 },
                 {
-                  "doc": "",
+                  "doc": "The abstract",
                   "name": "offChainVoteGovActionDataAbstract"
                 },
                 {
-                  "doc": "",
+                  "doc": "The motivation",
                   "name": "offChainVoteGovActionDataMotivation"
                 },
                 {
-                  "doc": "",
+                  "doc": "The rationale",
                   "name": "offChainVoteGovActionDataRationale"
                 }
               ],
               "name": "OffChainVoteGovActionData"
             }
           ],
-          "doc": "Table Name: off_chain_vote_gov_action_data\nDescription:",
+          "doc": "Schema reference for @off_chain_vote_gov_action_data@:\nThe table with offchain metadata for Governance Actions. Implementes CIP-108. New in 13.3-Conway.",
           "kind": "data",
-          "line": 145,
+          "line": 171,
           "name": "OffChainVoteGovActionData",
           "position": "before"
         },
@@ -2141,27 +3396,27 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The vote metadata table index this offchain data belongs to.",
                   "name": "offChainVoteDrepDataOffChainVoteDataId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payment address",
                   "name": "offChainVoteDrepDataPaymentAddress"
                 },
                 {
-                  "doc": "",
+                  "doc": "The name. This is the only mandatory field",
                   "name": "offChainVoteDrepDataGivenName"
                 },
                 {
-                  "doc": "",
+                  "doc": "The objectives",
                   "name": "offChainVoteDrepDataObjectives"
                 },
                 {
-                  "doc": "",
+                  "doc": "The motivations",
                   "name": "offChainVoteDrepDataMotivations"
                 },
                 {
-                  "doc": "",
+                  "doc": "The qualifications",
                   "name": "offChainVoteDrepDataQualifications"
                 },
                 {
@@ -2176,9 +3431,9 @@
               "name": "OffChainVoteDrepData"
             }
           ],
-          "doc": "Table Name: off_chain_vote_drep_data\nDescription:",
+          "doc": "Schema reference for @off_chain_vote_drep_data@:\nThe table with offchain metadata for Drep Registrations. Implementes CIP-119. New in 13.3-Conway.",
           "kind": "data",
-          "line": 194,
+          "line": 225,
           "name": "OffChainVoteDrepData",
           "position": "before"
         },
@@ -2188,36 +3443,36 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The OffChainVoteData table index this offchain data refers.",
                   "name": "offChainVoteAuthorOffChainVoteDataId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The name of the author.",
                   "name": "offChainVoteAuthorName"
                 },
                 {
-                  "doc": "",
+                  "doc": "The witness algorithm used by the author.",
                   "name": "offChainVoteAuthorWitnessAlgorithm"
                 },
                 {
-                  "doc": "",
+                  "doc": "The public key used by the author.",
                   "name": "offChainVoteAuthorPublicKey"
                 },
                 {
-                  "doc": "",
+                  "doc": "The signature of the author.",
                   "name": "offChainVoteAuthorSignature"
                 },
                 {
-                  "doc": "",
+                  "doc": "A warning related to verifying this metadata.",
                   "name": "offChainVoteAuthorWarning"
                 }
               ],
               "name": "OffChainVoteAuthor"
             }
           ],
-          "doc": "Table Name: off_chain_vote_author\nDescription:",
+          "doc": "Schema reference for @off_chain_vote_author@:\nThe table with offchain metadata authors, as decribed in CIP-100. New in 13.3-Conway.",
           "kind": "data",
-          "line": 234,
+          "line": 271,
           "name": "OffChainVoteAuthor",
           "position": "before"
         },
@@ -2227,32 +3482,32 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The OffChainVoteData table index this entry refers.",
                   "name": "offChainVoteReferenceOffChainVoteDataId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The label of this vote reference.",
                   "name": "offChainVoteReferenceLabel"
                 },
                 {
-                  "doc": "",
+                  "doc": "The uri of this vote reference.",
                   "name": "offChainVoteReferenceUri"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash digest of this vote reference, as described in CIP-108. This only appears for\ngovernance action metadata.",
                   "name": "offChainVoteReferenceHashDigest"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash algorithm of this vote reference, as described in CIP-108. This only appears for\ngovernance action metadata.",
                   "name": "offChainVoteReferenceHashAlgorithm"
                 }
               ],
               "name": "OffChainVoteReference"
             }
           ],
-          "doc": "Table Name: off_chain_vote_reference\nDescription:",
+          "doc": "Schema reference for @off_chain_vote_reference@:\nThe table with offchain metadata references, as decribed in CIP-100. New in 13.3-Conway.",
           "kind": "data",
-          "line": 270,
+          "line": 313,
           "name": "OffChainVoteReference",
           "position": "before"
         },
@@ -2262,24 +3517,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The OffChainVoteData table index this entry refers.",
                   "name": "offChainVoteExternalUpdateOffChainVoteDataId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The title of this external update.",
                   "name": "offChainVoteExternalUpdateTitle"
                 },
                 {
-                  "doc": "",
+                  "doc": "The uri of this external update.",
                   "name": "offChainVoteExternalUpdateUri"
                 }
               ],
               "name": "OffChainVoteExternalUpdate"
             }
           ],
-          "doc": "Table Name: off_chain_vote_external_update\nDescription:",
+          "doc": "Schema reference for @off_chain_vote_external_update@:\nThe table with offchain metadata external updates, as decribed in CIP-100. New in 13.3-Conway.",
           "kind": "data",
-          "line": 301,
+          "line": 351,
           "name": "OffChainVoteExternalUpdate",
           "position": "before"
         },
@@ -2289,11 +3544,11 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The VotingAnchor table index this offchain fetch error refers.",
                   "name": "offChainVoteFetchErrorVotingAnchorId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The text of the error.",
                   "name": "offChainVoteFetchErrorFetchError"
                 },
                 {
@@ -2301,16 +3556,16 @@
                   "name": "offChainVoteFetchErrorFetchTime"
                 },
                 {
-                  "doc": "",
+                  "doc": "The number of retries.",
                   "name": "offChainVoteFetchErrorRetryCount"
                 }
               ],
               "name": "OffChainVoteFetchError"
             }
           ],
-          "doc": "Table Name: off_chain_vote_fetch_error\nDescription:",
+          "doc": "Schema reference for @off_chain_vote_fetch_error@:\nErrors while fetching or validating offchain Voting Anchor metadata. New in 13.2-Conway.",
           "kind": "data",
-          "line": 326,
+          "line": 379,
           "name": "OffChainVoteFetchError",
           "position": "before"
         }
@@ -2327,18 +3582,18 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The raw bytes of the pool hash.",
                   "name": "poolHashHashRaw"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Bech32 encoding of the pool hash.",
                   "name": "poolHashView"
                 }
               ],
               "name": "PoolHash"
             }
           ],
-          "doc": "Table Name: pool_hash\nDescription: A table containing information about pool hashes.",
+          "doc": "Schema reference for @pool_hash@:\nA table for every unique pool key hash. The existance of an entry doesn't mean the pool is\nregistered or in fact that is was ever registered.",
           "kind": "data",
           "line": 46,
           "name": "PoolHash",
@@ -2350,36 +3605,36 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The pool_hash_id reference.",
                   "name": "poolStatPoolHashId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch number.",
                   "name": "poolStatEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "Number of blocks created on the previous epoch.",
                   "name": "poolStatNumberOfBlocks"
                 },
                 {
-                  "doc": "",
+                  "doc": "Number of delegators in the mark snapshot.",
                   "name": "poolStatNumberOfDelegators"
                 },
                 {
-                  "doc": "",
+                  "doc": "Total stake in the mark snapshot.",
                   "name": "poolStatStake"
                 },
                 {
-                  "doc": "",
+                  "doc": "Voting power of the SPO.",
                   "name": "poolStatVotingPower"
                 }
               ],
               "name": "PoolStat"
             }
           ],
-          "doc": "Table Name: pool_stat\nDescription: A table containing information about pool metadata.",
+          "doc": "Schema reference for @pool_stat@:\nStats per pool and per epoch.",
           "kind": "data",
-          "line": 66,
+          "line": 68,
           "name": "PoolStat",
           "position": "before"
         },
@@ -2389,56 +3644,56 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index of the pool this update refers to.",
                   "name": "poolUpdateHashId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this pool update within the certificates of this transaction.",
                   "name": "poolUpdateCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash of the pool's VRF key.",
                   "name": "poolUpdateVrfKeyHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) the pool owner pledges to the pool.",
                   "name": "poolUpdatePledge"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch number where this update becomes active.",
                   "name": "poolUpdateActiveEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The PoolMetadataRef table index this pool update refers to.",
                   "name": "poolUpdateMetaId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The margin this pool charges, stored as a fraction between 0 and 1 (not a percentage).",
                   "name": "poolUpdateMargin"
                 },
                 {
-                  "doc": "",
+                  "doc": "The fixed per epoch fee (in Lovelace) this pool charges.",
                   "name": "poolUpdateFixedCost"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction in which provided this pool update.",
                   "name": "poolUpdateRegisteredTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index of this pool's rewards address. New in v13: Replaced reward_addr.",
                   "name": "poolUpdateRewardAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The deposit payed for this pool update. Null for reregistrations.",
                   "name": "poolUpdateDeposit"
                 }
               ],
               "name": "PoolUpdate"
             }
           ],
-          "doc": "Table Name: pool_update\nDescription: A table containing information about pool updates.",
+          "doc": "Schema reference for @pool_update@:\nAn on-chain pool update.",
           "kind": "data",
-          "line": 101,
+          "line": 114,
           "name": "PoolUpdate",
           "position": "before"
         },
@@ -2448,28 +3703,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index of the pool for this reference.",
                   "name": "poolMetadataRefPoolId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The URL for the location of the off-chain data.",
                   "name": "poolMetadataRefUrl"
                 },
                 {
-                  "doc": "",
+                  "doc": "The expected hash for the off-chain data.",
                   "name": "poolMetadataRefHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction in which provided this metadata reference.",
                   "name": "poolMetadataRefRegisteredTxId"
                 }
               ],
               "name": "PoolMetadataRef"
             }
           ],
-          "doc": "Table Name: pool_metadata_ref\nDescription: A table containing references to pool metadata.",
+          "doc": "Schema reference for @pool_metadata_ref@:\nAn on-chain reference to off-chain pool metadata.",
           "kind": "data",
-          "line": 138,
+          "line": 170,
           "name": "PoolMetadataRef",
           "position": "before"
         },
@@ -2479,20 +3734,20 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the pool owner's stake address.",
                   "name": "poolOwnerAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The PoolUpdate table index for the pool. New in v13.",
                   "name": "poolOwnerPoolUpdateId"
                 }
               ],
               "name": "PoolOwner"
             }
           ],
-          "doc": "Table Name: pool_owner\nDescription: A table containing information about pool owners.",
+          "doc": "Schema reference for @pool_owner@:\nA table containing pool owners.",
           "kind": "data",
-          "line": 161,
+          "line": 200,
           "name": "PoolOwner",
           "position": "before"
         },
@@ -2502,28 +3757,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index of the pool this retirement refers to.",
                   "name": "poolRetireHashId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this pool retirement within the certificates of this transaction.",
                   "name": "poolRetireCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction where this pool retirement was announced.",
                   "name": "poolRetireAnnouncedTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch where this pool retires.",
                   "name": "poolRetireRetiringEpoch"
                 }
               ],
               "name": "PoolRetire"
             }
           ],
-          "doc": "Table Name: pool_retire\nDescription: A table containing information about pool retirements.",
+          "doc": "Schema reference for @pool_retire@:\nA table containing information about pools retiring.",
           "kind": "data",
-          "line": 180,
+          "line": 222,
           "name": "PoolRetire",
           "position": "before"
         },
@@ -2533,36 +3788,36 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The PoolUpdate table index this PoolRelay entry refers to.",
                   "name": "poolRelayUpdateId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The IPv4 address of the relay (NULLable).",
                   "name": "poolRelayIpv4"
                 },
                 {
-                  "doc": "",
+                  "doc": "The IPv6 address of the relay (NULLable).",
                   "name": "poolRelayIpv6"
                 },
                 {
-                  "doc": "",
+                  "doc": "The DNS name of the relay (NULLable).",
                   "name": "poolRelayDnsName"
                 },
                 {
-                  "doc": "",
+                  "doc": "The DNS service name of the relay (NULLable).",
                   "name": "poolRelayDnsSrvName"
                 },
                 {
-                  "doc": "",
+                  "doc": "The port number of relay (NULLable).",
                   "name": "poolRelayPort"
                 }
               ],
               "name": "PoolRelay"
             }
           ],
-          "doc": "Table Name: pool_relay\nDescription: A table containing information about pool relays.",
+          "doc": "Schema reference for @pool_relay@:\nNetwork endpoints advertised in a pool registration.",
           "kind": "data",
-          "line": 203,
+          "line": 251,
           "name": "PoolRelay",
           "position": "before"
         },
@@ -2572,16 +3827,16 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The pool hash",
                   "name": "delistedPoolHashRaw"
                 }
               ],
               "name": "DelistedPool"
             }
           ],
-          "doc": "Table Name: delisted_pool\nDescription: A table containing a managed list of delisted pools.",
+          "doc": "Schema reference for @delisted_pool@:\nA table containing pools that have been delisted.",
           "kind": "newtype",
-          "line": 233,
+          "line": 287,
           "name": "DelistedPool",
           "position": "before"
         },
@@ -2591,20 +3846,20 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The ticker name.",
                   "name": "reservedPoolTickerName"
                 },
                 {
-                  "doc": "",
+                  "doc": "The hash of the pool that owns this ticker.",
                   "name": "reservedPoolTickerPoolHash"
                 }
               ],
               "name": "ReservedPoolTicker"
             }
           ],
-          "doc": "Table Name: resser_pool_ticker\nDescription: A table containing a managed list of reserved ticker names.\nFor now they are grouped under the specific hash of the pool.",
+          "doc": "Schema reference for @reserved_pool_ticker@:\nA table containing a managed list of reserved ticker names.",
           "kind": "data",
-          "line": 254,
+          "line": 308,
           "name": "ReservedPoolTicker",
           "position": "before"
         }
@@ -2621,22 +3876,22 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The raw bytes of the stake address hash.",
                   "name": "stakeAddressHashRaw"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Bech32 encoded version of the stake address.",
                   "name": "stakeAddressView"
                 },
                 {
-                  "doc": "",
+                  "doc": "The script hash, in case this address is locked by a script.",
                   "name": "stakeAddressScriptHash"
                 }
               ],
               "name": "StakeAddress"
             }
           ],
-          "doc": "STAKE DELEGATION\n| These tables handle stake addresses, delegation, and reward\nTable Name: stake_address\nDescription: Contains information about stakeholder addresses.",
+          "doc": "Schema reference for @stake_address@:\nA table of unique stake addresses. Can be an actual address or a script hash. The existance of an\nentry doesn't mean the address is registered or in fact that is was ever registered.",
           "kind": "data",
           "line": 37,
           "name": "StakeAddress",
@@ -2648,19 +3903,19 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address.",
                   "name": "stakeRegistrationAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this stake registration within the certificates of this transaction.",
                   "name": "stakeRegistrationCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch in which the registration took place.",
                   "name": "stakeRegistrationEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction where this stake address was registered.",
                   "name": "stakeRegistrationTxId"
                 },
                 {
@@ -2671,9 +3926,9 @@
               "name": "StakeRegistration"
             }
           ],
-          "doc": "Table Name: stake_registration\nDescription: Contains information about stakeholder registrations.",
+          "doc": "Schema reference for @stake_registration@:\nA table containing stake address registrations.",
           "kind": "data",
-          "line": 74,
+          "line": 78,
           "name": "StakeRegistration",
           "position": "before"
         },
@@ -2683,32 +3938,32 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address.",
                   "name": "stakeDeregistrationAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this stake deregistration within the certificates of this transaction.",
                   "name": "stakeDeregistrationCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch in which the deregistration took place.",
                   "name": "stakeDeregistrationEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction where this stake address was deregistered.",
                   "name": "stakeDeregistrationTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Redeemer table index that is related with this certificate.",
                   "name": "stakeDeregistrationRedeemerId"
                 }
               ],
               "name": "StakeDeregistration"
             }
           ],
-          "doc": "Table Name: stake_deregistration\nDescription: Contains information about stakeholder deregistrations.",
+          "doc": "Schema reference for @stake_deregistration@:\nA table containing stake address deregistrations.",
           "kind": "data",
-          "line": 101,
+          "line": 111,
           "name": "StakeDeregistration",
           "position": "before"
         },
@@ -2718,40 +3973,40 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address.",
                   "name": "delegationAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this delegation within the certificates of this transaction.",
                   "name": "delegationCertIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index for the pool being delegated to.",
                   "name": "delegationPoolHashId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch number where this delegation becomes active.",
                   "name": "delegationActiveEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that contained this delegation.",
                   "name": "delegationTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The slot number of the block that contained this delegation.",
                   "name": "delegationSlotNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Redeemer table index that is related with this certificate.",
                   "name": "delegationRedeemerId"
                 }
               ],
               "name": "Delegation"
             }
           ],
-          "doc": "Table Name: delegation\nDescription:Contains information about stakeholder delegations, including the stakeholder's address and the pool to which they are delegating.",
+          "doc": "Schema reference for @delegation@:\nA table containing delegations from a stake address to a stake pool.",
           "kind": "data",
-          "line": 137,
+          "line": 155,
           "name": "Delegation",
           "position": "before"
         },
@@ -2761,36 +4016,36 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address that earned the reward.",
                   "name": "rewardAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The type of the rewards",
                   "name": "rewardType"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reward amount (in Lovelace).",
                   "name": "rewardAmount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch in which the reward is actually distributed and can be spent.",
                   "name": "rewardSpendableEpoch"
                 },
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index for the pool the stake address was delegated to when the reward is\nearned or for the pool that there is a deposit refund.",
                   "name": "rewardPoolId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch in which the reward was earned. For @member@ and @leader@ rewards spendable in epoch\n@N@, this will be @N - 2@, @refund@ N.",
                   "name": "rewardEarnedEpoch"
                 }
               ],
               "name": "Reward"
             }
           ],
-          "doc": "Table Name: reward\nDescription: Reward, Stake and Treasury need to be obtained from the ledger state.\n  The reward for each stake address and. This is not a balance, but a reward amount and the\n  epoch in which the reward was earned.\n  This table should never get rolled back.",
+          "doc": "Schema reference for @reward@:\nA table for earned staking rewards. After 13.2 release it includes only 3 types of rewards: member,\nleader and refund, since the other 2 types have moved to a separate table reward_rest. The\nrewards are inserted incrementally and this procedure is finalised when the spendable epoch comes.\nBefore the epoch comes, some entries may be missing.",
           "kind": "data",
-          "line": 188,
+          "line": 217,
           "name": "Reward",
           "position": "before"
         },
@@ -2800,32 +4055,32 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address that earned the reward.",
                   "name": "rewardRestAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The type of the rewards.",
                   "name": "rewardRestType"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reward amount (in Lovelace).",
                   "name": "rewardRestAmount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch in which the reward is actually distributed and can be spent.",
                   "name": "rewardRestSpendableEpoch"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch in which the reward was earned. For rewards spendable in epoch @N@, this will be @N -\n1@.",
                   "name": "rewardRestEarnedEpoch"
                 }
               ],
               "name": "RewardRest"
             }
           ],
-          "doc": "Table Name: reward_rest\nDescription: Contains information about the remaining reward for each stakeholder.",
+          "doc": "Schema reference for @reward_rest@:\nA table for rewards which are not correlated to a pool. It includes 3 types of rewards: reserves,\ntreasury and proposal_refund. Instant rewards are depredated after Conway.  New in 13.2",
           "kind": "data",
-          "line": 219,
+          "line": 261,
           "name": "RewardRest",
           "position": "before"
         },
@@ -2835,28 +4090,28 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address for this EpochStake entry.",
                   "name": "epochStakeAddrId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The PoolHash table index for the pool this entry is delegated to.",
                   "name": "epochStakePoolId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The amount (in Lovelace) being staked.",
                   "name": "epochStakeAmount"
                 },
                 {
-                  "doc": "",
+                  "doc": "The epoch number.",
                   "name": "epochStakeEpochNo"
                 }
               ],
               "name": "EpochStake"
             }
           ],
-          "doc": "Table Name: epoch_stake\nDescription: Contains information about the stake of each stakeholder in each epoch.\nThis table should never get rolled back",
+          "doc": "Schema reference for @epoch_stake@:\nThe epoch stake distribution, read from the ledger's @mark@ snapshot and tagged for the current\nepoch plus one. Normal syncing inserts slices during the preceding epoch after the security\nparameter's block delay; migration can catch up earlier slices. See Shelley specs Sec. 11.2.",
           "kind": "data",
-          "line": 254,
+          "line": 306,
           "name": "EpochStake",
           "position": "before"
         },
@@ -2866,20 +4121,20 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The related epoch",
                   "name": "epochStakeProgressEpochNo"
                 },
                 {
-                  "doc": "",
+                  "doc": "True if completed. If not completed the entry won't exist or more rarely be False.",
                   "name": "epochStakeProgressCompleted"
                 }
               ],
               "name": "EpochStakeProgress"
             }
           ],
-          "doc": "Table Name: epoch_stake_progress\nDescription: Contains information about the progress of the epoch stake calculation.",
+          "doc": "Schema reference for @epoch_stake_progress@:\nA table which shows when the epoch_stake for an epoch is complete",
           "kind": "data",
-          "line": 289,
+          "line": 348,
           "name": "EpochStakeProgress",
           "position": "before"
         }
@@ -3097,11 +4352,11 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that contains this transaction output.",
                   "name": "txOutAddressTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this transaction output with the transaction.",
                   "name": "txOutAddressIndex"
                 },
                 {
@@ -3109,36 +4364,36 @@
                   "name": "txOutAddressStakeAddressId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output value (in Lovelace) of the transaction output.",
                   "name": "txOutAddressValue"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output datum hash, null when the output carries no datum hash; independent of script presence.",
                   "name": "txOutAddressDataHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The inline datum of the output, if it has one. New in v13.",
                   "name": "txOutAddressInlineDatumId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference script of the output, if it has one. New in v13.",
                   "name": "txOutAddressReferenceScriptId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that consumes this transaction output. Not populated by\ndefault, can be activated via tx-out configs.",
                   "name": "txOutAddressConsumedByTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Address table index for the output address.",
                   "name": "txOutAddressAddressId"
                 }
               ],
               "name": "TxOutAddress"
             }
           ],
-          "doc": "Table Name: tx_out\nDescription: Represents the outputs of transactions, including addresses and values.",
+          "doc": "Schema reference for @tx_out@:\nA table for transaction outputs.",
           "kind": "data",
-          "line": 26,
+          "line": 25,
           "name": "TxOutAddress",
           "position": "before"
         },
@@ -3148,48 +4403,48 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that contains this collateral output.",
                   "name": "collateralTxOutAddressTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this transaction output with the transaction.",
                   "name": "collateralTxOutAddressIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address part of the Shelley address. (NULL for Byron\naddresses).",
                   "name": "collateralTxOutAddressStakeAddressId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output value (in Lovelace) of the transaction output.",
                   "name": "collateralTxOutAddressValue"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output datum hash, null when the output carries no datum hash; independent of script presence.",
                   "name": "collateralTxOutAddressDataHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "A textual description of multi-assets in the declared collateral-return output. These are\nrecorded here rather than in the normal @ma_tx_out@ rows.",
                   "name": "collateralTxOutAddressMultiAssetsDescr"
                 },
                 {
-                  "doc": "",
+                  "doc": "The inline datum of the output, if it has one. New in v13.",
                   "name": "collateralTxOutAddressInlineDatumId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference script of the output, if it has one. New in v13.",
                   "name": "collateralTxOutAddressReferenceScriptId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Address table index for the output address.",
                   "name": "collateralTxOutAddressAddressId"
                 }
               ],
               "name": "CollateralTxOutAddress"
             }
           ],
-          "doc": "Table Name: collateral_tx_out\nDescription: Represents collateral transaction outputs, which are used to cover transaction fees in case of failure.",
+          "doc": "Schema reference for @collateral_tx_out@:\nA table for transaction collateral outputs. New in v13.",
           "kind": "data",
-          "line": 116,
+          "line": 123,
           "name": "CollateralTxOutAddress",
           "position": "before"
         },
@@ -3199,32 +4454,32 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The human readable encoding of the output address. Will be Base58 for Byron era addresses and\nBech32 for Shelley era.",
                   "name": "addressAddress"
                 },
                 {
-                  "doc": "",
+                  "doc": "The raw binary address.",
                   "name": "addressRaw"
                 },
                 {
-                  "doc": "",
+                  "doc": "Flag which shows if this address is locked by a script.",
                   "name": "addressHasScript"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payment credential part of the Shelley address. (NULL for Byron addresses). For a\nscript-locked address, this is the script hash.",
                   "name": "addressPaymentCred"
                 },
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address part of the Shelley address. (NULL for Byron\naddresses).",
                   "name": "addressStakeAddressId"
                 }
               ],
               "name": "Address"
             }
           ],
-          "doc": "Table Name: address\nDescription: Represents addresses used in transactions, including their raw representation and associated scripts.",
+          "doc": "Schema reference for @address@:\nA table for addresses that appear in outputs.",
           "kind": "data",
-          "line": 163,
+          "line": 180,
           "name": "Address",
           "position": "before"
         },
@@ -3234,24 +4489,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The MultiAsset table index specifying the asset.",
                   "name": "maTxOutAddressIdent"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Multi Asset transaction output amount (denominated in the Multi Asset).",
                   "name": "maTxOutAddressQuantity"
                 },
                 {
-                  "doc": "",
+                  "doc": "The TxOut table index for the output containing this asset.",
                   "name": "maTxOutAddressTxOutId"
                 }
               ],
               "name": "MaTxOutAddress"
             }
           ],
-          "doc": "Table Name: ma_tx_out\nDescription: Represents multi-asset transaction outputs, which include various assets and their quantities.",
+          "doc": "Schema reference for @ma_tx_out@:\nA table containing Multi-Asset transaction outputs.",
           "kind": "data",
-          "line": 203,
+          "line": 227,
           "name": "MaTxOutAddress",
           "position": "before"
         }
@@ -3268,56 +4523,56 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that contains this transaction output.",
                   "name": "txOutCoreTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this transaction output with the transaction.",
                   "name": "txOutCoreIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The human readable encoding of the output address. Will be Base58 for Byron era addresses and\nBech32 for Shelley era.",
                   "name": "txOutCoreAddress"
                 },
                 {
-                  "doc": "",
+                  "doc": "Flag which shows if this address is locked by a script.",
                   "name": "txOutCoreAddressHasScript"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payment credential part of the Shelley address. (NULL for Byron addresses). For a\nscript-locked address, this is the script hash.",
                   "name": "txOutCorePaymentCred"
                 },
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address part of the Shelley address. (NULL for Byron\naddresses).",
                   "name": "txOutCoreStakeAddressId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output value (in Lovelace) of the transaction output.",
                   "name": "txOutCoreValue"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output datum hash, null when the output carries no datum hash; independent of script presence.",
                   "name": "txOutCoreDataHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "The inline datum of the output, if it has one. New in v13.",
                   "name": "txOutCoreInlineDatumId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference script of the output, if it has one. New in v13.",
                   "name": "txOutCoreReferenceScriptId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that consumes this transaction output. Not populated by\ndefault, can be activated via tx-out configs.",
                   "name": "txOutCoreConsumedByTxId"
                 }
               ],
               "name": "TxOutCore"
             }
           ],
-          "doc": "Table Name: tx_out\nDescription: Represents a transaction output in the Cardano blockchain.",
+          "doc": "Schema reference for @tx_out@:\nA table for transaction outputs.",
           "kind": "data",
-          "line": 24,
+          "line": 23,
           "name": "TxOutCore",
           "position": "before"
         },
@@ -3327,56 +4582,56 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Tx table index of the transaction that contains this transaction output.",
                   "name": "collateralTxOutCoreTxId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The index of this transaction output with the transaction.",
                   "name": "collateralTxOutCoreIndex"
                 },
                 {
-                  "doc": "",
+                  "doc": "The human readable encoding of the output address. Will be Base58 for Byron era addresses and\nBech32 for Shelley era.",
                   "name": "collateralTxOutCoreAddress"
                 },
                 {
-                  "doc": "",
+                  "doc": "Flag which shows if this address is locked by a script.",
                   "name": "collateralTxOutCoreAddressHasScript"
                 },
                 {
-                  "doc": "",
+                  "doc": "The payment credential part of the Shelley address. (NULL for Byron addresses). For a\nscript-locked address, this is the script hash.",
                   "name": "collateralTxOutCorePaymentCred"
                 },
                 {
-                  "doc": "",
+                  "doc": "The StakeAddress table index for the stake address part of the Shelley address. (NULL for Byron\naddresses).",
                   "name": "collateralTxOutCoreStakeAddressId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output value (in Lovelace) of the transaction output.",
                   "name": "collateralTxOutCoreValue"
                 },
                 {
-                  "doc": "",
+                  "doc": "The output datum hash, null when the output carries no datum hash; independent of script presence.",
                   "name": "collateralTxOutCoreDataHash"
                 },
                 {
-                  "doc": "",
+                  "doc": "A textual description of multi-assets in the declared collateral-return output. These are\nrecorded here rather than in the normal @ma_tx_out@ rows.",
                   "name": "collateralTxOutCoreMultiAssetsDescr"
                 },
                 {
-                  "doc": "",
+                  "doc": "The inline datum of the output, if it has one. New in v13.",
                   "name": "collateralTxOutCoreInlineDatumId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The reference script of the output, if it has one. New in v13.",
                   "name": "collateralTxOutCoreReferenceScriptId"
                 }
               ],
               "name": "CollateralTxOutCore"
             }
           ],
-          "doc": "Table Name: collateral_tx_out\nDescription: Represents a collateral transaction output in the Cardano blockchain.",
+          "doc": "Schema reference for @collateral_tx_out@:\nA table for transaction collateral outputs. New in v13.",
           "kind": "data",
-          "line": 126,
+          "line": 139,
           "name": "CollateralTxOutCore",
           "position": "before"
         },
@@ -3386,24 +4641,24 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "",
+                  "doc": "The Multi Asset transaction output amount (denominated in the Multi Asset).",
                   "name": "maTxOutCoreQuantity"
                 },
                 {
-                  "doc": "",
+                  "doc": "The TxOut table index for the transaction that this Multi Asset transaction output.",
                   "name": "maTxOutCoreTxOutId"
                 },
                 {
-                  "doc": "",
+                  "doc": "The MultiAsset table index specifying the asset.",
                   "name": "maTxOutCoreIdent"
                 }
               ],
               "name": "MaTxOutCore"
             }
           ],
-          "doc": "Table Name: ma_tx_out\nDescription: Represents a multi-asset transaction output in the Cardano blockchain.",
+          "doc": "Schema reference for @ma_tx_out@:\nA table containing Multi-Asset transaction outputs.",
           "kind": "data",
-          "line": 179,
+          "line": 206,
           "name": "MaTxOutCore",
           "position": "before"
         }
@@ -4177,23 +5432,37 @@
           "position": "before"
         },
         {
-          "doc": "QUERY ----------------------------------------------------------------------------------",
+          "doc": "Schema reference for @epoch_sync_enabled@:\nA single-row toggle controlling whether the @epoch@ and @epoch_current@ views return data.\n\n@singleton@: Always @TRUE@; enforces a single row.\n@enabled@: Whether epoch aggregation (the @epoch@ / @epoch_current@ views) is enabled.",
           "kind": "function",
-          "line": 220,
+          "line": 97,
+          "name": "setEpochSyncEnabledStmt",
+          "position": "before"
+        },
+        {
+          "doc": "Schema reference for @epoch_finalized@:\nMaterialised aggregates for finalized (completed) epochs. Together with @epoch_current@ it backs the @epoch@ view.\n\n@out_sum@: The sum of the transaction output values (in Lovelace) in this epoch.\n@fees@: The sum of the fees (in Lovelace) in this epoch.\n@tx_count@: The number of transactions in this epoch.\n@blk_count@: The number of blocks in this epoch.\n@no@: The epoch number (unique).\n@start_time@: The epoch start time.\n@end_time@: The epoch end time.",
+          "kind": "function",
+          "line": 154,
+          "name": "appendEpochFinalizedStmt",
+          "position": "before"
+        },
+        {
+          "doc": "QUERY ----------------------------------------------------------------------------------\nSchema reference for @epoch_current@:\nA view computing aggregates for the current (not-yet-finalized) epoch live from @block@ and @tx@. Excludes any epoch already present in @epoch_finalized@, and returns rows only when epoch sync is enabled (see @epoch_sync_enabled@).\n\n@id@: Synthetic id (epoch number + 1).\n@out_sum@: The sum of the transaction output values (in Lovelace) in this epoch.\n@fees@: The sum of the fees (in Lovelace) in this epoch.\n@tx_count@: The number of transactions in this epoch.\n@blk_count@: The number of blocks in this epoch.\n@no@: The epoch number.\n@start_time@: The epoch start time.\n@end_time@: The epoch end time.",
+          "kind": "function",
+          "line": 246,
           "name": "queryEpochEntryStmt",
           "position": "before"
         },
         {
           "doc": "Read a row directly from the epoch_finalized table, bypassing the public\nepoch view. Tests use this to distinguish a real finalised epoch from one\nthat the epoch_current view is merely surfacing.",
           "kind": "function",
-          "line": 248,
+          "line": 274,
           "name": "queryEpochFinalizedEntryStmt",
           "position": "before"
         },
         {
           "doc": "Get the most recent epoch in the Epoch DB table.",
           "kind": "function",
-          "line": 287,
+          "line": 313,
           "name": "queryLatestEpoch",
           "position": "before"
         }
@@ -5021,6 +6290,147 @@
       "header": null,
       "module": "Cardano.Db.Types",
       "path": "cardano-db/src/Cardano/Db/Types.hs"
+    },
+    {
+      "annotations": [
+        {
+          "doc": "For api versioning.",
+          "kind": "type-synonym",
+          "line": 77,
+          "name": "APIVersion",
+          "position": "before"
+        },
+        {
+          "doc": "Shortcut for common api result types.",
+          "kind": "type-synonym",
+          "line": 80,
+          "name": "ApiRes",
+          "position": "before"
+        },
+        {
+          "doc": "SMASH management endpoints use HTTP Basic authentication unless the server is built with\n@DISABLE_BASIC_AUTH@. Supply credentials with @--admins FILE@, one @username,password@ pair per\nline. These protect delist, enlist, ticker reservation and policy-fetch operations. Deploy behind\nHTTPS to protect credentials in transit.",
+          "kind": "type-synonym",
+          "line": 88,
+          "name": "BasicAuthURL",
+          "position": "before"
+        },
+        {
+          "doc": "GET @/api/v1/metadata/{id}/{hash}@ serves stored pool metadata for the requested pool identifier and\nmetadata hash. Metadata collection is performed by db-sync.",
+          "kind": "type-synonym",
+          "line": 94,
+          "name": "OffChainPoolMetadataAPI",
+          "position": "before"
+        },
+        {
+          "doc": "GET @/api/v1/tickers@ returns reserved pool ticker names.",
+          "kind": "type-synonym",
+          "line": 102,
+          "name": "ReservedTickersAPI",
+          "position": "before"
+        },
+        {
+          "doc": "GET @/api/v1/delisted@ returns the pools on the server's delisted list.",
+          "kind": "type-synonym",
+          "line": 107,
+          "name": "DelistedPoolsAPI",
+          "position": "before"
+        },
+        {
+          "doc": "GET @/api/v1/errors/{poolId}@ returns recorded pool metadata fetch errors, optionally filtered by\n@fromDate@ in @DD.MM.YYYY@ format. Results are newest first and limited to 10 even with a date\nfilter. Each result contains @time@, @utcTime@, @poolId@, @poolHash@, @cause@ and @retryCount@.\n@time@ is formatted as @DD.MM.YYYY. HH:MM:SS@; @utcTime@ is the serialized POSIX time in seconds.",
+          "kind": "type-synonym",
+          "line": 115,
+          "name": "FetchPoolErrorAPI",
+          "position": "before"
+        },
+        {
+          "doc": "PATCH @/api/v1/delist@ adds a pool to the delisted list; subsequent metadata requests for it are\nrejected.",
+          "kind": "type-synonym",
+          "line": 121,
+          "name": "DelistPoolAPI",
+          "position": "before"
+        },
+        {
+          "doc": "PATCH @/api/v1/enlist@ removes a pool from the delisted list.",
+          "kind": "type-synonym",
+          "line": 124,
+          "name": "EnlistPoolAPI",
+          "position": "before"
+        },
+        {
+          "doc": "POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that\nticker is not returned. The ticker does not need to be currently used by its reserved pool.",
+          "kind": "type-synonym",
+          "line": 128,
+          "name": "AddTickerAPI",
+          "position": "before"
+        },
+        {
+          "doc": "POST @/api/v1/policies@ fetches policy information, including delisted pools and reserved tickers,\nfrom another SMASH server.",
+          "kind": "type-synonym",
+          "line": 133,
+          "name": "FetchPoliciesAPI",
+          "position": "before"
+        },
+        {
+          "doc": "PATCH @/api/v1/delist@ adds a pool to the delisted list; subsequent metadata requests for it are\nrejected.",
+          "kind": "type-synonym",
+          "line": 137,
+          "name": "DelistPoolAPI",
+          "position": "before"
+        },
+        {
+          "doc": "PATCH @/api/v1/enlist@ removes a pool from the delisted list.",
+          "kind": "type-synonym",
+          "line": 140,
+          "name": "EnlistPoolAPI",
+          "position": "before"
+        },
+        {
+          "doc": "POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that\nticker is not returned. The ticker does not need to be currently used by its reserved pool.",
+          "kind": "type-synonym",
+          "line": 144,
+          "name": "AddTickerAPI",
+          "position": "before"
+        },
+        {
+          "doc": "POST @/api/v1/policies@ fetches policy information, including delisted pools and reserved tickers,\nfrom another SMASH server.",
+          "kind": "type-synonym",
+          "line": 149,
+          "name": "FetchPoliciesAPI",
+          "position": "before"
+        },
+        {
+          "doc": "GET @/api/v1/retired@ lists retired pools. Metadata requests for retired pools are rejected.",
+          "kind": "type-synonym",
+          "line": 153,
+          "name": "RetiredPoolsAPI",
+          "position": "before"
+        },
+        {
+          "doc": "API for serving @swagger.json@.",
+          "kind": "type-synonym",
+          "line": 172,
+          "name": "SwaggerAPI",
+          "position": "before"
+        },
+        {
+          "doc": "Combined SMASH API with Swagger documentation.",
+          "kind": "type-synonym",
+          "line": 175,
+          "name": "API",
+          "position": "before"
+        },
+        {
+          "doc": "Just the @Proxy@ for the API type.",
+          "kind": "function",
+          "line": 181,
+          "name": "smashApi",
+          "position": "before"
+        }
+      ],
+      "cpp": true,
+      "header": null,
+      "module": "Cardano.SMASH.Server.Api",
+      "path": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs"
     }
   ],
   "schemaVersion": 1

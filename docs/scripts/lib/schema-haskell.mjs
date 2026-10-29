@@ -339,6 +339,15 @@ export function readHaskellTables(repoRoot, variant) {
           `${file}: ${instance.type} lists ${names.length} columnNames for ${fields.length} record fields`,
         );
       }
+      // columnNames describes SQL/encoder order, which need not be record declaration order.
+      // Associate by the same naming rule as DbInfo's default. Unknown aliases require an
+      // explicit reader extension, never a positional guess that can silently rotate docs/types.
+      const byColumn = new Map(fields.map((f) => [fieldToColumn(instance.type, f.field), f]));
+      if (new Set(names).size !== names.length || names.some((name) => !byColumn.has(name))) {
+        throw new Error(
+          `${file}: ${instance.type} cannot associate columnNames with record fields`,
+        );
+      }
       if (tables.has(table)) {
         throw new Error(
           `${file}: table ${table} is declared twice (${tables.get(table).record}, ${instance.type})`,
@@ -348,7 +357,7 @@ export function readHaskellTables(repoRoot, variant) {
         table,
         record: instance.type,
         file,
-        columns: fields.map((f, i) => ({column: names[i], ...f})),
+        columns: names.map((column) => ({column, ...byColumn.get(column)})),
       });
     }
   }

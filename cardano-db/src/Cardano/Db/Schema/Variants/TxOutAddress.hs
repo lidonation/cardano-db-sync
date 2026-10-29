@@ -20,19 +20,27 @@ import Cardano.Db.Statement.Function.Core (bulkEncoder)
 import Cardano.Db.Statement.Types (DbInfo (..), Entity (..), Key)
 import Cardano.Db.Types (DbLovelace, DbWord64 (..), dbLovelaceDecoder, dbLovelaceEncoder, dbLovelaceValueEncoder, dbWord64ValueEncoder)
 
--- |
--- Table Name: tx_out
--- Description: Represents the outputs of transactions, including addresses and values.
+-- | Schema reference for @tx_out@:
+-- A table for transaction outputs.
 data TxOutAddress = TxOutAddress
   { txOutAddressTxId :: !Id.TxId
+  -- ^ The Tx table index of the transaction that contains this transaction output.
   , txOutAddressIndex :: !Word64
+  -- ^ The index of this transaction output with the transaction.
   , txOutAddressStakeAddressId :: !(Maybe Id.StakeAddressId)
   , txOutAddressValue :: !DbLovelace
+  -- ^ The output value (in Lovelace) of the transaction output.
   , txOutAddressDataHash :: !(Maybe ByteString)
+  -- ^ The output datum hash, null when the output carries no datum hash; independent of script presence.
   , txOutAddressInlineDatumId :: !(Maybe Id.DatumId)
+  -- ^ The inline datum of the output, if it has one. New in v13.
   , txOutAddressReferenceScriptId :: !(Maybe Id.ScriptId)
+  -- ^ The reference script of the output, if it has one. New in v13.
   , txOutAddressConsumedByTxId :: !(Maybe Id.TxId)
+  -- ^ The Tx table index of the transaction that consumes this transaction output. Not populated by
+  -- default, can be activated via tx-out configs.
   , txOutAddressAddressId :: !Id.AddressId
+  -- ^ The Address table index for the output address.
   }
   deriving (Eq, Show, Generic)
 
@@ -110,19 +118,29 @@ txOutAddressBulkEncoder =
     (bulkEncoder $ E.nullable $ Id.getTxId >$< E.int8) -- txOutAddressConsumedByTxId
     (bulkEncoder $ E.nonNullable $ Id.getAddressId >$< E.int8) -- txOutAddressAddressId
 
--- |
--- Table Name: collateral_tx_out
--- Description: Represents collateral transaction outputs, which are used to cover transaction fees in case of failure.
+-- | Schema reference for @collateral_tx_out@:
+-- A table for transaction collateral outputs. New in v13.
 data CollateralTxOutAddress = CollateralTxOutAddress
   { collateralTxOutAddressTxId :: !Id.TxId
+  -- ^ The Tx table index of the transaction that contains this collateral output.
   , collateralTxOutAddressIndex :: !Word64
+  -- ^ The index of this transaction output with the transaction.
   , collateralTxOutAddressStakeAddressId :: !(Maybe Id.StakeAddressId)
+  -- ^ The StakeAddress table index for the stake address part of the Shelley address. (NULL for Byron
+  -- addresses).
   , collateralTxOutAddressValue :: !DbLovelace
+  -- ^ The output value (in Lovelace) of the transaction output.
   , collateralTxOutAddressDataHash :: !(Maybe ByteString)
+  -- ^ The output datum hash, null when the output carries no datum hash; independent of script presence.
   , collateralTxOutAddressMultiAssetsDescr :: !Text
+  -- ^ A textual description of multi-assets in the declared collateral-return output. These are
+  -- recorded here rather than in the normal @ma_tx_out@ rows.
   , collateralTxOutAddressInlineDatumId :: !(Maybe Id.DatumId)
+  -- ^ The inline datum of the output, if it has one. New in v13.
   , collateralTxOutAddressReferenceScriptId :: !(Maybe Id.ScriptId)
+  -- ^ The reference script of the output, if it has one. New in v13.
   , collateralTxOutAddressAddressId :: !Id.AddressId
+  -- ^ The Address table index for the output address.
   }
   deriving (Eq, Show, Generic)
 
@@ -157,15 +175,22 @@ collateralTxOutAddressEncoder =
     , collateralTxOutAddressAddressId >$< Id.idEncoder Id.getAddressId
     ]
 
--- |
--- Table Name: address
--- Description: Represents addresses used in transactions, including their raw representation and associated scripts.
+-- | Schema reference for @address@:
+-- A table for addresses that appear in outputs.
 data Address = Address
   { addressAddress :: !Text
+  -- ^ The human readable encoding of the output address. Will be Base58 for Byron era addresses and
+  -- Bech32 for Shelley era.
   , addressRaw :: !ByteString
+  -- ^ The raw binary address.
   , addressHasScript :: !Bool
+  -- ^ Flag which shows if this address is locked by a script.
   , addressPaymentCred :: !(Maybe ByteString)
+  -- ^ The payment credential part of the Shelley address. (NULL for Byron addresses). For a
+  -- script-locked address, this is the script hash.
   , addressStakeAddressId :: !(Maybe Id.StakeAddressId)
+  -- ^ The StakeAddress table index for the stake address part of the Shelley address. (NULL for Byron
+  -- addresses).
   }
   deriving (Eq, Show, Generic)
 
@@ -197,13 +222,15 @@ addressEncoder =
     , addressStakeAddressId >$< Id.maybeIdEncoder Id.getStakeAddressId
     ]
 
--- |
--- Table Name: ma_tx_out
--- Description: Represents multi-asset transaction outputs, which include various assets and their quantities.
+-- | Schema reference for @ma_tx_out@:
+-- A table containing Multi-Asset transaction outputs.
 data MaTxOutAddress = MaTxOutAddress
   { maTxOutAddressIdent :: !Id.MultiAssetId
+  -- ^ The MultiAsset table index specifying the asset.
   , maTxOutAddressQuantity :: !DbWord64
+  -- ^ The Multi Asset transaction output amount (denominated in the Multi Asset).
   , maTxOutAddressTxOutId :: !Id.TxOutAddressId
+  -- ^ The TxOut table index for the output containing this asset.
   }
   deriving (Eq, Show, Generic)
 

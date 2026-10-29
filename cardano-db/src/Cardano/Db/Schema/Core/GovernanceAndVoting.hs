@@ -43,13 +43,17 @@ import Contravariant.Extras (contrazip3, contrazip4)
 -- These tables manage governance-related data, including DReps, committees, and voting procedures.
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: drep_hash
--- Description: Stores hashes of DRep (Decentralized Reputation) records, which are used in governance processes.
+-- | Schema reference for @drep_hash@:
+-- A table for every unique drep key hash. The existance of an entry doesn't mean the DRep is
+-- registered. New in 13.2-Conway.
 data DrepHash = DrepHash
   { drepHashRaw :: !(Maybe ByteString) -- sqltype=hash28type
+
+  -- ^ The raw bytes of the DRep.
   , drepHashView :: !Text
+  -- ^ The human readable encoding of the Drep.
   , drepHashHasScript :: !Bool
+  -- ^ Flag which shows if this DRep credentials are a script hash
   }
   deriving (Eq, Show, Generic)
 
@@ -65,14 +69,21 @@ drepHashEncoder =
     , drepHashHasScript >$< E.param (E.nonNullable E.bool)
     ]
 
--- |
--- Table Name: drep_registration
--- Description: Contains details about the registration of DReps, including their public keys and other identifying information.
+-- | Schema reference for @drep_registration@:
+-- A table for DRep registrations, deregistrations or updates. Registration have positive deposit
+-- values, deregistrations have negative and updates have null. Based on this distinction, for a
+-- specific DRep, getting the latest entry gives its registration state. New in 13.2-Conway.
 data DrepRegistration = DrepRegistration
   { drepRegistrationTxId :: !Id.TxId -- noreference
+
+  -- ^ The Tx table index of the tx that includes this certificate.
   , drepRegistrationCertIndex :: !Word16
+  -- ^ The index of this registration within the certificates of this transaction.
   , drepRegistrationDeposit :: !(Maybe Int64)
+  -- ^ The deposits payed if this is an initial registration.
   , drepRegistrationDrepHashId :: !Id.DrepHashId -- noreference
+
+  -- ^ The Drep hash index of this registration.
   , drepRegistrationVotingAnchorId :: !(Maybe Id.VotingAnchorId) -- noreference
   }
   deriving (Eq, Show, Generic)
@@ -90,14 +101,21 @@ drepRegistrationEncoder =
     , drepRegistrationVotingAnchorId >$< Id.maybeIdEncoder Id.getVotingAnchorId
     ]
 
--- |
--- Table Name: drep_distr
--- Description: Contains information about the distribution of DRep tokens, including the amount distributed and the epoch in which the distribution occurred.
+-- | Schema reference for @drep_distr@:
+-- The distribution of delegated voting power per DRep and epoch. Entries are aggregate amounts,
+-- not individual delegations. New in 13.2-Conway.
 data DrepDistr = DrepDistr
   { drepDistrHashId :: !Id.DrepHashId -- noreference
+
+  -- ^ The DrepHash table index that this distribution entry has information about.
   , drepDistrAmount :: !Word64
+  -- ^ The total amount of voting power this DRep is delegated.
   , drepDistrEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch no this distribution is about.
   , drepDistrActiveUntil :: !(Maybe Word64) -- sqltype=word31type
+
+  -- ^ The epoch until which this drep is active.
   }
   deriving (Eq, Show, Generic)
 
@@ -118,15 +136,24 @@ drepDistrBulkEncoder =
     (bulkEncoder $ E.nonNullable $ fromIntegral >$< E.int8)
     (bulkEncoder $ E.nullable $ fromIntegral >$< E.int8)
 
--- |
--- Table Name: delegation_vote
--- Description: Tracks votes cast by stakeholders to delegate their voting rights to other entities within the governance framework.
+-- | Schema reference for @delegation_vote@:
+-- A table containing delegations from a stake address to a drep. New in 13.2-Conway.
 data DelegationVote = DelegationVote
   { delegationVoteAddrId :: !Id.StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address.
   , delegationVoteCertIndex :: !Word16
+  -- ^ The index of this delegation within the certificates of this transaction.
   , delegationVoteDrepHashId :: !Id.DrepHashId -- noreference
+
+  -- ^ The DrepHash table index for the drep being delegated to.
   , delegationVoteTxId :: !Id.TxId -- noreference
+
+  -- ^ The Tx table index of the transaction that contained this delegation.
   , delegationVoteRedeemerId :: !(Maybe Id.RedeemerId) -- noreference
+
+  -- ^ The Redeemer table index that is related with this certificate. TODO: can vote redeemers index
+  -- these delegations?
   }
   deriving (Eq, Show, Generic)
 
@@ -143,24 +170,53 @@ delegationVoteEncoder =
     , delegationVoteRedeemerId >$< Id.maybeIdEncoder Id.getRedeemerId
     ]
 
--- |
--- Table Name: gov_action_proposal
--- Description: Contains proposals for governance actions, including the type of action, the amount of the deposit, and the expiration date.
+-- | Schema reference for @gov_action_proposal@:
+-- A table for proposed GovActionProposal, aka ProposalProcedure, GovAction or GovProposal. This table
+-- may be referenced by TreasuryWithdrawal or NewCommittee. New in 13.2-Conway.
 data GovActionProposal = GovActionProposal
   { govActionProposalTxId :: !Id.TxId -- noreference
+
+  -- ^ The Tx table index of the tx that includes this certificate.
   , govActionProposalIndex :: !Word64
+  -- ^ The index of this proposal procedure within its transaction.
   , govActionProposalPrevGovActionProposal :: !(Maybe Id.GovActionProposalId) -- noreference
+
+  -- ^ The previous related governance action proposal, if any.
   , govActionProposalDeposit :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The deposit amount payed for this proposal.
   , govActionProposalReturnAddress :: !Id.StakeAddressId -- noreference
+
+  -- ^ The StakeAddress index of the reward address to receive the deposit when it is repaid.
   , govActionProposalExpiration :: !(Maybe Word64) -- sqltype=word31type
+
+  -- ^ Shows the epoch at which this governance action will expire.
   , govActionProposalVotingAnchorId :: !(Maybe Id.VotingAnchorId) -- noreference
+
+  -- ^ The VotingAnchor table index related to this proposal.
   , govActionProposalType :: !GovActionType -- sqltype=govactiontype
+
+  -- ^ Can be one of ParameterChange, HardForkInitiation, TreasuryWithdrawals, NoConfidence,
+  -- NewCommittee, NewConstitution, InfoAction
   , govActionProposalDescription :: !Text -- sqltype=jsonb
+
+  -- ^ The JSON encoding of the proposed governance action, not a free-form description.
   , govActionProposalParamProposal :: !(Maybe Id.ParamProposalId) -- noreference
+
+  -- ^ If this is a param proposal action, this has the index of the param_proposal table.
   , govActionProposalRatifiedEpoch :: !(Maybe Word64) -- sqltype=word31type
+
+  -- ^ If not null, then this proposal has been ratified at the specfied epoch.
   , govActionProposalEnactedEpoch :: !(Maybe Word64) -- sqltype=word31type
+
+  -- ^ If not null, then this proposal has been enacted at the specfied epoch.
   , govActionProposalDroppedEpoch :: !(Maybe Word64) -- sqltype=word31type
+
+  -- ^ If not null, then this proposal has been dropped at the specfied epoch. A proposal is dropped
+  -- when it's expired or enacted or when one of its dependencies is expired.
   , govActionProposalExpiredEpoch :: !(Maybe Word64) -- sqltype=word31type
+
+  -- ^ If not null, then this proposal has been expired at the specfied epoch.
   }
   deriving (Eq, Show, Generic)
 
@@ -189,20 +245,38 @@ govActionProposalEncoder =
     , govActionProposalExpiredEpoch >$< E.param (E.nullable $ fromIntegral >$< E.int8)
     ]
 
--- |
--- Table Name: voting_procedure
--- Description: Defines the procedures and rules governing the voting process, including quorum requirements and tallying mechanisms.
+-- | Schema reference for @voting_procedure@:
+-- A table for voting procedures, aka GovVote. A Vote can be Yes No or Abstain. New in 13.2-Conway.
 data VotingProcedure = VotingProcedure
   { votingProcedureTxId :: !Id.TxId -- noreference
+
+  -- ^ The Tx table index of the tx that includes this VotingProcedure.
   , votingProcedureIndex :: !Word16
+  -- ^ The index of this VotingProcedure within this transaction.
   , votingProcedureGovActionProposalId :: !Id.GovActionProposalId -- noreference
+
+  -- ^ The index of the GovActionProposal that this vote targets.
   , votingProcedureVoterRole :: !VoterRole -- sqltype=voterrole
+
+  -- ^ The role of the voter. Can be one of ConstitutionalCommittee, DRep, SPO.
   , votingProcedureDrepVoter :: !(Maybe Id.DrepHashId) -- noreference
+
+  -- ^ A reference to the drep hash entry that voted
   , votingProcedurePoolVoter :: !(Maybe Id.PoolHashId) -- noreference
+
+  -- ^ A reference to the pool hash entry that voted
   , votingProcedureVote :: !Vote -- sqltype=vote
+
+  -- ^ The Vote. Can be one of Yes, No, Abstain.
   , votingProcedureVotingAnchorId :: !(Maybe Id.VotingAnchorId) -- noreference
+
+  -- ^ The VotingAnchor table index associated with this VotingProcedure.
   , votingProcedureCommitteeVoter :: !(Maybe Id.CommitteeHashId) -- noreference
+
+  -- ^ A reference to the hot key committee hash entry that voted
   , votingProcedureInvalid :: !(Maybe Id.EventInfoId) -- noreference
+
+  -- ^ TODO: This is currently not implemented and always stays null. Not null if the vote is invalid.
   }
   deriving (Eq, Show, Generic)
 
@@ -226,14 +300,22 @@ votingProcedureEncoder =
     , votingProcedureInvalid >$< Id.maybeIdEncoder Id.getEventInfoId
     ]
 
--- |
--- Table Name: voting_anchor
--- Description: Acts as an anchor point for votes, ensuring they are securely recorded and linked to specific proposals.
+-- | Schema reference for @voting_anchor@:
+-- A table for every Anchor that appears on Governance Actions. These are pointers to offchain
+-- metadata. The tuple of url and hash is unique. New in 13.2-Conway.
 data VotingAnchor = VotingAnchor
   { votingAnchorUrl :: !VoteUrl -- sqltype=varchar
+
+  -- ^ A URL to a JSON payload of metadata
   , votingAnchorDataHash :: !ByteString
+  -- ^ A hash of the contents of the metadata URL
   , votingAnchorType :: !AnchorType -- sqltype=anchorType
+
+  -- ^ The type of the anchor. It can be gov_action, drep, other, vote, committee_dereg, constitution
   , votingAnchorBlockId :: !Id.BlockId -- noreference
+
+  -- ^ The Block table index of the tx that includes this anchor. This only exists to facilitate
+  -- rollbacks
   }
   deriving (Eq, Show, Generic)
 
@@ -252,13 +334,18 @@ votingAnchorEncoder =
     , votingAnchorBlockId >$< Id.idEncoder Id.getBlockId
     ]
 
--- |
--- Table Name: constitution
--- Description: Holds the on-chain constitution, which defines the rules and principles of the blockchain's governance system.
+-- | Schema reference for @constitution@:
+-- A table for constitution attached to a GovActionProposal. New in 13.2-Conway.
 data Constitution = Constitution
   { constitutionGovActionProposalId :: !(Maybe Id.GovActionProposalId) -- noreference
+
+  -- ^ The GovActionProposal table index for this constitution.
   , constitutionVotingAnchorId :: !Id.VotingAnchorId -- noreference
+
+  -- ^ The VotingAnchor table index for this constitution.
   , constitutionScriptHash :: !(Maybe ByteString) -- sqltype=hash28type
+
+  -- ^ The Script Hash. It's associated script may not be already inserted in the script table.
   }
   deriving (Eq, Show, Generic)
 
@@ -273,13 +360,17 @@ constitutionEncoder =
     , constitutionScriptHash >$< E.param (E.nullable E.bytea)
     ]
 
--- |
--- Table Name: committee
--- Description: Contains information about the committee, including the quorum requirements and the proposal being considered.
+-- | Schema reference for @committee@:
+-- A table for new committee proposed on a GovActionProposal. New in 13.2-Conway.
 data Committee = Committee
   { committeeGovActionProposalId :: !(Maybe Id.GovActionProposalId) -- noreference
+
+  -- ^ The GovActionProposal table index for this new committee. This can be null for genesis
+  -- committees.
   , committeeQuorumNumerator :: !Word64
+  -- ^ The proposed quorum numerator.
   , committeeQuorumDenominator :: !Word64
+  -- ^ The proposed quorum denominator.
   }
   deriving (Eq, Show, Generic)
 
@@ -303,12 +394,14 @@ committeeEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committee_hash
--- Description: Stores hashes of committee records, which are used in governance processes.
+-- | Schema reference for @committee_hash@:
+-- A table for all committee credentials hot or cold
 data CommitteeHash = CommitteeHash
   { committeeHashRaw :: !ByteString -- sqltype=hash28type
+
+  -- ^ The key or script hash
   , committeeHashHasScript :: !Bool
+  -- ^ Flag which shows if this credential is a script hash
   }
   deriving (Eq, Show, Generic)
 
@@ -325,13 +418,18 @@ committeeHashEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committeemember
--- Description: Contains information about committee members.
+-- | Schema reference for @committee_member@:
+-- A table for members of the committee. A committee can have multiple members. New in 13.3-Conway.
 data CommitteeMember = CommitteeMember
   { committeeMemberCommitteeId :: !Id.CommitteeId -- OnDeleteCascade -- here intentionally we use foreign keys
+
+  -- ^ The reference to the committee
   , committeeMemberCommitteeHashId :: !Id.CommitteeHashId -- noreference
+
+  -- ^ The reference to the committee hash
   , committeeMemberExpirationEpoch :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch this member expires
   }
   deriving (Eq, Show, Generic)
 
@@ -348,14 +446,20 @@ committeeMemberEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committeeregistration
--- Description: Contains information about the registration of committee members, including their public keys and other identifying information.
+-- | Schema reference for @committee_registration@:
+-- A table for every committee hot key registration. New in 13.2-Conway.
 data CommitteeRegistration = CommitteeRegistration
   { committeeRegistrationTxId :: !Id.TxId -- noreference
+
+  -- ^ The Tx table index of the tx that includes this certificate.
   , committeeRegistrationCertIndex :: !Word16
+  -- ^ The index of this registration within the certificates of this transaction.
   , committeeRegistrationColdKeyId :: !Id.CommitteeHashId -- noreference
+
+  -- ^ The reference to the registered cold key hash id
   , committeeRegistrationHotKeyId :: !Id.CommitteeHashId -- noreference
+
+  -- ^ The reference to the registered hot key hash id
   }
   deriving (Eq, Show, Generic)
 
@@ -373,14 +477,20 @@ committeeRegistrationEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committeede_registration
--- Description: Contains information about the deregistration of committee members, including their public keys and other identifying information.
+-- | Schema reference for @committee_de_registration@:
+-- A table for every committee key de-registration. New in 13.2-Conway.
 data CommitteeDeRegistration = CommitteeDeRegistration
   { committeeDeRegistrationTxId :: !Id.TxId -- noreference
+
+  -- ^ The Tx table index of the tx that includes this certificate.
   , committeeDeRegistrationCertIndex :: !Word16
+  -- ^ The index of this deregistration within the certificates of this transaction.
   , committeeDeRegistrationVotingAnchorId :: !(Maybe Id.VotingAnchorId) -- noreference
+
+  -- ^ The Voting anchor reference id
   , committeeDeRegistrationColdKeyId :: !Id.CommitteeHashId -- noreference
+
+  -- ^ The reference to the the deregistered cold key hash id
   }
   deriving (Eq, Show, Generic)
 
@@ -396,63 +506,151 @@ committeeDeRegistrationEncoder =
     , committeeDeRegistrationColdKeyId >$< Id.idEncoder Id.getCommitteeHashId
     ]
 
--- |
--- Table Name: param_proposal
--- Description: Contains proposals for changes to the protocol parameters, including the proposed values and the expiration date.
+-- | Schema reference for @param_proposal@:
+-- A table containing block chain parameter change proposals.
 data ParamProposal = ParamProposal
   { paramProposalEpochNo :: !(Maybe Word64) -- sqltype=word31type
+
+  -- ^ The epoch for which this parameter proposal in intended to become active. Changed in 13.2-Conway
+  -- to nullable is always null in Conway era.
   , paramProposalKey :: !(Maybe ByteString) -- sqltype=hash28type
+
+  -- ^ The hash of the crypto key used to sign this proposal. Changed in 13.2-Conway to nullable is
+  -- always null in Conway era.
   , paramProposalMinFeeA :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The 'a' parameter to calculate the minimum transaction fee.
   , paramProposalMinFeeB :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The 'b' parameter to calculate the minimum transaction fee.
   , paramProposalMaxBlockSize :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum block size (in bytes).
   , paramProposalMaxTxSize :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum transaction size (in bytes).
   , paramProposalMaxBhSize :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum block header size (in bytes).
   , paramProposalKeyDeposit :: !(Maybe DbLovelace) -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) require for a deposit to register a StakeAddress.
   , paramProposalPoolDeposit :: !(Maybe DbLovelace) -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) require for a deposit to register a stake pool.
   , paramProposalMaxEpoch :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of epochs in the future that a pool retirement is allowed to be scheduled
+  -- for.
   , paramProposalOptimalPoolCount :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The optimal number of stake pools.
   , paramProposalInfluence :: !(Maybe Double)
+  -- ^ The influence of the pledge on a stake pool's probability on minting a block.
   , paramProposalMonetaryExpandRate :: !(Maybe Double)
+  -- ^ The monetary expansion rate.
   , paramProposalTreasuryGrowthRate :: !(Maybe Double)
+  -- ^ The treasury growth rate.
   , paramProposalDecentralisation :: !(Maybe Double)
+  -- ^ The decentralisation parameter (1 fully centralised, 0 fully decentralised).
   , paramProposalEntropy :: !(Maybe ByteString) -- sqltype=hash32type
+
+  -- ^ The 32 byte string of extra random-ness to be added into the protocol's entropy pool.
   , paramProposalProtocolMajor :: !(Maybe Word16) -- sqltype=word31type
+
+  -- ^ The protocol major number.
   , paramProposalProtocolMinor :: !(Maybe Word16) -- sqltype=word31type
+
+  -- ^ The protocol minor number.
   , paramProposalMinUtxoValue :: !(Maybe DbLovelace) -- sqltype=lovelace
+
+  -- ^ The minimum value of a UTxO entry.
   , paramProposalMinPoolCost :: !(Maybe DbLovelace) -- sqltype=lovelace
+
+  -- ^ The minimum pool cost.
   , paramProposalCostModelId :: !(Maybe Id.CostModelId) -- noreference
+
+  -- ^ The CostModel table index for the proposal.
   , paramProposalPriceMem :: !(Maybe Double)
+  -- ^ The per word cost of script memory usage.
   , paramProposalPriceStep :: !(Maybe Double)
+  -- ^ The cost of script execution step usage.
   , paramProposalMaxTxExMem :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution memory allowed to be used in a single transaction.
   , paramProposalMaxTxExSteps :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution steps allowed to be used in a single transaction.
   , paramProposalMaxBlockExMem :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution memory allowed to be used in a single block.
   , paramProposalMaxBlockExSteps :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution steps allowed to be used in a single block.
   , paramProposalMaxValSize :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum Val size.
   , paramProposalCollateralPercent :: !(Maybe Word16) -- sqltype=word31type
+
+  -- ^ The percentage of the txfee which must be provided as collateral when including non-native
+  -- scripts.
   , paramProposalMaxCollateralInputs :: !(Maybe Word16) -- sqltype=word31type
+
+  -- ^ The maximum number of collateral inputs allowed in a transaction.
   , paramProposalRegisteredTxId :: !Id.TxId -- noreference
+
+  -- ^ The Tx table index for the transaction that contains this parameter proposal.
   , paramProposalCoinsPerUtxoSize :: !(Maybe DbLovelace) -- sqltype=lovelace
+
+  -- ^ For Alonzo this is the cost per UTxO word. For Babbage and later per UTxO byte. New in v13:
+  -- Renamed from coins_per_utxo_word.
   , paramProposalPvtMotionNoConfidence :: !(Maybe Double)
+  -- ^ Pool Voting threshold for motion of no-confidence. New in 13.2-Conway.
   , paramProposalPvtCommitteeNormal :: !(Maybe Double)
+  -- ^ Pool Voting threshold for new committee/threshold (normal state). New in 13.2-Conway.
   , paramProposalPvtCommitteeNoConfidence :: !(Maybe Double)
+  -- ^ Pool Voting threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.
   , paramProposalPvtHardForkInitiation :: !(Maybe Double)
+  -- ^ Pool Voting threshold for hard-fork initiation. New in 13.2-Conway.
   , paramProposalPvtppSecurityGroup :: !(Maybe Double)
   , paramProposalDvtMotionNoConfidence :: !(Maybe Double)
+  -- ^ DRep Vote threshold for motion of no-confidence. New in 13.2-Conway.
   , paramProposalDvtCommitteeNormal :: !(Maybe Double)
+  -- ^ DRep Vote threshold for new committee/threshold (normal state). New in 13.2-Conway.
   , paramProposalDvtCommitteeNoConfidence :: !(Maybe Double)
+  -- ^ DRep Vote threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.
   , paramProposalDvtUpdateToConstitution :: !(Maybe Double)
+  -- ^ DRep Vote threshold for update to the Constitution. New in 13.2-Conway.
   , paramProposalDvtHardForkInitiation :: !(Maybe Double)
+  -- ^ DRep Vote threshold for hard-fork initiation. New in 13.2-Conway.
   , paramProposalDvtPPNetworkGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, network group. New in 13.2-Conway.
   , paramProposalDvtPPEconomicGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, economic group. New in 13.2-Conway.
   , paramProposalDvtPPTechnicalGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, technical group. New in 13.2-Conway.
   , paramProposalDvtPPGovGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, governance group. New in 13.2-Conway.
   , paramProposalDvtTreasuryWithdrawal :: !(Maybe Double)
+  -- ^ DRep Vote threshold for treasury withdrawal. New in 13.2-Conway.
   , paramProposalCommitteeMinSize :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ Minimal constitutional committee size. New in 13.2-Conway.
   , paramProposalCommitteeMaxTermLength :: !(Maybe DbWord64) --
+
+  -- ^ Constitutional committee term limits. New in 13.2-Conway.
   , paramProposalGovActionLifetime :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ Governance action expiration. New in 13.2-Conway.
   , paramProposalGovActionDeposit :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ Governance action deposit. New in 13.2-Conway.
   , paramProposalDrepDeposit :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ DRep deposit amount. New in 13.2-Conway.
   , paramProposalDrepActivity :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ DRep activity period. New in 13.2-Conway.
   , paramProposalMinFeeRefScriptCostPerByte :: !(Maybe Double)
   }
   deriving (Show, Eq, Generic)
@@ -585,13 +783,19 @@ paramProposalEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: treasury_withdrawal
--- Description:
+-- | Schema reference for @treasury_withdrawal@:
+-- A table for all treasury withdrawals proposed on a GovActionProposal. New in 13.2-Conway.
 data TreasuryWithdrawal = TreasuryWithdrawal
   { treasuryWithdrawalGovActionProposalId :: !Id.GovActionProposalId -- noreference
+
+  -- ^ The GovActionProposal table index for this withdrawal.Multiple TreasuryWithdrawal may reference
+  -- the same GovActionProposal.
   , treasuryWithdrawalStakeAddressId :: !Id.StakeAddressId -- noreference
+
+  -- ^ The address that benefits from this withdrawal.
   , treasuryWithdrawalAmount :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount for this withdrawl.
   }
   deriving (Eq, Show, Generic)
 
@@ -613,9 +817,8 @@ treasuryWithdrawalBulkEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: event_info
--- Description: Contains information about events, including the epoch in which they occurred and the type of event.
+-- | Schema reference for @event_info@:
+-- Ledger event identifiers with an epoch and an optional transaction reference.
 data EventInfo = EventInfo
   { eventInfoTxId :: !(Maybe Id.TxId) -- noreference
   , eventInfoEpoch :: !Word64 -- sqltype=word31type

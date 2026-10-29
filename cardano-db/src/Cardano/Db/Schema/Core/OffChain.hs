@@ -30,16 +30,26 @@ import Cardano.Db.Statement.Types (DbInfo (..), Entity (..), Key)
 -- These tables manage off-chain data, including pool and vote data.
 ----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: off_chain_pool_data
--- Description:
+-- | Schema reference for @off_chain_pool_data@:
+-- The pool offchain (ie not on chain) for a stake pool.
 data OffChainPoolData = OffChainPoolData
   { offChainPoolDataPoolId :: !Id.PoolHashId -- noreference
+
+  -- ^ The PoolHash table index for the pool this offchain data refers.
   , offChainPoolDataTickerName :: !Text
+  -- ^ The pool's ticker name (as many as 5 characters).
   , offChainPoolDataHash :: !ByteString -- sqltype=hash32type
+
+  -- ^ The hash of the offchain data.
   , offChainPoolDataJson :: !Text -- sqltype=jsonb
+
+  -- ^ The payload as JSON.
   , offChainPoolDataBytes :: !ByteString -- sqltype=bytea
+
+  -- ^ The raw bytes of the payload.
   , offChainPoolDataPmrId :: !Id.PoolMetadataRefId -- noreference
+
+  -- ^ The PoolMetadataRef table index for this offchain data.
   }
   deriving (Eq, Show, Generic)
 
@@ -60,17 +70,23 @@ offChainPoolDataEncoder =
     , offChainPoolDataPmrId >$< Id.idEncoder Id.getPoolMetadataRefId
     ]
 
--- |
--- Table Name: off_chain_pool_fetch_error
--- Description:
--- The pool metadata fetch error. We duplicate the poolId for easy access.
--- TODO(KS): Debatable whether we need to persist this between migrations!
+-- | Schema reference for @off_chain_pool_fetch_error@:
+-- A table containing pool offchain data fetch errors.
 data OffChainPoolFetchError = OffChainPoolFetchError
   { offChainPoolFetchErrorPoolId :: !Id.PoolHashId -- noreference
+
+  -- ^ The PoolHash table index for the pool this offchain fetch error refers.
   , offChainPoolFetchErrorFetchTime :: !UTCTime -- sqltype=timestamp
+
+  -- ^ The UTC time stamp of the error.
   , offChainPoolFetchErrorPmrId :: !Id.PoolMetadataRefId -- noreference
+
+  -- ^ The PoolMetadataRef table index for this offchain data.
   , offChainPoolFetchErrorFetchError :: !Text
+  -- ^ The text of the error.
   , offChainPoolFetchErrorRetryCount :: !Word -- sqltype=word31type
+
+  -- ^ The number of retries.
   }
   deriving (Eq, Show, Generic)
 
@@ -88,26 +104,37 @@ offChainPoolFetchErrorEncoder =
     , offChainPoolFetchErrorRetryCount >$< E.param (E.nonNullable $ fromIntegral >$< E.int8)
     ]
 
--- |
--- Table Name: off_chain_vote_data
--- Description: Stores off-chain voting anchor data with validation status
+-- | Schema reference for @off_chain_vote_data@:
+-- Off-chain anchor bytes and JSON with validation status. The expected hash must match; mismatches
+-- are recorded in @off_chain_vote_fetch_error@ for retry, not in this table.
 --
--- The is_valid column indicates the parsing status:
---   • TRUE: Content is valid JSON AND conforms to CIP schema
---           All related tables are populated
---   • FALSE: Content is valid JSON BUT does not conform to CIP schema
---           The json column contains the actual JSON, but related tables are empty
---   • NULL: Content is not valid JSON at all
---           The json column contains an error message, bytes column has raw data
+-- @is_valid = TRUE@ means valid JSON parsed as the applicable CIP structure for its anchor type
+-- (CIP-100, CIP-108 or CIP-119). Related rows depend on the anchor type and optional payload fields:
+-- a valid DRep anchor does not populate governance-action rows, or vice versa; authors, references
+-- and external updates may be absent. @is_valid = FALSE@ means JSON parsed but the applicable CIP
+-- structure did not. @is_valid = NULL@ means invalid JSON: @json@ holds an error object, while @bytes@
+-- retains the original payload. In the latter two states language is an empty string, comment is
+-- null and no related detail rows are inserted. New in 13.2-Conway.
 data OffChainVoteData = OffChainVoteData
   { offChainVoteDataVotingAnchorId :: !Id.VotingAnchorId -- noreference
+
+  -- ^ The VotingAnchor table index this offchain data refers.
   , offChainVoteDataHash :: !ByteString
+  -- ^ The hash of the offchain data.
   , offChainVoteDataJson :: !Text -- sqltype=jsonb
+
+  -- ^ The payload as JSON.
   , offChainVoteDataBytes :: !ByteString -- sqltype=bytea
+
+  -- ^ The raw bytes of the payload.
   , offChainVoteDataWarning :: !(Maybe Text)
+  -- ^ A warning that occured while validating the metadata.
   , offChainVoteDataLanguage :: !Text
+  -- ^ The langauge described in the context of the metadata. Described in CIP-100. New in 13.3-Conway.
   , offChainVoteDataComment :: !(Maybe Text)
   , offChainVoteDataIsValid :: !(Maybe Bool)
+  -- ^ Validation status for the applicable CIP structure: TRUE if parsed, FALSE for valid JSON with
+  -- an invalid structure, NULL for invalid JSON.
   }
   deriving (Eq, Show, Generic)
 
@@ -139,15 +166,20 @@ offChainVoteDataBulkEncoder =
     (bulkEncoder (E.nullable E.text))
     (bulkEncoder (E.nullable E.bool))
 
--- |
--- Table Name: off_chain_vote_gov_action_data
--- Description:
+-- | Schema reference for @off_chain_vote_gov_action_data@:
+-- The table with offchain metadata for Governance Actions. Implementes CIP-108. New in 13.3-Conway.
 data OffChainVoteGovActionData = OffChainVoteGovActionData
   { offChainVoteGovActionDataOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
+
+  -- ^ The vote metadata table index this offchain data belongs to.
   , offChainVoteGovActionDataTitle :: !Text
+  -- ^ The title
   , offChainVoteGovActionDataAbstract :: !Text
+  -- ^ The abstract
   , offChainVoteGovActionDataMotivation :: !Text
+  -- ^ The motivation
   , offChainVoteGovActionDataRationale :: !Text
+  -- ^ The rationale
   }
   deriving (Eq, Show, Generic)
 
@@ -188,16 +220,22 @@ offChainVoteGovActionDataBulkEncoder =
     (bulkEncoder (E.nonNullable E.text))
     (bulkEncoder (E.nonNullable E.text))
 
--- |
--- Table Name: off_chain_vote_drep_data
--- Description:
+-- | Schema reference for @off_chain_vote_drep_data@:
+-- The table with offchain metadata for Drep Registrations. Implementes CIP-119. New in 13.3-Conway.
 data OffChainVoteDrepData = OffChainVoteDrepData
   { offChainVoteDrepDataOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
+
+  -- ^ The vote metadata table index this offchain data belongs to.
   , offChainVoteDrepDataPaymentAddress :: !(Maybe Text)
+  -- ^ The payment address
   , offChainVoteDrepDataGivenName :: !Text
+  -- ^ The name. This is the only mandatory field
   , offChainVoteDrepDataObjectives :: !(Maybe Text)
+  -- ^ The objectives
   , offChainVoteDrepDataMotivations :: !(Maybe Text)
+  -- ^ The motivations
   , offChainVoteDrepDataQualifications :: !(Maybe Text)
+  -- ^ The qualifications
   , offChainVoteDrepDataImageUrl :: !(Maybe Text)
   , offChainVoteDrepDataImageHash :: !(Maybe Text)
   }
@@ -228,16 +266,22 @@ offChainVoteDrepDataBulkEncoder =
     (bulkEncoder (E.nullable E.text))
     (bulkEncoder (E.nullable E.text))
 
--- |
--- Table Name: off_chain_vote_author
--- Description:
+-- | Schema reference for @off_chain_vote_author@:
+-- The table with offchain metadata authors, as decribed in CIP-100. New in 13.3-Conway.
 data OffChainVoteAuthor = OffChainVoteAuthor
   { offChainVoteAuthorOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
+
+  -- ^ The OffChainVoteData table index this offchain data refers.
   , offChainVoteAuthorName :: !(Maybe Text)
+  -- ^ The name of the author.
   , offChainVoteAuthorWitnessAlgorithm :: !Text
+  -- ^ The witness algorithm used by the author.
   , offChainVoteAuthorPublicKey :: !Text
+  -- ^ The public key used by the author.
   , offChainVoteAuthorSignature :: !Text
+  -- ^ The signature of the author.
   , offChainVoteAuthorWarning :: !(Maybe Text)
+  -- ^ A warning related to verifying this metadata.
   }
   deriving (Eq, Show, Generic)
 
@@ -264,15 +308,22 @@ offChainVoteAuthorBulkEncoder =
     (bulkEncoder $ E.nonNullable E.text)
     (bulkEncoder $ E.nullable E.text)
 
--- |
--- Table Name: off_chain_vote_reference
--- Description:
+-- | Schema reference for @off_chain_vote_reference@:
+-- The table with offchain metadata references, as decribed in CIP-100. New in 13.3-Conway.
 data OffChainVoteReference = OffChainVoteReference
   { offChainVoteReferenceOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
+
+  -- ^ The OffChainVoteData table index this entry refers.
   , offChainVoteReferenceLabel :: !Text
+  -- ^ The label of this vote reference.
   , offChainVoteReferenceUri :: !Text
+  -- ^ The uri of this vote reference.
   , offChainVoteReferenceHashDigest :: !(Maybe Text)
+  -- ^ The hash digest of this vote reference, as described in CIP-108. This only appears for
+  -- governance action metadata.
   , offChainVoteReferenceHashAlgorithm :: !(Maybe Text)
+  -- ^ The hash algorithm of this vote reference, as described in CIP-108. This only appears for
+  -- governance action metadata.
   }
   deriving (Eq, Show, Generic)
 
@@ -295,13 +346,16 @@ offChainVoteReferenceBulkEncoder =
     (bulkEncoder $ E.nullable E.text)
     (bulkEncoder $ E.nullable E.text)
 
--- |
--- Table Name: off_chain_vote_external_update
--- Description:
+-- | Schema reference for @off_chain_vote_external_update@:
+-- The table with offchain metadata external updates, as decribed in CIP-100. New in 13.3-Conway.
 data OffChainVoteExternalUpdate = OffChainVoteExternalUpdate
   { offChainVoteExternalUpdateOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
+
+  -- ^ The OffChainVoteData table index this entry refers.
   , offChainVoteExternalUpdateTitle :: !Text
+  -- ^ The title of this external update.
   , offChainVoteExternalUpdateUri :: !Text
+  -- ^ The uri of this external update.
   }
   deriving (Eq, Show, Generic)
 
@@ -320,14 +374,18 @@ offChainVoteExternalUpdatesBulkEncoder =
     (bulkEncoder $ E.nonNullable E.text)
     (bulkEncoder $ E.nonNullable E.text)
 
--- |
--- Table Name: off_chain_vote_fetch_error
--- Description:
+-- | Schema reference for @off_chain_vote_fetch_error@:
+-- Errors while fetching or validating offchain Voting Anchor metadata. New in 13.2-Conway.
 data OffChainVoteFetchError = OffChainVoteFetchError
   { offChainVoteFetchErrorVotingAnchorId :: !Id.VotingAnchorId -- noreference
+
+  -- ^ The VotingAnchor table index this offchain fetch error refers.
   , offChainVoteFetchErrorFetchError :: !Text
+  -- ^ The text of the error.
   , offChainVoteFetchErrorFetchTime :: !UTCTime -- sqltype=timestamp
   , offChainVoteFetchErrorRetryCount :: !Word -- sqltype=word31type
+
+  -- ^ The number of retries.
   }
   deriving (Eq, Show, Generic)
 
