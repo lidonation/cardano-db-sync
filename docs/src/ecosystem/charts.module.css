@@ -5,6 +5,9 @@
   margin-block: var(--dbs-space-24);
 }
 .bar {
+  fill: var(--dbs-accent-primary-tint);
+}
+.barRecent {
   fill: var(--dbs-accent-primary);
 }
 .level0 {

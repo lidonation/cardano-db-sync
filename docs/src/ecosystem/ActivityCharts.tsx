@@ -1,4 +1,7 @@
 import React from 'react';
+import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
+import useFallbackLang from '../i18n/useFallbackLang';
+import {ECOSYSTEM_IDS} from './ids';
 import Chart, {ChartGraphic} from '../components/Chart';
 import {linearScale} from '../components/Chart/scale';
 import Tabs from '../components/Tabs';
@@ -17,11 +20,13 @@ function CodeChart({
   range,
   label,
   t,
+  locale,
 }: {
   data: Charts;
   range: Range;
   label: string;
   t: Translate;
+  locale: string;
 }) {
   const points = selectSeries(data, range);
   const id = `code-summary-${range}`;
@@ -54,7 +59,7 @@ function CodeChart({
             return (
               <rect
                 key={point.date}
-                className={styles.bar}
+                className={index >= points.length - 3 ? styles.barRecent : styles.bar}
                 x={20 + index * width}
                 y={Math.min(y, baseline)}
                 width={width * 0.8}
@@ -66,7 +71,12 @@ function CodeChart({
             (point, index) =>
               (range !== '30d' || index % 5 === 0 || index === points.length - 1) && (
                 <text key={point.date} className={styles.axisLabel} x={20 + index * width} y="185">
-                  {range === '12m' ? point.date.slice(5, 7) : point.date.slice(5)}
+                  {range === '12m'
+                    ? new Date(`${point.date}T00:00:00Z`).toLocaleString(locale, {
+                        month: 'short',
+                        timeZone: 'UTC',
+                      })
+                    : point.date.slice(5)}
                 </text>
               ),
           )}
@@ -104,6 +114,10 @@ function CodeChart({
 }
 
 export default function ActivityCharts({data, t}: {data: Charts; t: Translate}) {
+  const {
+    i18n: {currentLocale},
+  } = useDocusaurusContext();
+  const locale = useFallbackLang(ECOSYSTEM_IDS) ?? currentLocale;
   const ranges: {id: Range; label: string}[] = [
     {id: '12m', label: t({id: 'ecosystem.chart.range.year', message: '12 months'})},
     {id: '30d', label: t({id: 'ecosystem.chart.range.month', message: '30 days'})},
@@ -142,7 +156,7 @@ export default function ActivityCharts({data, t}: {data: Charts; t: Translate}) 
             items={ranges.map(({id, label}) => ({
               id,
               label,
-              content: <CodeChart data={data} range={id} label={label} t={t} />,
+              content: <CodeChart data={data} range={id} label={label} t={t} locale={locale} />,
             }))}
           />
         </div>
@@ -182,7 +196,8 @@ export default function ActivityCharts({data, t}: {data: Charts; t: Translate}) 
                         data-count={day.count}
                       >
                         <title>
-                          {day.date}: {day.count} commits
+                          {day.date}: {day.count}{' '}
+                          {t({id: 'ecosystem.chart.commits', message: 'Commits'})}
                         </title>
                       </rect>
                     )),
