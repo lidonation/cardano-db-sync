@@ -33,6 +33,16 @@ describe('activity charts', () => {
     expect(week[0].value).toBe(110);
     expect(week.at(-1)).toEqual({date: '2026-08-15', value: 106});
   });
+  it.each([
+    ['2026-08-15T23:30:00-03:00', '2026-08-16'],
+    ['2026-08-15T00:30:00+03:00', '2026-08-14'],
+    ['August 15, 2026 12:00:00 GMT', '2026-08-15'],
+  ])('normalizes accepted timestamps to the UTC chart date: %s', (builtAt, expected) => {
+    const result = chartData({...data, builtAt});
+    expect(result.daily.at(-1)?.date).toBe(expected);
+    expect(result.monthly.at(-1)?.date).toBe(expected);
+    expect(result.weeks.at(-1)?.days.at(-1)?.date).toBe(expected);
+  });
   it('has 52 weeks of seven cells and consistent weekly totals', () => {
     const {weeks} = chartData(data);
     expect(weeks).toHaveLength(52);

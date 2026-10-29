@@ -11,7 +11,8 @@ const dateString = (time: number) => new Date(time).toISOString().slice(0, 10);
 
 /** Produce bounded, public chart data at build time, not the full commit history. */
 export function chartData(data: RepositoryData): ActivityCharts {
-  const end = Date.parse(`${data.builtAt.slice(0, 10)}T00:00:00Z`);
+  const built = new Date(data.builtAt);
+  const end = Date.UTC(built.getUTCFullYear(), built.getUTCMonth(), built.getUTCDate());
   const endDate = new Date(end);
   const monthEnds = Array.from({length: 12}, (_, index) => {
     if (index === 11) return dateString(end);
