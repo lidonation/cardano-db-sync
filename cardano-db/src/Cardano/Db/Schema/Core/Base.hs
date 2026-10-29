@@ -104,7 +104,7 @@ data Block = Block
   -- ^ The VRF key of the creator of this block.
   , blockOpCert :: !(Maybe ByteString) -- sqltype=hash32type
 
-  -- ^ The hash of the operational certificate of the block producer.
+  -- ^ The raw KES hot verification key from the block producer's operational certificate.
   , blockOpCertCounter :: !(Maybe Word64) -- sqltype=hash63type
 
   -- ^ The value of the counter used to produce the operational certificate.
@@ -162,10 +162,7 @@ blockEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: tx
--- Description: Contains data related to transactions, such as transaction ID, inputs, outputs, and metadata
--- Schema reference for @tx@:
+-- | Schema reference for @tx@:
 -- A table for transactions within a block on the chain.
 data Tx = Tx
   { txHash :: !ByteString -- sqltype=hash32type
@@ -497,7 +494,7 @@ data Datum = Datum
   -- ^ The Hash of the Datum
   , datumTxId :: !TxId -- noreference
 
-  -- ^ The Tx table index for the transaction where this script first became available.
+  -- ^ The Tx table index for the transaction where this datum first became available.
   , datumValue :: !(Maybe Text) -- sqltype=jsonb
 
   -- ^ The actual data in JSON format (detailed schema)
@@ -542,10 +539,12 @@ data Script = Script
   -- type also defines @plutusV4@, which is not yet in the SQL enum.
   , scriptJson :: !(Maybe Text) -- sqltype=jsonb
 
-  -- ^ JSON representation of the timelock script, null for other script types
+  -- ^ JSON representation of native multisig or timelock scripts where supplied by the era converter;
+  -- null for Plutus and Dijkstra scripts, or when JSON decoding fails.
   , scriptBytes :: !(Maybe ByteString) -- sqltype=bytea
 
-  -- ^ CBOR encoded plutus script data, null for other script types
+  -- ^ CBOR script bytes when supplied by the era converter, including Plutus and Dijkstra native
+  -- scripts. Earlier native scripts have no stored CBOR bytes.
   , scriptSerialisedSize :: !(Maybe Word64) -- sqltype=word31type
 
   -- ^ The size of the CBOR serialised script, if it is a Plutus script.
@@ -581,7 +580,7 @@ scriptEncoder =
 -- * enormous* amount a memory which would cost a fortune.
 
 -- | Schema reference for @redeemer@:
--- A table containing redeemers. A redeemer is provided for all items that are validated by a script.
+-- A table containing redeemers. Redeemers supply data and execution budgets for Plutus script validation.
 data Redeemer = Redeemer
   { redeemerTxId :: !TxId -- noreference
 
@@ -598,8 +597,7 @@ data Redeemer = Redeemer
   -- null when ledger is disabled. New in v13: became nullable.
   , redeemerPurpose :: !ScriptPurpose -- sqltype=scriptpurposetype
 
-  -- ^ What kind pf validation this redeemer is used for. It can be one of 'spend', 'mint', 'cert',
-  -- 'reward', @voting@, @proposing@
+  -- ^ The SQL script purpose: @spend@, @mint@, @cert@, @reward@, @vote@ or @propose@.
   , redeemerIndex :: !Word64 -- sqltype=word31type
 
   -- ^ The index of the redeemer pointer in the transaction.
@@ -644,7 +642,7 @@ data RedeemerData = RedeemerData
   -- ^ The Hash of the Plutus Data
   , redeemerDataTxId :: !TxId -- noreference
 
-  -- ^ The Tx table index for the transaction where this script first became available.
+  -- ^ The Tx table index for the transaction where this redeemer data first became available.
   , redeemerDataValue :: !(Maybe Text) -- sqltype=jsonb
 
   -- ^ The actual data in JSON format (detailed schema)

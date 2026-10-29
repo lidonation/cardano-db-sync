@@ -26,15 +26,12 @@ import Cardano.Db.Types (
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- | STAKE DELEGATION
+-- STAKE DELEGATION
 -- These tables handle stake addresses, delegation, and reward
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: stake_address
--- Description: Contains information about stakeholder addresses.
--- Schema reference for @stake_address@:
+-- | Schema reference for @stake_address@:
 -- A table of unique stake addresses. Can be an actual address or a script hash. The existance of an
 -- entry doesn't mean the address is registered or in fact that is was ever registered.
 data StakeAddress = StakeAddress -- Can be an address of a script hash
@@ -76,10 +73,7 @@ stakeAddressEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: stake_registration
--- Description: Contains information about stakeholder registrations.
--- Schema reference for @stake_registration@:
+-- | Schema reference for @stake_registration@:
 -- A table containing stake address registrations.
 data StakeRegistration = StakeRegistration
   { stakeRegistrationAddrId :: !StakeAddressId -- noreference
@@ -112,10 +106,7 @@ stakeRegistrationEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: stake_deregistration
--- Description: Contains information about stakeholder deregistrations.
--- Schema reference for @stake_deregistration@:
+-- | Schema reference for @stake_deregistration@:
 -- A table containing stake address deregistrations.
 data StakeDeregistration = StakeDeregistration
   { stakeDeregistrationAddrId :: !StakeAddressId -- noreference
@@ -159,10 +150,7 @@ stakeDeregistrationEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: delegation
--- Description:Contains information about stakeholder delegations, including the stakeholder's address and the pool to which they are delegating.
--- Schema reference for @delegation@:
+-- | Schema reference for @delegation@:
 -- A table containing delegations from a stake address to a stake pool.
 data Delegation = Delegation
   { delegationAddrId :: !StakeAddressId -- noreference
@@ -221,13 +209,7 @@ delegationEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: reward
--- Description: Reward, Stake and Treasury need to be obtained from the ledger state.
---   The reward for each stake address and. This is not a balance, but a reward amount and the
---   epoch in which the reward was earned.
---   This table should never get rolled back.
--- Schema reference for @reward@:
+-- | Schema reference for @reward@:
 -- A table for earned staking rewards. After 13.2 release it includes only 3 types of rewards: member,
 -- leader and refund, since the other 2 types have moved to a separate table reward_rest. The
 -- rewards are inserted incrementally and this procedure is finalised when the spendable epoch comes.
@@ -273,10 +255,7 @@ rewardBulkEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: reward_rest
--- Description: Contains information about the remaining reward for each stakeholder.
--- Schema reference for @reward_rest@:
+-- | Schema reference for @reward_rest@:
 -- A table for rewards which are not correlated to a pool. It includes 3 types of rewards: reserves,
 -- treasury and proposal_refund. Instant rewards are depredated after Conway.  New in 13.2
 data RewardRest = RewardRest
@@ -320,14 +299,10 @@ rewardRestBulkEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: epoch_stake
--- Description: Contains information about the stake of each stakeholder in each epoch.
--- This table should never get rolled back
--- Schema reference for @epoch_stake@:
--- A table containing the epoch stake distribution for each epoch. This is inserted incrementally in
--- the first blocks of the previous epoch. The stake distribution is extracted from the @set@ snapshot
--- of the ledger. See Shelley specs Sec. 11.2 for more details.
+-- | Schema reference for @epoch_stake@:
+-- The epoch stake distribution, read from the ledger's @mark@ snapshot and tagged for the current
+-- epoch plus one. Normal syncing inserts slices during the preceding epoch after the security
+-- parameter's block delay; migration can catch up earlier slices. See Shelley specs Sec. 11.2.
 data EpochStake = EpochStake
   { epochStakeAddrId :: !StakeAddressId -- noreference
 
@@ -368,10 +343,7 @@ epochStakeBulkEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: epoch_stake_progress
--- Description: Contains information about the progress of the epoch stake calculation.
--- Schema reference for @epoch_stake_progress@:
+-- | Schema reference for @epoch_stake_progress@:
 -- A table which shows when the epoch_stake for an epoch is complete
 data EpochStakeProgress = EpochStakeProgress
   { epochStakeProgressEpochNo :: !Word64 -- sqltype=word31type

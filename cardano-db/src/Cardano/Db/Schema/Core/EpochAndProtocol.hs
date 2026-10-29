@@ -46,15 +46,7 @@ import Hasql.Encoders as E
 -- These tables store fundamental blockchain data, such as blocks, transactions, and UTXOs.
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: epoch
--- Description: The Epoch table is an aggregation of data in the 'Block' table, but is kept in this form
---   because having it as a 'VIEW' is incredibly slow and inefficient.
---   The 'outsum' type in the PostgreSQL world is 'bigint >= 0' so it will error out if an
---   overflow (sum of tx outputs in an epoch) is detected. 'maxBound :: !Int` is big enough to
---   hold 204 times the total Lovelace distribution. The chance of that much being transacted
---   in a single epoch is relatively low.
--- Schema reference for @epoch@:
+-- | Schema reference for @epoch@:
 -- A view aggregating data within an epoch. As of schema stage-two v49 (migration-2-0049) @epoch@ is a
 -- view, not a table: the @UNION ALL@ of @epoch_finalized@ (materialised past epochs) and
 -- @epoch_current@ (the live, in-progress epoch). It returns rows only when epoch sync is enabled (see
@@ -107,10 +99,7 @@ epochDecoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: epochparam
--- Description: Stores parameters relevant to each epoch, such as the number of slots per epoch or the block size limit.
--- Schema reference for @epoch_param@:
+-- | Schema reference for @epoch_param@:
 -- The accepted protocol parameters for an epoch.
 data EpochParam = EpochParam
   { epochParamEpochNo :: !Word64 -- sqltype=word31type
@@ -387,10 +376,7 @@ epochParamEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: epochstate
--- Description: Contains the state of the blockchain at the end of each epoch, including the committee, constitution, and no-confidence votes.
--- Schema reference for @epoch_state@:
+-- | Schema reference for @epoch_state@:
 -- Table with governance (and in the future other) stats per epoch.
 data EpochState = EpochState
   { epochStateCommitteeId :: !(Maybe CommitteeId) -- noreference
@@ -398,7 +384,7 @@ data EpochState = EpochState
   -- ^ The reference to the current committee.
   , epochStateNoConfidenceId :: !(Maybe GovActionProposalId) -- noreference
 
-  -- ^ The reference to the current gov_action_proposal of no confidence. TODO: This remains NULL.
+  -- ^ The reference to the enacted no-confidence governance proposal when the committee is absent; otherwise null.
   , epochStateConstitutionId :: !(Maybe ConstitutionId) -- noreference
 
   -- ^ The reference to the current constitution. Should never be null.
@@ -430,10 +416,7 @@ epochStateEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: epochsync_time
--- Description: Tracks synchronization times for epochs, ensuring nodes are in consensus regarding the current state.
--- Schema reference for @epoch_sync_time@:
+-- | Schema reference for @epoch_sync_time@:
 -- A table containing the time required to fully sync an epoch.
 data EpochSyncTime = EpochSyncTime
   { epochSyncTimeNo :: !Word64 -- sqltype=word31type
@@ -463,14 +446,8 @@ epochSyncTimeEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: ada_pots
--- Description: A table with all the different types of total balances.
---   This is only populated for the Shelley and later eras, and only on epoch boundaries.
---   The treasury and rewards fields will be correct for the whole epoch, but all other
---   fields change block by block.
--- Schema reference for @ada_pots@:
--- A table with all the different types of total balances (Shelley only). The treasury and rewards
+-- | Schema reference for @ada_pots@:
+-- A table with all the different types of total balances (Shelley and later eras, with ledger data). The treasury and rewards
 -- fields will be correct for the whole epoch, but all other fields change block by block.
 data AdaPots = AdaPots
   { adaPotsSlotNo :: !Word64 -- sqltype=word63type
@@ -554,10 +531,7 @@ adaPotsEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: pot_transfer
--- Description: Records transfers between different pots (e.g., from the rewards pot to the treasury pot).
--- Schema reference for @pot_transfer@:
+-- | Schema reference for @pot_transfer@:
 -- A table containing transfers between the reserves pot and the treasury pot.
 data PotTransfer = PotTransfer
   { potTransferCertIndex :: !Word16
@@ -588,10 +562,7 @@ potTransferEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: treasury
--- Description: Holds funds allocated to the treasury, which can be used for network upgrades or other community initiatives.
--- Schema reference for @treasury@:
+-- | Schema reference for @treasury@:
 -- A table for payments from the treasury to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)
 -- if more than one payment was made to a stake address in a single epoch, only the last payment was
 -- kept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a
@@ -625,10 +596,7 @@ treasuryEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: reserve
--- Description: Stores reserves set aside by the protocol to stabilize the cryptocurrency's value or fund future activities.
--- Schema reference for @reserve@:
+-- | Schema reference for @reserve@:
 -- A table for payments from the reserves to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)
 -- if more than one payment was made to a stake address in a single epoch, only the last payment was
 -- kept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a
@@ -662,10 +630,7 @@ reserveEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: cost_model
--- Description: Defines the cost model used for estimating transaction fees, ensuring efficient resource allocation on the network.
--- Schema reference for @cost_model@:
+-- | Schema reference for @cost_model@:
 -- CostModel for EpochParam and ParamProposal.
 data CostModel = CostModel
   { costModelCosts :: !Text -- sqltype=jsonb

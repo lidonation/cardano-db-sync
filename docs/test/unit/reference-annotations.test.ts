@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import {describe, expect, it} from 'vitest';
 
+import {maskHaskell} from '../../scripts/lib/schema-haskell.mjs';
+
 const artifact = JSON.parse(
   fs.readFileSync(
     path.resolve(import.meta.dirname, '../../generated/haddock-annotations.json'),
@@ -436,5 +438,131 @@ describe('reference semantics', () => {
     expect(doc).toContain('pool_metadata_ref');
     expect(doc).toContain('off_chain_pool_data');
     expect(doc).toContain('off_chain_pool_fetch_error');
+  });
+});
+
+// This audit checks current behavior, not parity with legacy prose.
+describe('current implementation audit', () => {
+  const get = (suffix: string, name: string) =>
+    artifact.files
+      .find((file: {path: string}) => file.path.endsWith(suffix))
+      ?.annotations.find((entry: {name: string}) => entry.name === name);
+  const field = (suffix: string, record: string, name: string): string =>
+    get(suffix, record)
+      ?.constructors.flatMap((ctor: {fields: {name: string; doc: string}[]}) => ctor.fields)
+      .find((entry: {name: string}) => entry.name === name)?.doc ?? '';
+  it('exports one canonical schema narrative without contradictory old boilerplate', () => {
+    const records = artifact.files
+      .flatMap((file: {annotations: {doc: string}[]}) => file.annotations)
+      .filter((entry: {doc: string}) => entry.doc?.includes('Schema reference for @'));
+    expect(records.length).toBeGreaterThanOrEqual(78);
+    for (const entry of records) {
+      expect(entry.doc).not.toContain('Table Name:');
+      expect(entry.doc).not.toContain('incredibly slow');
+      expect(entry.doc).not.toContain('Decentralized Reputation');
+    }
+    expect(get('/Core/EpochAndProtocol.hs', 'Epoch').doc).not.toContain('bigint >= 0');
+  });
+  it.each([
+    ['/Core/Base.hs', 'Block', 'blockOpCert', 'KES hot verification key'],
+    ['/Core/Base.hs', 'Redeemer', 'redeemerPurpose', '@vote@'],
+    ['/Core/Base.hs', 'Redeemer', 'redeemerPurpose', '@propose@'],
+    ['/Core/Base.hs', 'Datum', 'datumTxId', 'datum'],
+    ['/Core/Base.hs', 'Script', 'scriptJson', 'multisig'],
+    ['/Core/Base.hs', 'Script', 'scriptBytes', 'Dijkstra native'],
+    ['/Core/Base.hs', 'RedeemerData', 'redeemerDataTxId', 'redeemer data'],
+    [
+      '/Core/EpochAndProtocol.hs',
+      'EpochState',
+      'epochStateNoConfidenceId',
+      'enacted no-confidence',
+    ],
+    ['/Core/GovernanceAndVoting.hs', 'GovActionProposal', 'govActionProposalDescription', 'JSON'],
+  ])('%s %s.%s matches its current producer', (file, record, name, fact) => {
+    expect(field(file, record, name)).toContain(fact);
+  });
+  it('describes the actual mark snapshot used for next-epoch stake', () => {
+    const doc = get('/Core/StakeDelegation.hs', 'EpochStake').doc;
+    expect(doc).toContain('@mark@');
+    expect(doc).not.toContain('@set@');
+  });
+  it('does not promise all optional vote metadata tables for every valid anchor', () => {
+    const doc = get('/Core/OffChain.hs', 'OffChainVoteData').doc;
+    expect(doc).toContain('anchor type');
+    expect(doc).toContain('optional');
+    expect(doc).not.toContain('All related');
+    expect(field('/Core/OffChain.hs', 'OffChainVoteData', 'offChainVoteDataIsValid')).toContain(
+      'applicable CIP',
+    );
+  });
+  it.each(['TxOutCore', 'TxOutAddress', 'CollateralTxOutCore', 'CollateralTxOutAddress'])(
+    'does not tie %s datum hashes to script presence',
+    (record) => {
+      const module = record.endsWith('Core') ? 'Core' : 'Address';
+      const name = record[0].toLowerCase() + record.slice(1) + 'DataHash';
+      const doc = field(`/Variants/TxOut${module}.hs`, record, name);
+      expect(doc).toContain('no datum hash');
+      expect(doc).not.toContain('without scripts');
+    },
+  );
+  it.each(['ShelleyInsertConfig', 'MultiAssetConfig', 'PlutusConfig'])(
+    '%s discloses parsed but unenforced filters',
+    (name) => {
+      expect(get('/Config/Types.hs', name).doc).toContain('not enforced');
+    },
+  );
+  it('distinguishes parsed json_type and CLI flags from effective options', () => {
+    expect(get('/Config/Types.hs', 'JsonTypeConfig').doc).toContain('not consumed');
+    const doc = get('/app/cardano-db-sync.hs', 'pHasInOut').doc;
+    expect(doc).toContain('not used');
+    expect(doc).toContain('tx_out.value');
+  });
+  it('does not falsely promise null transaction deposits without the ledger', () => {
+    const doc = get('/Config/Types.hs', 'LedgerInsertConfig').doc;
+    expect(doc).toContain('computed from resolved inputs');
+    expect(doc).toContain('disable or ignore');
+    expect(doc).not.toContain('@redeemer.fee@ and @tx.deposit@ are null');
+  });
+  it('makes the rollback deletion boundary explicit', () => {
+    const doc = get('/app/cardano-db-sync.hs', 'pRollbackSlotNo').doc;
+    expect(doc).toContain('inclusive');
+    expect(doc).toContain('preceding block');
+  });
+  it('records the exact snapshot threshold and consistency conditions', () => {
+    const doc = get('/Config/Types.hs', 'SnapshotIntervalConfig').doc;
+    expect(doc).toContain('at or above');
+    expect(doc).toContain('consistent');
+    expect(doc).toContain('ten days');
+  });
+});
+
+// If these consumers change, the documented limitations need to be re-audited too.
+describe('runtime evidence for documented configuration limitations', () => {
+  const sourceRoot = path.resolve(import.meta.dirname, '../../../cardano-db-sync/src');
+  const sources = fs
+    .readdirSync(sourceRoot, {recursive: true, withFileTypes: true})
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.hs'))
+    .map((entry) => ({
+      file: path.join(entry.parentPath, entry.name),
+      code: maskHaskell(fs.readFileSync(path.join(entry.parentPath, entry.name), 'utf8')),
+    }));
+  it.each([
+    'ShelleyStakeAddrs',
+    'MultiAssetPolicies',
+    'PlutusScripts',
+    'sioJsonType',
+    'enpHasInOut',
+  ])('%s has no runtime consumer outside its parser/type module', (symbol) => {
+    const consumers = sources.filter(
+      ({file, code}) =>
+        !file.endsWith('/Config/Types.hs') && new RegExp(`\\b${symbol}\\b`).test(code),
+    );
+    expect(consumers.map(({file}) => path.relative(sourceRoot, file))).toEqual([]);
+  });
+  it('metadata keys are actually passed into the runtime and filtered', () => {
+    const builder = sources.find(({file}) => file.endsWith('/DbSync.hs'))!.code;
+    const insert = sources.find(({file}) => file.endsWith('/Insert/Tx.hs'))!.code;
+    expect(builder).toContain('ioKeepMetadataNames = maybeKeepMNames');
+    expect(insert).toContain('key `elem` metadataNames');
   });
 });

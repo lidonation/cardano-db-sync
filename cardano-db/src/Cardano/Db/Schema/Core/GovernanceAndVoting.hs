@@ -43,10 +43,7 @@ import Contravariant.Extras (contrazip3, contrazip4)
 -- These tables manage governance-related data, including DReps, committees, and voting procedures.
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: drep_hash
--- Description: Stores hashes of DRep (Decentralized Reputation) records, which are used in governance processes.
--- Schema reference for @drep_hash@:
+-- | Schema reference for @drep_hash@:
 -- A table for every unique drep key hash. The existance of an entry doesn't mean the DRep is
 -- registered. New in 13.2-Conway.
 data DrepHash = DrepHash
@@ -72,10 +69,7 @@ drepHashEncoder =
     , drepHashHasScript >$< E.param (E.nonNullable E.bool)
     ]
 
--- |
--- Table Name: drep_registration
--- Description: Contains details about the registration of DReps, including their public keys and other identifying information.
--- Schema reference for @drep_registration@:
+-- | Schema reference for @drep_registration@:
 -- A table for DRep registrations, deregistrations or updates. Registration have positive deposit
 -- values, deregistrations have negative and updates have null. Based on this distinction, for a
 -- specific DRep, getting the latest entry gives its registration state. New in 13.2-Conway.
@@ -107,10 +101,7 @@ drepRegistrationEncoder =
     , drepRegistrationVotingAnchorId >$< Id.maybeIdEncoder Id.getVotingAnchorId
     ]
 
--- |
--- Table Name: drep_distr
--- Description: Contains information about the distribution of DRep tokens, including the amount distributed and the epoch in which the distribution occurred.
--- Schema reference for @drep_distr@:
+-- | Schema reference for @drep_distr@:
 -- The distribution of delegated voting power per DRep and epoch. Entries are aggregate amounts,
 -- not individual delegations. New in 13.2-Conway.
 data DrepDistr = DrepDistr
@@ -145,10 +136,7 @@ drepDistrBulkEncoder =
     (bulkEncoder $ E.nonNullable $ fromIntegral >$< E.int8)
     (bulkEncoder $ E.nullable $ fromIntegral >$< E.int8)
 
--- |
--- Table Name: delegation_vote
--- Description: Tracks votes cast by stakeholders to delegate their voting rights to other entities within the governance framework.
--- Schema reference for @delegation_vote@:
+-- | Schema reference for @delegation_vote@:
 -- A table containing delegations from a stake address to a drep. New in 13.2-Conway.
 data DelegationVote = DelegationVote
   { delegationVoteAddrId :: !Id.StakeAddressId -- noreference
@@ -182,10 +170,7 @@ delegationVoteEncoder =
     , delegationVoteRedeemerId >$< Id.maybeIdEncoder Id.getRedeemerId
     ]
 
--- |
--- Table Name: gov_action_proposal
--- Description: Contains proposals for governance actions, including the type of action, the amount of the deposit, and the expiration date.
--- Schema reference for @gov_action_proposal@:
+-- | Schema reference for @gov_action_proposal@:
 -- A table for proposed GovActionProposal, aka ProposalProcedure, GovAction or GovProposal. This table
 -- may be referenced by TreasuryWithdrawal or NewCommittee. New in 13.2-Conway.
 data GovActionProposal = GovActionProposal
@@ -215,7 +200,7 @@ data GovActionProposal = GovActionProposal
   -- NewCommittee, NewConstitution, InfoAction
   , govActionProposalDescription :: !Text -- sqltype=jsonb
 
-  -- ^ A Text describing the content of this GovActionProposal in a readable way.
+  -- ^ The JSON encoding of the proposed governance action, not a free-form description.
   , govActionProposalParamProposal :: !(Maybe Id.ParamProposalId) -- noreference
 
   -- ^ If this is a param proposal action, this has the index of the param_proposal table.
@@ -260,10 +245,7 @@ govActionProposalEncoder =
     , govActionProposalExpiredEpoch >$< E.param (E.nullable $ fromIntegral >$< E.int8)
     ]
 
--- |
--- Table Name: voting_procedure
--- Description: Defines the procedures and rules governing the voting process, including quorum requirements and tallying mechanisms.
--- Schema reference for @voting_procedure@:
+-- | Schema reference for @voting_procedure@:
 -- A table for voting procedures, aka GovVote. A Vote can be Yes No or Abstain. New in 13.2-Conway.
 data VotingProcedure = VotingProcedure
   { votingProcedureTxId :: !Id.TxId -- noreference
@@ -318,10 +300,7 @@ votingProcedureEncoder =
     , votingProcedureInvalid >$< Id.maybeIdEncoder Id.getEventInfoId
     ]
 
--- |
--- Table Name: voting_anchor
--- Description: Acts as an anchor point for votes, ensuring they are securely recorded and linked to specific proposals.
--- Schema reference for @voting_anchor@:
+-- | Schema reference for @voting_anchor@:
 -- A table for every Anchor that appears on Governance Actions. These are pointers to offchain
 -- metadata. The tuple of url and hash is unique. New in 13.2-Conway.
 data VotingAnchor = VotingAnchor
@@ -355,10 +334,7 @@ votingAnchorEncoder =
     , votingAnchorBlockId >$< Id.idEncoder Id.getBlockId
     ]
 
--- |
--- Table Name: constitution
--- Description: Holds the on-chain constitution, which defines the rules and principles of the blockchain's governance system.
--- Schema reference for @constitution@:
+-- | Schema reference for @constitution@:
 -- A table for constitution attached to a GovActionProposal. New in 13.2-Conway.
 data Constitution = Constitution
   { constitutionGovActionProposalId :: !(Maybe Id.GovActionProposalId) -- noreference
@@ -384,10 +360,7 @@ constitutionEncoder =
     , constitutionScriptHash >$< E.param (E.nullable E.bytea)
     ]
 
--- |
--- Table Name: committee
--- Description: Contains information about the committee, including the quorum requirements and the proposal being considered.
--- Schema reference for @committee@:
+-- | Schema reference for @committee@:
 -- A table for new committee proposed on a GovActionProposal. New in 13.2-Conway.
 data Committee = Committee
   { committeeGovActionProposalId :: !(Maybe Id.GovActionProposalId) -- noreference
@@ -421,10 +394,7 @@ committeeEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committee_hash
--- Description: Stores hashes of committee records, which are used in governance processes.
--- Schema reference for @committee_hash@:
+-- | Schema reference for @committee_hash@:
 -- A table for all committee credentials hot or cold
 data CommitteeHash = CommitteeHash
   { committeeHashRaw :: !ByteString -- sqltype=hash28type
@@ -448,10 +418,7 @@ committeeHashEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committeemember
--- Description: Contains information about committee members.
--- Schema reference for @committee_member@:
+-- | Schema reference for @committee_member@:
 -- A table for members of the committee. A committee can have multiple members. New in 13.3-Conway.
 data CommitteeMember = CommitteeMember
   { committeeMemberCommitteeId :: !Id.CommitteeId -- OnDeleteCascade -- here intentionally we use foreign keys
@@ -479,10 +446,7 @@ committeeMemberEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committeeregistration
--- Description: Contains information about the registration of committee members, including their public keys and other identifying information.
--- Schema reference for @committee_registration@:
+-- | Schema reference for @committee_registration@:
 -- A table for every committee hot key registration. New in 13.2-Conway.
 data CommitteeRegistration = CommitteeRegistration
   { committeeRegistrationTxId :: !Id.TxId -- noreference
@@ -513,10 +477,7 @@ committeeRegistrationEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: committeede_registration
--- Description: Contains information about the deregistration of committee members, including their public keys and other identifying information.
--- Schema reference for @committee_de_registration@:
+-- | Schema reference for @committee_de_registration@:
 -- A table for every committee key de-registration. New in 13.2-Conway.
 data CommitteeDeRegistration = CommitteeDeRegistration
   { committeeDeRegistrationTxId :: !Id.TxId -- noreference
@@ -545,10 +506,7 @@ committeeDeRegistrationEncoder =
     , committeeDeRegistrationColdKeyId >$< Id.idEncoder Id.getCommitteeHashId
     ]
 
--- |
--- Table Name: param_proposal
--- Description: Contains proposals for changes to the protocol parameters, including the proposed values and the expiration date.
--- Schema reference for @param_proposal@:
+-- | Schema reference for @param_proposal@:
 -- A table containing block chain parameter change proposals.
 data ParamProposal = ParamProposal
   { paramProposalEpochNo :: !(Maybe Word64) -- sqltype=word31type
@@ -825,10 +783,7 @@ paramProposalEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: treasury_withdrawal
--- Description:
--- Schema reference for @treasury_withdrawal@:
+-- | Schema reference for @treasury_withdrawal@:
 -- A table for all treasury withdrawals proposed on a GovActionProposal. New in 13.2-Conway.
 data TreasuryWithdrawal = TreasuryWithdrawal
   { treasuryWithdrawalGovActionProposalId :: !Id.GovActionProposalId -- noreference
@@ -862,10 +817,8 @@ treasuryWithdrawalBulkEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: event_info
--- Description: Contains information about events, including the epoch in which they occurred and the type of event.
--- Schema reference for @event_info@:
+-- | Schema reference for @event_info@:
+-- Ledger event identifiers with an epoch and an optional transaction reference.
 data EventInfo = EventInfo
   { eventInfoTxId :: !(Maybe Id.TxId) -- noreference
   , eventInfoEpoch :: !Word64 -- sqltype=word31type

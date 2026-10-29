@@ -29,10 +29,7 @@ import Cardano.Db.Types (DbInt65, dbInt65Encoder)
 -- These tables manage governance-related data, including DReps, committees, and voting procedures.
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: multi_asset
--- Description: Contains information about multi-assets, including the policy and name of the asset.
--- Schema reference for @multi_asset@:
+-- | Schema reference for @multi_asset@:
 -- A table containing all the unique policy/name pairs along with a CIP14 asset fingerprint
 data MultiAsset = MultiAsset
   { multiAssetPolicy :: !ByteString -- sqltype=hash28type
@@ -60,10 +57,7 @@ multiAssetEncoder =
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: ma_tx_mint
--- Description: Contains information about the minting of multi-assets, including the quantity of the asset and the transaction in which it was minted.
--- Schema reference for @ma_tx_mint@:
+-- | Schema reference for @ma_tx_mint@:
 -- A table containing Multi-Asset mint events.
 data MaTxMint = MaTxMint
   { maTxMintQuantity :: !DbInt65 -- sqltype=int65type

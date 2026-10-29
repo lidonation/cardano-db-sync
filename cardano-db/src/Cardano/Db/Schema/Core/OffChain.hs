@@ -30,10 +30,7 @@ import Cardano.Db.Statement.Types (DbInfo (..), Entity (..), Key)
 -- These tables manage off-chain data, including pool and vote data.
 ----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: off_chain_pool_data
--- Description:
--- Schema reference for @off_chain_pool_data@:
+-- | Schema reference for @off_chain_pool_data@:
 -- The pool offchain (ie not on chain) for a stake pool.
 data OffChainPoolData = OffChainPoolData
   { offChainPoolDataPoolId :: !Id.PoolHashId -- noreference
@@ -73,12 +70,7 @@ offChainPoolDataEncoder =
     , offChainPoolDataPmrId >$< Id.idEncoder Id.getPoolMetadataRefId
     ]
 
--- |
--- Table Name: off_chain_pool_fetch_error
--- Description:
--- The pool metadata fetch error. We duplicate the poolId for easy access.
--- TODO(KS): Debatable whether we need to persist this between migrations!
--- Schema reference for @off_chain_pool_fetch_error@:
+-- | Schema reference for @off_chain_pool_fetch_error@:
 -- A table containing pool offchain data fetch errors.
 data OffChainPoolFetchError = OffChainPoolFetchError
   { offChainPoolFetchErrorPoolId :: !Id.PoolHashId -- noreference
@@ -112,29 +104,17 @@ offChainPoolFetchErrorEncoder =
     , offChainPoolFetchErrorRetryCount >$< E.param (E.nonNullable $ fromIntegral >$< E.int8)
     ]
 
--- |
--- Table Name: off_chain_vote_data
--- Description: Stores off-chain voting anchor data with validation status
+-- | Schema reference for @off_chain_vote_data@:
+-- Off-chain anchor bytes and JSON with validation status. The expected hash must match; mismatches
+-- are recorded in @off_chain_vote_fetch_error@ for retry, not in this table.
 --
--- The is_valid column indicates the parsing status:
---   • TRUE: Content is valid JSON AND conforms to CIP schema
---           All related tables are populated
---   • FALSE: Content is valid JSON BUT does not conform to CIP schema
---           The json column contains the actual JSON, but related tables are empty
---   • NULL: Content is not valid JSON at all
---           The json column contains an error message, bytes column has raw data
--- Schema reference for @off_chain_vote_data@:
--- Stores off-chain voting anchor data with validation status. The table accepts metadata in a more
--- lenient way than what's described in CIP-100. Only data with hash matches are stored here; hash
--- mismatches are stored in off_chain_vote_fetch_error for retry. The is_valid column indicates the
--- parsing status: • TRUE: Content is valid JSON AND conforms to CIP-100 schema. All related fields
--- (language, comment) and related tables (off_chain_vote_gov_action_data, off_chain_vote_drep_data,
--- off_chain_vote_author, off_chain_vote_reference, off_chain_vote_external_update) are populated. •
--- FALSE: Hash matches and content is valid JSON BUT does not conform to CIP-100 schema. The json
--- column contains the actual JSON, but language/comment fields and related tables remain empty. •
--- NULL: Hash matches but content is not valid JSON at all. The json column contains an error message,
--- bytes column has raw data. Language/comment fields and related tables remain empty. New in
--- 13.2-Conway.
+-- @is_valid = TRUE@ means valid JSON parsed as the applicable CIP structure for its anchor type
+-- (CIP-100, CIP-108 or CIP-119). Related rows depend on the anchor type and optional payload fields:
+-- a valid DRep anchor does not populate governance-action rows, or vice versa; authors, references
+-- and external updates may be absent. @is_valid = FALSE@ means JSON parsed but the applicable CIP
+-- structure did not. @is_valid = NULL@ means invalid JSON: @json@ holds an error object, while @bytes@
+-- retains the original payload. In the latter two states language is an empty string, comment is
+-- null and no related detail rows are inserted. New in 13.2-Conway.
 data OffChainVoteData = OffChainVoteData
   { offChainVoteDataVotingAnchorId :: !Id.VotingAnchorId -- noreference
 
@@ -153,8 +133,8 @@ data OffChainVoteData = OffChainVoteData
   -- ^ The langauge described in the context of the metadata. Described in CIP-100. New in 13.3-Conway.
   , offChainVoteDataComment :: !(Maybe Text)
   , offChainVoteDataIsValid :: !(Maybe Bool)
-  -- ^ Indicates validation status: TRUE for valid JSON conforming to CIP-100 schema, FALSE for valid
-  -- JSON not conforming to CIP-100 schema, NULL for content that is not valid JSON at all.
+  -- ^ Validation status for the applicable CIP structure: TRUE if parsed, FALSE for valid JSON with
+  -- an invalid structure, NULL for invalid JSON.
   }
   deriving (Eq, Show, Generic)
 
@@ -186,10 +166,7 @@ offChainVoteDataBulkEncoder =
     (bulkEncoder (E.nullable E.text))
     (bulkEncoder (E.nullable E.bool))
 
--- |
--- Table Name: off_chain_vote_gov_action_data
--- Description:
--- Schema reference for @off_chain_vote_gov_action_data@:
+-- | Schema reference for @off_chain_vote_gov_action_data@:
 -- The table with offchain metadata for Governance Actions. Implementes CIP-108. New in 13.3-Conway.
 data OffChainVoteGovActionData = OffChainVoteGovActionData
   { offChainVoteGovActionDataOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
@@ -243,10 +220,7 @@ offChainVoteGovActionDataBulkEncoder =
     (bulkEncoder (E.nonNullable E.text))
     (bulkEncoder (E.nonNullable E.text))
 
--- |
--- Table Name: off_chain_vote_drep_data
--- Description:
--- Schema reference for @off_chain_vote_drep_data@:
+-- | Schema reference for @off_chain_vote_drep_data@:
 -- The table with offchain metadata for Drep Registrations. Implementes CIP-119. New in 13.3-Conway.
 data OffChainVoteDrepData = OffChainVoteDrepData
   { offChainVoteDrepDataOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
@@ -292,10 +266,7 @@ offChainVoteDrepDataBulkEncoder =
     (bulkEncoder (E.nullable E.text))
     (bulkEncoder (E.nullable E.text))
 
--- |
--- Table Name: off_chain_vote_author
--- Description:
--- Schema reference for @off_chain_vote_author@:
+-- | Schema reference for @off_chain_vote_author@:
 -- The table with offchain metadata authors, as decribed in CIP-100. New in 13.3-Conway.
 data OffChainVoteAuthor = OffChainVoteAuthor
   { offChainVoteAuthorOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
@@ -337,10 +308,7 @@ offChainVoteAuthorBulkEncoder =
     (bulkEncoder $ E.nonNullable E.text)
     (bulkEncoder $ E.nullable E.text)
 
--- |
--- Table Name: off_chain_vote_reference
--- Description:
--- Schema reference for @off_chain_vote_reference@:
+-- | Schema reference for @off_chain_vote_reference@:
 -- The table with offchain metadata references, as decribed in CIP-100. New in 13.3-Conway.
 data OffChainVoteReference = OffChainVoteReference
   { offChainVoteReferenceOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
@@ -378,10 +346,7 @@ offChainVoteReferenceBulkEncoder =
     (bulkEncoder $ E.nullable E.text)
     (bulkEncoder $ E.nullable E.text)
 
--- |
--- Table Name: off_chain_vote_external_update
--- Description:
--- Schema reference for @off_chain_vote_external_update@:
+-- | Schema reference for @off_chain_vote_external_update@:
 -- The table with offchain metadata external updates, as decribed in CIP-100. New in 13.3-Conway.
 data OffChainVoteExternalUpdate = OffChainVoteExternalUpdate
   { offChainVoteExternalUpdateOffChainVoteDataId :: !Id.OffChainVoteDataId -- noreference
@@ -409,10 +374,7 @@ offChainVoteExternalUpdatesBulkEncoder =
     (bulkEncoder $ E.nonNullable E.text)
     (bulkEncoder $ E.nonNullable E.text)
 
--- |
--- Table Name: off_chain_vote_fetch_error
--- Description:
--- Schema reference for @off_chain_vote_fetch_error@:
+-- | Schema reference for @off_chain_vote_fetch_error@:
 -- Errors while fetching or validating offchain Voting Anchor metadata. New in 13.2-Conway.
 data OffChainVoteFetchError = OffChainVoteFetchError
   { offChainVoteFetchErrorVotingAnchorId :: !Id.VotingAnchorId -- noreference

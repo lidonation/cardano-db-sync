@@ -171,7 +171,7 @@ type SmashAPI =
 -- | API for serving @swagger.json@.
 type SwaggerAPI = "swagger.json" :> Get '[JSON] Swagger
 
--- | Combined API of a Todo service with Swagger documentation.
+-- | Combined SMASH API with Swagger documentation.
 type API = SwaggerAPI :<|> SmashAPI
 
 fullAPI :: Proxy API

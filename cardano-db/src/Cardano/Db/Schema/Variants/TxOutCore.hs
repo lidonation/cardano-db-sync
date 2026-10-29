@@ -18,10 +18,7 @@ import GHC.Generics (Generic)
 import qualified Hasql.Decoders as D
 import qualified Hasql.Encoders as E
 
--- |
--- Table Name: tx_out
--- Description: Represents a transaction output in the Cardano blockchain.
--- Schema reference for @tx_out@:
+-- | Schema reference for @tx_out@:
 -- A table for transaction outputs.
 data TxOutCore = TxOutCore
   { txOutCoreTxId :: !Id.TxId
@@ -42,7 +39,7 @@ data TxOutCore = TxOutCore
   , txOutCoreValue :: !DbLovelace
   -- ^ The output value (in Lovelace) of the transaction output.
   , txOutCoreDataHash :: !(Maybe ByteString)
-  -- ^ The hash of the transaction output datum. (NULL for Txs without scripts).
+  -- ^ The output datum hash, null when the output carries no datum hash; independent of script presence.
   , txOutCoreInlineDatumId :: !(Maybe Id.DatumId)
   -- ^ The inline datum of the output, if it has one. New in v13.
   , txOutCoreReferenceScriptId :: !(Maybe Id.ScriptId)
@@ -137,10 +134,7 @@ txOutCoreBulkEncoder =
     (bulkEncoder $ E.nullable $ Id.getScriptId >$< E.int8)
     (bulkEncoder $ E.nullable $ Id.getTxId >$< E.int8)
 
--- |
--- Table Name: collateral_tx_out
--- Description: Represents a collateral transaction output in the Cardano blockchain.
--- Schema reference for @collateral_tx_out@:
+-- | Schema reference for @collateral_tx_out@:
 -- A table for transaction collateral outputs. New in v13.
 data CollateralTxOutCore = CollateralTxOutCore
   { collateralTxOutCoreTxId :: !Id.TxId
@@ -161,10 +155,10 @@ data CollateralTxOutCore = CollateralTxOutCore
   , collateralTxOutCoreValue :: !DbLovelace
   -- ^ The output value (in Lovelace) of the transaction output.
   , collateralTxOutCoreDataHash :: !(Maybe ByteString)
-  -- ^ The hash of the transaction output datum. (NULL for Txs without scripts).
+  -- ^ The output datum hash, null when the output carries no datum hash; independent of script presence.
   , collateralTxOutCoreMultiAssetsDescr :: !Text
-  -- ^ This is a description of the multiassets in collateral output. Since the output is not really
-  -- created, we don't need to add them in separate tables.
+  -- ^ A textual description of multi-assets in the declared collateral-return output. These are
+  -- recorded here rather than in the normal @ma_tx_out@ rows.
   , collateralTxOutCoreInlineDatumId :: !(Maybe Id.DatumId)
   -- ^ The inline datum of the output, if it has one. New in v13.
   , collateralTxOutCoreReferenceScriptId :: !(Maybe Id.ScriptId)
@@ -207,10 +201,7 @@ collateralTxOutCoreEncoder =
     , collateralTxOutCoreReferenceScriptId >$< Id.maybeIdEncoder Id.getScriptId
     ]
 
--- |
--- Table Name: ma_tx_out
--- Description: Represents a multi-asset transaction output in the Cardano blockchain.
--- Schema reference for @ma_tx_out@:
+-- | Schema reference for @ma_tx_out@:
 -- A table containing Multi-Asset transaction outputs.
 data MaTxOutCore = MaTxOutCore
   { maTxOutCoreQuantity :: !DbWord64

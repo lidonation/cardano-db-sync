@@ -40,10 +40,7 @@ import Cardano.Db.Types (
 -- These tables manage stake pool-related data, including pool registration, updates, and retirements.
 -----------------------------------------------------------------------------------------------------------------------------------
 
--- |
--- Table Name: pool_hash
--- Description: A table containing information about pool hashes.
--- Schema reference for @pool_hash@:
+-- | Schema reference for @pool_hash@:
 -- A table for every unique pool key hash. The existance of an entry doesn't mean the pool is
 -- registered or in fact that is was ever registered.
 data PoolHash = PoolHash
@@ -66,10 +63,7 @@ poolHashEncoder =
     , poolHashView >$< E.param (E.nonNullable E.text) -- poolHashView
     ]
 
--- |
--- Table Name: pool_stat
--- Description: A table containing information about pool metadata.
--- Schema reference for @pool_stat@:
+-- | Schema reference for @pool_stat@:
 -- Stats per pool and per epoch.
 data PoolStat = PoolStat
   { poolStatPoolHashId :: !Id.PoolHashId -- noreference
@@ -115,10 +109,7 @@ poolStatBulkEncoder =
     (bulkEncoder $ E.nonNullable dbWord64ValueEncoder) -- stake
     (bulkEncoder $ E.nullable dbWord64ValueEncoder) -- voting_power
 
--- |
--- Table Name: pool_update
--- Description: A table containing information about pool updates.
--- Schema reference for @pool_update@:
+-- | Schema reference for @pool_update@:
 -- An on-chain pool update.
 data PoolUpdate = PoolUpdate
   { poolUpdateHashId :: !Id.PoolHashId -- noreference
@@ -174,10 +165,7 @@ poolUpdateEncoder =
     , poolUpdateDeposit >$< E.param (E.nullable $ fromIntegral . unDbLovelace >$< E.int8)
     ]
 
--- |
--- Table Name: pool_metadata_ref
--- Description: A table containing references to pool metadata.
--- Schema reference for @pool_metadata_ref@:
+-- | Schema reference for @pool_metadata_ref@:
 -- An on-chain reference to off-chain pool metadata.
 data PoolMetadataRef = PoolMetadataRef
   { poolMetadataRefPoolId :: !Id.PoolHashId -- noreference
@@ -207,10 +195,7 @@ poolMetadataRefEncoder =
     , poolMetadataRefRegisteredTxId >$< Id.idEncoder Id.getTxId
     ]
 
--- |
--- Table Name: pool_owner
--- Description: A table containing information about pool owners.
--- Schema reference for @pool_owner@:
+-- | Schema reference for @pool_owner@:
 -- A table containing pool owners.
 data PoolOwner = PoolOwner
   { poolOwnerAddrId :: !Id.StakeAddressId -- noreference
@@ -232,10 +217,7 @@ poolOwnerEncoder =
     , poolOwnerPoolUpdateId >$< Id.idEncoder Id.getPoolUpdateId
     ]
 
--- |
--- Table Name: pool_retire
--- Description: A table containing information about pool retirements.
--- Schema reference for @pool_retire@:
+-- | Schema reference for @pool_retire@:
 -- A table containing information about pools retiring.
 data PoolRetire = PoolRetire
   { poolRetireHashId :: !Id.PoolHashId -- noreference
@@ -264,10 +246,8 @@ poolRetireEncoder =
     , poolRetireRetiringEpoch >$< E.param (E.nonNullable $ fromIntegral >$< E.int8)
     ]
 
--- |
--- Table Name: pool_relay
--- Description: A table containing information about pool relays.
--- Schema reference for @pool_relay@:
+-- | Schema reference for @pool_relay@:
+-- Network endpoints advertised in a pool registration.
 data PoolRelay = PoolRelay
   { poolRelayUpdateId :: !Id.PoolUpdateId -- noreference
 
@@ -302,10 +282,7 @@ poolRelayEncoder =
       poolRelayPort >$< E.param (E.nullable $ fromIntegral >$< E.int4)
     ]
 
--- |
--- Table Name: delisted_pool
--- Description: A table containing a managed list of delisted pools.
--- Schema reference for @delisted_pool@:
+-- | Schema reference for @delisted_pool@:
 -- A table containing pools that have been delisted.
 newtype DelistedPool = DelistedPool
   { delistedPoolHashRaw :: ByteString -- sqltype=hash28type
@@ -326,11 +303,7 @@ delistedPoolDecoder =
 delistedPoolEncoder :: E.Params DelistedPool
 delistedPoolEncoder = delistedPoolHashRaw >$< E.param (E.nonNullable E.bytea)
 
--- |
--- Table Name: resser_pool_ticker
--- Description: A table containing a managed list of reserved ticker names.
--- For now they are grouped under the specific hash of the pool.
--- Schema reference for @reserved_pool_ticker@:
+-- | Schema reference for @reserved_pool_ticker@:
 -- A table containing a managed list of reserved ticker names.
 data ReservedPoolTicker = ReservedPoolTicker
   { reservedPoolTickerName :: !Text

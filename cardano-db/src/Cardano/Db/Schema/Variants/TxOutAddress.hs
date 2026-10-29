@@ -20,10 +20,7 @@ import Cardano.Db.Statement.Function.Core (bulkEncoder)
 import Cardano.Db.Statement.Types (DbInfo (..), Entity (..), Key)
 import Cardano.Db.Types (DbLovelace, DbWord64 (..), dbLovelaceDecoder, dbLovelaceEncoder, dbLovelaceValueEncoder, dbWord64ValueEncoder)
 
--- |
--- Table Name: tx_out
--- Description: Represents the outputs of transactions, including addresses and values.
--- Schema reference for @tx_out@:
+-- | Schema reference for @tx_out@:
 -- A table for transaction outputs.
 data TxOutAddress = TxOutAddress
   { txOutAddressTxId :: !Id.TxId
@@ -34,7 +31,7 @@ data TxOutAddress = TxOutAddress
   , txOutAddressValue :: !DbLovelace
   -- ^ The output value (in Lovelace) of the transaction output.
   , txOutAddressDataHash :: !(Maybe ByteString)
-  -- ^ The hash of the transaction output datum. (NULL for Txs without scripts).
+  -- ^ The output datum hash, null when the output carries no datum hash; independent of script presence.
   , txOutAddressInlineDatumId :: !(Maybe Id.DatumId)
   -- ^ The inline datum of the output, if it has one. New in v13.
   , txOutAddressReferenceScriptId :: !(Maybe Id.ScriptId)
@@ -121,10 +118,7 @@ txOutAddressBulkEncoder =
     (bulkEncoder $ E.nullable $ Id.getTxId >$< E.int8) -- txOutAddressConsumedByTxId
     (bulkEncoder $ E.nonNullable $ Id.getAddressId >$< E.int8) -- txOutAddressAddressId
 
--- |
--- Table Name: collateral_tx_out
--- Description: Represents collateral transaction outputs, which are used to cover transaction fees in case of failure.
--- Schema reference for @collateral_tx_out@:
+-- | Schema reference for @collateral_tx_out@:
 -- A table for transaction collateral outputs. New in v13.
 data CollateralTxOutAddress = CollateralTxOutAddress
   { collateralTxOutAddressTxId :: !Id.TxId
@@ -137,10 +131,10 @@ data CollateralTxOutAddress = CollateralTxOutAddress
   , collateralTxOutAddressValue :: !DbLovelace
   -- ^ The output value (in Lovelace) of the transaction output.
   , collateralTxOutAddressDataHash :: !(Maybe ByteString)
-  -- ^ The hash of the transaction output datum. (NULL for Txs without scripts).
+  -- ^ The output datum hash, null when the output carries no datum hash; independent of script presence.
   , collateralTxOutAddressMultiAssetsDescr :: !Text
-  -- ^ This is a description of the multiassets in collateral output. Since the output is not really
-  -- created, we don't need to add them in separate tables.
+  -- ^ A textual description of multi-assets in the declared collateral-return output. These are
+  -- recorded here rather than in the normal @ma_tx_out@ rows.
   , collateralTxOutAddressInlineDatumId :: !(Maybe Id.DatumId)
   -- ^ The inline datum of the output, if it has one. New in v13.
   , collateralTxOutAddressReferenceScriptId :: !(Maybe Id.ScriptId)
@@ -181,10 +175,7 @@ collateralTxOutAddressEncoder =
     , collateralTxOutAddressAddressId >$< Id.idEncoder Id.getAddressId
     ]
 
--- |
--- Table Name: address
--- Description: Represents addresses used in transactions, including their raw representation and associated scripts.
--- Schema reference for @address@:
+-- | Schema reference for @address@:
 -- A table for addresses that appear in outputs.
 data Address = Address
   { addressAddress :: !Text
@@ -231,10 +222,7 @@ addressEncoder =
     , addressStakeAddressId >$< Id.maybeIdEncoder Id.getStakeAddressId
     ]
 
--- |
--- Table Name: ma_tx_out
--- Description: Represents multi-asset transaction outputs, which include various assets and their quantities.
--- Schema reference for @ma_tx_out@:
+-- | Schema reference for @ma_tx_out@:
 -- A table containing Multi-Asset transaction outputs.
 data MaTxOutAddress = MaTxOutAddress
   { maTxOutAddressIdent :: !Id.MultiAssetId

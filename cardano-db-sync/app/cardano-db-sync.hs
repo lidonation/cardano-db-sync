@@ -215,7 +215,10 @@ pTracerSocketPath =
         <> Opt.metavar "FILEPATH"
     )
 
--- | @--rollback-to-slot SLOTNO@: force a rollback; if the requested slot has no block, use the next greater slot that has one. Primarily for testing and debugging.
+-- | @--rollback-to-slot SLOTNO@: force deletion of the block at this slot and all descendants,
+-- inclusive. If there is no block at that slot, deletion starts at the next greater slot with a
+-- block; the resulting tip is the preceding block. If no block exists at or after the requested
+-- slot, no blocks are removed. Primarily for testing and debugging.
 pRollbackSlotNo :: Parser SlotNo
 pRollbackSlotNo =
   SlotNo
@@ -226,7 +229,9 @@ pRollbackSlotNo =
           <> Opt.metavar "WORD"
       )
 
--- | @--disable-in-out@: disable the @tx_in@ and @tx_out@ tables.
+-- | @--disable-in-out@ is accepted for compatibility, but its parsed value is not used by the
+-- current runtime option builder. Use @insert_options.tx_out.value = "disable"@ to disable @tx_in@
+-- and @tx_out@ insertion.
 pHasInOut :: Parser Bool
 pHasInOut =
   Opt.flag

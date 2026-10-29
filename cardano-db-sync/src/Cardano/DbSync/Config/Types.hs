@@ -234,7 +234,8 @@ newtype PoolStatsConfig = PoolStatsConfig
   deriving (Eq, Show)
 
 -- | @disable_epoch@ defaults to false. When true, the public @epoch@ view and @epoch_current@ view
--- return no rows; @epoch_finalized@ contains finalized aggregates.
+-- return no rows; @epoch_finalized@ contains finalized aggregates. Epoch views are also disabled
+-- during bootstrap or when transaction output insertion is disabled, even if this flag is false.
 newtype EpochConfig = EpochConfig
   { isEpochDisabled :: Bool
   }
@@ -264,8 +265,9 @@ data TxOutConfig
   deriving (Eq, Show)
 
 -- | @tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is
--- ignored for @enable@ and @disable@. Setting it to true populates @tx_in@ in consumed, prune and
--- bootstrap modes, which otherwise omit transaction inputs.
+-- ignored for @enable@ and @disable@. Once input/output insertion is active, setting it to true
+-- populates @tx_in@ in consumed, prune and bootstrap modes, which otherwise omit transaction
+-- inputs. It does not override the disabled insertion phase before bootstrap's UTxO migration.
 newtype ForceTxIn = ForceTxIn {unForceTxIn :: Bool}
   deriving (Eq, Show)
   deriving newtype (ToJSON, FromJSON)
@@ -297,27 +299,30 @@ instance FromJSON LedgerBackend where
     "lsm" -> pure (LedgerBackendLSM Nothing)
     other -> fail $ "unexpected ledger_backend: " <> show other <> ". Expected \"inmemory\" or \"lsm\"."
 
--- | @ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable does
--- not maintain one; ignore maintains it for UTxO loading but does not use its other data. Disabling
--- ledger affects historical rewards, epoch stake, ada pots, epoch parameters and related fields.
--- Changing modes on an existing database can be unsafe.
+-- | @ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable
+-- does not maintain one; ignore maintains it for UTxO loading but does not use its other data.
 --
--- When ledger is disabled, historic rewards and epoch stake, ada pots and epoch parameter data are
--- unavailable: @reward@, @epoch_stake@, @ada_pots@, @epoch_param@ and @drep_distr@ are not populated.
--- @redeemer.fee@ and @tx.deposit@ are null, as are ledger-derived governance epochs and certificate
--- deposits. Starting with ledger disabled after restoring a ledger-enabled snapshot irreversibly
--- removes existing rewards, epoch stake, ada pots and epoch parameters, and clears redeemer fees.
--- Do not change ledger mode casually on an existing database. A supplied @--state-dir@ with ledger
--- disabled produces a warning, not an error; no ledger snapshots are maintained in that mode.
+-- With disable or ignore, new ledger-derived @reward@, @epoch_stake@, @ada_pots@, @epoch_param@ and
+-- @drep_distr@ data are unavailable. @redeemer.fee@ is null; stake-registration and pool-update
+-- deposits and ledger-derived governance epochs may be absent. @tx.deposit@ can be computed from resolved inputs,
+-- outputs, withdrawals, fees and treasury donations even without ledger data; it is null when the
+-- required values cannot be resolved, rather than always null in these modes.
+--
+-- Starting with either disable or ignore irreversibly clears existing @reward@, @epoch_stake@,
+-- @ada_pots@ and @epoch_param@ rows and redeemer fees through the no-ledger migration. Do not change
+-- ledger mode casually on an existing database. A supplied @--state-dir@ with ledger disabled
+-- produces a warning, not an error; disable does not maintain ledger snapshots, while ignore does.
 data LedgerInsertConfig
   = LedgerEnable
   | LedgerDisable
   | LedgerIgnore
   deriving (Eq, Show)
 
--- | @shelley.enable@ controls transaction-era certificates, withdrawals and parameter proposals, not
--- epoch stake or rewards. Genesis-era stake and pool registrations are still inserted. Optional
--- @stake_addresses@ filters enabled data.
+-- | @shelley.enable@ controls transaction-era stake/pool certificates, withdrawals and parameter
+-- proposals, not epoch stake or rewards. Genesis-era stake and pool registrations are still inserted.
+-- Governance certificates and vote delegations use the separate @governance@ option.
+-- The non-empty @stake_addresses@ list is parsed but not enforced by the current insertion pipeline;
+-- with @enable = true@ it does not restrict addresses. Do not treat it as a filter.
 data ShelleyInsertConfig
   = ShelleyEnable
   | ShelleyDisable
@@ -328,8 +333,9 @@ newtype RewardsConfig = RewardsConfig
   {areRewardsEnabled :: Bool}
   deriving (Eq, Show)
 
--- | @multi_asset.enable@ controls multi-asset entries. An optional non-empty @policies@ list restricts
--- enabled insertion to those policies.
+-- | @multi_asset.enable@ controls multi-asset entries. The optional non-empty @policies@ list is
+-- parsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is
+-- not restricted to these policy hashes. Do not rely on it for selective ingestion.
 data MultiAssetConfig
   = MultiAssetEnable
   | MultiAssetDisable
@@ -344,8 +350,9 @@ data MetadataConfig
   | MetadataKeys (NonEmpty Word)
   deriving (Eq, Show)
 
--- | @plutus.enable@ controls Plutus and script data. An optional non-empty @script_hashes@ list
--- restricts enabled insertion to those script hashes.
+-- | @plutus.enable@ controls Plutus and script data. The optional non-empty @script_hashes@ list is
+-- parsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is
+-- not restricted to these script hashes. Do not rely on it for selective ingestion.
 data PlutusConfig
   = PlutusEnable
   | PlutusDisable
@@ -381,7 +388,8 @@ newtype OffchainVoteDataConfig = OffchainVoteDataConfig
 
 -- | @remove_jsonb_from_schema@ accepts @enable@ or @disable@. Enabling removes JSONB types from
 -- supported schema columns to improve insertion performance; changing an existing schema requires
--- care.
+-- care. Disabling this option or removing it converts the affected columns back to JSONB on startup;
+-- either conversion can take time.
 --
 -- Affected JSONB columns include tx_metadata.json, script.json, datum.value, redeemer_data.value,
 -- cost_model.costs, gov_action_proposal.description, off_chain_pool_data.json and
@@ -396,7 +404,9 @@ newtype TxOutVariantTypeConfig = TxOutVariantTypeConfig
   }
   deriving (Eq, Show)
 
--- | @json_type@ accepts @text@, @jsonb@ or @disable@; the default is @text@.
+-- | @json_type@ accepts @text@, @jsonb@ or @disable@; the default is @text@. It is parsed and serialized
+-- but not consumed by the current runtime option builder. It does not select storage types or
+-- disable JSON insertion; @remove_jsonb_from_schema@ controls the schema conversion.
 data JsonTypeConfig
   = JsonTypeText
   | JsonTypeJsonb
@@ -406,8 +416,9 @@ data JsonTypeConfig
 -- | The top-level @snapshot_interval.near_tip_epoch@ threshold defaults to 580. Snapshot frequency
 -- changes when syncing near the tip; earlier syncing uses less frequent snapshots.
 --
--- Earlier syncing takes snapshots every ten epochs. Near tip, snapshots are taken every epoch, with
--- time-based detection when within ten days of current time.
+-- At an epoch boundary above zero, snapshots are taken every epoch at or above this threshold,
+-- even while lagging. Below it, snapshots occur on multiples of ten epochs, or on every epoch when
+-- the database is consistent and the chain time is within ten days of current time.
 newtype SnapshotIntervalConfig = SnapshotIntervalConfig
   { sicNearTipEpoch :: Word64
   }
