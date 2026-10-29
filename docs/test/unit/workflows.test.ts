@@ -20,6 +20,7 @@ interface Step {
   shell?: string;
   uses?: string;
   with?: Record<string, unknown>;
+  env?: Record<string, string>;
 }
 interface Job {
   steps?: Step[];
@@ -145,5 +146,22 @@ describe('browser runner compatibility', () => {
     ) as {jobs: Record<string, Record<string, unknown>>};
     expect(workflow.jobs['unit-tests']['runs-on']).toBe('ubuntu-24.04');
     expect(workflow.jobs.build['runs-on']).toBe('ubuntu-24.04');
+  });
+});
+
+describe('repository browser fixtures', () => {
+  it('keeps fixture builds out of the live artifact and its link and budget gates', async () => {
+    const doc = yaml.load(
+      await fs.readFile(path.join(ROOT, '.github/workflows/docs-site.yml'), 'utf8'),
+    ) as Workflow;
+    const steps = doc.jobs?.build.steps ?? [];
+    const fixture = steps.find((step) => step.name === 'Build deterministic browser fixtures');
+    expect(fixture?.run).toContain('--out-dir .cache/browser-fixtures/dev');
+    expect(fixture?.run).toContain('--out-dir .cache/browser-fixtures/prod');
+    const landing = steps.find((step) => step.name?.startsWith('Landing on shipped assets'));
+    expect(landing?.env?.DBS_LANDING_BUILT_BUILD_ROOT).toBe('.cache/browser-fixtures');
+    const artifact = steps.find((step) => step.with?.name === 'docs-build');
+    expect(artifact?.with?.path).toBe('docs/build/');
+    expect(fixture?.run).not.toMatch(/--out-dir build\//);
   });
 });
