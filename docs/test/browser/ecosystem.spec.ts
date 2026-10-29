@@ -217,6 +217,7 @@ test('activity ranges change the chart, summary and table with the keyboard', as
   await expect(selected).toHaveAttribute('aria-selected', 'true');
   await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(12);
   await expect(section.locator('[role=tabpanel]:visible svg rect')).toHaveCount(12);
+  await expect(section.locator('[role=tabpanel]:visible svg text').first()).toHaveText('17');
   await selected.focus();
   await page.keyboard.press('ArrowRight');
   await expect(tabs.getByRole('tab', {name: '30 days'})).toHaveAttribute('aria-selected', 'true');

@@ -46,6 +46,9 @@ function CodeChart({
       summary={summary}
       graphic={
         <ChartGraphic className={styles.graph} viewBox="0 0 600 200" summaryId={id}>
+          <text className={styles.axisLabel} x="580" y="15" textAnchor="end">
+            {number(points.at(-1)?.value ?? 0)}
+          </text>
           {points.map((point, index) => {
             const y = linearScale(point.value, min, max, 160, 20);
             return (
