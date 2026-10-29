@@ -1,4 +1,4 @@
-"""Skip unrelated CI only when every changed path is safely inside the site."""
+"""Skip unrelated CI only when every changed path is site-specific."""
 import os
 import subprocess
 import sys
@@ -6,7 +6,8 @@ import sys
 
 def requires_full_ci(paths):
     return not paths or any(
-        not path.startswith(b"docs/") or path.startswith(b"docs/extractor/")
+        path != b".github/workflows/docs-site.yml"
+        and (not path.startswith(b"docs/") or path.startswith(b"docs/extractor/"))
         for path in paths
     )
 

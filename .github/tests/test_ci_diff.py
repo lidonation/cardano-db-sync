@@ -15,6 +15,11 @@ class DiffTests(unittest.TestCase):
     def test_classification(self):
         for paths, expected in [
             ([b'docs/src/a.ts'], False),
+            ([b'.github/workflows/docs-site.yml'], False),
+            ([b'docs/src/a.ts', b'.github/workflows/docs-site.yml'], False),
+            ([b'.github/workflows/docs-site.yml', b'cardano-db/a.hs'], True),
+            ([b'.github/workflows/docs-site.yml', b'.github/scripts/classify-ci-diff.py'], True),
+            ([b'.github/workflows/docs-site.yml.bak'], True),
             ([b'docs/extractor/src/a.hs'], True),
             ([b'docs/a', b'cardano-db/a.hs'], True),
             ([b'.github/workflows/haskell.yml'], True),
@@ -38,6 +43,12 @@ class DiffTests(unittest.TestCase):
             (Path(tmp) / 'docs/a').write_text('changed')
             git('commit', '-am', 'site')
             site = git('rev-parse', 'HEAD')
+            workflow = Path(tmp) / '.github/workflows/docs-site.yml'
+            workflow.parent.mkdir(parents=True)
+            workflow.write_text('site workflow')
+            git('add', '.')
+            git('commit', '-m', 'site workflow')
+            site_workflow = git('rev-parse', 'HEAD')
             git('branch', 'community-base', base)
             git('mv', 'docs/a', 'backend')
             git('commit', '-m', 'move')
@@ -45,6 +56,9 @@ class DiffTests(unittest.TestCase):
             out = Path(tmp) / 'out'
             for event, before, head, expected in [
                 ('push', base, site, 'false'),
+                ('push', '0' * 40, site_workflow, 'false'),
+                ('pull_request', base, site_workflow, 'false'),
+                ('push', site_workflow, moved, 'true'),
                 ('pull_request', base, site, 'false'),
                 ('push', site, moved, 'true'),
                 ('push', '0' * 40, site, 'false'),
