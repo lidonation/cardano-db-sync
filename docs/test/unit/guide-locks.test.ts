@@ -502,3 +502,63 @@ it('validates public-schema-qualified column references', () => {
   );
   expect(result.errors.join('\n')).toContain('tx_out.missing');
 });
+
+it('fails closed on malformed guide metadata, ambiguous config and invalid history', async () => {
+  const {evaluateHistoricalGuide, deriveApplicability, resolveGuideRange} =
+    await import('../../scripts/lib/guide-locks.mjs');
+  for (const source of [
+    'No frontmatter',
+    '---\nrequires: [\n---\n',
+    '---\n- array\n---\n',
+    '---\ntitle: no-requires\n---\n',
+    '---\nrequires:\n  unknown: [x]\n---\n',
+  ]) {
+    expect(evaluateGuide('a.md', source, schema, config).errors.length).toBeGreaterThan(0);
+    expect(
+      evaluateHistoricalGuide('a.md', source, [{tag: 'current', schema, config}]).errors.length,
+    ).toBeGreaterThan(0);
+  }
+  expect(
+    evaluateGuide(
+      'a.md',
+      guide('', 'requires:\n  tables: [tx_out, tx_out]'),
+      schema,
+      config,
+    ).errors.join(),
+  ).toContain('duplicate');
+  const ambiguous = {
+    config: {
+      keys: [
+        {name: 'a', shape: {keys: [{name: 'value', shape: {type: 'string'}}]}},
+        {name: 'b', shape: {keys: [{name: 'value', shape: {type: 'string'}}]}},
+      ],
+    },
+  };
+  expect(
+    evaluateGuide(
+      'a.md',
+      guide('', 'requires:\n  config: [value]'),
+      schema,
+      ambiguous,
+    ).errors.join(),
+  ).toContain('ambiguous');
+  expect(deriveApplicability([], []).errors.length).toBeGreaterThan(0);
+  expect(deriveApplicability([{version: 'v1', entities: []}], ['']).errors.length).toBeGreaterThan(
+    0,
+  );
+  expect(
+    deriveApplicability(
+      [
+        {version: 'v1', entities: []},
+        {version: 'v1', entities: []},
+      ],
+      [],
+    ).errors.length,
+  ).toBeGreaterThan(0);
+  expect(
+    resolveGuideRange([{version: 'v1', entities: ['x']}], ['x'], {
+      versions: ['v1', 'v1'],
+      reason: 'x',
+    }).errors.length,
+  ).toBeGreaterThan(0);
+});

@@ -119,3 +119,29 @@ it('rejects release tags and stage values that are not canonical numeric identif
   );
   expect(validRelease({tag: '13.7.2.1', stage_two: '50', stage_four: '0009'})).toBe(false);
 });
+
+it('rejects empty, duplicate and malformed release snapshots', async () => {
+  const {buildHistory, unpackHistory, packHistory} =
+    await import('../../scripts/lib/guide-history.mjs');
+  expect(() => buildHistory([], () => null)).toThrow('empty');
+  const release = {tag: 'v1'};
+  const snapshot = {tag: 'v1', schema: {tables: []}, config: {config: {keys: []}}};
+  expect(() => buildHistory([release, release], () => snapshot)).toThrow('duplicate');
+  expect(() => unpackHistory({schemaVersion: 0})).toThrow('invalid');
+  const packed = packHistory({versions: [snapshot]});
+  packed.versions[0].schemaRef = 'missing';
+  expect(() => unpackHistory(packed)).toThrow('invalid');
+  expect(configKeys({})).toEqual([]);
+  expect(
+    catalogToTables(
+      {
+        types: new Map(),
+        tables: new Map([
+          ['b', []],
+          ['a', []],
+        ]),
+      },
+      'core',
+    ).map((table: {name: string}) => table.name),
+  ).toEqual(['a', 'b']);
+});
