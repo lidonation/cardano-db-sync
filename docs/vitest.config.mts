@@ -39,6 +39,8 @@ export default defineConfig({
         // B44-b: the Ecosystem page's entries and the changelog it counts.
         'src/data/release-history.ts',
         'src/ecosystem/entries.ts',
+        'src/ecosystem/chart-data.ts',
+        'src/components/Chart/scale.ts',
         // B44-f: the survey dashboard's manifest/aggregate resolution (browser-free).
         'src/survey-results/resolve.ts',
         'src/survey-results/ids.ts',

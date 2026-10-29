@@ -216,13 +216,16 @@ test('activity ranges change the chart, summary and table with the keyboard', as
   const selected = tabs.getByRole('tab', {name: '12 months'});
   await expect(selected).toHaveAttribute('aria-selected', 'true');
   await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(12);
+  await expect(section.locator('[role=tabpanel]:visible svg rect')).toHaveCount(12);
   await selected.focus();
   await page.keyboard.press('ArrowRight');
   await expect(tabs.getByRole('tab', {name: '30 days'})).toHaveAttribute('aria-selected', 'true');
   await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(30);
+  await expect(section.locator('[role=tabpanel]:visible svg rect')).toHaveCount(30);
   await expect(section.locator('[role=tabpanel]:visible [id^=code-summary]')).toContainText('30');
   await page.keyboard.press('ArrowRight');
   await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(7);
+  await expect(section.locator('[role=tabpanel]:visible svg rect')).toHaveCount(7);
   await expect(section.locator('[role=tabpanel]:visible [id^=code-summary]')).toContainText('7');
 });
 
@@ -241,3 +244,17 @@ test('heatmap weekly table agrees with its day cells', async ({page}) => {
   expect(cells).toHaveLength(52);
   await expect(section.locator('[data-week][data-count]')).toHaveCount(364);
 });
+
+for (const palette of ['light', 'dark', 'cream', 'navy']) {
+  test(`each activity range is accessible in ${palette}`, async ({page}) => {
+    await open(page, 375, palette);
+    const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
+    for (const name of ['12 months', '30 days', '7 days']) {
+      await section.getByRole('tab', {name}).click();
+      const results = await new AxeBuilder({page})
+        .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+        .analyze();
+      expect(results.violations).toEqual([]);
+    }
+  });
+}

@@ -46,6 +46,10 @@ describe('Docusaurus repository plugin', () => {
     expect(result.summary.status).toBe('available');
     expect(result.summary.data.contributors).toHaveLength(2);
     expect(result.summary.data.commits).toBeUndefined();
+    expect(result.summary.data.charts.monthly).toHaveLength(12);
+    expect(result.summary.data.charts.daily).toHaveLength(30);
+    expect(result.summary.data.charts.weeks).toHaveLength(52);
+    expect(JSON.stringify(result.summary.data.charts)).not.toContain('Erik');
     expect(result.history.data.commits).toHaveLength(2);
     expect(result.history.data.dailyLines).toHaveLength(1);
   });
