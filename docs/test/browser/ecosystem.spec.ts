@@ -2,13 +2,13 @@ import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
 import {SITE_URL} from '../../playwright.config';
-import {teams, tools} from '../../src/ecosystem/entries';
+import {CORE_TEAM, teams, tools} from '../../src/ecosystem/entries';
 
 import {smallTargets} from './audits';
 
 /**
  * B44-b — the Ecosystem page in a browser: margins and reflow per tier, 44px targets, every entry
- * linked to its source, the facts from the changelog, the navbar's active item, and WCAG 2.2 AA
+ * linked to its source, repository snapshot facts, the navbar's active item, and WCAG 2.2 AA
  * in four palettes.
  */
 const english = ({message}: {message: string}) => message;
@@ -97,40 +97,82 @@ test.describe('content', () => {
     );
   });
 
-  test('repository figures, people and country table come from the fixture', async ({page}) => {
-    await page.route('**/repository-avatars/*.png', async (route) => {
-      await route.fulfill({
-        path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
-        contentType: 'image/png',
+  test('repository figures, people and country table stay consistent; images stay same-origin', async ({
+    page,
+  }) => {
+    const built =
+      test.info().project.name === 'built-dev' || test.info().project.name === 'built-prod';
+    if (!built)
+      await page.route('**/repository-avatars/*.png', async (route) => {
+        await route.fulfill({
+          path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
+          contentType: 'image/png',
+        });
       });
-    });
+    const base = test.info().project.use.baseURL ?? SITE_URL;
     const externalImages: string[] = [];
     page.on('request', (request) => {
       if (
         request.resourceType() === 'image' &&
-        new URL(request.url()).origin !== new URL(SITE_URL).origin
+        new URL(request.url()).origin !== new URL(base).origin
       )
         externalImages.push(request.url());
     });
     await open(page, 1440);
-    const facts = page.locator(
-      'section[aria-labelledby="ecosystem-facts"] [data-dbs-component="Metric"]',
+    const section = page.locator('section[aria-labelledby="ecosystem-facts"]');
+    const facts = section.locator('[data-dbs-component="Metric"]');
+    if (built && (await facts.count()) === 0) {
+      await expect(section).toContainText('Repository activity data is unavailable');
+      await expect(page.locator('#ecosystem-origins')).toHaveCount(0);
+    } else {
+      await expect(facts).toHaveCount(5);
+      const values = await facts.evaluateAll((nodes) =>
+        nodes.map((node) => node.firstElementChild?.textContent ?? ''),
+      );
+      const number = (value: string) => Number(value.replaceAll(',', ''));
+      expect(values.slice(0, 4).every((value) => /^\d[\d,]*$/.test(value))).toBe(true);
+      expect(values[4] === '—' || /^\d[\d,]*$/.test(values[4])).toBe(true);
+      const contributors = number(values[3]);
+      await expect(page.locator('#ecosystem-title')).toContainText(
+        `Built by ${contributors} people.`,
+      );
+      const time = section.locator('time');
+      const builtAt = await time.getAttribute('datetime');
+      expect(builtAt && Number.isFinite(Date.parse(builtAt))).toBeTruthy();
+      await expect(time).toHaveText(`${builtAt!.slice(0, 10)} UTC`);
+      const table = page.locator('section[aria-labelledby="ecosystem-origins"] table');
+      await expect(table).toContainText('Unknown');
+      const counts = await table.locator('tbody tr td').allTextContents();
+      expect(counts.every((count) => /^\d[\d,]*$/.test(count))).toBe(true);
+      expect(counts.reduce((sum, count) => sum + number(count), 0)).toBe(contributors);
+      const faces = page.locator(
+        'section[aria-labelledby="ecosystem-people"] [data-dbs-component="Avatar"]',
+      );
+      const faceCount = await faces.count();
+      if (contributors === 0) expect(faceCount).toBe(0);
+      else {
+        expect(faceCount).toBeGreaterThanOrEqual(contributors);
+        expect(faceCount).toBeLessThanOrEqual(contributors + CORE_TEAM.length);
+      }
+      if (!built) {
+        expect(values).toEqual(['2', '1', '17', '2', '5']);
+        await expect(table).toContainText('Kenya');
+        await expect(faces).toHaveCount(7);
+        await expect(page.locator('section[aria-labelledby="ecosystem-people"] img')).toHaveCount(
+          1,
+        );
+      }
+    }
+    // Lazy avatars may not have requested their URLs yet: inspect every declared source too.
+    const declaredExternal = await page.locator('img[src]').evaluateAll((images) =>
+      images.flatMap((image) => {
+        const src = image.getAttribute('src');
+        if (!src) return [];
+        const url = new URL(src, location.href);
+        return url.protocol === 'data:' || url.origin === location.origin ? [] : [url.href];
+      }),
     );
-    await expect(facts).toHaveCount(5);
-    expect(
-      await facts.evaluateAll((nodes) => nodes.map((node) => node.firstElementChild?.textContent)),
-    ).toEqual(['2', '1', '17', '2', '5']);
-    await expect(page.locator('#ecosystem-title')).toContainText('Built by 2 people.');
-    await expect(page.locator('section[aria-labelledby="ecosystem-origins"] table')).toContainText(
-      'Kenya',
-    );
-    await expect(page.locator('section[aria-labelledby="ecosystem-origins"] table')).toContainText(
-      'Unknown',
-    );
-    await expect(
-      page.locator('section[aria-labelledby="ecosystem-people"] [data-dbs-component="Avatar"]'),
-    ).toHaveCount(7);
-    await expect(page.locator('section[aria-labelledby="ecosystem-people"] img')).toHaveCount(1);
+    expect(declaredExternal).toEqual([]);
     expect(externalImages).toEqual([]);
   });
 
