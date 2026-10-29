@@ -127,3 +127,5 @@ Anonymous roadmap retrieval has a 60-second snapshot deadline, a 15-second per-r
 limit, a 5 MiB decoded response-body limit and a 20 MiB cumulative body limit. These
 limits include all pagination; exceeding one takes the same last-good-cache or unavailable
 path as a failed request, rather than keeping a build waiting on an unstable endpoint.
+
+<!-- Temporary CI routing test; do not merge. -->
