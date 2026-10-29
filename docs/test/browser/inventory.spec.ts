@@ -87,23 +87,38 @@ test.describe('axe, WCAG 2.2 AA', () => {
           .include('#inventory')
           .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
           .analyze();
-        // axe cannot see a background painted on a clipped pseudo-element, so it leaves those
-        // nodes "incomplete" rather than failing them. Only the hexagon buttons paint that way, and
-        // they are measured directly below; anything else left unchecked is a failure here.
+        // Axe marks absolute pseudo-surfaces incomplete. Hexagon Button fills
+        // are measured below. The closed theme plate is measured here, not skipped.
         const unchecked = await Promise.all(
           results.incomplete
             .filter((result) => result.id === 'color-contrast')
             .flatMap((result) => result.nodes)
-            .map((node) =>
-              page
+            .map(async (node) => {
+              const surface = await page
                 .locator(node.target.join(' '))
                 .first()
-                .evaluate((element) =>
-                  element.closest('[data-dbs-component="Button"]')
-                    ? null
-                    : element.outerHTML.slice(0, 80),
-                ),
-            ),
+                .evaluate((element) => {
+                  if (element.closest('[data-dbs-component="Button"]')) return null;
+                  const button = element.closest('button.dbs-control-plate');
+                  if (button?.closest('[data-dbs-component="Theme switcher"]')) {
+                    return {
+                      html: element.outerHTML.slice(0, 80),
+                      label: getComputedStyle(element).color,
+                      fill: getComputedStyle(button, '::before').backgroundColor,
+                    };
+                  }
+                  return {html: element.outerHTML.slice(0, 80)};
+                });
+              if (!surface) return null;
+              if ('label' in surface && surface.label && surface.fill) {
+                // An unknown/translucent backing is not a passing measurement.
+                const alpha = (surface.fill.match(/[\d.]+/g) ?? []).map(Number)[3] ?? 1;
+                if (alpha !== 1) return `${surface.html}: non-opaque plate`;
+                const ratio = contrast(surface.label, surface.fill);
+                return ratio >= 4.5 ? null : `${surface.html}: ${ratio.toFixed(2)}:1`;
+              }
+              return surface.html;
+            }),
         );
         expect(unchecked.filter(Boolean)).toEqual([]);
         const found = results.violations.flatMap((violation) =>
