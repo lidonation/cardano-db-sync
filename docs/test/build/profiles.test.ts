@@ -2,7 +2,6 @@ import {execFile} from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {promisify} from 'node:util';
-import {gzipSync} from 'node:zlib';
 
 import {beforeAll, describe, expect, it} from 'vitest';
 import {load} from 'cheerio';
@@ -12,6 +11,7 @@ import {PROFILES} from '../../config/profiles';
 import {PALETTE_BOOTSTRAP} from '../../src/lib/palette';
 import {inlineScripts} from '../../plugins/security';
 import {faqPageProblems} from '../../scripts/lib/faq-jsonld.mjs';
+import {localeSites, measure} from '../../scripts/check-asset-budget.mjs';
 
 const run = promisify(execFile);
 const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -392,13 +392,11 @@ describe('homepage Prism payload (B51)', () => {
       const $ = load(html);
       const scripts = $('script[src]').toArray();
       expect(scripts.length).toBeGreaterThan(0);
-      let initialBytes = gzipSync(Buffer.from(html), {level: 9}).length;
-      const assets = [...new Set([...$('script[src]').toArray().map((el) => $(el).attr('src')!), ...$('link[rel=stylesheet][href]').toArray().map((el) => $(el).attr('href')!)])];
-      for (const url of assets) {
-        const relative = url.slice(url.indexOf('/assets/') + 1);
-        initialBytes += gzipSync(await fs.readFile(path.join(root, relative)), {level: 9}).length;
-      }
-      expect(initialBytes).toBeLessThanOrEqual(150 * 1024);
+      // Use the shipping gate's locale isolation, URL resolution and gzip accounting.
+      const {pages} = await measure(root, await localeSites(root));
+      const homepage = pages.find((page) => page.page === 'index.html');
+      expect(homepage).toBeDefined();
+      expect(homepage!.bytes).toBeLessThanOrEqual(150 * 1024);
       for (const script of scripts) {
         const url = $(script).attr('src')!;
         const relative = url.slice(url.indexOf('/assets/') + 1);
