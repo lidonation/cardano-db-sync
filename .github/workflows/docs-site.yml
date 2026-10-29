@@ -131,12 +131,35 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup
+      # A failed upstream checkout must not prevent a cached or unavailable build.
+      - name: Check out upstream full history
+        uses: actions/checkout@v4
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          repository: IntersectMBO/cardano-db-sync
+          ref: master
+          fetch-depth: 0
+          path: upstream-cardano-db-sync
+          persist-credentials: false
+      - name: Restore repository activity cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: docs/.cache/repository-activity
+          key: repository-activity-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+          restore-keys: |
+            repository-activity-v1-${{ runner.os }}-
       # B01 DoD: both profiles build clean from one working tree, the developer output carries no
       # CNAME, the production output does, and a broken Markdown file fails the build.
       # Under CI the build checks the route manifest instead of writing it, and fails listing any
       # published route the committed manifest does not account for (VER-5).
       - name: Build and profile assertions
         run: npm run test:build
+        env:
+          REPOSITORY_CHECKOUT: ${{ github.workspace }}/upstream-cardano-db-sync
+          GITHUB_TOKEN: ${{ github.token }}
       # B43: run against both profiles' actual static CSP-protected HTML, not the dev server.
       - name: Install Chromium for built landing and chrome
         run: npx playwright install --with-deps chromium
@@ -225,8 +248,8 @@ jobs:
     name: Deploy developer site to Pages
     needs: gate
     if: >-
-      github.event_name == 'push' &&
       github.repository != 'IntersectMBO/cardano-db-sync' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       github.ref == 'refs/heads/release/community-site'
     runs-on: ubuntu-latest
     permissions:
@@ -241,8 +264,31 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # A failed upstream checkout must not prevent a cached or unavailable build.
+      - name: Check out upstream full history
+        uses: actions/checkout@v4
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          repository: IntersectMBO/cardano-db-sync
+          ref: master
+          fetch-depth: 0
+          path: upstream-cardano-db-sync
+          persist-credentials: false
+      - name: Restore repository activity cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: docs/.cache/repository-activity
+          key: repository-activity-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+          restore-keys: |
+            repository-activity-v1-${{ runner.os }}-
       - id: deploy
         uses: ./.github/actions/docs-deploy
+        env:
+          REPOSITORY_CHECKOUT: ${{ github.workspace }}/upstream-cardano-db-sync
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           profile: dev
 
@@ -266,7 +312,44 @@ jobs:
       url: ${{ steps.deploy.outputs.page_url }}
     steps:
       - uses: actions/checkout@v4
+      # A failed upstream checkout must not prevent a cached or unavailable build.
+      - name: Check out upstream full history
+        uses: actions/checkout@v4
+        continue-on-error: true
+        timeout-minutes: 5
+        with:
+          repository: IntersectMBO/cardano-db-sync
+          ref: master
+          fetch-depth: 0
+          path: upstream-cardano-db-sync
+          persist-credentials: false
+      - name: Restore repository activity cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: docs/.cache/repository-activity
+          key: repository-activity-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+          restore-keys: |
+            repository-activity-v1-${{ runner.os }}-
       - id: deploy
         uses: ./.github/actions/docs-deploy
+        env:
+          REPOSITORY_CHECKOUT: ${{ github.workspace }}/upstream-cardano-db-sync
+          GITHUB_TOKEN: ${{ github.token }}
         with:
           profile: prod
+
+  activity-alert:
+    name: Scheduled activity ops alert
+    needs: [gate, deploy-dev]
+    if: >-
+      always() && github.event_name == 'workflow_dispatch' &&
+      github.repository == 'lidonation/cardano-db-sync' &&
+      github.ref == 'refs/heads/release/community-site'
+    permissions:
+      contents: read
+      issues: write
+    uses: ./.github/workflows/docs-ops-alert.yml
+    with:
+      result: ${{ needs.gate.result != 'success' && needs.gate.result || needs.deploy-dev.result }}

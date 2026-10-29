@@ -4,7 +4,7 @@ export type Language = 'haskell' | 'sql' | 'nix' | 'cabal' | 'docs';
 export type DailyLines = {date: string} & Record<Language, number>;
 export interface GitHistory {
   commits: {sha: string; date: string; subject: string; author: string}[];
-  authors: {name: string; email: string; commits: number}[];
+  authors: {name: string; email: string; commits: number; sha: string}[];
   firstCommit: string | null;
   dailyLines: DailyLines[];
 }
@@ -19,41 +19,80 @@ function language(file: string): Language | undefined {
 }
 
 /** Read from a full local checkout; author email stays in the build process, never client data. */
-export function readHistory(directory: string): GitHistory {
-  const git = (...args: string[]) =>
-    execFileSync('git', args, {
-      cwd: directory,
-      encoding: 'utf8',
-      maxBuffer: 100 * 1024 * 1024,
-      stdio: ['ignore', 'pipe', 'pipe'],
-    });
+export function readHistory(directory: string, run?: (...args: string[]) => string): GitHistory {
+  const git =
+    run ??
+    ((...args: string[]) =>
+      execFileSync('git', args, {
+        cwd: directory,
+        encoding: 'utf8',
+        maxBuffer: 100 * 1024 * 1024,
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }));
   if (git('rev-parse', '--is-shallow-repository').trim() !== 'false')
     throw new Error('Shallow history');
+  try {
+    git('rev-parse', '--verify', 'HEAD');
+  } catch (error) {
+    if (git('for-each-ref', '--count=1', '--format=%(objectname)').trim() === '') {
+      return {commits: [], authors: [], firstCommit: null, dailyLines: []};
+    }
+    throw error;
+  }
   const text = git(
     'log',
     '--no-renames',
     '--numstat',
-    '--format=%x1e%H%x00%aI%x00%aN%x00%aE%x00%s',
+    '--format=%x1e%H%x00%cI%x00%aN%x00%aE%x00%s',
   );
+  // A first-parent diff includes changes made during merge conflict resolution without
+  // double-counting the merged branch. The separate full walk preserves all authors.
+  const mainline = git(
+    'log',
+    '--first-parent',
+    '--no-renames',
+    '--numstat',
+    '--format=%x1e%H%x00%cI%x00%aN%x00%aE%x00%s',
+  );
+  if (!text.startsWith('\x1e') || !mainline.startsWith('\x1e'))
+    throw new Error('Malformed git log');
   const commits: GitHistory['commits'] = [];
   const authors = new Map<string, GitHistory['authors'][number]>();
   const days = new Map<string, DailyLines>();
-  for (const record of text.split('\x1e').slice(1)) {
+  const records = [
+    ...text
+      .split('\x1e')
+      .slice(1)
+      .map((record) => ({record, series: false})),
+    ...mainline
+      .split('\x1e')
+      .slice(1)
+      .map((record) => ({record, series: true})),
+  ];
+  for (const {record, series} of records) {
     const newline = record.indexOf('\n');
     if (newline < 0) throw new Error('Malformed git record');
     const fields = record.slice(0, newline).split('\0');
     if (fields.length !== 5) throw new Error('Malformed git header');
     const [sha, timestamp, name, email, subject] = fields;
     const instant = new Date(timestamp);
-    if (!/^[a-f0-9]{40,64}$/.test(sha) || !Number.isFinite(instant.getTime()) || !name || !email)
+    if (
+      !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(sha) ||
+      !Number.isFinite(instant.getTime()) ||
+      !name ||
+      !email
+    )
       throw new Error('Malformed git commit');
     const date = instant.toISOString().slice(0, 10);
-    commits.push({sha, date, subject, author: name});
-    if (!/\[bot\]$/i.test(name) && !/\[bot\]@/i.test(email)) {
-      const key = email.toLowerCase();
-      const author = authors.get(key) ?? {name, email, commits: 0};
-      author.commits++;
-      authors.set(key, author);
+    if (!series) {
+      commits.push({sha, date, subject, author: name});
+      if (!/\[bot\]$/i.test(name) && !/\[bot\]@/i.test(email)) {
+        const key = email.toLowerCase();
+        const author = authors.get(key) ?? {name, email, commits: 0, sha};
+        author.commits++;
+        authors.set(key, author);
+      }
+      continue;
     }
     const day = days.get(date) ?? {date, haskell: 0, sql: 0, nix: 0, cabal: 0, docs: 0};
     for (const line of record

@@ -60,7 +60,8 @@
     "clsx": "2.1.1",
     "prism-react-renderer": "2.4.1",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "sharp": "0.35.5"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

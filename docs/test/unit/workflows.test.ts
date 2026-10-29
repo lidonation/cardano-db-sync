@@ -99,8 +99,11 @@ describe('scheduled-job alerts (NUM-4)', () => {
         continue;
       }
       const name = path.basename(file);
-      const alerts = Object.values(doc.jobs ?? {}).filter((job) =>
-        job.uses?.endsWith('/docs-ops-alert.yml'),
+      const alerts = Object.values(doc.jobs ?? {}).filter(
+        (job) =>
+          job.uses === './.github/workflows/docs-ops-alert.yml' ||
+          job.uses ===
+            'lidonation/cardano-db-sync/.github/workflows/docs-ops-alert.yml@release/community-site',
       );
       if (alerts.length === 0) {
         problems.push(`${name}: no ops alert job`);
