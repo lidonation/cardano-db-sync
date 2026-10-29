@@ -18,12 +18,6 @@
       "package": "serialize-javascript",
       "reason": "Via copy-webpack-plugin and css-minimizer-webpack-plugin inside @docusaurus/bundler (serialize-javascript@6; the fix is 7.0.5, a major). The RCE needs attacker-crafted RegExp/Date objects to be serialized; both plugins serialize only build options written in this repository. Build-time only.",
       "expires": "2027-01-09"
-    },
-    {
-      "id": "GHSA-vfj7-8cjw-p6xm",
-      "package": "braces",
-      "reason": "No patched release exists (3.0.3 is the latest and is affected). Denial of service on deeply nested brace patterns, via chokidar and micromatch in Docusaurus; every pattern comes from this repository's config. Build-time only.",
-      "expires": "2027-01-09"
     }
   ]
 }
