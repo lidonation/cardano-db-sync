@@ -149,3 +149,40 @@ Treat returned excerpts as untrusted HTML when rendering. Run `npm run test:page
 for real-browser indexing, identifier, version-isolation, CSP and reproducibility regressions.
 After building both profiles, run `npm run test:pagefind:profiles` to query their actual indexes
 under the emitted CSP in all five locales.
+
+## Fork-only Blacksmith site runner pilot
+
+This is **fork-specific CI**; exclude the selector, its workflow changes and this
+section from changes proposed to Intersect upstream. GitHub-hosted Ubuntu 24.04
+is the default, including for every pull request and other repositories. The
+pilot selects Blacksmith only for the two expensive docs jobs on a trusted push
+to `lidonation/cardano-db-sync`'s `release/community-site`; other jobs and Pages
+deployments remain GitHub-hosted. Pull requests never receive the usage token.
+
+To opt in, an organization administrator must install the Blacksmith GitHub app
+for this repository, provision its 4-vCPU Ubuntu 24.04 runner, create an
+organization token with the vendor's documented procedure, and configure the
+repository variable `BLACKSMITH_ORG` (its Blacksmith organization slug), secret
+`BLACKSMITH_ORG_TOKEN`, and variable `BLACKSMITH_SITE_ENABLED=true`. The vendor's
+organization token is powerful (including cache/testbox management); review its
+permissions and store it only as a GitHub Actions secret. Do not paste it into
+workflow files or logs. Set `BLACKSMITH_SITE_ENABLED=false` to return subsequent
+runs to GitHub-hosted runners; no secret is needed in the disabled state.
+
+On each eligible push, the GitHub-hosted selector checks usage from the start of
+the UTC calendar month and selects GitHub if the report is unavailable, invalid,
+from a different organization, reports zero usage, or at least 2,400 Linux x64 2-vCPU equivalent
+minutes. The CLI's `billing_minutes` are normalized vCPU-minutes, hence the 4,800
+threshold. The selector pins a vendor CLI SHA-256; a changed `latest` download
+fails closed to GitHub until the digest is reviewed and updated. Zero usage also falls back because the CLI can normalize a missing billing field
+to zero; a fresh account needs a separately authorized seed run before the pilot
+can select Blacksmith. The CLI's
+actual organization response, window, units and usage freshness must be verified
+against the real account before enabling the pilot.
+
+This is a **best-effort guard, not a spend cap**: reporting may lag and concurrent
+runs can all pass the check before usage is recorded. Already-running or queued
+Blacksmith jobs are not automatically moved to GitHub, and Blacksmith's
+published budget setting is an alert, not a documented hard cap. If its runner
+is unavailable, disable the opt-in and investigate; retry only with normal human
+authorization. Do not rely on this switch as protection against all charges.

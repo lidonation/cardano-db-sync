@@ -23,7 +23,38 @@ describe('docs browser runner compatibility', () => {
   for (const [name, job] of Object.entries(workflow.jobs)) {
     if (!job.steps?.some((step) => step.run?.includes('playwright install'))) continue;
     it(`${name} pins the OS supported by the locked Playwright version`, () => {
-      expect(job['runs-on']).toBe('ubuntu-24.04');
+      const expected = "${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}";
+      expect(job['runs-on']).toBe(expected);
+      const selector = readFileSync(
+        path.resolve(import.meta.dirname, '../../../.github/scripts/blacksmith-runner.py'),
+        'utf8',
+      );
+      expect(selector).toContain("GITHUB = 'ubuntu-24.04'");
+      expect(selector).toContain("BLACKSMITH = 'blacksmith-4vcpu-ubuntu-2404'");
     });
   }
+});
+
+describe('fork-only runner selection', () => {
+  it('limits credential use to trusted release pushes and preserves fallback', () => {
+    const source = readFileSync(
+      path.resolve(import.meta.dirname, '../../../.github/workflows/docs-site.yml'),
+      'utf8',
+    );
+    const parsed = yaml.load(source) as {
+      jobs: Record<
+        string,
+        {needs?: string; if?: string; steps?: Array<{id?: string; if?: string}>}
+      >;
+    };
+    const selector = parsed.jobs['site-runner'];
+    const step = selector.steps?.find((item) => item.id === 'select');
+    expect(step?.if).toContain("github.repository == 'lidonation/cardano-db-sync'");
+    expect(step?.if).toContain("github.event_name == 'push'");
+    expect(step?.if).toContain("github.ref == 'refs/heads/release/community-site'");
+    for (const name of ['unit-tests', 'build']) {
+      expect(parsed.jobs[name].needs).toBe('site-runner');
+      expect(parsed.jobs[name].if).toBe('${{ !cancelled() }}');
+    }
+  });
 });

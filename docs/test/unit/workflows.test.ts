@@ -144,8 +144,15 @@ describe('browser runner compatibility', () => {
     const workflow = yaml.load(
       await fs.readFile(path.join(ROOT, '.github/workflows/docs-site.yml'), 'utf8'),
     ) as {jobs: Record<string, Record<string, unknown>>};
-    expect(workflow.jobs['unit-tests']['runs-on']).toBe('ubuntu-24.04');
-    expect(workflow.jobs.build['runs-on']).toBe('ubuntu-24.04');
+    const expected = "${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}";
+    expect(workflow.jobs['unit-tests']['runs-on']).toBe(expected);
+    expect(workflow.jobs.build['runs-on']).toBe(expected);
+    const selector = await fs.readFile(
+      path.join(ROOT, '.github/scripts/blacksmith-runner.py'),
+      'utf8',
+    );
+    expect(selector).toContain("GITHUB = 'ubuntu-24.04'");
+    expect(selector).toContain("BLACKSMITH = 'blacksmith-4vcpu-ubuntu-2404'");
   });
 });
 
