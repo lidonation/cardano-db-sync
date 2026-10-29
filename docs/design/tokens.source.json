@@ -129,8 +129,7 @@
       "below": "-1",
       "raised": "10",
       "navbar": "100",
-      "skip": "201",
-      "behind": -1
+      "skip": "201"
     },
     "code": {
       "surface": "#0f1117",

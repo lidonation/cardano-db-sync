@@ -130,3 +130,29 @@ for (const palette of PALETTES) {
     });
   }
 }
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  for (const palette of PALETTES) {
+    test(`control carets remain visible in forced ${colorScheme} colors with ${palette}`, async ({
+      page,
+    }) => {
+      await page.emulateMedia({forcedColors: 'active', colorScheme});
+      await page.addInitScript((name) => localStorage.setItem('dbs-palette', name), palette);
+      await page.goto(BUILT_HOME);
+      const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+      const controls = [
+        header.getByRole('button', {name: /^Theme:/}),
+        header.locator('.navbar__item.dropdown > .navbar__link').first(),
+      ];
+      for (const control of controls) {
+        const colors = await control.evaluate((element) => ({
+          text: getComputedStyle(element).color,
+          caret: getComputedStyle(element, '::after').backgroundColor,
+          plate: getComputedStyle(element, '::before').backgroundColor,
+        }));
+        expect(colors.caret).toBe(colors.text);
+        expect(colors.caret).not.toBe(colors.plate);
+      }
+    });
+  }
+}

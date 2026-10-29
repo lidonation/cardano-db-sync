@@ -38,7 +38,14 @@ async function run(args) {
       [path.join(root, 'node_modules/@docusaurus/core/bin/docusaurus.mjs'), ...args],
       {
         cwd: site,
-        env: {...process.env, DOCS_PROFILE: 'dev', ROUTE_MANIFEST: 'write'},
+        // node_modules is shared with the checkout, including Webpack's default cache.
+        // This disposable build must not read or write that persistent cache.
+        env: {
+          ...process.env,
+          DOCS_PROFILE: 'dev',
+          ROUTE_MANIFEST: 'write',
+          DOCUSAURUS_NO_PERSISTENT_CACHE: '1',
+        },
         stdio: 'inherit',
       },
     );

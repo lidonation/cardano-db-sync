@@ -111,3 +111,18 @@ test('release names and equivalent pages survive version navigation', async ({pa
   await expect(page).toHaveURL(/\/docs\/next\/intro\?source=versions#introduction$/);
   await expect(page.getByRole('button', {name: 'Next', exact: true})).toHaveCount(0);
 });
+
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`the version caret remains visible in forced ${colorScheme} colors`, async ({page}) => {
+    await page.emulateMedia({forcedColors: 'active', colorScheme});
+    await open(page, INTRO, 1440);
+    const version = page.getByRole('button', {name: 'Unreleased', exact: true});
+    const colors = await version.evaluate((element) => ({
+      text: getComputedStyle(element).color,
+      caret: getComputedStyle(element, '::after').backgroundColor,
+      plate: getComputedStyle(element, '::before').backgroundColor,
+    }));
+    expect(colors.caret).toBe(colors.text);
+    expect(colors.caret).not.toBe(colors.plate);
+  });
+}

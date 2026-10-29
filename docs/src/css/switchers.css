@@ -48,7 +48,7 @@
 .navbar__item.dropdown > .navbar__link::before {
   content: '';
   position: absolute;
-  z-index: var(--dbs-layer-behind);
+  z-index: var(--dbs-layer-below);
   box-sizing: border-box;
   inset-inline: 0;
   inset-block-start: 50%;
@@ -85,6 +85,15 @@
 .dbs-control-plate:active::before,
 .navbar__item.dropdown > .navbar__link:active::before {
   background: var(--dbs-surface-accent-subtle);
+}
+
+/* Keep currentColor tied to the user's forced text color. Otherwise forced-color
+   mode paints the clipped caret as Canvas, making it disappear into its plate. */
+@media (forced-colors: active) {
+  .dbs-control-plate::after,
+  .navbar__item.dropdown > .navbar__link::after {
+    forced-color-adjust: preserve-parent-color;
+  }
 }
 
 /* The menus: token surface, control boundary, no shadow (the design has none). */
