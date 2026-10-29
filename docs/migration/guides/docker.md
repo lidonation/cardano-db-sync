@@ -38,10 +38,23 @@ curl -o docker-compose.yml \
   "https://raw.githubusercontent.com/IntersectMBO/${REPOSITORY}/master/docker-compose.example.yml"
 ```
 
-Start `cardano-node`, `postgresql`, and `cardano-db-sync` services:
+The downloaded example publishes PostgreSQL on every interface with a public development
+password. **Do not start it unchanged.** Require Docker Compose 2.24.4 or newer, then save this
+as `docker-compose.local.yml` to replace, not append to, its published port list:
+
+```yaml
+services:
+  postgres:
+    ports: !override
+      - '127.0.0.1:5432:5432'
+```
+
+Use a fresh local test environment and replace the example database credentials before use.
+Start `cardano-node`, `postgresql`, and `cardano-db-sync` with both files:
 
 ```bash
-docker compose up -d && docker compose logs -f
+docker compose -f docker-compose.yml -f docker-compose.local.yml up -d && \
+  docker compose -f docker-compose.yml -f docker-compose.local.yml logs -f
 ```
 
 The PostgreSQL database should now be exposed on localhost port `5432`
@@ -49,29 +62,51 @@ The PostgreSQL database should now be exposed on localhost port `5432`
 To connect to PostgreSQL database:
 
 ```bash
-psql -h 0.0.0.0 -p 5432 -U postgres -d cexplorer
+psql -h 127.0.0.1 -p 5432 -U postgres -d cexplorer
 ```
 
 ### Connecting to a Other Networks
 
-To connect to different network use `NETWORK` environment variable:
+Select the network **before the first start**. Never reuse a populated database or ledger/node
+volumes from another network. For a fresh preprod environment, use `NETWORK` on every Compose
+operation and keep the same override:
 
 ```bash
-NETWORK=preprod docker compose up -d && docker compose logs -f
+NETWORK=preprod docker compose -f docker-compose.yml -f docker-compose.local.yml up -d && \
+  docker compose -f docker-compose.yml -f docker-compose.local.yml logs -f
 ```
 
 ## Running `cardano-db-sync`
+
+The image tags below match the Compose example in this checkout. Verify them against your
+chosen release and pin approved image digests before deployment. Node, db-sync, configuration
+and snapshot must be compatible; never run an older binary against a newer database schema.
+The names below assume the Compose project's default `cardano-db-sync` name.
+Before running an alternative standalone db-sync, stop the Compose db-sync service to prevent
+concurrent writers, while leaving PostgreSQL and the node running:
+
+```bash
+docker compose -f docker-compose.yml -f docker-compose.local.yml stop cardano-db-sync
+```
+
+Prepare `$PWD/pgpass` with approved credentials for host `postgres`, database and port, readable
+only by the container's service account (mode 0600). Do not put a password into a shell command.
+Each example joins the Compose database network and mounts that file read-only. Adjust the
+project-prefixed volume/network names if you selected another Compose project name.
 
 Start `cardano-db-sync`:
 
 ```bash
 docker run \
+  --network cardano-db-sync_postgres \
+  --env PGPASSFILE=/run/secrets/pgpass \
+  --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
   --env NETWORK=mainnet \
   --env POSTGRES_HOST=postgres \
   --env POSTGRES_PORT=5432 \
-  --volume db-sync-data:/var/lib/cexplorer \
-  --volume node-ipc \
-  ghcr.io/IntersectMBO/cardano-db-sync:13.3.0.0
+  --volume cardano-db-sync_db-sync-data:/var/lib/cexplorer \
+  --volume cardano-db-sync_node-ipc:/node-ipc:ro \
+  ghcr.io/intersectmbo/cardano-db-sync:13.7.2.1
 ```
 
 ### Environment Variables
@@ -129,13 +164,16 @@ Extra command line arguments to pass to `cardano-db-sync`. For example:
 
 ```bash
 docker run \
+  --network cardano-db-sync_postgres \
+  --env PGPASSFILE=/run/secrets/pgpass \
+  --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
   --env NETWORK=mainnet \
   --env POSTGRES_HOST=postgres \
   --env POSTGRES_PORT=5432 \
   --env EXTRA_DB_SYNC_ARGS="--disable-cache" \
-  --volume db-sync-data:/var/lib/cexplorer \
-  --volume node-ipc \
-  ghcr.io/IntersectMBO/cardano-db-sync:13.3.0.0
+  --volume cardano-db-sync_db-sync-data:/var/lib/cexplorer \
+  --volume cardano-db-sync_node-ipc:/node-ipc:ro \
+  ghcr.io/intersectmbo/cardano-db-sync:13.7.2.1
 ```
 
 ### Overriding Network Configuration
@@ -145,14 +183,17 @@ variable:
 
 ```bash
 docker run \
+  --network cardano-db-sync_postgres \
+  --env PGPASSFILE=/run/secrets/pgpass \
+  --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
   --env NETWORK=mainnet \
   --env POSTGRES_HOST=postgres \
   --env POSTGRES_PORT=5432 \
   --env DB_SYNC_CONFIG=/config/db-sync-config.json \
-  --volume db-sync-data:/var/lib/cexplorer \
-  --volume node-ipc:/node-ipc \
+  --volume cardano-db-sync_db-sync-data:/var/lib/cexplorer \
+  --volume cardano-db-sync_node-ipc:/node-ipc:ro \
   --volume $PWD/environments/mainnet:/config \
-  ghcr.io/IntersectMBO/cardano-db-sync:13.3.0.0
+  ghcr.io/intersectmbo/cardano-db-sync:13.7.2.1
 ```
 
 ### Restoring From Snapshots
@@ -161,26 +202,35 @@ Snapshots are provided for mainnet to restore the PostgreSQL database. See the [
 releases](https://github.com/IntersectMBO/cardano-db-sync/releases) for a recent snapshot
 matched with the `cardano-db-sync` version.
 
-Although, you can specify a URL directly, we recommend downloading the image separately to avoid
-having to download it multiple times in case of failure. First, download the latest snapshot:
+Download the archive separately so retries do not repeatedly download it. Choose a trusted
+snapshot URL for the same network and compatible db-sync/schema/platform release, then set
+`SNAPSHOT_URL` in your shell. The command fails if it is unset:
 
 ```bash
-SNAPSHOT_REPOSITORY=cardano-db-sync
-curl -O "https://update-cardano-mainnet.iohk.io/${SNAPSHOT_REPOSITORY}/13.3/db-sync-snapshot-schema-13.3-block-10611621-x86_64.tgz"
+: "${SNAPSHOT_URL:?Set SNAPSHOT_URL to the approved compatible snapshot URL}"
+mkdir -p snapshots
+curl --fail --location --output snapshots/db-sync-snapshot.tgz "$SNAPSHOT_URL"
 ```
 
+Verify the archive against its trusted publisher's checksum or signature. Restore only into
+an empty database and empty state volume, with all other writers stopped and a tested backup.
+Create a separate protected `pgpass-restore` file targeting that empty database, and a new empty
+Docker volume `db-sync-restore-data`. Do not reuse a populated Compose state volume.
 Restore the snapshot with `RESTORE_SNAPSHOT`:
 
 ```bash
 docker run \
+  --network cardano-db-sync_postgres \
+  --env PGPASSFILE=/run/secrets/pgpass \
+  --volume "$PWD/pgpass-restore:/run/secrets/pgpass:ro" \
   --env NETWORK=mainnet \
   --env POSTGRES_HOST=postgres \
   --env POSTGRES_PORT=5432 \
-  --env RESTORE_SNAPSHOT=/data/db-sync-snapshot-schema-13.3-block-10611621-x86_64.tgz \
-  --volume db-sync-data:/var/lib/cexplorer \
-  --volume node-ipc:/node-ipc \
-  --volume $PWD:/data
-  ghcr.io/IntersectMBO/cardano-db-sync:13.3.0.0
+  --env RESTORE_SNAPSHOT=/data/db-sync-snapshot.tgz \
+  --volume db-sync-restore-data:/var/lib/cexplorer \
+  --volume cardano-db-sync_node-ipc:/node-ipc:ro \
+  --volume "$PWD/snapshots:/data:ro" \
+  ghcr.io/intersectmbo/cardano-db-sync:13.7.2.1
 ```
 
 ### Advanced Usage
@@ -191,11 +241,14 @@ configuration. The `--schema-dir` argument is automatically set and is not requi
 
 ```bash
 docker run \
-  --volume db-sync-data:/var/lib/cexplorer \
-  --volume node-ipc:/node-ipc \
+  --network cardano-db-sync_postgres \
+  --env PGPASSFILE=/run/secrets/pgpass \
+  --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
+  --volume cardano-db-sync_db-sync-data:/var/lib/cexplorer \
+  --volume cardano-db-sync_node-ipc:/node-ipc:ro \
   --volume $PWD/environments/mainnet:/config \
-  ghcr.io/IntersectMBO/cardano-db-sync:13.3.0.0 \
-  run --config /config/db-sync-config.json --socket-path /node-ipc/node.socket
+  ghcr.io/intersectmbo/cardano-db-sync:13.7.2.1 \
+  --config /config/db-sync-config.json --socket-path /node-ipc/node.socket
 ```
 
 ## Running `cardano-smash-server`
@@ -207,14 +260,17 @@ and network controls before exposing it remotely.
 
 ```bash
 docker run \
+  --network cardano-db-sync_postgres \
+  --env PGPASSFILE=/run/secrets/pgpass \
+  --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
   --env NETWORK=mainnet \
   --env POSTGRES_HOST=postgres \
   --env POSTGRES_PORT=5432 \
   --env SMASH_USER=smash-admin \
   --env SMASH_PASSWORD \
   --publish 127.0.0.1:3100:3100 \
-  --volume node-ipc:/node-ipc \
-  ghcr.io/IntersectMBO/cardano-smash-server:13.3.0.0
+  --volume cardano-db-sync_node-ipc:/node-ipc:ro \
+  ghcr.io/intersectmbo/cardano-smash-server:13.7.2.1
 ```
 
 ### Environment Variables
@@ -272,9 +328,12 @@ configuration.
 
 ```bash
 docker run \
-  --volume node-ipc:/node-ipc \
+  --network cardano-db-sync_postgres \
+  --env PGPASSFILE=/run/secrets/pgpass \
+  --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
+  --volume cardano-db-sync_node-ipc:/node-ipc:ro \
   --volume $PWD/environments/mainnet:/config \
-  ghcr.io/IntersectMBO/cardano-db-sync:13.3.0.0 \
+  ghcr.io/intersectmbo/cardano-smash-server:13.7.2.1 \
   --config /config/db-sync-config.json --port 3100
 ```
 

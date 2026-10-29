@@ -66,6 +66,11 @@ Manual rollbacks allow you to revert the database to a previous state by deletin
 - Recovering from a corrupted database state
 - Testing and development scenarios
 
+> [!WARNING]
+> Stop db-sync and prevent other writers before a manual rollback. Verify the target database,
+> network and slot, and take tested, compatible PostgreSQL and ledger-state backups first.
+> Use the matching schema variant and release; do not copy the example mainnet slot blindly.
+
 ## Methods
 
 There are two ways to perform manual rollbacks:
@@ -243,7 +248,10 @@ ORDER BY id DESC
 LIMIT 1;
 ```
 
-The result should show a block at or just after your specified rollback slot.
+Keep db-sync stopped during this check. If blocks at or after the requested slot existed before
+rollback, the latest remaining non-null slot must be strictly before the requested slot. If no
+such blocks existed, the tool may do nothing; confirm that result rather than treating it as a
+successful deletion. Once db-sync restarts it can advance past the target again.
 
 ## Common Issues
 
@@ -256,4 +264,5 @@ This means the specified slot doesn't exist in the database. The rollback will f
 If you see unique constraint violations after a rollback, this may indicate:
 
 - The rollback wasn't performed correctly (fixed in recent versions)
-- Manual cleanup may be needed for some tables
+- Keep writers stopped and investigate the matching release's recovery procedure. Do not manually
+  delete rows as a troubleshooting shortcut; restore verified matching backups if needed.

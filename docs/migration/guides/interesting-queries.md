@@ -5,6 +5,8 @@ requires:
   tables:
     [
       block,
+      collateral_tx_in,
+      collateral_tx_out,
       delegation,
       epoch,
       epoch_stake,
@@ -12,6 +14,7 @@ requires:
       ma_tx_mint,
       meta,
       multi_asset,
+      off_chain_pool_data,
       pool_hash,
       pool_metadata_ref,
       pool_retire,
@@ -30,13 +33,19 @@ requires:
     ]
   columns:
     [
-      address.id,
       block.block_no,
       block.epoch_no,
       block.hash,
       block.id,
       block.slot_leader_id,
       block.time,
+      collateral_tx_in.tx_in_id,
+      collateral_tx_in.tx_out_id,
+      collateral_tx_in.tx_out_index,
+      collateral_tx_out.tx_id,
+      collateral_tx_out.value,
+      off_chain_pool_data.pmr_id,
+      off_chain_pool_data.ticker_name,
       delegation.active_epoch_no,
       delegation.addr_id,
       delegation.id,
@@ -586,7 +595,7 @@ select addr_id, amount, NULL as reward_epoch_no, tx_id as treasury_tx_id from tr
 The UTxO set is dependent on time, this will return it for a given timestamp
 
 ```sql
-# with const as (select to_timestamp ('2020-10-10 17:00:00', 'YYYY-MM-DD HH24:MI:SS') as effective_time_)
+with const as (select to_timestamp ('2020-10-10 17:00:00', 'YYYY-MM-DD HH24:MI:SS') as effective_time_)
   select tx_out.address as address, tx_out.value as lovelace, generating_block.time as timestamp
     from const
     cross join tx_out
@@ -639,6 +648,7 @@ select
     inner join tx as genesis_tx on genesis_tx.block_id = genesis_block.id
     inner join tx_out as genesis_output on genesis_output.tx_id = genesis_tx.id
     left join tx_in as redemption_input on redemption_input.tx_out_id = genesis_tx.id
+      and redemption_input.tx_out_index = genesis_output.index
     left join tx as redemption_tx on redemption_tx.id = redemption_input.tx_in_id
     left join block as redemption_block on redemption_block.id = redemption_tx.block_id
     where genesis_block.epoch_no is null ;
@@ -699,20 +709,32 @@ select tx.id as tx_id, tx.fee as fees, SUM(redeemer.fee) as script_fees, SUM(red
 
 ### Get the sum of collatereal input lost
 
-```sql
-select SUM(value)/1000000 as lost_amount
-  from tx
-  join tx_in on tx.id = tx_in.tx_in_id
-  join tx_out on tx_in.tx_out_id = tx_out.id
-    where tx.valid_contract = false ;
-```
+This query requires retained referenced outputs and collateral records on the standard
+`tx_out` schema variant. Pruned, disabled or incomplete history can undercount; do not treat it
+as an authoritative total in that case. Failed transactions consume collateral inputs, not their
+normal `tx_in` rows. Subtract collateral returned by Babbage-era transactions, aggregating each
+side before joining so multiple inputs do not duplicate returns.
 
 ```sql
-  lost_amount
---------------------
- 592003625.28471400
-
+SELECT COALESCE(SUM(inputs.lovelace - COALESCE(returns.lovelace, 0)), 0) / 1000000
+  AS lost_amount
+FROM tx
+JOIN (
+  SELECT collateral_tx_in.tx_in_id, SUM(tx_out.value) AS lovelace
+  FROM collateral_tx_in
+  JOIN tx_out ON tx_out.tx_id = collateral_tx_in.tx_out_id
+    AND tx_out."index" = collateral_tx_in.tx_out_index
+  GROUP BY collateral_tx_in.tx_in_id
+) AS inputs ON inputs.tx_in_id = tx.id
+LEFT JOIN (
+  SELECT tx_id, SUM(value) AS lovelace
+  FROM collateral_tx_out
+  GROUP BY tx_id
+) AS returns ON returns.tx_id = tx.id
+WHERE tx.valid_contract = false;
 ```
+
+No fixed result is shown: the total depends on the selected network and retained chain history.
 
 ### Get all uses of a spend script and how much ada it unlocked from an output
 
@@ -788,12 +810,12 @@ select redeemer.tx_id as tx_id, redeemer.unit_mem, redeemer.unit_steps, redeemer
 
 ```sql
 select distinct on(block.hash) block.hash as block_hash , epoch_no, tx_count, pool_hash.hash_raw as pool_hash,
-                               pool_update.pledge, pool_update.active_epoch_no, pool_metadata_ref.url, offchain_pool_data.ticker_name
+                               pool_update.pledge, pool_update.active_epoch_no, pool_metadata_ref.url, off_chain_pool_data.ticker_name
   from block join slot_leader on block.slot_leader_id = slot_leader.id
     join pool_hash on slot_leader.pool_hash_id = pool_hash.id
     join pool_update on pool_update.hash_id = pool_hash.id
     left join pool_metadata_ref on pool_update.meta_id = pool_metadata_ref.id
-    left join offchain_pool_data on offchain_pool_data.pmr_id = pool_metadata_ref.id
+    left join off_chain_pool_data on off_chain_pool_data.pmr_id = pool_metadata_ref.id
   where tx_count = 0 and epoch_no > 150
   order by block.hash, pool_update.active_epoch_no desc;
 ```
