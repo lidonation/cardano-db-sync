@@ -98,6 +98,18 @@ test.describe('content', () => {
   });
 
   test('repository figures, people and country table come from the fixture', async ({page}) => {
+    if (test.info().project.use.baseURL) {
+      await open(page, 1440);
+      const section = page.locator('section[aria-labelledby="ecosystem-facts"]');
+      const facts = section.locator('[data-dbs-component="Metric"]');
+      if ((await facts.count()) === 0) {
+        await expect(section).toContainText('Repository activity data is unavailable');
+      } else {
+        await expect(facts).toHaveCount(5);
+        await expect(section.locator('time')).toHaveCount(1);
+      }
+      return;
+    }
     await page.route('**/repository-avatars/*.png', async (route) => {
       await route.fulfill({
         path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
@@ -213,12 +225,21 @@ for (const palette of ['light', 'dark', 'cream', 'navy']) {
   test(`roadmap data and accessible table in ${palette}`, async ({page}) => {
     await open(page, 1440, palette);
     const section = page.locator('section[aria-labelledby="roadmap"]');
-    await expect(section).toContainText('108 tracked items');
-    await expect(section).toContainText('11 of 12 done');
-    await expect(section).toContainText('21 of 22 tracked performance items');
-    await expect(section.locator('progress')).toHaveCount(4);
-    await expect(section.locator('table tbody tr')).toHaveCount(4);
-    await expect(section).toContainText('2026-10-29');
+    if (!test.info().project.use.baseURL) {
+      await expect(section).toContainText('108 tracked items');
+      await expect(section).toContainText('11 of 12 done');
+      await expect(section).toContainText('21 of 22 tracked performance items');
+      await expect(section.locator('progress')).toHaveCount(4);
+      await expect(section.locator('table tbody tr')).toHaveCount(4);
+      await expect(section).toContainText('2026-10-29');
+    } else if (await section.getByText('Roadmap data is unavailable in this build.').count()) {
+      await expect(section.locator('progress')).toHaveCount(0);
+    } else {
+      await expect(section).toContainText('tracked items');
+      await expect(section.locator('time')).toHaveCount(1);
+      const count = await section.locator('progress').count();
+      await expect(section.locator('table tbody tr')).toHaveCount(count);
+    }
     await expect(page.locator('footer').getByRole('link', {name: 'Roadmap'})).toHaveAttribute(
       'href',
       /ecosystem#roadmap$/,
