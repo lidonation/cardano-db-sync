@@ -1,7 +1,9 @@
 import React from 'react';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
 import Button from '../components/Button';
 import type {PageMessage} from '../i18n/pageTranslator';
 import type {RoadmapState} from '../roadmap/types';
+import {releaseTrack} from '../roadmap/releases';
 import Eyebrow from '../landing/Eyebrow';
 import layout from '../landing/styles.module.css';
 import styles from './roadmap.module.css';
@@ -18,6 +20,8 @@ export function Roadmap({
   issueUrl: string;
   t: Translate;
 }): React.JSX.Element {
+  useBrokenLinks().collectAnchor('roadmap');
+  const releases = state.status === 'available' ? releaseTrack(state.data.releases) : [];
   return (
     <section className={layout.section} aria-labelledby="roadmap">
       <div className={layout.inner}>
@@ -81,14 +85,14 @@ export function Roadmap({
                   'The project tracks performance objectives and planned releases. Progress counts items marked Done or Released.',
               })}
             </p>
-            {state.data.releases.length > 0 && (
+            {releases.length > 0 && (
               <div>
                 <p>{t({id: 'ecosystem.roadmap.releases', message: 'Planned releases:'})}</p>
                 <ol
                   className={styles.releases}
                   aria-label={t({id: 'ecosystem.roadmap.releases', message: 'Planned releases:'})}
                 >
-                  {state.data.releases.map((release) => (
+                  {releases.map((release) => (
                     <li key={release}>{release}</li>
                   ))}
                 </ol>
