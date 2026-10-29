@@ -4,16 +4,58 @@ import type {RoadmapData} from '../../src/roadmap/types';
 
 const BOARD = 'https://github.com/orgs/IntersectMBO/projects/8';
 const ITEMS = 'https://github.com/memexes/6909988/paginated_items';
-async function request(url: string, send: typeof fetch, accept: string): Promise<Response> {
+// Bound the entire anonymous snapshot, not just each individual page.
+const MAX_RESPONSE_BYTES = 5 * 1024 * 1024;
+interface RetrievalBudget {
+  signal: AbortSignal;
+  remainingBytes: number;
+}
+const retrievalBudget = (): RetrievalBudget => ({
+  signal: AbortSignal.timeout(60_000),
+  remainingBytes: 20 * 1024 * 1024,
+});
+async function request(
+  url: string,
+  send: typeof fetch,
+  accept: string,
+  budget: RetrievalBudget,
+): Promise<string> {
+  budget.signal.throwIfAborted();
   const response = await send(url, {
     headers: {accept},
     redirect: 'error',
-    signal: AbortSignal.timeout(15000),
+    signal: AbortSignal.any([budget.signal, AbortSignal.timeout(15_000)]),
   });
   if (!response.ok) throw new Error(`Roadmap source returned ${response.status}`);
-  return response;
+  if (!response.body) throw new Error('Missing roadmap response body');
+  const reader = response.body.getReader();
+  const decoder = new TextDecoder();
+  let bytes = 0;
+  let text = '';
+  try {
+    while (true) {
+      budget.signal.throwIfAborted();
+      const {done, value} = await reader.read();
+      budget.signal.throwIfAborted();
+      if (done) break;
+      bytes += value.byteLength;
+      budget.remainingBytes -= value.byteLength;
+      if (bytes > MAX_RESPONSE_BYTES || budget.remainingBytes < 0)
+        throw new Error('Roadmap response exceeds size limit');
+      text += decoder.decode(value, {stream: true});
+    }
+    return text + decoder.decode();
+  } catch (error) {
+    await reader.cancel().catch(() => {});
+    throw error;
+  } finally {
+    reader.releaseLock();
+  }
 }
-export async function readPages(send: typeof fetch = fetch): Promise<unknown[]> {
+export async function readPages(
+  send: typeof fetch = fetch,
+  budget = retrievalBudget(),
+): Promise<unknown[]> {
   const pages: unknown[] = [];
   const cursors = new Set<string>();
   let after = '';
@@ -21,7 +63,9 @@ export async function readPages(send: typeof fetch = fetch): Promise<unknown[]> 
   while (more) {
     const url = new URL(ITEMS);
     if (after) url.searchParams.set('after', after);
-    const page: unknown = await (await request(url.toString(), send, 'application/json')).json();
+    const page: unknown = JSON.parse(
+      await request(url.toString(), send, 'application/json', budget),
+    );
     if (
       !page ||
       typeof page !== 'object' ||
@@ -51,7 +95,8 @@ export async function readPages(send: typeof fetch = fetch): Promise<unknown[]> 
   return pages;
 }
 export async function readRoadmap(send: typeof fetch = fetch): Promise<RoadmapData> {
-  const html = await (await request(BOARD, send, 'text/html')).text();
+  const budget = retrievalBudget();
+  const html = await request(BOARD, send, 'text/html', budget);
   const $ = load(html);
   const read = (id: string): unknown => {
     const node = $(`script#${id}`);
@@ -107,7 +152,7 @@ export async function readRoadmap(send: typeof fetch = fetch): Promise<RoadmapDa
     !['_noValue', 'Blocked', 'In Progress', 'Done', 'Released'].every((name) => counts.has(name))
   )
     throw new Error('Unexpected board groups');
-  const result = transform(fields, await readPages(send), new Date().toISOString());
+  const result = transform(fields, await readPages(send, budget), new Date().toISOString());
   if (
     result.statuses.todo + result.statuses.inProgress + result.statuses.done !==
     board.totalCount.value

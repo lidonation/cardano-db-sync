@@ -95,3 +95,52 @@ it('rejects a changed board format before accepting source data', async () => {
   const send = async () => new Response('<html>format changed</html>', {status: 200});
   await expect(readRoadmap(send as typeof fetch)).rejects.toThrow('Board format changed');
 });
+
+it('applies one deadline across the board and all pages without sending credentials', async () => {
+  const {readRoadmap} = await import('../../plugins/roadmap/source');
+  const {vi} = await import('vitest');
+  const deadlines: number[] = [];
+  const timeout = vi.spyOn(AbortSignal, 'timeout').mockImplementation((milliseconds) => {
+    deadlines.push(milliseconds);
+    return new AbortController().signal;
+  });
+  const groups = [
+    ['_noValue', 3],
+    ['Blocked', 0],
+    ['In Progress', 1],
+    ['Done', 104],
+    ['Released', 0],
+  ];
+  const board = `<script id="memex-paginated-items-get-api-data">${JSON.stringify({url: '/memexes/6909988/paginated_items'})}</script>
+    <script id="memex-columns-data">${JSON.stringify(fixture.fields)}</script>
+    <script id="memex-paginated-items-data">${JSON.stringify({totalCount: {value: 108, isApproximate: false}, groups: {nodes: groups.map(([groupValue, value]) => ({groupValue, totalCount: {value, isApproximate: false}}))}})}</script>`;
+  let call = 0;
+  try {
+    const send: typeof fetch = async (_url, init) => {
+      expect(init?.headers).toEqual({accept: call === 0 ? 'text/html' : 'application/json'});
+      expect(init?.redirect).toBe('error');
+      expect(init?.signal).toBeInstanceOf(AbortSignal);
+      return new Response(call++ === 0 ? board : JSON.stringify(fixture.pages[call - 2]));
+    };
+    const result = await readRoadmap(send);
+    expect(result.statuses).toEqual({todo: 3, inProgress: 1, done: 104});
+    expect(call).toBe(3);
+    // One snapshot-wide deadline, not a fresh minute for every page.
+    expect(deadlines.filter((value) => value === 60_000)).toHaveLength(1);
+  } finally {
+    timeout.mockRestore();
+  }
+});
+
+it('rejects oversized source bodies and falls back to the validated snapshot', async () => {
+  const {readRoadmap} = await import('../../plugins/roadmap/source');
+  const data = transform(fixture.fields, fixture.pages, '2026-10-29T00:00:00.000Z');
+  const send: typeof fetch = async () => new Response(' '.repeat(5 * 1024 * 1024 + 1));
+  await expect(readRoadmap(send)).rejects.toThrow('Roadmap response exceeds size limit');
+  expect(
+    await resolveRoadmap(
+      () => readRoadmap(send),
+      async () => data,
+    ),
+  ).toEqual({status: 'available', data});
+});
