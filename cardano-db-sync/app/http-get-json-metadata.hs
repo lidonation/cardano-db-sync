@@ -27,6 +27,13 @@ import System.Exit (exitFailure)
 
 {-# ANN module ("HLint: ignore Avoid restricted qualification" :: Text.Text) #-}
 
+-- | Test the off-chain metadata fetcher. With no type keyword, pass a pool URL
+-- and an optional hexadecimal metadata hash. Governance types are @drep@,
+-- @ga@, @vote@, @committee_dereg@, @const@ and @other@. Add @url@ to fetch a
+-- governance anchor over the network; without it the argument is a local file.
+-- This tool supplies no IPFS gateway, so rewrite an @ipfs://@ URL through a
+-- gateway before using network mode. Local-file mode prints validation details,
+-- including the computed hash and an @Is valid JSON@ result.
 main :: IO ()
 main = do
   xs <- getArgs

@@ -10,6 +10,9 @@
     "/docs/guides/installation": {
       "status": "live"
     },
+    "/docs/guides/installing-with-nix": {
+      "status": "live"
+    },
     "/docs/guides/kubernetes": {
       "status": "live"
     },
@@ -20,6 +23,9 @@
       "status": "live"
     },
     "/docs/guides/restore-from-snapshot": {
+      "status": "live"
+    },
+    "/docs/guides/running": {
       "status": "live"
     },
     "/docs/guides/smash-operations": {

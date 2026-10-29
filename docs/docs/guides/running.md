@@ -19,7 +19,7 @@ This guide assumes you have the following tools:
 
 - [Git](https://git-scm.com/download)
 - [Cardano Node](https://github.com/input-output-hk/cardano-node-wiki/blob/main/docs/getting-started/install.md)
-- [Cardano DB Sync](installing.md)
+- [Cardano DB Sync](https://github.com/IntersectMBO/cardano-db-sync/blob/master/doc/installing.md)
 
 ## Download Configuration Files
 

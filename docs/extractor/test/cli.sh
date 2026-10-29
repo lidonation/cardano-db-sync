@@ -5,10 +5,16 @@ exe=$(realpath "$1")
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT HUP INT TERM
 repo="$tmp/repo"
-mkdir -p "$repo/fixtures" "$repo/cardano-db/src" "$repo/cardano-db-sync/src/Cardano/DbSync/Config" "$repo/empty"
+mkdir -p "$repo/fixtures" "$repo/cardano-db/src" "$repo/cardano-db-sync/src/Cardano/DbSync/Config" "$repo/empty" "$repo/cardano-db-sync/app" "$repo/cardano-db-sync/src/Cardano/DbSync/OffChain" "$repo/cardano-smash-server/src/Cardano/SMASH/Server"
 printf 'module Fixture where\n-- | Fixture café documentation.\nf :: Int\nf = 1\n' > "$repo/fixtures/F.hs"
 printf 'module Default where\n' > "$repo/cardano-db/src/Default.hs"
 printf 'module Config where\n' > "$repo/cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"
+printf 'module Cli where\n' > "$repo/cardano-db-sync/app/cardano-db-sync.hs"
+printf 'module Fixture where\n' > "$repo/cardano-db-sync/app/http-get-json-metadata.hs"
+printf 'module Fixture where\n' > "$repo/cardano-db-sync/app/test-http-get-json-metadata.hs"
+printf 'module Fixture where\n' > "$repo/cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs"
+printf 'module Fixture where\n' > "$repo/cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs"
+printf 'module Fixture where\n' > "$repo/cardano-smash-server/src/Cardano/SMASH/Server/Api.hs"
 run() { "$exe" --repo-root "$repo" --out "$tmp/out.json" "$@"; }
 fail() {
   if run "$@" >"$tmp/stdout" 2>"$tmp/stderr"; then
@@ -33,7 +39,17 @@ PY
 run
 python3 - "$tmp/out.json" <<'PY'
 import json,sys
-assert len(json.load(open(sys.argv[1]))['files']) == 2
+actual = {f['path'] for f in json.load(open(sys.argv[1]))['files']}
+assert actual == {
+    'cardano-db/src/Default.hs',
+    'cardano-db-sync/src/Cardano/DbSync/Config/Types.hs',
+    'cardano-db-sync/app/cardano-db-sync.hs',
+    'cardano-db-sync/app/http-get-json-metadata.hs',
+    'cardano-db-sync/app/test-http-get-json-metadata.hs',
+    'cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs',
+    'cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs',
+    'cardano-smash-server/src/Cardano/SMASH/Server/Api.hs',
+}
 PY
 fail --input missing
 fail --input empty

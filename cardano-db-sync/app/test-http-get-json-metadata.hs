@@ -28,6 +28,10 @@ import Network.HTTP.Client.TLS (tlsManagerSettings)
 -- A test/debug program that pulls PoolMetadataRef data from the database and then tests all
 -- the URLs found.
 
+-- | Check stored pool metadata references in the database selected by
+-- @PGPASSFILE@. The tool refetches references and reports grouped errors such as
+-- hash mismatches, timeouts and invalid content types; it does not check vote
+-- metadata.
 main :: IO ()
 main = do
   manager <- Http.newManager tlsManagerSettings
