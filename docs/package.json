@@ -48,7 +48,8 @@
     "test:prism:built": "node test/fixtures/prism/run.mjs",
     "test:versions:built": "playwright test --config playwright.versions.config.ts",
     "extract:versions": "node scripts/extract-versions.mjs",
-    "check:versions": "node scripts/extract-versions.mjs --check"
+    "check:versions": "node scripts/extract-versions.mjs --check",
+    "test:pagefind:built": "playwright test --config playwright.pagefind.config.ts"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",
@@ -81,6 +82,7 @@
     "cross-env": "7.0.3",
     "eslint": "9.39.5",
     "js-yaml": "4.3.2",
+    "pagefind": "1.5.2",
     "playwright-core": "1.56.1",
     "postcss": "8.5.29",
     "postcss-selector-parser": "7.1.6",

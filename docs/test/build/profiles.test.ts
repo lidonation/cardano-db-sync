@@ -52,6 +52,22 @@ describe('both profiles build from one working tree', () => {
   });
 });
 
+describe('headless prose indexes (SRCH-10)', () => {
+  for (const profile of ['dev', 'prod'] as const) {
+    for (const locale of LOCALES) {
+      it(`emits the current version index for ${profile} ${locale}`, async () => {
+        const prefix = locale === DEFAULT_LOCALE ? '' : locale;
+        const bundle = path.join(OUT[profile], prefix, 'pagefind', 'current');
+        const entry = JSON.parse(await fs.readFile(path.join(bundle, 'pagefind-entry.json'), 'utf8'));
+        expect(entry.languages[locale].page_count).toBeGreaterThan(0);
+        expect(await exists(path.join(bundle, 'pagefind.js'))).toBe(true);
+        expect(await exists(path.join(bundle, 'pagefind-worker.js'))).toBe(true);
+        expect(await exists(path.join(bundle, 'pagefind-ui.js'))).toBe(false);
+      });
+    }
+  }
+});
+
 describe('CNAME is a production-only artifact (ENV-6)', () => {
   it('does not write a CNAME into the developer output', async () => {
     expect(await exists(path.join(OUT.dev, 'CNAME'))).toBe(false);

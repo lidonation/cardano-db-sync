@@ -1,0 +1,166 @@
+import {test, expect} from '@playwright/test';
+import {indexVersions} from '../../plugins/pagefind-prose';
+import {mkdtemp, mkdir, readFile, rm, writeFile, access, readdir} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import path from 'node:path';
+import {createServer, type Server} from 'node:http';
+import {once} from 'node:events';
+import ts from 'typescript';
+
+let root: string;
+let server: Server;
+let origin: string;
+
+test.beforeAll(async () => {
+  const pagefind = await import('pagefind');
+  root = await mkdtemp(path.join(tmpdir(), 'prose-index-'));
+  for (const [version, text] of [
+    ['v1', 'Prune tx_out safely with the snapshot procedure.'],
+    ['v2', 'Zebraquartz is available exclusively in this newer guide.'],
+  ]) {
+    const dir = path.join(root, 'docs', version, 'guide');
+    await mkdir(dir, {recursive: true});
+    await writeFile(
+      path.join(dir, 'index.html'),
+      `<html lang="en"><body><article><div class="markdown"><h1>Database guide</h1><h2 id="pruning">Pruning</h2><p>${text}</p></div></article></body></html>`,
+    );
+  }
+  try {
+    await indexVersions({
+      outDir: root,
+      baseUrl: '/preview/ja/',
+      versions: ['v1', 'v2'].map((versionName) => ({
+        versionName,
+        docs: [{permalink: `/preview/ja/docs/${versionName}/guide`}],
+      })),
+      create: () => pagefind.createIndex({rootSelector: 'article .markdown'}),
+      read: (file) => readFile(file, 'utf8'),
+    });
+  } finally {
+    await pagefind.close();
+  }
+  server = createServer(async (req, res) => {
+    const pathname = new URL(req.url ?? '/', 'http://localhost').pathname;
+    if (pathname === '/') {
+      res.setHeader('Content-Type', 'text/html');
+      res.end(
+        `<html lang="en"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; connect-src 'self'; object-src 'none'; base-uri 'none'"></head></html>`,
+      );
+      return;
+    }
+    if (pathname === '/helper.js') {
+      const source = await readFile(path.resolve('src/search/prose.ts'), 'utf8');
+      res.setHeader('Content-Type', 'text/javascript');
+      res.end(
+        ts.transpileModule(source, {
+          compilerOptions: {module: ts.ModuleKind.ESNext, target: ts.ScriptTarget.ES2022},
+        }).outputText,
+      );
+      return;
+    }
+    const relative = pathname.startsWith('/preview/ja/')
+      ? pathname.slice('/preview/ja'.length)
+      : pathname;
+    const file = path.resolve(root, `.${decodeURIComponent(relative)}`);
+    if (!file.startsWith(`${root}${path.sep}`)) {
+      res.writeHead(403).end();
+      return;
+    }
+    try {
+      const data = await readFile(file);
+      const extension = path.extname(file);
+      res.setHeader(
+        'Content-Type',
+        extension === '.js'
+          ? 'text/javascript'
+          : extension === '.wasm'
+            ? 'application/wasm'
+            : 'application/octet-stream',
+      );
+      res.end(data);
+    } catch {
+      res.writeHead(404).end();
+    }
+  });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  const address = server.address();
+  if (!address || typeof address === 'string') throw new Error('Missing test server port');
+  origin = `http://127.0.0.1:${address.port}`;
+});
+
+test.afterAll(async () => {
+  if (server) {
+    server.close();
+    await once(server, 'close');
+  }
+  if (root) await rm(root, {recursive: true, force: true});
+});
+
+test('real headless search preserves identifiers, excerpts, deep links and version isolation', async ({
+  page,
+}) => {
+  await expect(access(path.join(root, 'pagefind/v1/pagefind-ui.js'))).rejects.toThrow();
+  await page.goto(origin);
+  const results = await page.evaluate(async () => {
+    const helperUrl = '/helper.js';
+    const helper = await import(/* webpackIgnore: true */ helperUrl);
+    const base = '/preview/ja/pagefind/';
+    const api = await helper.loadProseApi(`${base}v1/`);
+    const search = (version: string, query: string) =>
+      helper.searchProse(api, `${base}${version}/`, query);
+    return {
+      prose: await search('v1', 'how do I prune tx_out?'),
+      whole: await search('v1', 'tx_out'),
+      split: await search('v1', 'tx'),
+      absent: await search('v1', 'zebraquartz'),
+      present: await search('v2', 'zebraquartz'),
+      concurrent: await Promise.all([search('v1', 'tx_out'), search('v2', 'zebraquartz')]),
+    };
+  });
+  expect(results.prose).toHaveLength(1);
+  expect(results.prose[0].excerpt).toContain('tx_out');
+  expect(results.prose[0].url).toBe('/preview/ja/docs/v1/guide');
+  expect(
+    results.prose[0].sub_results.some((item: {url: string}) => item.url.endsWith('#pruning')),
+  ).toBe(true);
+  expect(results.whole).toHaveLength(1);
+  expect(results.split).toHaveLength(1);
+  expect(results.absent).toHaveLength(0);
+  expect(results.present).toHaveLength(1);
+  expect(results.concurrent[0][0].url).toBe('/preview/ja/docs/v1/guide');
+  expect(results.concurrent[1][0].url).toBe('/preview/ja/docs/v2/guide');
+});
+
+test('identical source regenerates byte-identical headless bundles', async () => {
+  const second = await mkdtemp(path.join(tmpdir(), 'prose-repeat-'));
+  const pagefind = await import('pagefind');
+  async function snapshot(dir: string, prefix = ''): Promise<Array<[string, string]>> {
+    const result: Array<[string, string]> = [];
+    for (const entry of await readdir(dir, {withFileTypes: true})) {
+      const name = `${prefix}${entry.name}`;
+      if (entry.isDirectory())
+        result.push(...(await snapshot(path.join(dir, entry.name), `${name}/`)));
+      else result.push([name, (await readFile(path.join(dir, entry.name))).toString('base64')]);
+    }
+    return result.sort(([a], [b]) => a.localeCompare(b));
+  }
+  try {
+    await indexVersions({
+      outDir: second,
+      baseUrl: '/preview/ja/',
+      versions: ['v1', 'v2'].map((versionName) => ({
+        versionName,
+        docs: [{permalink: `/preview/ja/docs/${versionName}/guide`}],
+      })),
+      create: () => pagefind.createIndex({rootSelector: 'article .markdown'}),
+      read: (file) => readFile(file.replace(second, root), 'utf8'),
+    });
+    expect(await snapshot(path.join(second, 'pagefind'))).toEqual(
+      await snapshot(path.join(root, 'pagefind')),
+    );
+  } finally {
+    await pagefind.close();
+    await rm(second, {recursive: true, force: true});
+  }
+});

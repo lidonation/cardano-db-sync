@@ -127,3 +127,18 @@ Anonymous roadmap retrieval has a 60-second snapshot deadline, a 15-second per-r
 limit, a 5 MiB decoded response-body limit and a 20 MiB cumulative body limit. These
 limits include all pagination; exceeding one takes the same last-good-cache or unavailable
 path as a failed request, rather than keeping a build waiting on an unstable endpoint.
+
+### Headless prose search (B20)
+
+The production and development builds emit one Pagefind 1.5.2 index for each Docusaurus
+`(version, locale)` under the locale's `pagefind/<version>/` directory. Only rendered docs
+are indexed, not navigation or redirects. The build fails if indexing fails. The Pagefind UI
+and highlighter are not shipped: the planned search interface consumes the headless API.
+
+Use `bundlePath` from `src/search/version.ts` with the active locale base URL and Docusaurus
+version name, then `loadProseApi` and `searchProse` from `src/search/prose.ts`. The latter
+serializes bundle switches and returns hydrated results, including heading-level `sub_results`.
+Load it only when a prose query is needed. Pagefind's actual 1.5.2 option is `basePath` (not
+`bundlePath`); the adapter also prevents profile/locale prefixes being duplicated in results.
+Treat returned excerpts as untrusted HTML when rendering. Run `npm run test:pagefind:built`
+for real-browser indexing, identifier, version-isolation, CSP and reproducibility regressions.
