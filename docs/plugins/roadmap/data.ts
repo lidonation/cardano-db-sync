@@ -41,6 +41,14 @@ export function transform(fields: unknown, pages: unknown, builtAt: string): Roa
     }
     defs.set(name, {id: String(field.id), options});
   }
+  if (new Set([...defs.values()].map((field) => field.id)).size !== wanted.length)
+    throw new Error('Duplicate field IDs');
+  if (
+    [...defs.get('Release Planned')!.options.values()].some(
+      (version) => !/^\d+(?:\.\d+){1,3}$/.test(version),
+    )
+  )
+    throw new Error('Invalid release option');
   const statusOptions = [...defs.get('Status')!.options.values()];
   if (
     statusOptions.length !== 4 ||

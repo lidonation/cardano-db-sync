@@ -25,6 +25,10 @@ describe('roadmap source', () => {
     duplicate[1].nodes[0].id = duplicate[0].nodes[0].id;
     expect(() => transform(fixture.fields, duplicate, '2026-10-29T00:00:00.000Z')).toThrow();
     expect(() => transform([], fixture.pages, '2026-10-29T00:00:00.000Z')).toThrow();
+    const fields = structuredClone(fixture.fields);
+    fields.find((field) => field.name === 'Release Planned')!.settings.options[0].name =
+      'invalid release';
+    expect(() => transform(fields, fixture.pages, '2026-10-29T00:00:00.000Z')).toThrow();
   });
   it('falls back to cache or explicitly unavailable on failure', async () => {
     const data = transform(fixture.fields, fixture.pages, '2026-10-29T00:00:00.000Z');

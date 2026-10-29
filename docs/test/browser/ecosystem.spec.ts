@@ -215,6 +215,7 @@ for (const palette of ['light', 'dark', 'cream', 'navy']) {
     const section = page.locator('section[aria-labelledby="roadmap"]');
     await expect(section).toContainText('108 tracked items');
     await expect(section).toContainText('11 of 12 done');
+    await expect(section).toContainText('21 of 22 tracked performance items');
     await expect(section.locator('progress')).toHaveCount(4);
     await expect(section.locator('table tbody tr')).toHaveCount(4);
     await expect(section).toContainText('2026-10-29');

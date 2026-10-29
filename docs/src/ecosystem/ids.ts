@@ -18,6 +18,7 @@ export const ECOSYSTEM_IDS = [
   'ecosystem.roadmap.empty',
   'ecosystem.roadmap.table',
   'ecosystem.roadmap.objective',
+  'ecosystem.roadmap.objectiveSummary',
   'ecosystem.roadmap.total',
   'ecosystem.roadmap.date',
   'ecosystem.roadmap.unlabelled',

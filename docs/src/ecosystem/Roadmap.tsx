@@ -85,6 +85,28 @@ export function Roadmap({
                   'The project tracks performance objectives and planned releases. Progress counts items marked Done or Released.',
               })}
             </p>
+            {state.data.objectives.length > 0 && (
+              <p>
+                {t({
+                  id: 'ecosystem.roadmap.objectiveSummary',
+                  message:
+                    '{done} of {total} tracked performance items are done across {count} objectives.',
+                })
+                  .replace(
+                    '{done}',
+                    String(
+                      state.data.objectives.reduce((sum, objective) => sum + objective.done, 0),
+                    ),
+                  )
+                  .replace(
+                    '{total}',
+                    String(
+                      state.data.objectives.reduce((sum, objective) => sum + objective.total, 0),
+                    ),
+                  )
+                  .replace('{count}', String(state.data.objectives.length))}
+              </p>
+            )}
             {releases.length > 0 && (
               <div>
                 <p>{t({id: 'ecosystem.roadmap.releases', message: 'Planned releases:'})}</p>
