@@ -1,0 +1,911 @@
+{
+  "schemaVersion": 1,
+  "guides": {
+    "docs/guides/first-queries.md": {
+      "tables:block": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "columns:block.block_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:57aa3879b9141e623a639b71780017c3a5d7f06104d34bee84741deaecf7cd23",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.epoch_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:9e0b89a6678d3b2244edf90fcc5ca00cd49753365bba8007a5acd0ae1d812887",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:8204f6182d519c069ac35fad81c4893ed9c86d95f0493bbd937c6a780ffad8be",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('block_id_seq'::regclass)"
+        }
+      ],
+      "columns:block.slot_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:c22559e2150bb67852d72fd040e088739dae07be89d06e125ad0ba9c22a6bef4",
+          "resolved_type": {
+            "base": "bigint",
+            "domains": ["word63type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.time": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:556918da70570c5a7c9cff4a723dd567f695c09717457cb503cfa90ebba6243a",
+          "resolved_type": {
+            "base": "timestamp without time zone",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ]
+    },
+    "docs/guides/installation.md": {},
+    "docs/guides/installing-with-nix.md": {},
+    "docs/guides/kubernetes.md": {},
+    "docs/guides/monitoring-rollback.md": {
+      "tables:block": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "columns:block.block_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:57aa3879b9141e623a639b71780017c3a5d7f06104d34bee84741deaecf7cd23",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.epoch_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:9e0b89a6678d3b2244edf90fcc5ca00cd49753365bba8007a5acd0ae1d812887",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:8204f6182d519c069ac35fad81c4893ed9c86d95f0493bbd937c6a780ffad8be",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('block_id_seq'::regclass)"
+        }
+      ],
+      "columns:block.slot_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:c22559e2150bb67852d72fd040e088739dae07be89d06e125ad0ba9c22a6bef4",
+          "resolved_type": {
+            "base": "bigint",
+            "domains": ["word63type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.time": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:556918da70570c5a7c9cff4a723dd567f695c09717457cb503cfa90ebba6243a",
+          "resolved_type": {
+            "base": "timestamp without time zone",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ]
+    },
+    "docs/guides/pool-metadata.md": {
+      "tables:pool_metadata_ref": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:off_chain_pool_data": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:off_chain_pool_fetch_error": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "config:insert_options.offchain_pool_data": {
+        "fingerprint": "sha256:d70e05b64c500bc2c764aa0d72b54e237de6e2b428a8ca31f37e5149e1e55fba",
+        "contract": {
+          "path": "insert_options.offchain_pool_data",
+          "key": {
+            "default": "disable",
+            "name": "offchain_pool_data",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "disable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "disable",
+                    "only_governance": "disable",
+                    "only_utxo": "disable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:ipfs_gateway": {
+        "fingerprint": "sha256:40c5b5d9cb5967763c183f2c0281bba9426e10c614afca4dac5ebaf0ab0fd951",
+        "contract": {
+          "path": "ipfs_gateway",
+          "key": {
+            "default": ["https://ipfs.io/ipfs"],
+            "name": "ipfs_gateway",
+            "required": false,
+            "shape": {"items": {"type": "string"}, "nullable": true, "type": "array"}
+          },
+          "context": []
+        }
+      }
+    },
+    "docs/guides/restore-from-snapshot.md": {},
+    "docs/guides/running.md": {},
+    "docs/guides/smash-operations.md": {
+      "config:insert_options.offchain_pool_data": {
+        "fingerprint": "sha256:d70e05b64c500bc2c764aa0d72b54e237de6e2b428a8ca31f37e5149e1e55fba",
+        "contract": {
+          "path": "insert_options.offchain_pool_data",
+          "key": {
+            "default": "disable",
+            "name": "offchain_pool_data",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "disable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "disable",
+                    "only_governance": "disable",
+                    "only_utxo": "disable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      }
+    },
+    "docs/guides/trimming.md": {
+      "tables:tx_in": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_out": "sha256:dc995955aba5fde41c749f2ef12b7445f393bfe0856ca0fedc12f086b9c47d51",
+      "columns:tx_out.consumed_by_tx_id": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:544312bd793f858802c6f8f6fd4909648d565461f1bc2d50f32abee86247df28",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        },
+        {
+          "variant": "address",
+          "fingerprint": "sha256:544312bd793f858802c6f8f6fd4909648d565461f1bc2d50f32abee86247df28",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "config:insert_options.tx_out.value": {
+        "fingerprint": "sha256:67e68063c98516f9df3d10e4e622723ec1669c632fb959402fdad4e11687983c",
+        "contract": {
+          "path": "insert_options.tx_out.value",
+          "key": {
+            "name": "value",
+            "required": true,
+            "shape": {
+              "type": "enum",
+              "values": ["enable", "disable", "consumed", "prune", "bootstrap"]
+            }
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "enable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "enable",
+                    "only_governance": "disable",
+                    "only_utxo": "bootstrap"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            },
+            {
+              "path": "insert_options.tx_out",
+              "required": false,
+              "nullable": true,
+              "default": "enable"
+            }
+          ]
+        }
+      },
+      "config:insert_options.tx_out.force_tx_in": {
+        "fingerprint": "sha256:7f28385fe952a08b3e475ad6748e0292637ae58613c295fd9a99a3f523bb20d5",
+        "contract": {
+          "path": "insert_options.tx_out.force_tx_in",
+          "key": {
+            "default": false,
+            "name": "force_tx_in",
+            "required": false,
+            "shape": {"nullable": true, "type": "boolean"}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "presets": [{"key": "preset", "values": {"only_utxo": false}}],
+              "selections": {"insert_options.preset": null}
+            },
+            {"path": "insert_options.tx_out", "required": false, "nullable": true}
+          ]
+        }
+      },
+      "config:insert_options.ledger": {
+        "fingerprint": "sha256:e5c68b6d661b57de07eaa42fd22b62c1dfe9d435b92cefd6cc98b3c8a98e5ce1",
+        "contract": {
+          "path": "insert_options.ledger",
+          "key": {
+            "default": "enable",
+            "name": "ledger",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable", "ignore"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "enable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "enable",
+                    "only_governance": "enable",
+                    "only_utxo": "ignore"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      }
+    },
+    "docs/guides/ubuntu-systemd.md": {}
+  },
+  "ranges": {
+    "docs/guides/first-queries.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/installation.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/installing-with-nix.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/kubernetes.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/monitoring-rollback.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/pool-metadata.md": [
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/restore-from-snapshot.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/running.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/smash-operations.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/trimming.md": [
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/ubuntu-systemd.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ]
+  },
+  "variants": {
+    "docs/guides/first-queries.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/installation.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/installing-with-nix.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/kubernetes.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/monitoring-rollback.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/pool-metadata.md": {
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/restore-from-snapshot.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/running.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/smash-operations.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/trimming.md": {
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/ubuntu-systemd.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    }
+  }
+}
