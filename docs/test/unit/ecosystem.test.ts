@@ -13,7 +13,7 @@ import {
 } from '../../scripts/check-external-links.mjs';
 import {DISCORD_URL, REPO_URL} from '../../src/data/links';
 import {loadReleaseHistory, releaseHistory} from '../../src/data/release-history';
-import {teams, tools} from '../../src/ecosystem/entries';
+import {teams, tools, toolsView} from '../../src/ecosystem/entries';
 import {ECOSYSTEM_IDS} from '../../src/ecosystem/ids';
 
 import {runAsScript} from './run-as-script';
@@ -74,11 +74,43 @@ describe('release history (B44-b)', () => {
 });
 
 describe('ecosystem entries', () => {
+  it('names the empty state and offers Discord recovery', () => {
+    expect(toolsView([], english)).toEqual({
+      kind: 'empty',
+      message: 'No ecosystem tools are listed yet.',
+      action: 'Tell us about a tool on Discord',
+      href: DISCORD_URL,
+    });
+    expect(toolsView(tools(english), english)).toEqual({kind: 'list'});
+  });
+
   it('names every tool and team once, each with an https link', () => {
     const entries = [...tools(english), ...teams(english)];
     expect(new Set(tools(english).map((tool) => tool.name)).size).toBe(tools(english).length);
     expect(new Set(teams(english).map((team) => team.name)).size).toBe(teams(english).length);
     for (const entry of entries) expect(entry.url, entry.name).toMatch(/^https:\/\//);
+  });
+
+  it('validates distinct, trusted tool links and includes them in the external check', async () => {
+    const constants = await linkConstants();
+    const checked = new Set(
+      SOURCES.flatMap((file: string) =>
+        externalUrls(readFileSync(path.join(DOCS, file), 'utf8'), constants),
+      ),
+    );
+    for (const tool of tools(english)) {
+      const urls = [tool.url, tool.website, tool.sql].filter((url): url is string => Boolean(url));
+      expect(new Set(urls).size).toBe(urls.length);
+      for (const url of urls) {
+        const parsed = new URL(url);
+        expect(parsed.protocol).toBe('https:');
+        expect(['github.com', 'koios.rest', 'blockfrost.io', 'gov.tools']).toContain(
+          parsed.hostname,
+        );
+        expect(checked.has(url), url).toBe(true);
+      }
+    }
+    expect(tools(english).find((tool) => tool.name === 'Koios')?.sql).toBeTruthy();
   });
 
   it('every link the page renders is one the external link check fetches', async () => {

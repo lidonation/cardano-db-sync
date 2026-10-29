@@ -17,21 +17,33 @@ export function ToolCard({
   org,
   description,
   href,
+  links,
   ...data
 }: CardDataProps & {
   readonly name: string;
   readonly org: ReactNode;
   readonly description: ReactNode;
   readonly href?: string;
+  readonly links?: readonly {readonly href: string; readonly label: string}[];
 }): React.JSX.Element {
   return (
-    <Frame kind="Tool" href={href} skeleton={<CardSkeleton />} {...data}>
+    <Frame
+      kind="Tool"
+      href={links?.length ? undefined : href}
+      skeleton={<CardSkeleton />}
+      {...data}
+    >
       <span className={styles.toolName}>
         <code className="dbs-type-mono">{name}</code>
-        {href && <Icon name="external" size={12} />}
+        {href && !links?.length && <Icon name="external" size={12} />}
       </span>
       <span className={styles.meta}>{org}</span>
       <span className={styles.body}>{description}</span>
+      {links?.map((link) => (
+        <Link className={styles.inlineLink} to={link.href} key={link.href}>
+          {link.label}
+        </Link>
+      ))}
     </Frame>
   );
 }
