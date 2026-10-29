@@ -19,3 +19,6 @@
 
 # Build-time repository activity cache
 /.cache/repository-activity
+
+# Build-time public roadmap cache
+/.cache/roadmap
