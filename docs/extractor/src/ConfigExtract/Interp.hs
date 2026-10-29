@@ -371,7 +371,7 @@ objectShape env t scope f = case f of
         SObject _ _ keys presets
           | all ((/= key) . keyName) keys -> pure (SObject t (lineOf env t) (Key key False (SNullable (SEnum (map fst options))) Nothing : keys) presets)
           | otherwise -> unresolved "legacy preset collides with a child key" >> pure (SObject t (lineOf env t) [] [])
-        _ -> unresolved ("legacy object child is not an object") >> pure (SObject t (lineOf env t) [] [])
+        _ -> unresolved "legacy object child is not an object" >> pure (SObject t (lineOf env t) [] [])
     build o body = do
       let analysis = analyseObject env scope o body
           -- with no preset, a switch takes its Nothing branch (the plain defaults)
