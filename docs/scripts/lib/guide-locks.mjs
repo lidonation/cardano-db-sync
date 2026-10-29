@@ -3,6 +3,8 @@ import yaml from 'js-yaml';
 import {canonicalJson} from './schema-model.mjs';
 
 const comparable = (value) => canonicalJson(JSON.parse(JSON.stringify(value ?? null)));
+const qualifiedReferences = (body) =>
+  body.matchAll(/\b(?:public\.)?([a-z][a-z0-9_]*\.[a-z][a-z0-9_]*)\b/g);
 
 const digest = (value) =>
   `sha256:${createHash('sha256').update(canonicalJson(value)).digest('hex')}`;
@@ -190,6 +192,7 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
       } else lock[`${kind}:${id}`] = value;
     }
   }
+  const sqlReferences = new Set();
   const body = source
     .slice(match[0].length)
     .replace(/\]\([^\n)]*\)/g, ']()')
@@ -200,17 +203,20 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
     // sentence ending in a table name cannot turn into a spurious column reference.
     .replace(
       /(`{3,}|~{3,})(sql|postgresql|postgres)\b[^\n]*\n([\s\S]*?)\1/g,
-      (_, fence, language, sql) =>
-        `${fence}${language}\n${sql.replace(/([a-z0-9_])[ \t]*\.[ \t]*(?=[a-z])/g, '$1.')}${fence}`,
+      (_, fence, language, sql) => {
+        const normalized = sql.replace(/([a-z0-9_])[ \t]*\.[ \t]*(?=[a-z])/g, '$1.');
+        for (const ref of qualifiedReferences(normalized)) sqlReferences.add(ref[1]);
+        return `${fence}${language}\n${normalized}${fence}`;
+      },
     );
-  for (const ref of body.matchAll(/\b(?:public\.)?([a-z][a-z0-9_]*\.[a-z][a-z0-9_]*)\b/g)) {
+  for (const ref of qualifiedReferences(body)) {
     const id = ref[1];
     const [table, column] = id.split('.');
     const candidates = tables.filter((t) => t.name === table);
     if (!candidates.length) continue;
     const columnExists = candidates.some((t) => t.columns.some((c) => c.name === column));
     const configExists = Object.keys(keys).some((key) => key === id || key.endsWith(`.${id}`));
-    if (!columnExists && !configExists)
+    if (!columnExists && (!configExists || sqlReferences.has(id)))
       errors.push(`${name}: body references unknown column ${id}`);
     else if (columnExists && !declared.has(`columns:${id}`))
       warnings.push(`${name}: body references undeclared column ${id}`);

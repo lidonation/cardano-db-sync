@@ -863,3 +863,21 @@ it('follows both rename-map entries and never invents a dropped target column', 
   expect(dropped.errors.join('\n')).toContain('table old_table was renamed to new_table');
   expect(dropped.errors.join('\n')).not.toContain('renamed to new_table.missing');
 });
+
+it('does not let a valid config path excuse a nonexistent SQL column', () => {
+  const cfg = {
+    config: {
+      keys: [{name: 'tx_out', shape: {keys: [{name: 'force_tx_in', shape: {type: 'boolean'}}]}}],
+    },
+  };
+  const result = evaluateGuide(
+    'a.md',
+    guide(
+      '```sql\nSELECT tx_out.force_tx_in FROM tx_out;\n```',
+      'requires:\n  config: [tx_out.force_tx_in]',
+    ),
+    schema,
+    cfg,
+  );
+  expect(result.errors.join('\n')).toContain('body references unknown column tx_out.force_tx_in');
+});
