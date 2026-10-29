@@ -58,6 +58,9 @@ requires:
       ma_tx_mint.ident,
       ma_tx_mint.quantity,
       ma_tx_mint.tx_id,
+      meta.id,
+      meta.start_time,
+      meta.network_name,
       multi_asset.fingerprint,
       multi_asset.id,
       multi_asset.name,
@@ -135,6 +138,8 @@ Some of these queries have Haskell/Esqueleto equivalents in the file [Query.hs][
 they exist, the names of those queries will be included in parentheses.
 
 ### Chain meta data (`queryMeta`)
+
+The output shown is a historical example; current releases may include additional columns.
 
 ```sql
 select * from meta ;

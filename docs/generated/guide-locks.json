@@ -1,6 +1,105 @@
 {
   "schemaVersion": 1,
   "guides": {
+    "docs/guides/building-running.md": {},
+    "docs/guides/database-encode-decode.md": {
+      "tables:address": "sha256:a59aa3d6126eee9977b8434e150df6f755c65f06c91c7f127545ba9e1c5799e6",
+      "tables:event_info": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:ma_tx_out": "sha256:a59aa3d6126eee9977b8434e150df6f755c65f06c91c7f127545ba9e1c5799e6",
+      "columns:tx_out.address_id": [
+        {
+          "variant": "address",
+          "fingerprint": "sha256:b6ecb8e10242dff7fb844685fb06150b1b7196bea2760e8c9dfbd41bbd3b0126",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:ma_tx_out.quantity": [
+        {
+          "variant": "address",
+          "fingerprint": "sha256:8fa3ccf0f6b69d33fb7c88c137397e086d93089391bcc5aa82b5ff5da6c6f067",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["word64type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:ma_tx_out.tx_out_id": [
+        {
+          "variant": "address",
+          "fingerprint": "sha256:dd27d095eaad86141a7039fca9d65b6ee1258596818f0bd20ca55b24285fa987",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:ma_tx_out.ident": [
+        {
+          "variant": "address",
+          "fingerprint": "sha256:dafc01e13306bc432501e08c7f0718da0c5efaca653c239d25d03e912ee32fff",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:event_info.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:f51f73f637655e3431ab0fe85374fca19fa56085397f072bc25a118706fa54bd",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:event_info.epoch": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:33625a463190de69c2a09b778a102ba1833bf9ecca490557f03b92d6242fa80e",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:event_info.type": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:ba07478221a6216fe487efadff2733ec5995f0711f809e29fedd2fd6322b907c",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:event_info.explanation": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:77a76bebc961c71f2a4c524781f550567ae2fa31c7064dc90fdbadcafd7bc84b",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ]
+    },
+    "docs/guides/docker.md": {},
     "docs/guides/first-queries.md": {
       "tables:block": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
       "columns:block.block_no": [
@@ -69,9 +168,1049 @@
         }
       ]
     },
+    "docs/guides/index.md": {},
     "docs/guides/installation.md": {},
     "docs/guides/installing-with-nix.md": {},
+    "docs/guides/installing.md": {},
+    "docs/guides/interesting-queries.md": {
+      "tables:block": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:collateral_tx_in": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:collateral_tx_out": "sha256:0c4098f4244eaaa31eeb7b028020c0af9fed92a192ed719d87bb935cb377b5ef",
+      "tables:delegation": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:epoch": "sha256:c6acecd183eff4e85e3c301a3ca1e835e1fe2362f4a6fc8d30cabe298ac54105",
+      "tables:epoch_stake": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:epoch_sync_time": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:ma_tx_mint": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:meta": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:multi_asset": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:off_chain_pool_data": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_hash": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_metadata_ref": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_retire": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_update": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:redeemer": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:reward": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:slot_leader": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:stake_address": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:stake_deregistration": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:stake_registration": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:treasury": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_in": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_out": "sha256:0c4098f4244eaaa31eeb7b028020c0af9fed92a192ed719d87bb935cb377b5ef",
+      "tables:withdrawal": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "columns:block.block_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:57aa3879b9141e623a639b71780017c3a5d7f06104d34bee84741deaecf7cd23",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.epoch_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:9e0b89a6678d3b2244edf90fcc5ca00cd49753365bba8007a5acd0ae1d812887",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.hash": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:4ad3baec9e15a8065dc02f569e2ec36891aa70ae245406fc1c185165ac774638",
+          "resolved_type": {
+            "base": "bytea",
+            "domains": ["hash32type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:block.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:8204f6182d519c069ac35fad81c4893ed9c86d95f0493bbd937c6a780ffad8be",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('block_id_seq'::regclass)"
+        }
+      ],
+      "columns:block.slot_leader_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:54329d054e61059efeea0ecc51669822313c8953859beba44f33bdc1e5e0c4f7",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:block.time": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:556918da70570c5a7c9cff4a723dd567f695c09717457cb503cfa90ebba6243a",
+          "resolved_type": {
+            "base": "timestamp without time zone",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:collateral_tx_in.tx_in_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:e7b44c781aee91de9d7ee797df3015bf3b0ce0b7baffddb40f40caa5a7b9e6b7",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:collateral_tx_in.tx_out_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:dd27d095eaad86141a7039fca9d65b6ee1258596818f0bd20ca55b24285fa987",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:collateral_tx_in.tx_out_index": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:dc6c9e496feb2d77e6514f85f938e51046c2ddcda5e9c65a724eb7b0ee4bcb68",
+          "resolved_type": {
+            "base": "smallint",
+            "domains": ["txindex"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:collateral_tx_out.tx_id": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:collateral_tx_out.value": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:6a4a07c273acbe332b009d27633df38c585486d7fd81e80ded037477e890de8d",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["lovelace"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:off_chain_pool_data.pmr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:8bb923fd4ec8d6cfdae74d1e6a322e1c5bae618a42a0f4c4f2c16dbb40e47891",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:off_chain_pool_data.ticker_name": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:3643f3e7f5bd9d21e4222682b2f62d519e08ebabf1c8417142f41f4f72d6fe00",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:delegation.active_epoch_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:f20037e79f5ced9f8cf3e5a49993119270e3b78b7911acd8280d8a16eb88eb39",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:delegation.addr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5e1031c4acb45c464e32835610531f9c12ad5c5f618530fdab55b814a1960aac",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:delegation.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:a10679d6daf4d68c187fe1a3dd9509196124fdbf30256eab9729458c61d62928",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('delegation_id_seq'::regclass)"
+        }
+      ],
+      "columns:delegation.pool_hash_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:8f5355d9f71df47fa71fe8faf03500760a2bf1910ac4c0f93e00ac9ad706a543",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:epoch_stake.addr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5e1031c4acb45c464e32835610531f9c12ad5c5f618530fdab55b814a1960aac",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:epoch_stake.amount": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:65cfff1a16b68e9a635bc1e52a1be34fc703780cb08b9e9983563ab4077f6875",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["lovelace"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:epoch_stake.epoch_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:0954041d3a561cbbfad877cdae62ddbfd5b71f827fe3c4f4ebe1d174985c0a02",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:epoch_stake.pool_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:ceefa4b7f0cec08321945ab3342aa2e2c8285a9c2e6dd4e5a1adf880e75ad4bf",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:ma_tx_mint.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5b9cc02f59e385a7a766b28406cffdd59ae609eeab6e6540894bef55bce06f9f",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('ma_tx_mint_id_seq'::regclass)"
+        }
+      ],
+      "columns:ma_tx_mint.ident": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:dafc01e13306bc432501e08c7f0718da0c5efaca653c239d25d03e912ee32fff",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:ma_tx_mint.quantity": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:4d2c607a0fdb84f615a166fe8734d7f7e745b1a685466ca65cb5e662ec4b21f5",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["int65type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:ma_tx_mint.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:meta.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5d2c680eb0d17b8a6f2fd9be0073dccb1e742aca7de0b8a5dc98bd35132d8290",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('meta_id_seq'::regclass)"
+        }
+      ],
+      "columns:meta.start_time": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:dc06a7b6aa22353e5428d900b630915c1128f5208b4bc3e196a71e8cd0f62587",
+          "resolved_type": {
+            "base": "timestamp without time zone",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:meta.network_name": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:4d8f45fb1d14ebd6ab117591a5c995865026853d6fa3184dfa36dabb063a5263",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:multi_asset.fingerprint": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:a671a87fe207408064b357d9b6cc4cc5ad48d5eab0b9259a9bc932bb3de91f0e",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:multi_asset.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:32fd1ea5ea64afa74405b96bd77dc235aa5e23cd09d0ae796192c133df53bd24",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('multi_asset_id_seq'::regclass)"
+        }
+      ],
+      "columns:multi_asset.name": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:47df61102e9ba61eb3326cb5f8bc447b972eec63bb8155c2751b4c90bfa282fc",
+          "resolved_type": {
+            "base": "bytea",
+            "domains": ["asset32type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:multi_asset.policy": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:d06f85d2300099012463a163748a4982962245e49a8c93f3c1613cda983cfd1b",
+          "resolved_type": {
+            "base": "bytea",
+            "domains": ["hash28type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_hash.hash_raw": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:86fb8e14be10dd7c5d08544c9030b6e5a6f0868116a1383d3add958f62c146db",
+          "resolved_type": {
+            "base": "bytea",
+            "domains": ["hash28type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_hash.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:c85ec83ebbc74feb39c356de81e4f28d54258a2218a9c898af16b8a3bfb6318b",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('pool_hash_id_seq'::regclass)"
+        }
+      ],
+      "columns:pool_hash.view": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:a27c82df86df9480435bc27daeb49571f501c6017adbac3740627f2386dd8150",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_metadata_ref.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:7a4d218afa545653d62a490804caf7041f7a89333364ca319a12d4c40ade7d61",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('pool_metadata_ref_id_seq'::regclass)"
+        }
+      ],
+      "columns:pool_metadata_ref.url": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:0877fb9f3dca4c024d6f5798d32e676d3f808e156c1a47a3b3834ae4aa7be584",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_retire.hash_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:c1f7f139cb05c6d8166e6df18cc460ac64ff5da92abdf30ac748aeee7e83b8f5",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_retire.retiring_epoch": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:9c0133b32865838eb5dfb29b011e1a1f94d8d8d9632a616c605aff231cf3a596",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_update.active_epoch_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:f20037e79f5ced9f8cf3e5a49993119270e3b78b7911acd8280d8a16eb88eb39",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_update.hash_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:c1f7f139cb05c6d8166e6df18cc460ac64ff5da92abdf30ac748aeee7e83b8f5",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_update.meta_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:fa1345fd735185bcec2f8718da1ad29edf3f607493bb43d5c932045697188087",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:pool_update.pledge": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:228f28a5bd06d427dd39362bfdd3fb1c5c37ae1512925b1fb2964d0f12ea4061",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["lovelace"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:redeemer.fee": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:e6c732c21f329750c4af4f9c45e971b91afe0a61bde92e294de0d324b33908c2",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["lovelace"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:redeemer.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:86ab008c79c398c8873fe1b5d562421b0ea91af2b2e4fc5e6b7a56f392448cb7",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('redeemer_id_seq'::regclass)"
+        }
+      ],
+      "columns:redeemer.purpose": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:a4abc5244500ac8a1380d54a7ce3c5750717cf645c031957aa16ae18e05c2fd4",
+          "resolved_type": {
+            "base": "scriptpurposetype",
+            "domains": [],
+            "checks": [],
+            "not_null": false,
+            "enum": ["spend", "mint", "cert", "reward", "vote", "propose"]
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:redeemer.script_hash": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:928eedce33b1d614fa478478f1e91b805a6b8a6e48e9833a20f6682dbda758f7",
+          "resolved_type": {
+            "base": "bytea",
+            "domains": ["hash28type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:redeemer.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:redeemer.unit_mem": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:88eee136e5b9658e43fa7bef0c0a961a57822f1b3ab8b1be97b7ee6e8b80a966",
+          "resolved_type": {
+            "base": "bigint",
+            "domains": ["word63type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:redeemer.unit_steps": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:681ff11677acd938fbe9e177e8726671ff7e4ee905cb9010b15e298afadac729",
+          "resolved_type": {
+            "base": "bigint",
+            "domains": ["word63type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:reward.addr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5e1031c4acb45c464e32835610531f9c12ad5c5f618530fdab55b814a1960aac",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:reward.amount": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:65cfff1a16b68e9a635bc1e52a1be34fc703780cb08b9e9983563ab4077f6875",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["lovelace"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:reward.earned_epoch": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:b1927b636d6f900246c0084afc04621a8ad2a7a65edd998adc53d23c1257529e",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "\nCASE\n    WHEN (type = 'refund'::rewardtype) THEN spendable_epoch\n    ELSE\n    CASE\n        WHEN (spendable_epoch >= 2) THEN (spendable_epoch - 2)\n        ELSE (0)::bigint\n    END\nEND"
+        }
+      ],
+      "columns:reward.pool_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:ceefa4b7f0cec08321945ab3342aa2e2c8285a9c2e6dd4e5a1adf880e75ad4bf",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:slot_leader.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:89d7a8ae24c32aed7e930cd53b79e06f66d53393a1d814ca7c5a2a41254cf4e3",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('slot_leader_id_seq'::regclass)"
+        }
+      ],
+      "columns:slot_leader.pool_hash_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:be29f07d9c9662518f2349401d1544dd300bfbe5b0db8884002c84dc034d503e",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:stake_address.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:2f079b50b0eb7770be0493b154196498bd7d6cdb7095f5c300fe9512495b85b3",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('stake_address_id_seq'::regclass)"
+        }
+      ],
+      "columns:stake_address.view": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:a27c82df86df9480435bc27daeb49571f501c6017adbac3740627f2386dd8150",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:stake_deregistration.addr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5e1031c4acb45c464e32835610531f9c12ad5c5f618530fdab55b814a1960aac",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:stake_deregistration.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:1d324bdcaef643f8723001e1bb490eeccfeee4ea2da2a3e4a448b1e4ad88317c",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('stake_deregistration_id_seq'::regclass)"
+        }
+      ],
+      "columns:stake_registration.addr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5e1031c4acb45c464e32835610531f9c12ad5c5f618530fdab55b814a1960aac",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:stake_registration.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:56e738609220cf301ec50cd5b554d88925efd46e75920d8ae64f1edfed6a36d0",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('stake_registration_id_seq'::regclass)"
+        }
+      ],
+      "columns:tx.block_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:a95537488ed9d65f091fbfd511dcf0b78519e969d9797282c691681f887928c2",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx.fee": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:e16db0b47cfb5d72e7b3a5e000358e107c02cecdb3b6e8a17352a693dc059e95",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["lovelace"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx.hash": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:4ad3baec9e15a8065dc02f569e2ec36891aa70ae245406fc1c185165ac774638",
+          "resolved_type": {
+            "base": "bytea",
+            "domains": ["hash32type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:0d8404d75ab81dbf6fa2bf3093966d4e4959ac46e335fad045a1e4df17f31057",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('tx_id_seq'::regclass)"
+        }
+      ],
+      "columns:tx.script_size": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:6bbf874d83d9f13f2fab8f741e3b2f8791a6abb5bb7d4369e514c798368ee7e0",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx.size": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:6acaae11aa6e0c8ab876fb08fe05c6cfc8122629fbcd7aaa169a3ce8d924239a",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx.valid_contract": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:7400e8df5fbe5f542b7d8f85d51ed37f35a9f6306b8df64ef3b622d010a02ca9",
+          "resolved_type": {"base": "boolean", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_in.redeemer_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:6be8487c4e04cc1608a650e1a9ae4e99f40efdebe22cfb2d993348d8b13c4f72",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:tx_in.tx_in_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:e7b44c781aee91de9d7ee797df3015bf3b0ce0b7baffddb40f40caa5a7b9e6b7",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_in.tx_out_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:dd27d095eaad86141a7039fca9d65b6ee1258596818f0bd20ca55b24285fa987",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_in.tx_out_index": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:dc6c9e496feb2d77e6514f85f938e51046c2ddcda5e9c65a724eb7b0ee4bcb68",
+          "resolved_type": {
+            "base": "smallint",
+            "domains": ["txindex"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_out.address": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:8b8465098a4ed7ecc88c62870b3c93ebf455a3e210425625c64af1d5bcf4e082",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_out.id": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:8a58b8f3520508e95d22aa5a9fed83c7a0506368897a3b059ea3b13bc39a08b9",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('tx_out_id_seq'::regclass)"
+        }
+      ],
+      "columns:tx_out.index": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:2a256c54cbca90288b27dcf1a38051ef2bb3df47b2fe72bd12ee906b0e4ce6d9",
+          "resolved_type": {
+            "base": "smallint",
+            "domains": ["txindex"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_out.stake_address_id": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:d60b758f106cf1e57248537af1d1576a92f01d6efa166028adb78b1ebb3d82c1",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:tx_out.tx_id": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_out.value": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:6a4a07c273acbe332b009d27633df38c585486d7fd81e80ded037477e890de8d",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["lovelace"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:withdrawal.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ]
+    },
     "docs/guides/kubernetes.md": {},
+    "docs/guides/manual-rollbacks.md": {
+      "tables:ada_pots": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:block": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:collateral_tx_in": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:collateral_tx_out": "sha256:dc995955aba5fde41c749f2ef12b7445f393bfe0856ca0fedc12f086b9c47d51",
+      "tables:committee_de_registration": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:committee_registration": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:datum": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:delegation": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:delegation_vote": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:drep_distr": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:drep_registration": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:epoch": "sha256:c6acecd183eff4e85e3c301a3ca1e835e1fe2362f4a6fc8d30cabe298ac54105",
+      "tables:epoch_param": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:extra_key_witness": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:gov_action_proposal": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:ma_tx_mint": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:ma_tx_out": "sha256:dc995955aba5fde41c749f2ef12b7445f393bfe0856ca0fedc12f086b9c47d51",
+      "tables:off_chain_vote_data": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:off_chain_vote_fetch_error": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:param_proposal": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_metadata_ref": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_retire": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_stat": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pot_transfer": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:redeemer": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:redeemer_data": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:reference_tx_in": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:reserve": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:reverse_index": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:reward_rest": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:script": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:stake_deregistration": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:stake_registration": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:treasury": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:treasury_withdrawal": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_cbor": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_in": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_metadata": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_out": "sha256:dc995955aba5fde41c749f2ef12b7445f393bfe0856ca0fedc12f086b9c47d51",
+      "tables:voting_anchor": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:voting_procedure": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:withdrawal": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "columns:block.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:8204f6182d519c069ac35fad81c4893ed9c86d95f0493bbd937c6a780ffad8be",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('block_id_seq'::regclass)"
+        }
+      ],
+      "columns:block.slot_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:c22559e2150bb67852d72fd040e088739dae07be89d06e125ad0ba9c22a6bef4",
+          "resolved_type": {
+            "base": "bigint",
+            "domains": ["word63type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.block_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:57aa3879b9141e623a639b71780017c3a5d7f06104d34bee84741deaecf7cd23",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.epoch_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:9e0b89a6678d3b2244edf90fcc5ca00cd49753365bba8007a5acd0ae1d812887",
+          "resolved_type": {
+            "base": "integer",
+            "domains": ["word31type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:block.time": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:556918da70570c5a7c9cff4a723dd567f695c09717457cb503cfa90ebba6243a",
+          "resolved_type": {
+            "base": "timestamp without time zone",
+            "domains": [],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ]
+    },
+    "docs/guides/migrations.md": {
+      "tables:ada_pots": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:reward": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20"
+    },
     "docs/guides/monitoring-rollback.md": {
       "tables:block": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
       "columns:block.block_no": [
@@ -192,6 +1331,41 @@
     },
     "docs/guides/restore-from-snapshot.md": {},
     "docs/guides/running.md": {},
+    "docs/guides/schema-management.md": {
+      "tables:schema_version": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "columns:schema_version.stage_three": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:faa13a5acd211028014b8b2c977cfc4f9ff6dbe30158bc712dd40ddbbc40e435",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "config:insert_options.tx_out.use_address_table": {
+        "fingerprint": "sha256:c211a34306b3087bec4876a19836d7e09add7f650041116dd52a8a790ab9d356",
+        "contract": {
+          "path": "insert_options.tx_out.use_address_table",
+          "key": {
+            "default": false,
+            "name": "use_address_table",
+            "required": false,
+            "shape": {"nullable": true, "type": "boolean"}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": false,
+              "presets": [{"key": "preset", "values": {"full": false, "only_utxo": false}}],
+              "selections": {"insert_options.preset": null}
+            },
+            {"path": "insert_options.tx_out", "required": false, "nullable": true, "default": false}
+          ]
+        }
+      }
+    },
     "docs/guides/smash-operations.md": {
       "config:insert_options.offchain_pool_data": {
         "fingerprint": "sha256:d70e05b64c500bc2c764aa0d72b54e237de6e2b428a8ca31f37e5149e1e55fba",
@@ -226,6 +1400,7 @@
         }
       }
     },
+    "docs/guides/state-snapshot.md": {},
     "docs/guides/trimming.md": {
       "tables:tx_in": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
       "tables:tx_out": "sha256:dc995955aba5fde41c749f2ef12b7445f393bfe0856ca0fedc12f086b9c47d51",
@@ -340,10 +1515,108 @@
         }
       }
     },
-    "docs/guides/ubuntu-systemd.md": {}
+    "docs/guides/troubleshooting.md": {},
+    "docs/guides/ubuntu-systemd.md": {},
+    "docs/guides/upgrading-postgresql.md": {},
+    "docs/guides/validation.md": {
+      "tables:block": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20"
+    }
   },
   "ranges": {
+    "docs/guides/building-running.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/database-encode-decode.md": [
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/docker.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
     "docs/guides/first-queries.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/index.md": [
       "13.3.0.0",
       "13.4.0.0",
       "13.4.0.1",
@@ -424,7 +1697,115 @@
       "13.7.2.1",
       "current"
     ],
+    "docs/guides/installing.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/interesting-queries.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
     "docs/guides/kubernetes.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/manual-rollbacks.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/migrations.md": [
       "13.3.0.0",
       "13.4.0.0",
       "13.4.0.1",
@@ -551,7 +1932,53 @@
       "13.7.2.1",
       "current"
     ],
+    "docs/guides/schema-management.md": [
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
     "docs/guides/smash-operations.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/state-snapshot.md": [
       "13.3.0.0",
       "13.4.0.0",
       "13.4.0.1",
@@ -597,7 +2024,88 @@
       "13.7.2.1",
       "current"
     ],
+    "docs/guides/troubleshooting.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
     "docs/guides/ubuntu-systemd.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/upgrading-postgresql.md": [
+      "13.3.0.0",
+      "13.4.0.0",
+      "13.4.0.1",
+      "13.4.0.2",
+      "13.4.1.0",
+      "13.5.0.0",
+      "13.5.0.1",
+      "13.5.0.2",
+      "13.6.0.1",
+      "13.6.0.2",
+      "13.6.0.4",
+      "13.6.0.5",
+      "13.6.0.6",
+      "13.6.0.7",
+      "13.6.0.8",
+      "13.7.0.0",
+      "13.7.0.1",
+      "13.7.0.2",
+      "13.7.0.3",
+      "13.7.0.4",
+      "13.7.0.5",
+      "13.7.1.0",
+      "13.7.2.0",
+      "13.7.2.1",
+      "current"
+    ],
+    "docs/guides/validation.md": [
       "13.3.0.0",
       "13.4.0.0",
       "13.4.0.1",
@@ -626,7 +2134,100 @@
     ]
   },
   "variants": {
+    "docs/guides/building-running.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/database-encode-decode.md": {
+      "13.7.0.0": ["address"],
+      "13.7.0.1": ["address"],
+      "13.7.0.2": ["address"],
+      "13.7.0.3": ["address"],
+      "13.7.0.4": ["address"],
+      "13.7.0.5": ["address"],
+      "13.7.1.0": ["address"],
+      "13.7.2.0": ["address"],
+      "13.7.2.1": ["address"],
+      "current": ["address"]
+    },
+    "docs/guides/docker.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
     "docs/guides/first-queries.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/index.md": {
       "13.3.0.0": ["core"],
       "13.4.0.0": ["core"],
       "13.4.0.1": ["core"],
@@ -707,7 +2308,115 @@
       "13.7.2.1": ["address", "core"],
       "current": ["address", "core"]
     },
+    "docs/guides/installing.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/interesting-queries.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["core"],
+      "13.7.0.1": ["core"],
+      "13.7.0.2": ["core"],
+      "13.7.0.3": ["core"],
+      "13.7.0.4": ["core"],
+      "13.7.0.5": ["core"],
+      "13.7.1.0": ["core"],
+      "13.7.2.0": ["core"],
+      "13.7.2.1": ["core"],
+      "current": ["core"]
+    },
     "docs/guides/kubernetes.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/manual-rollbacks.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/migrations.md": {
       "13.3.0.0": ["core"],
       "13.4.0.0": ["core"],
       "13.4.0.1": ["core"],
@@ -834,7 +2543,53 @@
       "13.7.2.1": ["address", "core"],
       "current": ["address", "core"]
     },
+    "docs/guides/schema-management.md": {
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
     "docs/guides/smash-operations.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/state-snapshot.md": {
       "13.3.0.0": ["core"],
       "13.4.0.0": ["core"],
       "13.4.0.1": ["core"],
@@ -880,7 +2635,88 @@
       "13.7.2.1": ["address", "core"],
       "current": ["address", "core"]
     },
+    "docs/guides/troubleshooting.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
     "docs/guides/ubuntu-systemd.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/upgrading-postgresql.md": {
+      "13.3.0.0": ["core"],
+      "13.4.0.0": ["core"],
+      "13.4.0.1": ["core"],
+      "13.4.0.2": ["core"],
+      "13.4.1.0": ["core"],
+      "13.5.0.0": ["core"],
+      "13.5.0.1": ["core"],
+      "13.5.0.2": ["core"],
+      "13.6.0.1": ["core"],
+      "13.6.0.2": ["core"],
+      "13.6.0.4": ["core"],
+      "13.6.0.5": ["core"],
+      "13.6.0.6": ["core"],
+      "13.6.0.7": ["core"],
+      "13.6.0.8": ["core"],
+      "13.7.0.0": ["address", "core"],
+      "13.7.0.1": ["address", "core"],
+      "13.7.0.2": ["address", "core"],
+      "13.7.0.3": ["address", "core"],
+      "13.7.0.4": ["address", "core"],
+      "13.7.0.5": ["address", "core"],
+      "13.7.1.0": ["address", "core"],
+      "13.7.2.0": ["address", "core"],
+      "13.7.2.1": ["address", "core"],
+      "current": ["address", "core"]
+    },
+    "docs/guides/validation.md": {
       "13.3.0.0": ["core"],
       "13.4.0.0": ["core"],
       "13.4.0.1": ["core"],

@@ -48,10 +48,12 @@ for (const locale of LOCALES) {
         const api = await helper.loadProseApi(bundle);
         const first = await helper.searchProse(api, bundle, 'tx_out');
         const second = await helper.searchProse(api, bundle, 'tx_out');
+        const migrated = await helper.searchProse(api, bundle, 'cexplorer database table');
         await api.destroy();
         return {
           first,
           second,
+          migrated,
           violations: (window as unknown as {proseCspViolations: string[]}).proseCspViolations,
         };
       },
@@ -61,6 +63,11 @@ for (const locale of LOCALES) {
     expect(searchRequests.length).toBeGreaterThan(0);
     expect(result.first.length).toBeGreaterThan(0);
     expect(result.second).toEqual(result.first);
+    expect(
+      result.migrated.some((item: {url: string}) =>
+        item.url.includes('/guides/interesting-queries'),
+      ),
+    ).toBe(true);
     for (const item of result.first) {
       expect(item.url.startsWith(`${localeBase}docs/`)).toBe(true);
       expect(item.excerpt.length).toBeGreaterThan(0);

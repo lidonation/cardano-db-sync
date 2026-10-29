@@ -11,7 +11,7 @@
 export const SURFACES = {
   docs: '/docs/intro',
   guides: '/docs/guides',
-  installation: '/docs/installation',
+  installation: '/docs/guides/installation',
   schema: '/schema',
   numbers: '/numbers',
   survey: '/survey',
@@ -60,6 +60,7 @@ export function routeExists(paths: ReadonlySet<string>, baseUrl: string, path: s
 /** Ordered designed navigation. Labels pass through Docusaurus' config translation pipeline. */
 export const NAVBAR_MENU = [
   {label: 'Docs', href: SURFACES.docs},
+  {label: 'Guides', href: SURFACES.guides},
   {label: 'Schema', href: SURFACES.schema},
   {label: 'Numbers', href: SURFACES.numbers},
   {label: 'Survey', href: SURFACES.survey},
@@ -75,6 +76,7 @@ export const FOOTER_MENU: readonly {
     title: 'Docs',
     items: [
       {label: 'Introduction', href: SURFACES.docs},
+      {label: 'Guides', href: SURFACES.guides},
       {label: 'Installation', href: SURFACES.installation},
       {label: 'Configuration', href: SURFACES.config},
       {label: 'Schema', href: SURFACES.schema},

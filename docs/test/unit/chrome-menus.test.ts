@@ -4,10 +4,21 @@ import {describe, expect, it} from 'vitest';
 import {FOOTER_MENU, NAVBAR_MENU, SURFACES, gateMenu, routePaths} from '../../src/data/surfaces';
 
 describe('chrome route gating', () => {
-  const paths = routePaths([{path: ['/base/docs/intro/', '/base/numbers', '/base/ecosystem']}]);
+  const paths = routePaths([
+    {
+      path: [
+        '/base/docs/intro/',
+        '/base/docs/guides',
+        '/base/docs/guides/installation',
+        '/base/numbers',
+        '/base/ecosystem',
+      ],
+    },
+  ]);
   it('keeps the locked navbar order and hides unbuilt routes', () => {
     expect(NAVBAR_MENU.map((item) => item.label)).toEqual([
       'Docs',
+      'Guides',
       'Schema',
       'Numbers',
       'Survey',
@@ -15,6 +26,7 @@ describe('chrome route gating', () => {
     ]);
     expect(gateMenu(NAVBAR_MENU, paths, '/base/').map((item) => item.label)).toEqual([
       'Docs',
+      'Guides',
       'Numbers',
       'Ecosystem',
     ]);
@@ -40,12 +52,15 @@ describe('chrome route gating', () => {
     expect(FOOTER_MENU.map((column) => column.title)).toEqual(['Docs', 'Project', 'Community']);
     expect(FOOTER_MENU[0]!.items.map((item) => item.label)).toEqual([
       'Introduction',
+      'Guides',
       'Installation',
       'Configuration',
       'Schema',
     ]);
     expect(gateMenu(FOOTER_MENU[0]!.items, paths, '/base/').map((item) => item.label)).toEqual([
       'Introduction',
+      'Guides',
+      'Installation',
     ]);
   });
 });
@@ -60,4 +75,9 @@ it('shows the roadmap anchor only with its ecosystem page', () => {
   const roadmap = {label: 'Roadmap', href: '/ecosystem#roadmap'};
   expect(gateMenu([roadmap], new Set(['/base/ecosystem']), '/base/')).toEqual([roadmap]);
   expect(gateMenu([roadmap], new Set(), '/base/')).toEqual([]);
+});
+
+it('routes Guides and Installation to real guide pages', () => {
+  expect(SURFACES.guides).toBe('/docs/guides');
+  expect(SURFACES.installation).toBe('/docs/guides/installation');
 });

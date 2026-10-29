@@ -63,6 +63,18 @@ for (const guide of [
   'ubuntu-systemd',
   'running',
   'installing-with-nix',
+  'building-running',
+  'database-encode-decode',
+  'docker',
+  'installing',
+  'interesting-queries',
+  'manual-rollbacks',
+  'migrations',
+  'schema-management',
+  'state-snapshot',
+  'troubleshooting',
+  'upgrading-postgresql',
+  'validation',
 ]) {
   test(`${guide} guide has no WCAG A/AA violations`, async ({page}) => {
     await page.goto(`docs/guides/${guide}/`);

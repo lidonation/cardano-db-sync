@@ -22,7 +22,7 @@ const sourceNames = [
   'upgrading-postgresql',
   'validation',
 ];
-const newlyPublished = ['running', 'installing-with-nix'];
+const newlyPublished = sourceNames;
 function migratedPath(name: string): string {
   const paths = [
     path.join(root, 'docs/docs/guides', `${name}.md`),
@@ -33,7 +33,7 @@ function migratedPath(name: string): string {
   return present[0];
 }
 
-it('publishes the two live-data-budget-verified legacy procedures', () => {
+it('publishes every migrated legacy procedure', () => {
   for (const name of newlyPublished) {
     expect(existsSync(path.join(root, 'docs/docs/guides', `${name}.md`)), name).toBe(true);
     expect(existsSync(path.join(root, 'docs/migration/guides', `${name}.md`)), name).toBe(false);
@@ -159,9 +159,75 @@ it('does not suggest creating a system-wide PostgreSQL socket symlink', () => {
   expect(guide).toContain('PGHOST=/tmp');
 });
 
-it('keeps the three extra routes staged until they fit with current upstream data', () => {
-  for (const name of ['troubleshooting', 'state-snapshot', 'validation']) {
-    expect(existsSync(path.join(root, 'docs/migration/guides', `${name}.md`)), name).toBe(true);
-    expect(existsSync(path.join(root, 'docs/docs/guides', `${name}.md`)), name).toBe(false);
-  }
+it('declares the schema entities used by the concrete Hasql examples', () => {
+  const text = readFileSync(migratedPath('database-encode-decode'), 'utf8');
+  const front = yaml.load(/^---\n([\s\S]*?)\n---/.exec(text)![1]) as {
+    requires: {tables: string[]; columns: string[]};
+  };
+  expect(front.requires.tables).toEqual(
+    expect.arrayContaining(['address', 'ma_tx_out', 'event_info']),
+  );
+  expect(front.requires.columns).toEqual(
+    expect.arrayContaining([
+      'tx_out.address_id',
+      'ma_tx_out.quantity',
+      'ma_tx_out.tx_out_id',
+      'ma_tx_out.ident',
+      'event_info.tx_id',
+      'event_info.epoch',
+      'event_info.type',
+      'event_info.explanation',
+    ]),
+  );
+});
+
+it('records the Hasql example as address-variant specific', () => {
+  const locks = JSON.parse(
+    readFileSync(path.join(root, 'docs/generated/guide-locks.json'), 'utf8'),
+  ) as {variants: Record<string, Record<string, string[]>>};
+  expect(locks.variants['docs/guides/database-encode-decode.md'].current).toEqual(['address']);
+});
+
+it('locks the block columns used to select and verify rollback points', () => {
+  const text = readFileSync(migratedPath('manual-rollbacks'), 'utf8');
+  const front = yaml.load(/^---\n([\s\S]*?)\n---/.exec(text)![1]) as {
+    requires: {columns: string[]};
+  };
+  expect(front.requires.columns).toEqual(
+    expect.arrayContaining([
+      'block.id',
+      'block.slot_no',
+      'block.block_no',
+      'block.epoch_no',
+      'block.time',
+    ]),
+  );
+});
+
+it('locks the displayed metadata fields in the example SQL guide', () => {
+  const text = readFileSync(migratedPath('interesting-queries'), 'utf8');
+  const front = yaml.load(/^---\n([\s\S]*?)\n---/.exec(text)![1]) as {
+    requires: {columns: string[]};
+  };
+  expect(front.requires.columns).toEqual(
+    expect.arrayContaining(['meta.id', 'meta.start_time', 'meta.network_name']),
+  );
+  expect(text).toMatch(/historical example.*additional columns/is);
+});
+
+it('uses the real numeric array type in the multi-asset DbInfo example', () => {
+  const text = readFileSync(migratedPath('database-encode-decode'), 'utf8');
+  expect(text).toContain('("quantity", "numeric[]")');
+  expect(text).not.toContain('("quantity", "bigint[]")');
+});
+
+it('uses the project’s numeric DbWord64 codecs and database column order', () => {
+  const text = readFileSync(migratedPath('database-encode-decode'), 'utf8');
+  expect(text).toContain(
+    'maTxOutAddressBulkEncoder :: E.Params ([DbWord64], [Id.TxOutAddressId], [Id.MultiAssetId])',
+  );
+  expect(text).toContain('bulkEncoder $ E.nonNullable dbWord64ValueEncoder');
+  expect(text).toContain('maTxOutAddressQuantity >$< dbWord64Encoder');
+  expect(text).not.toContain('fromIntegral . unDbWord64 >$< E.int8');
+  expect(text).not.toContain('DbWord64 . fromIntegral <$> D.int8');
 });

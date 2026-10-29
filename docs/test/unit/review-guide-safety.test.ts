@@ -4,10 +4,9 @@ import {describe, expect, it} from 'vitest';
 import {DatabaseSync} from 'node:sqlite';
 
 const root = path.resolve(import.meta.dirname, '../..');
-const read = (name: string) =>
-  readFileSync(path.join(root, 'migration/guides', `${name}.md`), 'utf8');
+const read = (name: string) => readFileSync(path.join(root, 'docs/guides', `${name}.md`), 'utf8');
 
-describe('staged guide safety regressions', () => {
+describe('published guide safety regressions', () => {
   it('does not start the example database on all network interfaces', () => {
     const docker = read('docker');
     expect(docker).toContain('127.0.0.1:5432:5432');
@@ -71,8 +70,8 @@ describe('staged guide safety regressions', () => {
       db.close();
     }
   });
-  it('keeps relative links resolvable from the staged location', () => {
-    const directory = path.join(root, 'migration/guides');
+  it('keeps relative links resolvable from the published location', () => {
+    const directory = path.join(root, 'docs/guides');
     for (const name of readdirSync(directory).filter((file) => file.endsWith('.md'))) {
       const text = readFileSync(path.join(directory, name), 'utf8');
       for (const [, href] of text.matchAll(/\]\(([^)]+)\)/g)) {
