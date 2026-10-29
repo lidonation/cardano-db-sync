@@ -31,7 +31,9 @@ Describe likely failures and safe recovery steps.
 
 - Copy this file to `docs/docs/guides/` with a descriptive `.md` filename and remove this checklist.
 - Write plain CommonMark, with no JSX, so the guide remains readable on GitHub. Use GitHub-style
-  alerts rather than Docusaurus-only directive syntax.
+  alerts rather than Docusaurus-only directive syntax. For alternative procedures, use two or more
+  consecutive fenced blocks labelled with `tab="Label"` after the language; on GitHub they remain
+  sequential blocks, and the site upgrades them to accessible tabs.
 - Declare every schema table, qualified column and configuration key the procedure depends on in
   `requires`. Keep an empty list when a category has no dependencies; do not invent dependencies.
 - Do not hand-write a version range. Review the derived schema range and dependency locks with the

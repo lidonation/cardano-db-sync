@@ -27,7 +27,15 @@ for (const palette of PALETTES) {
       await expect(page.locator('html')).toHaveAttribute('data-theme', paletteToTheme(palette));
       const keyword = page.locator('main pre code .token.keyword').first();
       await expect(keyword).toBeVisible();
-      await expect(keyword).toHaveAttribute('style', /color|font-style/i);
+      await expect(keyword).not.toHaveAttribute('style');
+      const colors = await keyword.evaluate((element) => ({
+        token: getComputedStyle(element).color,
+        parent: getComputedStyle(element.closest('pre')!).color,
+      }));
+      expect(colors.token).not.toBe(colors.parent);
+      await expect(
+        page.locator('main .theme-code-block[style], main .theme-code-block [style]'),
+      ).toHaveCount(0);
       expect(errors).toEqual([]);
     });
   }
@@ -72,4 +80,34 @@ test('server-rendered source reuses the keyboard-accessible classic code contain
   } finally {
     await context.close();
   }
+});
+
+test('numbered code retains source, line numbering and copy control without inline styles', async ({
+  page,
+}) => {
+  await page.goto(`${BUILT_HOME}docs/intro`);
+  const block = page.locator('main .theme-code-block').filter({hasText: 'SELECT 1;'});
+  await expect(block.locator('[data-line="7"]')).toHaveCount(1);
+  await expect(block.locator('[data-line="8"]')).toHaveCount(1);
+  await expect(block.locator('code')).toHaveText('SELECT 1;\nSELECT 2;\n');
+  const copy = block.getByRole('button', {name: /copy code/i});
+  await expect(copy).toBeVisible();
+  await page.context().grantPermissions(['clipboard-read', 'clipboard-write']);
+  await copy.click();
+  await expect
+    .poll(() => page.evaluate(() => navigator.clipboard.readText()))
+    .toBe('SELECT 1;\nSELECT 2;');
+  await expect(block.locator('[style]')).toHaveCount(0);
+});
+
+test('word wrap toggles without an inline style under the site CSP', async ({page}) => {
+  await page.goto(`${BUILT_HOME}docs/intro`);
+  const block = page.locator('main .theme-code-block').filter({hasText: 'LONGTEXT-'});
+  const button = block.getByRole('button', {name: /toggle word wrap/i});
+  await expect(button).toBeVisible();
+  await button.click();
+  await expect(block.locator('code')).toHaveCSS('white-space', 'pre-wrap');
+  await expect(block.locator('[style]')).toHaveCount(0);
+  await button.click();
+  await expect(block.locator('code')).not.toHaveCSS('white-space', 'pre-wrap');
 });
