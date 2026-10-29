@@ -5,6 +5,7 @@ import process from 'node:process';
 import * as prettier from 'prettier';
 import {evaluateHistoricalGuide} from './lib/guide-locks.mjs';
 import {unpackHistory} from './lib/guide-history.mjs';
+import {canonicalJson} from './lib/schema-model.mjs';
 
 const root = process.cwd();
 const guidesDir = path.join(root, 'docs/guides');
@@ -134,7 +135,10 @@ for (const file of files) {
   next.guides[name] = result.lock;
   next.ranges[name] = result.versions;
   next.variants[name] = result.variants ?? {};
-  if (!updating && JSON.stringify(old.variants?.[name]) !== JSON.stringify(result.variants ?? {}))
+  if (
+    !updating &&
+    canonicalJson(old.variants?.[name] ?? {}) !== canonicalJson(result.variants ?? {})
+  )
     problems.push(`${name}: supported schema variants changed; update the lock after review`);
   if (!updating && JSON.stringify(old.ranges?.[name]) !== JSON.stringify(result.versions))
     problems.push(`${name}: derived version range changed; update the lock after review`);
