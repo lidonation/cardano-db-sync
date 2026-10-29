@@ -1,6 +1,8 @@
 import {existsSync, readFileSync, readdirSync} from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
+import {unified} from 'unified';
+import remarkParse from 'remark-parse';
 import {describe, expect, it} from 'vitest';
 
 const root = path.resolve(import.meta.dirname, '../../..');
@@ -42,6 +44,19 @@ const schema = JSON.parse(readFileSync(path.join(root, 'docs/generated/schema.js
   tables: {name: string; columns: {name: string}[]}[];
 };
 
+// Parse headings instead of treating shell/SQL lines beginning with # as headings.
+function headings(source: string): string[] {
+  return unified()
+    .use(remarkParse)
+    .parse(source)
+    .children.filter((node) => node.type === 'heading')
+    .map((node) => source.slice(node.position!.start.offset, node.position!.end.offset).trim());
+}
+
+it('does not mistake a hash inside a code fence for a heading to preserve', () => {
+  expect(headings('# Title\n\n```sql\n# with const as (...)\n```')).toEqual(['# Title']);
+});
+
 describe('legacy procedural migration (CON-8, GDE-1)', () => {
   it.each(sourceNames)('preserves the headings of %s and declares known dependencies', (name) => {
     const source = readFileSync(path.join(root, 'doc', `${name}.md`), 'utf8');
@@ -66,8 +81,7 @@ describe('legacy procedural migration (CON-8, GDE-1)', () => {
         column,
       ).toBe(true);
     }
-    for (const heading of source.match(/^#{1,6}\s+.+$/gm) ?? [])
-      expect(guide).toContain(heading.trim());
+    for (const heading of headings(source)) expect(guide).toContain(heading.trim());
   });
 });
 
