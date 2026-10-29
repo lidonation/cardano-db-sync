@@ -75,6 +75,42 @@ class BlacksmithRunnerTests(unittest.TestCase):
         self.assertEqual(len(calls), 2)
         self.assertNotIn('private-token', str(calls[0][0]))
 
+    def test_unverified_download_never_reaches_authentication(self):
+        response = mock.MagicMock()
+        for content in [b'changed executable', b'']:
+            response.__enter__.return_value.read.return_value = content
+            with self.subTest(content=content), \
+                 mock.patch.object(module.urllib.request, 'urlopen', return_value=response), \
+                 mock.patch.object(module.subprocess, 'run') as run:
+                with self.assertRaises(ValueError):
+                    module.usage_report({}, 'start', 'end')
+                run.assert_not_called()
+
+    def test_ineligible_main_never_fetches_usage_or_exposes_details(self):
+        good = {'GITHUB_REPOSITORY':'lidonation/cardano-db-sync', 'GITHUB_EVENT_NAME':'push',
+                'GITHUB_REF':'refs/heads/release/community-site', 'BLACKSMITH_SITE_ENABLED':'true',
+                'BLACKSMITH_ORG':'lidonation', 'BLACKSMITH_ORG_TOKEN':'private-token'}
+        with tempfile.TemporaryDirectory() as tmp:
+            output = Path(tmp) / 'out'
+            for key, value in [('GITHUB_EVENT_NAME', 'pull_request'),
+                               ('GITHUB_EVENT_NAME', 'pull_request_target'),
+                               ('GITHUB_EVENT_NAME', 'workflow_dispatch'),
+                               ('GITHUB_EVENT_NAME', 'schedule'),
+                               ('GITHUB_REPOSITORY', 'IntersectMBO/cardano-db-sync'),
+                               ('BLACKSMITH_SITE_ENABLED', 'false'),
+                               ('BLACKSMITH_ORG_TOKEN', '')]:
+                output.write_text('')
+                env = dict(good, GITHUB_OUTPUT=str(output))
+                env[key] = value
+                with self.subTest(key=key, value=value), \
+                     mock.patch.dict(os.environ, env, clear=True), \
+                     mock.patch.object(module, 'usage_report') as usage, \
+                     mock.patch('builtins.print', wraps=print) as log:
+                    module.main()
+                    usage.assert_not_called()
+                    self.assertNotIn('private-token', str(log.call_args_list))
+                self.assertEqual(output.read_text(), 'runner=ubuntu-24.04\n')
+
     def test_trusted_main_selects_both_runners(self):
         env = {'GITHUB_REPOSITORY':'lidonation/cardano-db-sync', 'GITHUB_EVENT_NAME':'push',
                'GITHUB_REF':'refs/heads/release/community-site', 'BLACKSMITH_SITE_ENABLED':'true',

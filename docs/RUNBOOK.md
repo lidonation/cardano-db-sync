@@ -158,6 +158,9 @@ is the default, including for every pull request and other repositories. The
 pilot selects Blacksmith only for the two expensive docs jobs on a trusted push
 to `lidonation/cardano-db-sync`'s `release/community-site`; other jobs and Pages
 deployments remain GitHub-hosted. Pull requests never receive the usage token.
+The selector job is skipped entirely outside enabled, trusted release pushes;
+dependent jobs still use the default GitHub runner. Selector and CI-policy Python
+regressions run in the required static-analysis job on pull requests too.
 
 To opt in, an organization administrator must install the Blacksmith GitHub app
 for this repository, provision its 4-vCPU Ubuntu 24.04 runner, create an

@@ -52,6 +52,10 @@ jobs:
   # or failed selector yields the original GitHub-hosted runner label.
   site-runner:
     name: Choose site runner
+    if: >-
+      github.repository == 'lidonation/cardano-db-sync' &&
+      github.event_name == 'push' && github.ref == 'refs/heads/release/community-site' &&
+      vars.BLACKSMITH_SITE_ENABLED == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 3
     outputs:
@@ -93,6 +97,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup
+      - name: Runner selector and CI policy regressions
+        working-directory: .
+        run: python3 -m unittest discover -s .github/tests -v
       - name: ESLint
         run: npm run lint
       - name: Types
@@ -253,6 +260,7 @@ jobs:
   links:
     name: Link check
     needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -271,6 +279,7 @@ jobs:
   asset-budget:
     name: Asset budget
     needs: build
+    if: ${{ !cancelled() && needs.build.result == 'success' }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -317,9 +326,10 @@ jobs:
     name: Deploy developer site to Pages
     needs: gate
     if: >-
+      ${{ !cancelled() && needs.gate.result == 'success' &&
       github.repository != 'IntersectMBO/cardano-db-sync' &&
       (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
-      github.ref == 'refs/heads/release/community-site'
+      github.ref == 'refs/heads/release/community-site' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -374,9 +384,10 @@ jobs:
     name: Deploy production site to Pages
     needs: gate
     if: >-
+      ${{ !cancelled() && needs.gate.result == 'success' &&
       github.event_name == 'push' &&
       github.repository == 'IntersectMBO/cardano-db-sync' &&
-      github.ref == 'refs/heads/master'
+      github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read

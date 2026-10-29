@@ -36,25 +36,51 @@ describe('docs browser runner compatibility', () => {
 });
 
 describe('fork-only runner selection', () => {
-  it('limits credential use to trusted release pushes and preserves fallback', () => {
-    const source = readFileSync(
-      path.resolve(import.meta.dirname, '../../../.github/workflows/docs-site.yml'),
-      'utf8',
+  const jobs = workflow.jobs as Record<
+    string,
+    {
+      needs?: string;
+      if?: string;
+      steps?: Array<{id?: string; if?: string; run?: string; 'working-directory'?: string}>;
+    }
+  >;
+
+  it('skips selector provisioning outside the enabled trusted push policy', () => {
+    expect(jobs['site-runner'].if?.replace(/\s+/g, ' ').trim()).toBe(
+      "github.repository == 'lidonation/cardano-db-sync' && github.event_name == 'push' && github.ref == 'refs/heads/release/community-site' && vars.BLACKSMITH_SITE_ENABLED == 'true'",
     );
-    const parsed = yaml.load(source) as {
-      jobs: Record<
-        string,
-        {needs?: string; if?: string; steps?: Array<{id?: string; if?: string}>}
-      >;
-    };
-    const selector = parsed.jobs['site-runner'];
-    const step = selector.steps?.find((item) => item.id === 'select');
+  });
+
+  it('runs selector regressions as a required CI step from the repository root', () => {
+    const tests = jobs['static-analysis'].steps?.find((item) =>
+      item.run?.includes('python3 -m unittest discover -s .github/tests'),
+    );
+    expect(tests, 'selector regressions must be a required CI step').toBeDefined();
+    expect(tests?.['working-directory']).toBe('.');
+    // Do not hide failures behind a status override, conditional or shell fallback.
+    expect(tests?.run).toBe('python3 -m unittest discover -s .github/tests -v');
+    expect(tests?.if).toBeUndefined();
+    expect(tests).not.toHaveProperty('continue-on-error');
+  });
+
+  it('keeps build consumers gated on success even when the selector is skipped', () => {
+    for (const name of ['links', 'asset-budget']) {
+      expect(jobs[name].if).toBe("${{ !cancelled() && needs.build.result == 'success' }}");
+    }
+    for (const name of ['deploy-dev', 'deploy-production']) {
+      expect(jobs[name].if).toContain('!cancelled()');
+      expect(jobs[name].if).toContain("needs.gate.result == 'success'");
+    }
+  });
+
+  it('limits credential use to trusted release pushes and preserves fallback', () => {
+    const step = jobs['site-runner'].steps?.find((item) => item.id === 'select');
     expect(step?.if).toContain("github.repository == 'lidonation/cardano-db-sync'");
     expect(step?.if).toContain("github.event_name == 'push'");
     expect(step?.if).toContain("github.ref == 'refs/heads/release/community-site'");
     for (const name of ['unit-tests', 'build']) {
-      expect(parsed.jobs[name].needs).toBe('site-runner');
-      expect(parsed.jobs[name].if).toBe('${{ !cancelled() }}');
+      expect(jobs[name].needs).toBe('site-runner');
+      expect(jobs[name].if).toBe('${{ !cancelled() }}');
     }
   });
 });
