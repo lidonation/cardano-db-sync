@@ -89,6 +89,11 @@ replaceAdaPots blockId adapots = do
 -- Epoch (public view backed by epoch_finalized table + epoch_current view)
 --------------------------------------------------------------------------------
 
+-- | Schema reference for @epoch_sync_enabled@:
+-- A single-row toggle controlling whether the @epoch@ and @epoch_current@ views return data.
+--
+-- @singleton@: Always @TRUE@; enforces a single row.
+-- @enabled@: Whether epoch aggregation (the @epoch@ / @epoch_current@ views) is enabled.
 setEpochSyncEnabledStmt :: HsqlStmt.Statement Bool ()
 setEpochSyncEnabledStmt =
   HsqlStmt.Statement sql encoder HsqlD.noResult True
@@ -136,6 +141,16 @@ epochFinalizedUpsertTail =
     , "   end_time   = EXCLUDED.end_time"
     ]
 
+-- | Schema reference for @epoch_finalized@:
+-- Materialised aggregates for finalized (completed) epochs. Together with @epoch_current@ it backs the @epoch@ view.
+--
+-- @out_sum@: The sum of the transaction output values (in Lovelace) in this epoch.
+-- @fees@: The sum of the fees (in Lovelace) in this epoch.
+-- @tx_count@: The number of transactions in this epoch.
+-- @blk_count@: The number of blocks in this epoch.
+-- @no@: The epoch number (unique).
+-- @start_time@: The epoch start time.
+-- @end_time@: The epoch end time.
 appendEpochFinalizedStmt :: HsqlStmt.Statement Word64 ()
 appendEpochFinalizedStmt =
   HsqlStmt.Statement sql encoder HsqlD.noResult True
@@ -217,6 +232,17 @@ insertEpochSyncTime epochSyncTime =
   runSession mkDbCallStack $ HsqlSes.statement epochSyncTime insertEpochSyncTimeStmt
 
 -- | QUERY ----------------------------------------------------------------------------------
+-- Schema reference for @epoch_current@:
+-- A view computing aggregates for the current (not-yet-finalized) epoch live from @block@ and @tx@. Excludes any epoch already present in @epoch_finalized@, and returns rows only when epoch sync is enabled (see @epoch_sync_enabled@).
+--
+-- @id@: Synthetic id (epoch number + 1).
+-- @out_sum@: The sum of the transaction output values (in Lovelace) in this epoch.
+-- @fees@: The sum of the fees (in Lovelace) in this epoch.
+-- @tx_count@: The number of transactions in this epoch.
+-- @blk_count@: The number of blocks in this epoch.
+-- @no@: The epoch number.
+-- @start_time@: The epoch start time.
+-- @end_time@: The epoch end time.
 queryEpochEntryStmt :: HsqlStmt.Statement Word64 (Maybe SEnP.Epoch)
 queryEpochEntryStmt =
   HsqlStmt.Statement sql encoder decoder True

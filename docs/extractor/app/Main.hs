@@ -2,7 +2,7 @@
 --
 -- Usage:
 --
--- > extract-haddock --repo-root . --out docs/generated/haddock-annotations.json --input cardano-db/src
+-- > extract-haddock --repo-root . --out docs/generated/haddock-annotations.json
 --
 -- Every file that fails to parse is printed on stderr and the exit code is
 -- 1 — a source change that the extractor cannot read must never silently
@@ -48,7 +48,7 @@ usage =
     [ "usage: extract-haddock --repo-root DIR --out FILE [--input PATH]..."
     , "  --repo-root DIR   repository the artifact paths are relative to (default: .)"
     , "  --out FILE        artifact to write (required)"
-    , "  --input PATH      file or directory to extract (repeatable; default: cardano-db/src and config Types.hs)."
+    , "  --input PATH      file or directory to extract (repeatable; default: cardano-db/src, config Types.hs, the db-sync CLI, off-chain fetcher, and SMASH API)."
     , "                   Paths are repository-relative or absolute paths inside the repository."
     ]
 
@@ -65,7 +65,7 @@ parseArgs = go (Options "." "" [])
       "" -> Left "missing --out FILE"
       _
         | null (optInputs opts) ->
-            Right opts {optInputs = ["cardano-db/src", "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs"]}
+            Right opts {optInputs = ["cardano-db/src", "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs", "cardano-db-sync/app/cardano-db-sync.hs", "cardano-db-sync/app/http-get-json-metadata.hs", "cardano-db-sync/app/test-http-get-json-metadata.hs", "cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs", "cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs", "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs"]}
         | otherwise -> Right opts
     go opts (flag : value : rest) = case flag of
       "--repo-root" -> go opts {optRoot = value} rest

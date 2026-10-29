@@ -1,0 +1,55 @@
+.pre {
+  margin: 0;
+  padding: var(--dbs-space-16);
+  background: var(--dbs-code-surface);
+  color: var(--dbs-code-text);
+}
+
+.code {
+  font: inherit;
+}
+
+.code[data-wrap='true'] {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.line {
+  display: block;
+}
+
+.number {
+  display: inline-block;
+  min-inline-size: var(--dbs-space-32);
+  margin-inline-end: var(--dbs-space-16);
+  color: var(--dbs-code-text-muted);
+  text-align: end;
+  user-select: none;
+}
+
+.number::before {
+  content: attr(data-line);
+}
+
+.pre :global(.theme-code-block-highlighted-line) {
+  background: var(--dbs-code-surface-raised);
+}
+
+.pre :global(.token.keyword),
+.pre :global(.token.atrule),
+.pre :global(.token.operator) {
+  color: var(--dbs-text-on-navy);
+}
+
+.pre :global(.token.string),
+.pre :global(.token.function),
+.pre :global(.token.number),
+.pre :global(.token.boolean) {
+  color: var(--dbs-code-text-muted);
+}
+
+.pre :global(.token.comment),
+.pre :global(.token.prolog),
+.pre :global(.token.doctype) {
+  color: var(--dbs-code-text-muted);
+}

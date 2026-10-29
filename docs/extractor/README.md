@@ -38,17 +38,23 @@ cabal run extract-haddock -- \
   --repo-root ../.. \
   --out ../generated/haddock-annotations.json \
   --input cardano-db/src \
-  --input cardano-db-sync/src/Cardano/DbSync/Config/Types.hs
+  --input cardano-db-sync/src/Cardano/DbSync/Config/Types.hs \
+  --input cardano-db-sync/app/cardano-db-sync.hs \
+  --input cardano-db-sync/app/http-get-json-metadata.hs \
+  --input cardano-db-sync/app/test-http-get-json-metadata.hs \
+  --input cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs \
+  --input cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs \
+  --input cardano-smash-server/src/Cardano/SMASH/Server/Api.hs
 ```
 
 `--input` is repository-relative (it becomes the `path` in the artifact) and
 may name a file or a directory; directories are walked recursively for `*.hs`.
-Explicit inputs replace defaults. Without them, the schema tree and config types
+Explicit inputs replace defaults. Without them, the schema tree, config types, db-sync CLI, off-chain fetcher, and SMASH API
 are selected. Missing, empty, escaped and invalid UTF-8 inputs fail the run.
 `--repo-root` is the repository those paths are relative to.
 
 CI runs this from [`.github/workflows/extract-haddock.yml`](../../.github/workflows/extract-haddock.yml):
-it builds, runs the golden, regression and CLI tests, extracts schema and config
+it builds, runs the golden, regression and CLI tests, extracts all listed reference
 sources, and fails on drift on both pull requests and deploy branches. Regenerate
 and commit the artifact with the source change. The workflow has read-only access
 and never commits a repair after deployment has started.

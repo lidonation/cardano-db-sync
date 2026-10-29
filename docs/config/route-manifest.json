@@ -4,6 +4,39 @@
     "/": {
       "status": "live"
     },
+    "/docs/guides/first-queries": {
+      "status": "live"
+    },
+    "/docs/guides/installation": {
+      "status": "live"
+    },
+    "/docs/guides/installing-with-nix": {
+      "status": "live"
+    },
+    "/docs/guides/kubernetes": {
+      "status": "live"
+    },
+    "/docs/guides/monitoring-rollback": {
+      "status": "live"
+    },
+    "/docs/guides/pool-metadata": {
+      "status": "live"
+    },
+    "/docs/guides/restore-from-snapshot": {
+      "status": "live"
+    },
+    "/docs/guides/running": {
+      "status": "live"
+    },
+    "/docs/guides/smash-operations": {
+      "status": "live"
+    },
+    "/docs/guides/trimming": {
+      "status": "live"
+    },
+    "/docs/guides/ubuntu-systemd": {
+      "status": "live"
+    },
     "/docs/intro": {
       "status": "live"
     },
