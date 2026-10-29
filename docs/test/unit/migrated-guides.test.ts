@@ -20,13 +20,7 @@ const sourceNames = [
   'upgrading-postgresql',
   'validation',
 ];
-const newlyPublished = [
-  'running',
-  'installing-with-nix',
-  'troubleshooting',
-  'state-snapshot',
-  'validation',
-];
+const newlyPublished = ['running', 'installing-with-nix'];
 function migratedPath(name: string): string {
   const paths = [
     path.join(root, 'docs/docs/guides', `${name}.md`),
@@ -37,7 +31,7 @@ function migratedPath(name: string): string {
   return present[0];
 }
 
-it('publishes the five budget-verified legacy procedures', () => {
+it('publishes the two live-data-budget-verified legacy procedures', () => {
   for (const name of newlyPublished) {
     expect(existsSync(path.join(root, 'docs/docs/guides', `${name}.md`)), name).toBe(true);
     expect(existsSync(path.join(root, 'docs/migration/guides', `${name}.md`)), name).toBe(false);
@@ -149,4 +143,11 @@ it('does not suggest creating a system-wide PostgreSQL socket symlink', () => {
   const guide = readFileSync(migratedPath('troubleshooting'), 'utf8');
   expect(guide).not.toContain('sudo ln -s /tmp/.s.PGSQL.5432');
   expect(guide).toContain('PGHOST=/tmp');
+});
+
+it('keeps the three extra routes staged until they fit with current upstream data', () => {
+  for (const name of ['troubleshooting', 'state-snapshot', 'validation']) {
+    expect(existsSync(path.join(root, 'docs/migration/guides', `${name}.md`)), name).toBe(true);
+    expect(existsSync(path.join(root, 'docs/docs/guides', `${name}.md`)), name).toBe(false);
+  }
 });
