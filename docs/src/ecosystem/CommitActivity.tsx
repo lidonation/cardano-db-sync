@@ -1,10 +1,11 @@
-import React, {useEffect, useId, useState} from 'react';
+import React, {useEffect, useState} from 'react';
 import commitFeedUrl from '@generated/repository-activity/default/commits.json?commit-feed';
 import Tabs from '../components/Tabs';
-import {EmptyState, ErrorMessage} from '../components/shared/Status';
+import {EmptyState} from '../components/shared/Status';
 import {REPO_URL} from '../data/links';
 import type {PageMessage} from '../i18n/pageTranslator';
 import type {CommitFeedState} from '../repository-activity/types';
+import DateRangeFields from '../updates/DateRangeFields';
 import useUpdatesMessages from '../updates/messages';
 import {rangeError, selectDatedEntries} from '../updates/model';
 import type {DateRange, Period} from '../updates/types';
@@ -21,7 +22,6 @@ export default function CommitActivity({t}: {t: Translate}) {
   const [state, setState] = useState<CommitFeedState | null>(null);
   const [period, setPeriod] = useState<Period>('month');
   const [range, setRange] = useState<DateRange>({from: '', to: ''});
-  const base = useId();
   const messages = useUpdatesMessages(ECOSYSTEM_IDS);
   useEffect(() => {
     const controller = new AbortController();
@@ -52,38 +52,7 @@ export default function CommitActivity({t}: {t: Translate}) {
     selected !== period ? null : (
       <>
         {selected === 'custom' && (
-          <div className={styles.range}>
-            <div className={styles.fields}>
-              {(['from', 'to'] as const).map((endpoint) => (
-                <label className="dbs-type-label" key={endpoint} htmlFor={`${base}-${endpoint}`}>
-                  {messages[endpoint]}
-                  <input
-                    className="dbs-type-body-sm"
-                    id={`${base}-${endpoint}`}
-                    type="date"
-                    value={range[endpoint]}
-                    aria-invalid={(error !== null && error !== 'required') || undefined}
-                    aria-describedby={`${base}-utc${error ? ` ${base}-error` : ''}`}
-                    onChange={(event) =>
-                      setRange({...range, [endpoint]: event.currentTarget.value})
-                    }
-                  />
-                </label>
-              ))}
-            </div>
-            <p id={`${base}-utc`} className={styles.helper}>
-              {messages.utc}
-            </p>
-            {error === 'required' ? (
-              <p id={`${base}-error`} className={styles.helper}>
-                {messages.required}
-              </p>
-            ) : error ? (
-              <ErrorMessage id={`${base}-error`} live>
-                {messages[error]}
-              </ErrorMessage>
-            ) : null}
-          </div>
+          <DateRangeFields range={range} onChange={setRange} messages={messages} />
         )}
         {state === null ? (
           <p>{t({id: 'ecosystem.commit.loading', message: 'Loading commit activity…'})}</p>

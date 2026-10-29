@@ -79,3 +79,60 @@ test('empty and unavailable feeds are distinguished', async ({page}) => {
   await expect(activity.getByRole('status')).toContainText('Unavailable');
   expect((await new AxeBuilder({page}).include('main').analyze()).violations).toEqual([]);
 });
+
+test('custom dates retain their values and accessible validation across tab switches', async ({
+  page,
+}) => {
+  await page.route('**/assets/data/*.json', (route) =>
+    route.fulfill({
+      json: {
+        status: 'available',
+        data: {
+          asOf: '2026-06-01',
+          entries: [{id: 'a'.repeat(40), date: '2026-06-01', subject: 'snapshot day'}],
+        },
+      },
+    }),
+  );
+  await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
+  const activity = page.getByRole('region', {name: 'Commit activity'});
+  await activity.getByRole('tab', {name: 'Custom'}).click();
+  const from = activity.getByLabel('From', {exact: true});
+  const to = activity.getByLabel('To', {exact: true});
+  await expect(from).toHaveAccessibleDescription(/Choose both a From date and a To date/);
+  await from.fill('2026-06-01');
+  await to.fill('2026-06-01');
+  await expect(activity.getByRole('status')).toContainText('1 updates');
+  await expect(from).not.toHaveAttribute('aria-invalid');
+  await activity.getByRole('tab', {name: 'Month'}).click();
+  await activity.getByRole('tab', {name: 'Custom'}).click();
+  await expect(from).toHaveValue('2026-06-01');
+  await expect(to).toHaveValue('2026-06-01');
+  await to.fill('2026-05-31');
+  await expect(from).toHaveAttribute('aria-invalid', 'true');
+  await expect(from).toHaveAccessibleDescription(/To date must be on or after/);
+});
+
+test('a malformed future snapshot fails closed instead of leaking custom-only rows', async ({
+  page,
+}) => {
+  await page.route('**/assets/data/*.json', (route) =>
+    route.fulfill({
+      json: {
+        status: 'available',
+        data: {
+          asOf: '2026-06-01',
+          entries: [{id: 'a'.repeat(40), date: '2026-06-02', subject: 'future commit'}],
+        },
+      },
+    }),
+  );
+  await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
+  const activity = page.getByRole('region', {name: 'Commit activity'});
+  await expect(activity).toContainText('Commit activity is unavailable in this build.');
+  await activity.getByRole('tab', {name: 'Custom'}).click();
+  await activity.getByLabel('From', {exact: true}).fill('2026-06-02');
+  await activity.getByLabel('To', {exact: true}).fill('2026-06-02');
+  await expect(activity.locator('li')).toHaveCount(0);
+  await expect(activity.getByRole('status')).toContainText('Unavailable');
+});
