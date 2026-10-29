@@ -1,4 +1,4 @@
-/** Prototype: preserve metadata and move client content and TOC to already-rendered HTML. */
+/** Preserve metadata while loading client content and TOC from the server-rendered guide. */
 export function clientModule(source) {
   const start = source.indexOf('function _createMdxContent(');
   const title = source.indexOf('export const contentTitle = ');
