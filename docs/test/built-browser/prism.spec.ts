@@ -32,3 +32,44 @@ for (const palette of PALETTES) {
     });
   }
 }
+
+test('a failed highlighting chunk keeps the source and the rest of the page readable', async ({
+  page,
+}) => {
+  const url = `${BUILT_HOME}docs/intro`;
+  let blocked = 0;
+  await page.route('**/code-block.*.js', (route) => {
+    blocked += 1;
+    return route.abort();
+  });
+  const chunkError = Promise.race([
+    page.waitForEvent('console', {
+      predicate: (message) =>
+        message.type() === 'error' && /ChunkLoadError|Loading chunk.*failed/s.test(message.text()),
+    }),
+    page.waitForEvent('pageerror', {
+      predicate: (error) => /Loading chunk.*failed/s.test(error.message),
+    }),
+  ]);
+  await page.goto(url);
+  await chunkError;
+  expect(blocked).toBeGreaterThan(0);
+  await expect(page.locator('main pre code').first()).toContainText('SELECT count(*) FROM block;');
+  await expect(page.locator('main')).toContainText('This site is being rebuilt.');
+});
+
+test('server-rendered source reuses the keyboard-accessible classic code container', async ({
+  browser,
+}) => {
+  const context = await browser.newContext({javaScriptEnabled: false});
+  try {
+    const page = await context.newPage();
+    await page.goto(`${BUILT_HOME}docs/intro`);
+    const code = page.locator('main pre').first();
+    await expect(code).toHaveClass(/theme-code-block/);
+    await expect(code).toHaveAttribute('tabindex', '0');
+    await expect(code).toContainText('SELECT count(*) FROM block;');
+  } finally {
+    await context.close();
+  }
+});
