@@ -7,6 +7,7 @@
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE NoImplicitPrelude #-}
 
 module Cardano.DbSync.Era.Universal.Insert.GovAction (
@@ -16,6 +17,7 @@ module Cardano.DbSync.Era.Universal.Insert.GovAction (
   insertDrep,
   insertDrepDistr,
   insertGovActionProposal,
+  insertProposal,
   insertParamProposal,
   insertVotingProcedures,
   insertCommitteeHash,
@@ -41,6 +43,7 @@ import Cardano.DbSync.DbEvent (liftDbLookup, liftDbLookupEither)
 import qualified Cardano.DbSync.Era.Shelley.Generic as Generic
 import Cardano.DbSync.Era.Shelley.Generic.ParamProposal
 import Cardano.DbSync.Era.Universal.Insert.Other (toDouble)
+import Cardano.DbSync.Era.Util (safeEncodeToJson)
 import Cardano.DbSync.Error (SyncNodeError, mkSyncNodeCallStack)
 import Cardano.DbSync.Ledger.State
 import Cardano.DbSync.Util
@@ -51,7 +54,7 @@ import qualified Cardano.Ledger.BaseTypes as Ledger
 import Cardano.Ledger.Coin (Coin)
 import qualified Cardano.Ledger.Coin as Ledger
 import Cardano.Ledger.Compactible (Compactible (..))
-import Cardano.Ledger.Conway.Core (DRepVotingThresholds (..), PoolVotingThresholds (..))
+import Cardano.Ledger.Conway.Core (ConwayEraPParams, DRepVotingThresholds (..), PoolVotingThresholds (..))
 import Cardano.Ledger.Conway.Governance
 import qualified Cardano.Ledger.Credential as Ledger
 import Cardano.Ledger.DRep (DRepState (..))
@@ -62,19 +65,17 @@ import Cardano.Ledger.State (DRep (..))
 import Cardano.Prelude
 import Control.Monad.Extra (whenJust)
 import qualified Data.Aeson as Aeson
-import qualified Data.ByteString.Lazy.Char8 as LBS
 import qualified Data.Map.Strict as Map
-import qualified Data.Text.Encoding as Text
 import Lens.Micro ((^.))
-import Ouroboros.Consensus.Cardano.Block (ConwayEra)
 
 insertGovActionProposal ::
+  ConwayEraPParams era =>
   SyncEnv ->
   DB.BlockId ->
   DB.TxId ->
   Maybe EpochNo ->
-  Maybe (ConwayGovState ConwayEra) ->
-  (Word64, (GovActionId, ProposalProcedure ConwayEra)) ->
+  Maybe (ConwayGovState era) ->
+  (Word64, (GovActionId, ProposalProcedure era)) ->
   ExceptT SyncNodeError DB.DbM ()
 insertGovActionProposal syncEnv blkId txId govExpiresAt mcgs (index, (govId, pp)) = do
   addrId <- queryOrInsertRewardAccount syncEnv UpdateCache $ pProcReturnAddr pp
@@ -82,11 +83,12 @@ insertGovActionProposal syncEnv blkId txId govExpiresAt mcgs (index, (govId, pp)
   mParamProposalId <-
     case pProcGovAction pp of
       ParameterChange _ pparams _ ->
-        Just <$> insertParamProposal blkId txId (convertConwayParamProposal pparams)
+        Just <$> insertParamProposal syncEnv blkId txId (convertConwayParamProposal pparams)
       _ -> pure Nothing
   prevGovActionDBId <- case mprevGovAction of
     Nothing -> pure Nothing
     Just prevGovActionId -> Just <$> resolveGovActionProposal syncEnv prevGovActionId
+  description <- safeEncodeToJson syncEnv "gov_action_proposal.description" (Aeson.toJSON (pProcGovAction pp))
   govActionProposalId <-
     lift $
       DB.insertGovActionProposal $
@@ -99,7 +101,7 @@ insertGovActionProposal syncEnv blkId txId govExpiresAt mcgs (index, (govId, pp)
           , DB.govActionProposalExpiration = (\epochNum -> unEpochNo epochNum + 1) <$> govExpiresAt
           , DB.govActionProposalVotingAnchorId = Just votingAnchorId
           , DB.govActionProposalType = Generic.toGovAction $ pProcGovAction pp
-          , DB.govActionProposalDescription = Text.decodeUtf8 $ LBS.toStrict $ Aeson.encode (pProcGovAction pp)
+          , DB.govActionProposalDescription = description
           , DB.govActionProposalParamProposal = mParamProposalId
           , DB.govActionProposalRatifiedEpoch = Nothing
           , DB.govActionProposalEnactedEpoch = Nothing
@@ -157,9 +159,28 @@ insertGovActionProposal syncEnv blkId txId govExpiresAt mcgs (index, (govId, pp)
           other ->
             liftIO $ logWarning (getTrace syncEnv) $ textShow other <> ": Failed to find committee for " <> textShow pp
 
+insertProposal ::
+  SyncEnv ->
+  DB.BlockId ->
+  DB.TxId ->
+  Maybe EpochNo ->
+  Maybe Generic.GovStateW ->
+  (Word64, (GovActionId, Generic.Proposal)) ->
+  ExceptT SyncNodeError DB.DbM ()
+insertProposal syncEnv blkId txId expiry mgsw (idx, (govId, proposal)) =
+  case (proposal, mgsw) of
+    (Generic.ProposalC pp, Just (Generic.GovStateC cgs)) ->
+      insertGovActionProposal syncEnv blkId txId expiry (Just cgs) (idx, (govId, pp))
+    (Generic.ProposalC pp, _) ->
+      insertGovActionProposal syncEnv blkId txId expiry Nothing (idx, (govId, pp))
+    (Generic.ProposalD pp, Just (Generic.GovStateD cgs)) ->
+      insertGovActionProposal syncEnv blkId txId expiry (Just cgs) (idx, (govId, pp))
+    (Generic.ProposalD pp, _) ->
+      insertGovActionProposal syncEnv blkId txId expiry Nothing (idx, (govId, pp))
+
 insertCommittee ::
   Maybe DB.GovActionProposalId ->
-  Committee ConwayEra ->
+  Committee era ->
   ExceptT SyncNodeError DB.DbM DB.CommitteeId
 insertCommittee mgapId committee = do
   committeeId <- lift insertCommitteeDB
@@ -205,12 +226,13 @@ resolveGovActionProposal syncEnv gaId = do
     $ DB.queryGovActionProposalId gaTxId (fromIntegral index) -- TODO: Use Word32?
 
 insertParamProposal ::
+  SyncEnv ->
   DB.BlockId ->
   DB.TxId ->
   ParamProposal ->
   ExceptT SyncNodeError DB.DbM DB.ParamProposalId
-insertParamProposal blkId txId pp = do
-  cmId <- maybe (pure Nothing) (fmap Just . insertCostModel blkId) (pppCostmdls pp)
+insertParamProposal syncEnv blkId txId pp = do
+  cmId <- maybe (pure Nothing) (fmap Just . insertCostModel syncEnv blkId) (pppCostmdls pp)
   lift
     . DB.insertParamProposal
     $ DB.ParamProposal
@@ -275,7 +297,7 @@ insertParamProposal blkId txId pp = do
 insertConstitution ::
   DB.BlockId ->
   Maybe DB.GovActionProposalId ->
-  Constitution ConwayEra ->
+  Constitution era ->
   ExceptT SyncNodeError DB.DbM DB.ConstitutionId
 insertConstitution blockId mgapId constitution = do
   votingAnchorId <- insertVotingAnchor blockId DB.ConstitutionAnchor $ constitutionAnchor constitution
@@ -294,17 +316,22 @@ insertVotingProcedures ::
   SyncEnv ->
   DB.BlockId ->
   DB.TxId ->
-  (Voter, [(GovActionId, VotingProcedure ConwayEra)]) ->
+  (Voter, [(GovActionId, Generic.Voting)]) ->
   ExceptT SyncNodeError DB.DbM ()
 insertVotingProcedures syncEnv blkId txId (voter, actions) =
-  mapM_ (insertVotingProcedure syncEnv blkId txId voter) (zip [0 ..] actions)
+  mapM_ go (zip [0 ..] actions)
+  where
+    go (idx, (gaId, Generic.VotingC vp)) =
+      insertVotingProcedure syncEnv blkId txId voter (idx, (gaId, vp))
+    go (idx, (gaId, Generic.VotingD vp)) =
+      insertVotingProcedure syncEnv blkId txId voter (idx, (gaId, vp))
 
 insertVotingProcedure ::
   SyncEnv ->
   DB.BlockId ->
   DB.TxId ->
   Voter ->
-  (Word16, (GovActionId, VotingProcedure ConwayEra)) ->
+  (Word16, (GovActionId, VotingProcedure era)) ->
   ExceptT SyncNodeError DB.DbM ()
 insertVotingProcedure syncEnv blkId txId voter (index, (gaId, vp)) = do
   govActionId <- resolveGovActionProposal syncEnv gaId
@@ -341,7 +368,7 @@ insertVotingAnchor blockId anchorType anchor =
     DB.insertVotingAnchor $
       DB.VotingAnchor
         { DB.votingAnchorBlockId = blockId
-        , DB.votingAnchorUrl = DB.VoteUrl $ Ledger.urlToText $ anchorUrl anchor -- TODO: Conway check unicode and size of URL
+        , DB.votingAnchorUrl = DB.VoteUrl $ Ledger.urlToText $ anchorUrl anchor
         , DB.votingAnchorDataHash = Generic.safeHashToByteString $ anchorDataHash anchor
         , DB.votingAnchorType = anchorType
         }
@@ -376,7 +403,7 @@ insertCredDrepHash cred = do
   where
     bs = Generic.unCredentialHash cred
 
-insertDrepDistr :: EpochNo -> PulsingSnapshot ConwayEra -> ExceptT SyncNodeError DB.DbM ()
+insertDrepDistr :: EpochNo -> PulsingSnapshot era -> ExceptT SyncNodeError DB.DbM ()
 insertDrepDistr e pSnapshot = do
   let drepEntries = Map.toList $ psDRepDistr pSnapshot
       drepChunks = DB.chunkForBulkQuery (Proxy @DB.DrepDistr) Nothing drepEntries
@@ -405,21 +432,23 @@ insertDrepDistr e pSnapshot = do
       DRepCredential cred -> drepExpiry <$> Map.lookup cred (psDRepState pSnapshot)
 
 insertCostModel ::
+  SyncEnv ->
   DB.BlockId ->
   Map Language Ledger.CostModel ->
   ExceptT SyncNodeError DB.DbM DB.CostModelId
-insertCostModel _blkId cms =
+insertCostModel syncEnv _blkId cms = do
+  costs <- safeEncodeToJson syncEnv "cost_model.costs" (Aeson.toJSON cms)
   lift $
     DB.insertCostModel $
       DB.CostModel
         { DB.costModelHash = Crypto.abstractHashToBytes $ Crypto.serializeCborHash $ Ledger.mkCostModels cms
-        , DB.costModelCosts = Text.decodeUtf8 $ LBS.toStrict $ Aeson.encode cms
+        , DB.costModelCosts = costs
         }
 
 updateRatified ::
   SyncEnv ->
   EpochNo ->
-  [GovActionState ConwayEra] ->
+  [GovActionState era] ->
   ExceptT SyncNodeError DB.DbM ()
 updateRatified syncEnv epochNo ratifiedActions = do
   forM_ ratifiedActions $ \action -> do
@@ -447,10 +476,12 @@ updateDropped syncEnv epochNo ratifiedActions = do
     lift $ DB.updateGovActionDropped gaId (unEpochNo epochNo)
 
 insertUpdateEnacted ::
+  forall era.
+  (ConwayEraGov era, GovState era ~ ConwayGovState era) =>
   SyncEnv ->
   DB.BlockId ->
   EpochNo ->
-  ConwayGovState ConwayEra ->
+  ConwayGovState era ->
   ExceptT SyncNodeError DB.DbM ()
 insertUpdateEnacted syncEnv blkId epochNo enactedState = do
   (mcommitteeId, mnoConfidenceGaId) <- handleCommittee
@@ -465,6 +496,7 @@ insertUpdateEnacted syncEnv blkId epochNo enactedState = do
           , DB.epochStateEpochNo = unEpochNo epochNo
           }
   where
+    govIds :: GovRelation StrictMaybe
     govIds = govStatePrevGovActionIds enactedState
 
     trce = getTrace syncEnv

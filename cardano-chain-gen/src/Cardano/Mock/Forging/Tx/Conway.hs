@@ -70,7 +70,7 @@ module Cardano.Mock.Forging.Tx.Conway (
 import Cardano.Ledger.Address (AccountAddress (..), AccountId (..), Addr (..), Withdrawals (..))
 import Cardano.Ledger.Allegra.Scripts
 import Cardano.Ledger.Alonzo.Scripts
-import Cardano.Ledger.Alonzo.Tx (IsValid (..))
+import Cardano.Ledger.Alonzo.Tx (IsPhase2Valid (..))
 import Cardano.Ledger.Alonzo.TxAuxData (AlonzoTxAuxData (..), mkAlonzoTxAuxData)
 import qualified Cardano.Ledger.Babbage.Core as Core
 import Cardano.Ledger.Babbage.TxOut (BabbageEraTxOut, BabbageTxOut (..))
@@ -360,7 +360,7 @@ mkSimpleTx isValid' txBody =
     AlonzoTx
       { atBody = txBody
       , atWits = mempty
-      , atIsValid = IsValid isValid'
+      , atIsPhase2Valid = if isValid' then Phase2Valid else Phase2Invalid
       , atAuxData = maybeToStrictMaybe Nothing
       }
 
@@ -382,7 +382,7 @@ mkAuxDataTxWithScripts isValid' txBody auxData scripts =
     AlonzoTx
       { atBody = txBody
       , atWits = mempty
-      , atIsValid = IsValid isValid'
+      , atIsPhase2Valid = if isValid' then Phase2Valid else Phase2Invalid
       , atAuxData = SJust (mkAlonzoTxAuxData auxData scripts)
       }
 
@@ -689,7 +689,7 @@ mkDummyTxWithSlot slot =
             , ctbTreasuryDonation = mempty
             }
       , atWits = mempty
-      , atIsValid = IsValid True
+      , atIsPhase2Valid = Phase2Valid
       , atAuxData = SNothing
       }
 
@@ -721,7 +721,7 @@ mkFullTx n m state' = do
               (mkInputs refInputPairs)
               collateralInput
         , atWits = witnesses
-        , atIsValid = IsValid True
+        , atIsPhase2Valid = Phase2Valid
         , atAuxData = SJust auxiliaryData'
         }
   where
