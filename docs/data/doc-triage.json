@@ -1,0 +1,122 @@
+[
+  {
+    "file": "ERD.png",
+    "disposition": "omission",
+    "reason": "Replace the legacy raster with a generated, themed and accessible SVG ERD in B18; retain the source until migration."
+  },
+  {
+    "file": "Readme.md",
+    "disposition": "omission",
+    "reason": "The table of contents is superseded by site navigation."
+  },
+  {
+    "file": "building-running.md",
+    "disposition": "guide",
+    "reason": "Build and run procedures belong in authored guides."
+  },
+  {
+    "file": "command-line-options.md",
+    "disposition": "annotation",
+    "reason": "CLI option reference belongs on the corresponding Haskell declarations."
+  },
+  {
+    "file": "community-tools.md",
+    "disposition": "omission",
+    "reason": "Community tool information belongs on the Ecosystem page, not in a guide or annotation."
+  },
+  {
+    "file": "configuration.md",
+    "disposition": "annotation",
+    "reason": "Configuration reference belongs on Haskell configuration declarations; procedural trimming material feeds the related guide."
+  },
+  {
+    "file": "database-encode-decode.md",
+    "disposition": "guide",
+    "reason": "Encoder, decoder and database access examples are developer guidance."
+  },
+  {
+    "file": "docker.md",
+    "disposition": "guide",
+    "reason": "Container installation and operation are procedural guidance."
+  },
+  {
+    "file": "hlint-stylish-haskell.md",
+    "disposition": "omission",
+    "reason": "Contributor lint and hook instructions belong in CONTRIBUTING, not the site migration."
+  },
+  {
+    "file": "installing-with-nix.md",
+    "disposition": "guide",
+    "reason": "Nix installation is a procedural guide."
+  },
+  {
+    "file": "installing.md",
+    "disposition": "guide",
+    "reason": "Source installation is a procedural guide."
+  },
+  {
+    "file": "interesting-queries.md",
+    "disposition": "guide",
+    "reason": "SQL examples feed the first-queries guide."
+  },
+  {
+    "file": "manual-rollbacks.md",
+    "disposition": "guide",
+    "reason": "Rollback procedures feed monitoring and rollback recovery guidance."
+  },
+  {
+    "file": "migrations.md",
+    "disposition": "guide",
+    "reason": "Version upgrade procedures belong in authored migration guides."
+  },
+  {
+    "file": "pool-offchain-data.md",
+    "disposition": "both",
+    "reason": "Reference details become Haskell annotations; operational procedures become guides."
+  },
+  {
+    "file": "release-process.md",
+    "disposition": "omission",
+    "reason": "Release procedures are contributor documentation and belong in CONTRIBUTING."
+  },
+  {
+    "file": "running.md",
+    "disposition": "guide",
+    "reason": "Starting and operating db-sync is procedural guidance."
+  },
+  {
+    "file": "schema-management.md",
+    "disposition": "guide",
+    "reason": "Creating schema migrations is developer guidance."
+  },
+  {
+    "file": "schema.md",
+    "disposition": "annotation",
+    "reason": "Table and column reference descriptions move to Haskell schema annotations."
+  },
+  {
+    "file": "smash.md",
+    "disposition": "both",
+    "reason": "SMASH reference details become Haskell annotations; installation and operational procedures become guides."
+  },
+  {
+    "file": "state-snapshot.md",
+    "disposition": "guide",
+    "reason": "Snapshot creation and restoration feed the snapshot guide."
+  },
+  {
+    "file": "troubleshooting.md",
+    "disposition": "guide",
+    "reason": "Diagnosis and recovery instructions belong in troubleshooting guidance."
+  },
+  {
+    "file": "upgrading-postgresql.md",
+    "disposition": "guide",
+    "reason": "PostgreSQL upgrade steps belong in an authored guide."
+  },
+  {
+    "file": "validation.md",
+    "disposition": "guide",
+    "reason": "Validation methods and assumptions belong in authored guidance."
+  }
+]
