@@ -41,7 +41,7 @@ export default function CommitActivity({t}: {t: Translate}) {
   const feed = state?.status === 'available' ? state.data : null;
   const error = period === 'custom' ? rangeError(range) : null;
   const entries = feed ? selectDatedEntries(feed, period, range) : [];
-  const title = t({id: 'ecosystem.commit.title', message: 'Commit activity'});
+  const title = t({id: 'ecosystem.commit.title', message: 'Commit history'});
   const periodLabel = {
     week: t({id: 'ecosystem.commit.lastWeek', message: 'last week'}),
     month: t({id: 'ecosystem.commit.lastMonth', message: 'last month'}),
