@@ -154,7 +154,14 @@ test.describe('content', () => {
       const faceCount = await faces.count();
       if (contributors === 0) expect(faceCount).toBe(0);
       else {
-        expect(faceCount).toBeGreaterThanOrEqual(contributors);
+        expect(faceCount).toBeGreaterThanOrEqual(Math.max(contributors, CORE_TEAM.length));
+        for (const {login} of CORE_TEAM) {
+          await expect(
+            page
+              .locator('section[aria-labelledby="ecosystem-people"] strong')
+              .getByText(login, {exact: true}),
+          ).toBeVisible();
+        }
         expect(faceCount).toBeLessThanOrEqual(contributors + CORE_TEAM.length);
       }
       if (!built) {
