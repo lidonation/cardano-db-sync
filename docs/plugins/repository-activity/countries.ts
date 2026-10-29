@@ -1,43 +1,28 @@
 /** Reviewed exact country and city aliases, deliberately conservative: ambiguous strings are unknown. */
-const locations: Record<string, string> = {
+const countries: Record<string, string> = {
   kenya: 'Kenya',
-  nairobi: 'Kenya',
   'united kingdom': 'United Kingdom',
   uk: 'United Kingdom',
-  london: 'United Kingdom',
   'united states': 'United States',
   usa: 'United States',
   'united states of america': 'United States',
   canada: 'Canada',
-  toronto: 'Canada',
-  vancouver: 'Canada',
   germany: 'Germany',
   deutschland: 'Germany',
-  berlin: 'Germany',
   france: 'France',
-  paris: 'France',
   netherlands: 'Netherlands',
-  amsterdam: 'Netherlands',
   australia: 'Australia',
-  sydney: 'Australia',
-  melbourne: 'Australia',
   switzerland: 'Switzerland',
-  zurich: 'Switzerland',
   sweden: 'Sweden',
   norway: 'Norway',
   denmark: 'Denmark',
   finland: 'Finland',
   ireland: 'Ireland',
-  dublin: 'Ireland',
   spain: 'Spain',
-  madrid: 'Spain',
   portugal: 'Portugal',
-  lisbon: 'Portugal',
   italy: 'Italy',
   poland: 'Poland',
-  warsaw: 'Poland',
   austria: 'Austria',
-  vienna: 'Austria',
   belgium: 'Belgium',
   'czech republic': 'Czechia',
   czechia: 'Czechia',
@@ -46,7 +31,6 @@ const locations: Record<string, string> = {
   ukraine: 'Ukraine',
   greece: 'Greece',
   japan: 'Japan',
-  tokyo: 'Japan',
   singapore: 'Singapore',
   india: 'India',
   brazil: 'Brazil',
@@ -63,18 +47,36 @@ const locations: Record<string, string> = {
   türkiye: 'Turkey',
 };
 
+// City-only aliases are separate so they cannot override an explicit country.
+// London, Paris and Vancouver are ambiguous and deliberately remain unknown.
+const cities: Record<string, string> = {
+  nairobi: 'Kenya',
+  toronto: 'Canada',
+  berlin: 'Germany',
+  amsterdam: 'Netherlands',
+  sydney: 'Australia',
+  melbourne: 'Australia',
+  zurich: 'Switzerland',
+  dublin: 'Ireland',
+  madrid: 'Spain',
+  lisbon: 'Portugal',
+  warsaw: 'Poland',
+  vienna: 'Austria',
+  tokyo: 'Japan',
+};
+
 export function countryForLocation(location: string): string | null {
   const parts = location
     .toLocaleLowerCase('en')
     .split(',')
     .map((part) => part.trim())
     .filter(Boolean);
-  const matches = new Set(
-    parts
-      .map((part) => (Object.hasOwn(locations, part) ? locations[part] : undefined))
-      .filter((part): part is string => !!part),
-  );
-  return matches.size === 1 ? [...matches][0] : null;
+  const matches = (lookup: Record<string, string>) =>
+    new Set(parts.flatMap((part) => (Object.hasOwn(lookup, part) ? [lookup[part]] : [])));
+  const explicit = matches(countries);
+  if (explicit.size) return explicit.size === 1 ? [...explicit][0] : null;
+  const inferred = matches(cities);
+  return inferred.size === 1 ? [...inferred][0] : null;
 }
 
 export function aggregateCountries(profiles: readonly (string | null)[]) {

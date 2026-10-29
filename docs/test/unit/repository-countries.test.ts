@@ -10,6 +10,13 @@ describe('profile locations', () => {
     expect(countryForLocation('')).toBeNull();
     expect(countryForLocation('constructor')).toBeNull();
   });
+  it('uses explicit countries and leaves ambiguous city-only locations unknown', () => {
+    expect(countryForLocation('London, Canada')).toBe('Canada');
+    expect(countryForLocation('Vancouver, United States')).toBe('United States');
+    expect(countryForLocation('Paris')).toBeNull();
+    expect(countryForLocation('London')).toBeNull();
+    expect(countryForLocation('Kenya, Canada')).toBeNull();
+  });
   it('publishes only aggregate counts, with an unknown bucket', () => {
     const result = aggregateCountries(['Nairobi, Kenya', 'Kenya', 'Unknown', null]);
     expect(result).toEqual({countries: [{country: 'Kenya', count: 2}], unknownCountries: 2});

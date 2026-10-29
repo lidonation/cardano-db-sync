@@ -1,4 +1,4 @@
-import {cp, mkdir, readFile, rename, writeFile} from 'node:fs/promises';
+import {copyFile, lstat, mkdir, readFile, rename, writeFile} from 'node:fs/promises';
 import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 import type {RepositorySnapshotState} from '../../src/repository-activity/types';
@@ -19,7 +19,7 @@ export default function repositoryActivity(context: LoadContext): Plugin {
   );
   const avatarsDir = path.join(cacheDir, 'avatars');
   const cacheFile = path.join(cacheDir, 'data.json');
-  let hasData = false;
+  let avatarNames: string[] = [];
   return {
     name: 'repository-activity',
     async contentLoaded({actions: {createData}}) {
@@ -68,19 +68,33 @@ export default function repositoryActivity(context: LoadContext): Plugin {
         snapshots.set(key, snapshot);
       }
       const state = await snapshot;
-      hasData = state.status === 'available';
-      if (!hasData) console.warn('repository-activity: data unavailable');
+      if (state.status === 'available') {
+        avatarNames = [
+          ...new Set(
+            [...state.data.contributors, ...state.data.coreTeam].flatMap((person) =>
+              person.avatar ? [path.basename(person.avatar)] : [],
+            ),
+          ),
+        ];
+      } else console.warn('repository-activity: data unavailable');
       await createData('resolved.json', JSON.stringify(summarizeActivity(state)));
       await createData('history.json', JSON.stringify(state));
     },
     async postBuild({outDir}) {
-      if (hasData) {
-        try {
-          await cp(avatarsDir, path.join(outDir, 'repository-avatars'), {recursive: true});
-        } catch {
-          /* Missing avatars degrade to initials. */
-        }
-      }
+      // Never publish the cache directory wholesale: only validated, referenced raster names.
+      await Promise.all(
+        avatarNames.map(async (name) => {
+          try {
+            const source = path.join(avatarsDir, name);
+            if (!(await lstat(source)).isFile()) return;
+            const destination = path.join(outDir, 'repository-avatars');
+            await mkdir(destination, {recursive: true});
+            await copyFile(source, path.join(destination, name));
+          } catch {
+            /* Missing avatars degrade to initials independently of other images. */
+          }
+        }),
+      );
     },
   };
 }

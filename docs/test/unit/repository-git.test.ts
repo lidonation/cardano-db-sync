@@ -70,6 +70,21 @@ describe('repository history', () => {
     expect(history.commits).toHaveLength(4);
     expect(history.dailyLines.reduce((sum, day) => sum + day.haskell, 0)).toBe(4);
   });
+  it('counts source files whose names require git path quoting', () => {
+    const dir = mkdtempSync(path.join(tmpdir(), 'repo-paths-'));
+    dirs.push(dir);
+    const git = (...args: string[]) => execFileSync('git', args, {cwd: dir, encoding: 'utf8'});
+    git('init', '-q');
+    git('config', 'user.name', 'Alice');
+    git('config', 'user.email', 'alice@example.org');
+    for (const name of ['λ.hs', 'tab\tfile.hs', 'line\nfile.sql'])
+      writeFileSync(path.join(dir, name), 'one\ntwo\n');
+    git('add', '.');
+    git('commit', '-qm', 'quoted paths');
+    const totals = readHistory(dir).dailyLines;
+    expect(totals.reduce((sum, day) => sum + day.haskell, 0)).toBe(4);
+    expect(totals.reduce((sum, day) => sum + day.sql, 0)).toBe(2);
+  });
   it('reports a genuinely empty repository as empty', () => {
     const dir = mkdtempSync(path.join(tmpdir(), 'repo-empty-'));
     dirs.push(dir);

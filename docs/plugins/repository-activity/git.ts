@@ -10,6 +10,9 @@ export interface GitHistory {
 }
 
 function language(file: string): Language | undefined {
+  // numstat C-quotes paths containing non-ASCII or control characters. Only the
+  // ASCII extension is needed here; keep escapes inside the filename untouched.
+  if (file.startsWith('"') && file.endsWith('"')) file = file.slice(1, -1);
   if (/\.l?hs$/i.test(file)) return 'haskell';
   if (/\.sql$/i.test(file)) return 'sql';
   if (/\.nix$/i.test(file)) return 'nix';

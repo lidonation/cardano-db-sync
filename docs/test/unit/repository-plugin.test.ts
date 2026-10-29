@@ -1,4 +1,4 @@
-import {mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, readFile, readdir, rm, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
@@ -19,7 +19,7 @@ afterEach(async () => {
   await Promise.all(dirs.splice(0).map((dir) => rm(dir, {recursive: true, force: true})));
 });
 
-async function load(cache: string) {
+async function load(cache: string, outDir?: string) {
   process.env.REPOSITORY_ACTIVITY_CACHE = cache;
   delete process.env.REPOSITORY_CHECKOUT;
   delete process.env.GITHUB_TOKEN;
@@ -28,6 +28,7 @@ async function load(cache: string) {
   await plugin.contentLoaded!({actions: {createData}} as unknown as Parameters<
     NonNullable<Plugin['contentLoaded']>
   >[0]);
+  if (outDir) await plugin.postBuild!({outDir} as Parameters<NonNullable<Plugin['postBuild']>>[0]);
   expect(createData.mock.calls.map(([name]) => name)).toEqual(['resolved.json', 'history.json']);
   return {
     summary: JSON.parse(createData.mock.calls[0][1]),
@@ -47,6 +48,23 @@ describe('Docusaurus repository plugin', () => {
     expect(result.summary.data.commits).toBeUndefined();
     expect(result.history.data.commits).toHaveLength(2);
     expect(result.history.data.dailyLines).toHaveLength(1);
+  });
+  it('publishes only referenced avatars, never unrelated cache files', async () => {
+    const dir = await mkdtemp(path.join(tmpdir(), 'activity-publish-'));
+    dirs.push(dir);
+    const fixture = 'test/fixtures/repository-activity';
+    await writeFile(path.join(dir, 'data.json'), await readFile(`${fixture}/data.json`));
+    await mkdir(path.join(dir, 'avatars'));
+    const image = 'c'.repeat(64) + '.png';
+    await writeFile(
+      path.join(dir, 'avatars', image),
+      await readFile(`${fixture}/avatars/${image}`),
+    );
+    await writeFile(path.join(dir, 'avatars', 'private.json'), 'not for publication');
+    await writeFile(path.join(dir, 'avatars', 'd'.repeat(64) + '.png'), 'obsolete');
+    const outDir = path.join(dir, 'out');
+    await load(dir, outDir);
+    expect(await readdir(path.join(outDir, 'repository-avatars'))).toEqual([image]);
   });
   it('does not fail builds when the cache is absent or invalid', async () => {
     const dir = await mkdtemp(path.join(tmpdir(), 'activity-missing-'));
