@@ -11,6 +11,7 @@ export function parseCommitFeed(value: unknown): CommitFeedState {
   const data = state.data as {asOf?: unknown; entries?: unknown};
   if (typeof data.asOf !== 'string' || !validDate(data.asOf) || !Array.isArray(data.entries))
     throw new Error('Invalid commit feed');
+  const asOf = data.asOf;
   const ids = new Set<string>();
   const entries = data.entries.map((value: unknown) => {
     if (!value || typeof value !== 'object') throw new Error('Invalid commit');
@@ -21,6 +22,7 @@ export function parseCommitFeed(value: unknown): CommitFeedState {
       ids.has(entry.id) ||
       typeof entry.date !== 'string' ||
       !validDate(entry.date) ||
+      entry.date > asOf ||
       typeof entry.subject !== 'string' ||
       entry.subject.length > 500
     )

@@ -63,3 +63,18 @@ describe('commit feed validation', () => {
     }
   });
 });
+
+describe('commit snapshot boundary', () => {
+  it('rejects entries later than the published snapshot, including custom-only future rows', async () => {
+    const {parseCommitFeed} = await import('../../src/ecosystem/commitFeed');
+    expect(() =>
+      parseCommitFeed({
+        status: 'available',
+        data: {
+          asOf: '2026-06-01',
+          entries: [{id: 'a'.repeat(40), date: '2026-06-02', subject: 'future'}],
+        },
+      }),
+    ).toThrow();
+  });
+});
