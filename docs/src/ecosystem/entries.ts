@@ -1,4 +1,4 @@
-import {REPO_URL} from '../data/links';
+import {DISCORD_URL, REPO_URL} from '../data/links';
 import type {PageMessage} from '../i18n/pageTranslator';
 
 /**
@@ -20,6 +20,8 @@ export interface Tool {
   readonly org: string;
   readonly kind: ToolKind;
   readonly url: string;
+  readonly website?: string;
+  readonly sql?: string;
   readonly description: string;
 }
 
@@ -30,6 +32,24 @@ export interface Team {
 }
 
 type Translate = (message: PageMessage) => string;
+
+/** Named, recoverable empty state for the tool grid. */
+export function toolsView(items: readonly Tool[], translate: Translate) {
+  return items.length
+    ? {kind: 'list' as const}
+    : {
+        kind: 'empty' as const,
+        message: translate({
+          id: 'ecosystem.tools.empty',
+          message: 'No ecosystem tools are listed yet.',
+        }),
+        action: translate({
+          id: 'ecosystem.tools.empty.action',
+          message: 'Tell us about a tool on Discord',
+        }),
+        href: DISCORD_URL,
+      };
+}
 
 export function tools(translate: Translate): readonly Tool[] {
   return [
@@ -61,6 +81,8 @@ export function tools(translate: Translate): readonly Tool[] {
       org: 'cardano-community',
       kind: 'built-on',
       url: 'https://github.com/cardano-community/koios-artifacts',
+      website: 'https://koios.rest/',
+      sql: 'https://github.com/cardano-community/koios-artifacts/tree/main/files/grest/rpc',
       description: translate({
         id: 'ecosystem.tool.koios',
         message: 'Decentralised, community-run REST API whose queries run against db-sync.',
@@ -71,6 +93,8 @@ export function tools(translate: Translate): readonly Tool[] {
       org: 'Blockfrost',
       kind: 'built-on',
       url: 'https://github.com/blockfrost/blockfrost-backend-ryo',
+      website: 'https://blockfrost.io/',
+      sql: 'https://github.com/blockfrost/blockfrost-backend-ryo/tree/master/src/sql',
       description: translate({
         id: 'ecosystem.tool.blockfrost',
         message: 'Run-your-own Blockfrost API, queried from a db-sync database.',
@@ -81,6 +105,8 @@ export function tools(translate: Translate): readonly Tool[] {
       org: 'IntersectMBO',
       kind: 'built-on',
       url: 'https://github.com/IntersectMBO/govtool',
+      website: 'https://gov.tools/',
+      sql: 'https://github.com/IntersectMBO/govtool/blob/main/govtool/govtool-provider-dbsync/src/governance/dreps/sql.ts',
       description: translate({
         id: 'ecosystem.tool.govtool',
         message: 'On-chain governance platform; its backend can read chain data from db-sync.',

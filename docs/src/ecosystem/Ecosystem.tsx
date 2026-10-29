@@ -8,7 +8,9 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import Button from '../components/Button';
 import {TeamCard, ToolCard} from '../components/Card';
 import Metric from '../components/Metric';
+import Tag from '../components/Tag';
 import Icon from '../components/shared/Icon';
+import {EmptyState} from '../components/shared/Status';
 import {DISCORD_URL, REPO_URL} from '../data/links';
 import type {ReleaseHistory} from '../data/release-history';
 import {SURFACES} from '../data/surfaces';
@@ -17,7 +19,7 @@ import Eyebrow from '../landing/Eyebrow';
 import useSurface from '../landing/useSurface';
 import styles from '../landing/styles.module.css';
 
-import {teams, tools, type Tool} from './entries';
+import {teams, tools, toolsView, type Tool} from './entries';
 import {ECOSYSTEM_IDS} from './ids';
 
 const NEW_ISSUE = `${REPO_URL}/issues/new/choose`;
@@ -31,23 +33,58 @@ function useEcosystemTranslate() {
   return pageTranslator(ECOSYSTEM_IDS, codeTranslations, currentLocale, defaultLocale, translate);
 }
 
-/** A grid of tool cards; `tag` marks every card in it (the alternatives). */
-function ToolGrid({
+/** A single grid, with alternatives marked and an actionable empty state. */
+export function ToolGrid({
   items,
-  tag,
+  t,
 }: {
   readonly items: readonly Tool[];
-  readonly tag?: string;
+  readonly t: ReturnType<typeof useEcosystemTranslate>;
 }): React.JSX.Element {
+  const view = toolsView(items, t);
+  if (view.kind === 'empty')
+    return (
+      <div>
+        <EmptyState>{view.message}</EmptyState>
+        <Link className={styles.more} to={view.href}>
+          {view.action}
+        </Link>
+      </div>
+    );
   return (
     <ul className={styles.cards}>
       {items.map((tool) => (
         <li key={tool.name}>
           <ToolCard
             name={tool.name}
-            org={tag ? `${tool.org} · ${tag}` : tool.org}
+            org={
+              <>
+                {tool.org} {tool.kind === 'alternative' && <Tag>ALT</Tag>}
+              </>
+            }
             description={tool.description}
-            href={tool.url}
+            links={[
+              ...(tool.website
+                ? [
+                    {
+                      href: tool.website,
+                      label: `${tool.name} ${t({id: 'ecosystem.links.website', message: 'website'})}`,
+                    },
+                  ]
+                : []),
+              {
+                href: tool.url,
+                label: `${tool.name} ${t({id: 'ecosystem.links.repository', message: 'repository'})}`,
+              },
+              ...(tool.sql
+                ? [
+                    {
+                      href: tool.sql,
+                      label: `${tool.name} ${t({id: 'ecosystem.links.sql', message: 'SQL'})}`,
+                    },
+                  ]
+                : []),
+            ]}
           />
         </li>
       ))}
@@ -66,7 +103,6 @@ export default function Ecosystem(): React.JSX.Element {
   const history = useDocusaurusContext().siteConfig.customFields?.releaseHistory as ReleaseHistory;
   const allTools = tools(t);
   const builtOn = allTools.filter((tool) => tool.kind === 'built-on');
-  const alternatives = allTools.filter((tool) => tool.kind === 'alternative');
   const allTeams = teams(t);
   const tellUs = surface('survey') ?? NEW_ISSUE;
   const facts = [
@@ -84,7 +120,7 @@ export default function Ecosystem(): React.JSX.Element {
     },
     {
       value: builtOn.length.toLocaleString('en'),
-      label: t({id: 'ecosystem.facts.tools', message: 'open-source tools listed here'}),
+      label: t({id: 'ecosystem.facts.tools', message: 'tools built on db-sync listed here'}),
     },
   ];
   return (
@@ -131,16 +167,16 @@ export default function Ecosystem(): React.JSX.Element {
             {t({id: 'ecosystem.tools.eyebrow', message: 'related ecosystem tools'})}
           </Eyebrow>
           <h2 id="ecosystem-tools" className={styles.heading}>
-            {t({id: 'ecosystem.tools.title', message: 'Built on top of the schema'})}
+            {t({id: 'ecosystem.tools.title', message: 'Built on top or with the schema'})}
           </h2>
           <p className={styles.intro}>
             {t({
               id: 'ecosystem.tools.intro',
               message:
-                'DB Sync is infrastructure other infrastructure stands on. These projects read its database, extend its schema or wrap it in an API.',
+                'DB Sync is infrastructure other infrastructure stands on. These projects read its database, extend its schema or wrap it in an API. ALT marks alternative indexers.',
             })}
           </p>
-          <ToolGrid items={builtOn} />
+          <ToolGrid items={allTools} t={t} />
           <div className={styles.actions}>
             <Button variant="primary" size="md" href={tellUs}>
               {t({id: 'ecosystem.tools.cta', message: 'Tell us what you’re building'})}
@@ -162,10 +198,6 @@ export default function Ecosystem(): React.JSX.Element {
                 'Indexers that do not use db-sync, for when a full relational mirror is more than you need.',
             })}
           </p>
-          <ToolGrid
-            items={alternatives}
-            tag={t({id: 'ecosystem.alternatives.tag', message: 'alternative'})}
-          />
         </div>
       </section>
 

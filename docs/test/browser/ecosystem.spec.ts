@@ -60,8 +60,31 @@ test.describe('content', () => {
     const hrefs = await page
       .locator('main section li a')
       .evaluateAll((links) => links.map((link) => link.getAttribute('href')));
-    const expected = [...tools(english), ...teams(english)].map((entry) => entry.url);
+    const expected = [
+      ...tools(english).flatMap((tool) =>
+        [tool.url, tool.website, tool.sql].filter((url): url is string => Boolean(url)),
+      ),
+      ...teams(english).map((team) => team.url),
+    ];
     expect(hrefs.sort()).toEqual(expected.sort());
+    await expect(page.getByRole('link', {name: 'Koios website'})).toHaveAttribute(
+      'href',
+      'https://koios.rest/',
+    );
+    await expect(page.getByRole('link', {name: 'Koios SQL'})).toBeVisible();
+    for (const tool of tools(english)) {
+      for (const [label, href] of [
+        ['repository', tool.url],
+        ['website', tool.website],
+        ['SQL', tool.sql],
+      ] as const) {
+        if (href)
+          await expect(
+            page.getByRole('link', {name: `${tool.name} ${label}`, exact: true}),
+          ).toHaveAttribute('href', href);
+      }
+    }
+    await expect(page.locator('section[aria-labelledby=ecosystem-tools]')).toContainText('ALT');
   });
 
   test('does not infer production deployments from project participation', async ({page}) => {
@@ -131,4 +154,35 @@ test.describe('axe, WCAG 2.2 AA', () => {
       });
     }
   }
+});
+
+test('empty tools fixture names the state and offers recovery without accessibility violations', async ({
+  page,
+}) => {
+  test.skip(
+    Boolean(test.info().project.use.baseURL),
+    'Fixture exists only on the development server',
+  );
+  await page.goto(new URL('__ecosystem-empty', SITE_URL).toString());
+  await expect(page.getByText('No ecosystem tools are listed yet.')).toBeVisible();
+  await page.keyboard.press('Tab');
+  await page.keyboard.press('Enter');
+  await expect(page.locator('main')).toBeFocused();
+  const recovery = page.getByRole('link', {name: 'Tell us about a tool on Discord'});
+  await expect(recovery).toHaveAttribute('href', /discord/);
+  await page.keyboard.press('Tab');
+  await expect(recovery).toBeFocused();
+  // Exercise native link activation without sending a test browser to Discord.
+  await recovery.evaluate((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      link.setAttribute('data-activated', 'true');
+    });
+  });
+  await page.keyboard.press('Enter');
+  await expect(recovery).toHaveAttribute('data-activated', 'true');
+  const results = await new AxeBuilder({page})
+    .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+    .analyze();
+  expect(results.violations).toEqual([]);
 });

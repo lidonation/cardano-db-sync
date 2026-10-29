@@ -90,6 +90,11 @@ export default function inventoryPlugin(context: LoadContext): Plugin {
         exact: true,
       });
       actions.addRoute({
+        path: `${context.baseUrl}__ecosystem-empty`,
+        component: path.resolve(context.siteDir, 'test/fixtures/ecosystem/EmptyFixture.tsx'),
+        exact: true,
+      });
+      actions.addRoute({
         path: `${context.baseUrl}__survey-results`,
         component: path.resolve(context.siteDir, 'src/survey-results/FixturePage.tsx'),
         exact: true,

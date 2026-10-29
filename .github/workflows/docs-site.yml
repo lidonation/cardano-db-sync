@@ -99,6 +99,7 @@ jobs:
 
   unit-tests:
     name: Unit tests
+    # Playwright 1.56 supports Ubuntu 24.04, not the moving ubuntu-latest image.
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
@@ -125,6 +126,7 @@ jobs:
 
   build:
     name: Build both profiles
+    # Browser tests install the same pinned Playwright release as unit-tests.
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
