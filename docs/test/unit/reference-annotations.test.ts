@@ -319,6 +319,19 @@ describe('reference semantics', () => {
     ['TxOutAddress', 'MaTxOutAddress', 'maTxOutAddressQuantity', 'amount'],
     ['TxOutAddress', 'MaTxOutAddress', 'maTxOutAddressTxOutId', 'TxOut table index'],
     ['Core/Pool', 'PoolUpdate', 'poolUpdateFixedCost', 'Lovelace'],
+    ['Core/Pool', 'PoolUpdate', 'poolUpdateMargin', 'fraction'],
+    [
+      'Core/GovernanceAndVoting',
+      'Constitution',
+      'constitutionVotingAnchorId',
+      'VotingAnchor table index',
+    ],
+    [
+      'Core/GovernanceAndVoting',
+      'GovActionProposal',
+      'govActionProposalVotingAnchorId',
+      'VotingAnchor table index',
+    ],
   ])('%s.%s.%s keeps its actual field meaning', (module, record, name, meaning) => {
     const entry = annotation(
       `cardano-db/src/Cardano/Db/Schema/${module.startsWith('Core/') ? module : `Variants/${module}`}.hs`,
@@ -328,6 +341,14 @@ describe('reference semantics', () => {
       .flatMap((ctor: {fields: {name: string; doc: string}[]}) => ctor.fields)
       .find((field: {name: string}) => field.name === name)?.doc;
     expect(doc).toContain(meaning);
+  });
+  it('describes voting power as a per-epoch aggregate, not an individual delegation', () => {
+    const doc = annotation(
+      'cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs',
+      'DrepDistr',
+    )?.doc;
+    expect(doc).toContain('per DRep and epoch');
+    expect(doc).toContain('not individual delegations');
   });
   it('does not describe a NOT NULL epoch sync duration as nullable', () => {
     const entry = annotation(
@@ -380,6 +401,33 @@ describe('reference semantics', () => {
     expect(entries.length).toBeGreaterThan(0);
     for (const entry of entries) expect(entry.doc).toContain(fact);
   });
+  it.each(['core', 'address'])(
+    'joins %s multi-asset column docs through the committed schema',
+    (variant) => {
+      const schema = JSON.parse(
+        fs.readFileSync(path.resolve(import.meta.dirname, '../../generated/schema.json'), 'utf8'),
+      );
+      const table = schema.tables.find(
+        (table: {name: string; variant: string}) =>
+          table.name === 'ma_tx_out' && table.variant === variant,
+      );
+      const entry = annotation(table.haskell.file, table.haskell.record);
+      const fields = entry.constructors.flatMap(
+        (ctor: {fields: {name: string; doc: string}[]}) => ctor.fields,
+      );
+      for (const [name, meaning] of [
+        ['ident', 'MultiAsset table index'],
+        ['quantity', 'amount'],
+        ['tx_out_id', 'TxOut table index'],
+      ]) {
+        const column = table.columns.find((column: {name: string}) => column.name === name);
+        expect(
+          fields.find((field: {name: string}) => field.name === column.haskell.field)?.doc,
+        ).toContain(meaning);
+      }
+    },
+  );
+
   it('records pool metadata queue success and failure destinations', () => {
     const doc = annotation(
       'cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs',

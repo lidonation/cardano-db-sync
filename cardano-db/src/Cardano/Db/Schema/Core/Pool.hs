@@ -139,7 +139,7 @@ data PoolUpdate = PoolUpdate
   -- ^ The PoolMetadataRef table index this pool update refers to.
   , poolUpdateMargin :: !Double -- sqltype=percentage????
 
-  -- ^ The margin (as a percentage) this pool charges.
+  -- ^ The margin this pool charges, stored as a fraction between 0 and 1 (not a percentage).
   , poolUpdateFixedCost :: !DbLovelace -- sqltype=lovelace
 
   -- ^ The fixed per epoch fee (in Lovelace) this pool charges.

@@ -3268,7 +3268,7 @@
           "nullable": false,
           "default": null,
           "fingerprint": "sha256:8fa3ccf0f6b69d33fb7c88c137397e086d93089391bcc5aa82b5ff5da6c6f067",
-          "haskell": {"field": "maTxOutAddressIdent"}
+          "haskell": {"field": "maTxOutAddressQuantity"}
         },
         {
           "name": "tx_out_id",
@@ -3277,7 +3277,7 @@
           "nullable": false,
           "default": null,
           "fingerprint": "sha256:dd27d095eaad86141a7039fca9d65b6ee1258596818f0bd20ca55b24285fa987",
-          "haskell": {"field": "maTxOutAddressQuantity"}
+          "haskell": {"field": "maTxOutAddressTxOutId"}
         },
         {
           "name": "ident",
@@ -3286,7 +3286,7 @@
           "nullable": false,
           "default": null,
           "fingerprint": "sha256:dafc01e13306bc432501e08c7f0718da0c5efaca653c239d25d03e912ee32fff",
-          "haskell": {"field": "maTxOutAddressTxOutId"}
+          "haskell": {"field": "maTxOutAddressIdent"}
         }
       ]
     },

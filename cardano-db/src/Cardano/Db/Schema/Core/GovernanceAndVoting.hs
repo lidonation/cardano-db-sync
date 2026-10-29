@@ -111,8 +111,8 @@ drepRegistrationEncoder =
 -- Table Name: drep_distr
 -- Description: Contains information about the distribution of DRep tokens, including the amount distributed and the epoch in which the distribution occurred.
 -- Schema reference for @drep_distr@:
--- The table for the distribution of voting power per DRep per. Currently this has a single entry per
--- DRep and doesn't show every delegator. This may change. New in 13.2-Conway.
+-- The distribution of delegated voting power per DRep and epoch. Entries are aggregate amounts,
+-- not individual delegations. New in 13.2-Conway.
 data DrepDistr = DrepDistr
   { drepDistrHashId :: !Id.DrepHashId -- noreference
 
@@ -208,7 +208,7 @@ data GovActionProposal = GovActionProposal
   -- ^ Shows the epoch at which this governance action will expire.
   , govActionProposalVotingAnchorId :: !(Maybe Id.VotingAnchorId) -- noreference
 
-  -- ^ The Anchor table index related to this proposal.
+  -- ^ The VotingAnchor table index related to this proposal.
   , govActionProposalType :: !GovActionType -- sqltype=govactiontype
 
   -- ^ Can be one of ParameterChange, HardForkInitiation, TreasuryWithdrawals, NoConfidence,
@@ -366,7 +366,7 @@ data Constitution = Constitution
   -- ^ The GovActionProposal table index for this constitution.
   , constitutionVotingAnchorId :: !Id.VotingAnchorId -- noreference
 
-  -- ^ The ConstitutionVotingAnchor table index for this constitution.
+  -- ^ The VotingAnchor table index for this constitution.
   , constitutionScriptHash :: !(Maybe ByteString) -- sqltype=hash28type
 
   -- ^ The Script Hash. It's associated script may not be already inserted in the script table.

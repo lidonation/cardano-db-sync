@@ -2513,7 +2513,7 @@
               "name": "DrepDistr"
             }
           ],
-          "doc": "Table Name: drep_distr\nDescription: Contains information about the distribution of DRep tokens, including the amount distributed and the epoch in which the distribution occurred.\nSchema reference for @drep_distr@:\nThe table for the distribution of voting power per DRep per. Currently this has a single entry per\nDRep and doesn't show every delegator. This may change. New in 13.2-Conway.",
+          "doc": "Table Name: drep_distr\nDescription: Contains information about the distribution of DRep tokens, including the amount distributed and the epoch in which the distribution occurred.\nSchema reference for @drep_distr@:\nThe distribution of delegated voting power per DRep and epoch. Entries are aggregate amounts,\nnot individual delegations. New in 13.2-Conway.",
           "kind": "data",
           "line": 116,
           "name": "DrepDistr",
@@ -2584,7 +2584,7 @@
                   "name": "govActionProposalExpiration"
                 },
                 {
-                  "doc": "The Anchor table index related to this proposal.",
+                  "doc": "The VotingAnchor table index related to this proposal.",
                   "name": "govActionProposalVotingAnchorId"
                 },
                 {
@@ -2721,7 +2721,7 @@
                   "name": "constitutionGovActionProposalId"
                 },
                 {
-                  "doc": "The ConstitutionVotingAnchor table index for this constitution.",
+                  "doc": "The VotingAnchor table index for this constitution.",
                   "name": "constitutionVotingAnchorId"
                 },
                 {
@@ -3668,7 +3668,7 @@
                   "name": "poolUpdateMetaId"
                 },
                 {
-                  "doc": "The margin (as a percentage) this pool charges.",
+                  "doc": "The margin this pool charges, stored as a fraction between 0 and 1 (not a percentage).",
                   "name": "poolUpdateMargin"
                 },
                 {
