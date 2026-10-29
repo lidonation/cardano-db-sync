@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "versions": [
+    {
+      "tag": "13.3.0.0",
+      "stage_two": "0041",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.4.0.0",
+      "stage_two": "0042",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.4.0.1",
+      "stage_two": "0042",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.4.0.2",
+      "stage_two": "0042",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.4.1.0",
+      "stage_two": "0042",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.5.0.0",
+      "stage_two": "0043",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.5.0.1",
+      "stage_two": "0043",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.5.0.2",
+      "stage_two": "0043",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.6.0.1",
+      "stage_two": "0044",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.6.0.2",
+      "stage_two": "0044",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.6.0.4",
+      "stage_two": "0044",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.6.0.5",
+      "stage_two": "0044",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.6.0.6",
+      "stage_two": "0044",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.6.0.7",
+      "stage_two": "0044",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.6.0.8",
+      "stage_two": "0044",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.7.0.0",
+      "stage_two": "0045",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.7.0.1",
+      "stage_two": "0045",
+      "stage_four": "0008"
+    },
+    {
+      "tag": "13.7.0.2",
+      "stage_two": "0046",
+      "stage_four": "0009"
+    },
+    {
+      "tag": "13.7.0.3",
+      "stage_two": "0047",
+      "stage_four": "0009"
+    },
+    {
+      "tag": "13.7.0.4",
+      "stage_two": "0047",
+      "stage_four": "0009"
+    },
+    {
+      "tag": "13.7.0.5",
+      "stage_two": "0047",
+      "stage_four": "0009"
+    },
+    {
+      "tag": "13.7.1.0",
+      "stage_two": "0048",
+      "stage_four": "0009"
+    },
+    {
+      "tag": "13.7.2.0",
+      "stage_two": "0050",
+      "stage_four": "0009"
+    },
+    {
+      "tag": "13.7.2.1",
+      "stage_two": "0050",
+      "stage_four": "0009"
+    }
+  ]
+}

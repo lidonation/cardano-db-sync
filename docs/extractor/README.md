@@ -192,3 +192,16 @@ Dependency selection is pinned by `cabal.project`. The extraction step has a
 60-second timeout; toolchain installation and building the extractor are reported
 separately and take longer on a cold cache. CPP conditionals are not evaluated.
 Incompatible alternatives fail parsing with a diagnostic, never partial output.
+
+### Release/schema version matrix (VER-1, VER-3)
+
+`npm run extract:versions` derives `generated/versions.json` from the complete set of numeric
+four-component release tags. It keeps every release in the five newest minor lines and reads each
+tag's `schema/` tree; migration **sequence numbers**, not filename dates or tag timestamps, supply
+the stage-two and stage-four values. Patch releases with the same tuple remain separate rows so
+consumers can map either release to the same schema.
+
+Fetch all tags (`git fetch --tags`) before regeneration. Commit the resulting artifact when release
+tags change. `npm run check:versions` checks for byte-identical regeneration; the docs CI unit job
+fetches full history and tags to run this check and the six historical regression tests. The site
+build itself needs only the committed JSON, not Git history or a Haskell toolchain.
