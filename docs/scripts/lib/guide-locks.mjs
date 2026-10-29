@@ -37,7 +37,7 @@ function configContract(path, node, ancestors) {
     }
     return value;
   };
-  const context = ancestors.map(({path: parentPath, node: parent}) => {
+  const scopes = ancestors.map(({path: parentPath, node: parent}) => {
     const parts = path.slice(parentPath.length + 1).split('.');
     const presets = (parent.shape?.presets ?? []).flatMap(({key, values}) => {
       const relevant = Object.fromEntries(
@@ -48,13 +48,25 @@ function configContract(path, node, ancestors) {
       );
       return Object.keys(relevant).length ? [{key, values: relevant}] : [];
     });
-    const inheritedDefault = project(parent.default, parts);
+    return {path: parentPath, node: parent, presets};
+  });
+  const selectors = scopes.flatMap(({path, presets}) => presets.map(({key}) => `${path}.${key}`));
+  const context = scopes.map(({path: parentPath, node: parent, presets}) => {
+    const inheritedDefault = project(parent.default, path.slice(parentPath.length + 1).split('.'));
+    const selections = Object.fromEntries(
+      selectors.flatMap((selector) => {
+        if (!selector.startsWith(`${parentPath}.`)) return [];
+        const value = project(parent.default, selector.slice(parentPath.length + 1).split('.'));
+        return value === undefined ? [] : [[selector, value]];
+      }),
+    );
     return {
       path: parentPath,
       ...(parent.required !== undefined ? {required: parent.required} : {}),
       nullable: parent.shape?.nullable ?? false,
       ...(inheritedDefault !== undefined ? {default: inheritedDefault} : {}),
       ...(presets.length ? {presets} : {}),
+      ...(Object.keys(selections).length ? {selections} : {}),
     };
   });
   return semanticConfig({path, key: node, context});

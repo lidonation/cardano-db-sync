@@ -881,3 +881,38 @@ it('does not let a valid config path excuse a nonexistent SQL column', () => {
   );
   expect(result.errors.join('\n')).toContain('body references unknown column tx_out.force_tx_in');
 });
+
+it('locks preset selection inside ancestor defaults, including outer object defaults', () => {
+  const cfg = {
+    config: {
+      keys: [
+        {
+          name: 'outer',
+          required: false,
+          default: {options: {preset: 'full'}},
+          shape: {
+            keys: [
+              {
+                name: 'options',
+                required: false,
+                default: {preset: 'full'},
+                shape: {
+                  keys: [{name: 'flag', required: false, shape: {type: 'boolean'}}],
+                  presets: [{key: 'preset', values: {full: {flag: true}, minimal: {flag: false}}}],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  };
+  const source = guide('', 'requires:\n  config: [options.flag]');
+  const lock = evaluateGuide('a.md', source, schema, cfg).lock;
+  const outer = structuredClone(cfg);
+  outer.config.keys[0].default.options.preset = 'minimal';
+  expect(evaluateGuide('a.md', source, schema, outer, lock).changes).toHaveLength(1);
+  const inner = structuredClone(cfg);
+  inner.config.keys[0].shape.keys[0].default.preset = 'minimal';
+  expect(evaluateGuide('a.md', source, schema, inner, lock).changes).toHaveLength(1);
+});
