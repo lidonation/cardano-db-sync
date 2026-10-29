@@ -44,7 +44,7 @@ async function run(args) {
     );
     child.once('error', reject);
     child.once('exit', (code) =>
-      code === 0 ? resolve() : reject(new Error(`Docusaurus exited ${code}`)),
+      code === 0 || interrupted ? resolve() : reject(new Error(`Docusaurus exited ${code}`)),
     );
   });
 }
@@ -55,13 +55,15 @@ try {
   });
   await symlink(path.join(root, 'node_modules'), path.join(site, 'node_modules'), 'dir');
   await cp(
-    path.join(root, '../cardano-db-sync/CHANGELOG.md'),
+    path.join(root, '..', 'cardano-db-sync', 'CHANGELOG.md'),
     path.join(temporary, 'cardano-db-sync/CHANGELOG.md'),
     {recursive: true},
   );
   await run(['docs:version', '13.6.0.5']);
   await run(['build', '--locale', 'en', '--out-dir', 'build/dev']);
   await run(['serve', '--dir', 'build/dev', '--host', '127.0.0.1', '--port', port, '--no-open']);
+} catch (error) {
+  if (!interrupted) throw error;
 } finally {
   await rm(temporary, {recursive: true, force: true});
 }
