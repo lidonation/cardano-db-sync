@@ -14,6 +14,23 @@ turn off some of these features, especially the most expensive ones in terms of 
 Starting with db-sync 13.3.0.0, customizing features is done in the standard db-sync configuration
 file (`db-sync-config.json` or `db-sync-config.yaml`).
 
+## Runtime option migration
+
+`insert_options.json_type is retired` is a startup error, including for `text`, `jsonb`
+and `disable`. Remove that key. Use `remove_jsonb_from_schema` to choose text columns
+(`enable`) or JSONB columns (`disable`, the default); JSON payload insertion is not
+independently disabled. Conversion of an existing schema runs at startup and can take time.
+
+The retired `--disable-in-out` switch is also rejected before startup. Set
+`insert_options.tx_out.value` to `disable` instead, including when migrating a command
+that supplied both the switch and explicit output settings.
+
+Set stake-address, policy and script selections before syncing a fresh database. The same
+selections, regardless of ordering or duplicates, can be used on restart. Adding, changing
+or removing a selection on a populated database requires a fresh database and replay.
+Do not run older db-sync binaries against a selectively indexed database: they do not
+enforce the selections.
+
 ## Simple Example
 
 Below is a sample `insert_options` section that shows the recommended defaults:
@@ -43,7 +60,7 @@ Below is a sample `insert_options` section that shows the recommended defaults:
     "governance": "enable",
     "offchain_pool_data": "disable",
     "offchain_vote_data": "disable",
-    "json_type": "text",
+    "remove_jsonb_from_schema": "disable",
     "disable_epoch": false
   }
 }
@@ -76,7 +93,7 @@ Below is a sample `insert_options` section that shows the recommended defaults:
 
 ## Preset
 
-Preset is an aggregate setting that overrides all other properties. For example, setting
+Preset supplies base settings; explicit sibling properties override it. For example, setting
 preset to `"full"` will enable all insert options except `"tx_cbor"`, `"offchain_pool_data"`,
 and `"offchain_vote_data"` (the last two default to `"disable"` since 13.7.0.1).
 
@@ -120,7 +137,7 @@ This is equivalent to setting:
 "offchain_pool_data": "disable",
 "offchain_vote_data": "disable",
 "pool_stat": "enable",
-"json_type": "text"
+"remove_jsonb_from_schema": "disable"
 ```
 
 `offchain_pool_data` and `offchain_vote_data` default to `"disable"` since 13.7.0.1 - set
@@ -448,6 +465,14 @@ are always inserted regardless of this setting.
 
  * Type: `boolean`
 
+### Stake Addresses
+
+An optional non-empty `shelley.stake_addresses` array selects valid bech32 stake accounts
+for stake registrations, deregistrations, stake-pool delegations, MIR recipients and withdrawals.
+Required identity rows, epoch stake, rewards and independently governed Conway vote delegations
+are not filtered. Pool certificates, parameter proposals and MIR pot transfers are also independent.
+An absent list retains all accounts; `enable: false` retains its existing disabled behavior.
+
 ## Multi Asset
 
 `multi_asset`
@@ -467,6 +492,13 @@ Enables or disables multi assets tables and entries.
 `multi_asset.enable`
 
  * Type: `boolean`
+
+### Policies
+
+An optional non-empty `multi_asset.policies` array selects 28-byte policy IDs encoded as
+56 hexadecimal characters. Only matching mint and output-asset rows are inserted, in both
+output schemas. The selection does not restrict scripts or redeemers. An absent list retains
+all policies; `enable: false` disables multi-asset rows.
 
 ## Metadata
 
@@ -516,6 +548,14 @@ Enables or disables most tables and entries related to plutus and scripts.
 `plutus.enable`
 
  * Type: `boolean`
+
+### Script Hashes
+
+An optional non-empty `plutus.script_hashes` array selects 28-byte script hashes encoded as
+56 hexadecimal characters. This applies to witness, auxiliary and reference scripts. Datums,
+redeemers, collateral and reference inputs remain independently retained; excluded reference
+scripts leave null reference-script IDs rather than broken links. An absent list retains all
+scripts; `enable: false` retains its existing disabled behavior.
 
 ## Governance
 

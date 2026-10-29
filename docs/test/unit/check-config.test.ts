@@ -558,3 +558,29 @@ describe('check:config gate (CON-4)', () => {
     expect(await main(docs, quiet)).toBe(1);
   });
 });
+
+describe('runtime option migration guidance', () => {
+  it('keeps the recommended and full configuration examples accepted by the runtime schema', async () => {
+    const guide = await fs.readFile(path.resolve(DOCS_ROOT, '../doc/configuration.md'), 'utf8');
+    const blocks = [...guide.matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map((match) =>
+      match[1].replace(/^\s*\/\/.*$/gm, ''),
+    );
+    const recommended = JSON.parse(blocks[0]);
+    const full = {insert_options: JSON.parse(`{${blocks[1]}}`)};
+    expect(validateWizardOutput(recommended)).toEqual([]);
+    expect(validateWizardOutput(full)).toEqual([]);
+    expect(guide).toContain('fresh database');
+    expect(guide).toContain('json_type is retired');
+  });
+
+  it('describes the old CLI switch as rejected, not as an effective option', async () => {
+    const guide = await fs.readFile(
+      path.resolve(DOCS_ROOT, '../doc/command-line-options.md'),
+      'utf8',
+    );
+    const line = guide.split('\n').find((text) => text.includes('`--disable-in-out`'));
+    expect(line).toContain('retired');
+    expect(line).toContain('tx_out.value');
+    expect(line).not.toContain('Disables');
+  });
+});
