@@ -208,3 +208,36 @@ test('empty tools fixture names the state and offers recovery without accessibil
     .analyze();
   expect(results.violations).toEqual([]);
 });
+
+test('activity ranges change the chart, summary and table with the keyboard', async ({page}) => {
+  await open(page, 1440);
+  const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
+  const tabs = section.getByRole('tablist');
+  const selected = tabs.getByRole('tab', {name: '12 months'});
+  await expect(selected).toHaveAttribute('aria-selected', 'true');
+  await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(12);
+  await selected.focus();
+  await page.keyboard.press('ArrowRight');
+  await expect(tabs.getByRole('tab', {name: '30 days'})).toHaveAttribute('aria-selected', 'true');
+  await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(30);
+  await expect(section.locator('[role=tabpanel]:visible [id^=code-summary]')).toContainText('30');
+  await page.keyboard.press('ArrowRight');
+  await expect(section.locator('[role=tabpanel]:visible tbody tr')).toHaveCount(7);
+  await expect(section.locator('[role=tabpanel]:visible [id^=code-summary]')).toContainText('7');
+});
+
+test('heatmap weekly table agrees with its day cells', async ({page}) => {
+  await open(page, 1440);
+  const section = page.locator('section[aria-labelledby="ecosystem-activity-title"]');
+  const cells = await section.locator('[data-week][data-count]').evaluateAll((nodes) => {
+    const sums = Array.from({length: 52}, () => 0);
+    nodes.forEach((node) => {
+      sums[Number(node.getAttribute('data-week'))] += Number(node.getAttribute('data-count'));
+    });
+    return sums;
+  });
+  const table = await section.locator('tbody tr td').allTextContents();
+  expect(table.map(Number)).toEqual(cells);
+  expect(cells).toHaveLength(52);
+  await expect(section.locator('[data-week][data-count]')).toHaveCount(364);
+});

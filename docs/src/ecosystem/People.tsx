@@ -9,6 +9,7 @@ import Eyebrow from '../landing/Eyebrow';
 import layout from '../landing/styles.module.css';
 import {CORE_TEAM} from './entries';
 import styles from './people.module.css';
+import ActivityCharts from './ActivityCharts';
 
 type Translate = (message: PageMessage) => string;
 function Face({person, core = false}: {person: Contributor; core?: boolean}) {
@@ -143,6 +144,7 @@ export function RepositoryPeople({state, t}: {state: RepositoryState; t: Transla
           </table>
         </div>
       </section>
+      <ActivityCharts data={data.charts} t={t} />
       <section className={layout.section} aria-labelledby="ecosystem-people">
         <div className={layout.inner}>
           <Eyebrow>{t({id: 'ecosystem.people.eyebrow', message: 'the people'})}</Eyebrow>
