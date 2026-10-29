@@ -256,13 +256,23 @@ docker run \
 Start `cardano-smash-server` for local testing. Supply `SMASH_PASSWORD` from an approved secret
 mechanism, not a literal in shell history. Environment variables are visible to container
 administrators. The example binds the port to loopback; protect administrative access with TLS
-and network controls before exposing it remotely.
+and network controls before exposing it remotely. The entrypoint writes its administrator CSV
+under `/configuration`, so prepare a private writable directory for it. Load and export
+`SMASH_PASSWORD` through your approved secret mechanism before running either example:
+
+```bash
+: "${SMASH_PASSWORD:?Load an approved SMASH password before starting}"
+export SMASH_PASSWORD
+mkdir -p smash-config
+chmod 700 smash-config
+```
 
 ```bash
 docker run \
   --network cardano-db-sync_postgres \
   --env PGPASSFILE=/run/secrets/pgpass \
   --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
+  --volume "$PWD/smash-config:/configuration" \
   --env NETWORK=mainnet \
   --env POSTGRES_HOST=postgres \
   --env POSTGRES_PORT=5432 \
@@ -328,13 +338,16 @@ configuration.
 
 ```bash
 docker run \
+  --env SMASH_USER=smash-admin \
+  --env SMASH_PASSWORD \
   --network cardano-db-sync_postgres \
   --env PGPASSFILE=/run/secrets/pgpass \
   --volume "$PWD/pgpass:/run/secrets/pgpass:ro" \
+  --volume "$PWD/smash-config:/configuration" \
   --volume cardano-db-sync_node-ipc:/node-ipc:ro \
   --volume $PWD/environments/mainnet:/config \
   ghcr.io/intersectmbo/cardano-smash-server:13.7.2.1 \
-  --config /config/db-sync-config.json --port 3100
+  --config /config/db-sync-config.json --port 3100 --admins /configuration/admins.csv
 ```
 
 ## Building
