@@ -122,3 +122,8 @@ shows an explicit unavailable state. The snapshot date is displayed. Revisit #10
 if the public endpoint becomes unreliable. Weekly rebuilds require installing the existing
 weekly-dispatch workflow on the default branch as described above; a release-branch schedule alone
 cannot fire.
+
+Anonymous roadmap retrieval has a 60-second snapshot deadline, a 15-second per-request
+limit, a 5 MiB decoded response-body limit and a 20 MiB cumulative body limit. These
+limits include all pagination; exceeding one takes the same last-good-cache or unavailable
+path as a failed request, rather than keeping a build waiting on an unstable endpoint.

@@ -144,3 +144,57 @@ it('rejects oversized source bodies and falls back to the validated snapshot', a
     ),
   ).toEqual({status: 'available', data});
 });
+
+it('stops pagination when the shared deadline expires and preserves cache fallback', async () => {
+  const {readPages} = await import('../../plugins/roadmap/source');
+  const controller = new AbortController();
+  const data = transform(fixture.fields, fixture.pages, '2026-10-29T00:00:00.000Z');
+  let calls = 0;
+  const send: typeof fetch = async (_url, init) => {
+    if (++calls === 2) controller.abort(new Error('snapshot deadline'));
+    expect(init?.signal?.aborted).toBe(calls === 2);
+    return new Response(JSON.stringify(fixture.pages[calls - 1]));
+  };
+  const fresh = async () => {
+    await readPages(send, {signal: controller.signal, remainingBytes: 20 * 1024 * 1024});
+    return data;
+  };
+  expect(await resolveRoadmap(fresh, async () => data)).toEqual({status: 'available', data});
+  expect(calls).toBe(2);
+});
+
+it('cancels a chunked oversized body before reading the rest', async () => {
+  const {readPages} = await import('../../plugins/roadmap/source');
+  let cancelled = false;
+  let chunks = 0;
+  const send: typeof fetch = async () =>
+    new Response(
+      new ReadableStream({
+        pull(controller) {
+          chunks++;
+          controller.enqueue(new Uint8Array(2 * 1024 * 1024));
+        },
+        cancel() {
+          cancelled = true;
+        },
+      }),
+    );
+  await expect(readPages(send)).rejects.toThrow('Roadmap response exceeds size limit');
+  expect(cancelled).toBe(true);
+  // Streams may prefetch one chunk; no more than 8 MiB is ever consumed or queued.
+  expect(chunks).toBeLessThanOrEqual(4);
+});
+
+it('limits the cumulative bytes across otherwise individually small pages', async () => {
+  const {readPages} = await import('../../plugins/roadmap/source');
+  let calls = 0;
+  const send: typeof fetch = async () =>
+    new Response(
+      JSON.stringify({
+        pageInfo: {hasNextPage: true, endCursor: String(++calls)},
+        padding: ' '.repeat(1024 * 1024),
+      }),
+    );
+  await expect(readPages(send)).rejects.toThrow('Roadmap response exceeds size limit');
+  expect(calls).toBe(20);
+});
