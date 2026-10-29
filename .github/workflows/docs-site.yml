@@ -144,6 +144,15 @@ jobs:
           fetch-depth: 0
           path: upstream-cardano-db-sync
           persist-credentials: false
+      - name: Restore roadmap cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: docs/.cache/roadmap
+          key: roadmap-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+          restore-keys: |
+            roadmap-v1-${{ runner.os }}-
       - name: Restore repository activity cache
         uses: actions/cache@v4
         continue-on-error: true
@@ -287,6 +296,15 @@ jobs:
           fetch-depth: 0
           path: upstream-cardano-db-sync
           persist-credentials: false
+      - name: Restore roadmap cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: docs/.cache/roadmap
+          key: roadmap-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+          restore-keys: |
+            roadmap-v1-${{ runner.os }}-
       - name: Restore repository activity cache
         uses: actions/cache@v4
         continue-on-error: true
@@ -335,6 +353,15 @@ jobs:
           fetch-depth: 0
           path: upstream-cardano-db-sync
           persist-credentials: false
+      - name: Restore roadmap cache
+        uses: actions/cache@v4
+        continue-on-error: true
+        timeout-minutes: 3
+        with:
+          path: docs/.cache/roadmap
+          key: roadmap-v1-${{ runner.os }}-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}
+          restore-keys: |
+            roadmap-v1-${{ runner.os }}-
       - name: Restore repository activity cache
         uses: actions/cache@v4
         continue-on-error: true

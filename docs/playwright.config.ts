@@ -32,7 +32,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: `npx cross-env ${INVENTORY_ENV_VAR}=1 DOCS_PROFILE=dev REPOSITORY_ACTIVITY_CACHE=test/fixtures/repository-activity docusaurus start --port ${PORT} --host 127.0.0.1 --no-open`,
+    command: `npx cross-env ${INVENTORY_ENV_VAR}=1 DOCS_PROFILE=dev REPOSITORY_ACTIVITY_CACHE=test/fixtures/repository-activity ROADMAP_OFFLINE=1 ROADMAP_CACHE=test/fixtures/roadmap-cache docusaurus start --port ${PORT} --host 127.0.0.1 --no-open`,
     url: INVENTORY_URL,
     reuseExistingServer: false,
     timeout: 240_000,

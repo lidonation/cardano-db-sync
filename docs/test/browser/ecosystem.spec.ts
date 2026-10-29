@@ -271,6 +271,37 @@ test('empty tools fixture names the state and offers recovery without accessibil
   expect(results.violations).toEqual([]);
 });
 
+for (const palette of ['light', 'dark', 'cream', 'navy']) {
+  test(`roadmap data and accessible table in ${palette}`, async ({page}) => {
+    await open(page, 1440, palette);
+    const section = page.locator('section[aria-labelledby="roadmap"]');
+    if (!test.info().project.use.baseURL) {
+      await expect(section).toContainText('108 tracked items');
+      await expect(section).toContainText('11 of 12 done');
+      await expect(section).toContainText('21 of 22 tracked performance items');
+      await expect(section.locator('progress')).toHaveCount(4);
+      await expect(section.locator('table tbody tr')).toHaveCount(4);
+      await expect(section).toContainText('2026-10-29');
+    } else if (await section.getByText('Roadmap data is unavailable in this build.').count()) {
+      await expect(section.locator('progress')).toHaveCount(0);
+    } else {
+      await expect(section).toContainText('tracked items');
+      await expect(section.locator('time')).toHaveCount(1);
+      const count = await section.locator('progress').count();
+      await expect(section.locator('table tbody tr')).toHaveCount(count);
+    }
+    await expect(page.locator('footer').getByRole('link', {name: 'Roadmap'})).toHaveAttribute(
+      'href',
+      /ecosystem#roadmap$/,
+    );
+    const results = await new AxeBuilder({page})
+      .include('section[aria-labelledby="roadmap"]')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(results.violations).toEqual([]);
+  });
+}
+
 test('activity ranges change the chart, summary and table with the keyboard', async ({page}) => {
   requireRepositoryFixture();
   await open(page, 1440);

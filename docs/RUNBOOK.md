@@ -102,3 +102,28 @@ The plugin exposes the full location-free snapshot at
 `@generated/repository-activity/default/history.json` for build-time chart and activity
 consumers; the Ecosystem page imports only the compact summary. Aggregate history before
 shipping future charts so the site stays within its existing payload limits.
+
+### Roadmap project snapshot (B55)
+
+On 2026-10-29 the public project 8 page exposed an exact total of 108 and status groups
+(3 unset, 1 In Progress, 104 Done). Its HTML contained only 29 records; the Done group
+indicated more pages. Its anonymous `memexes/6909988/paginated_items` JSON endpoint returned
+100 and 8 records using `after` cursors. As a one-time cross-check, the 108 distinct items
+were compared by content ID to all pages of GitHub's authenticated `projectV2` GraphQL API:
+Status, Performance and Release Planned agreed for every item. The objective totals were
+Sync speed 11/12, Memory 5/5, Modularity 4/4 and Disk space 1/1.
+
+This endpoint and the page's embedded JSON are undocumented and may change. The build does not
+send a credential to it. It validates field definitions and each value, page cursors, exact totals,
+unique item IDs and the status groups; an inconsistency is rejected. This is not a transactional
+snapshot: a concurrent change that preserves all checked totals could still escape detection. If
+retrieval fails or the format changes, the last valid Actions cache is used; without one, the page
+shows an explicit unavailable state. The snapshot date is displayed. Revisit #101 with Intersect
+if the public endpoint becomes unreliable. Weekly rebuilds require installing the existing
+weekly-dispatch workflow on the default branch as described above; a release-branch schedule alone
+cannot fire.
+
+Anonymous roadmap retrieval has a 60-second snapshot deadline, a 15-second per-request
+limit, a 5 MiB decoded response-body limit and a 20 MiB cumulative body limit. These
+limits include all pagination; exceeding one takes the same last-good-cache or unavailable
+path as a failed request, rather than keeping a build waiting on an unstable endpoint.

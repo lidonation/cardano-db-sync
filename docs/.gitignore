@@ -20,5 +20,8 @@
 # Build-time repository activity cache
 /.cache/repository-activity
 
+# Build-time public roadmap cache
+/.cache/roadmap
+
 # Deterministic browser builds, separate from uploaded profiles
 /.cache/browser-fixtures

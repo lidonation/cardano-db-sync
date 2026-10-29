@@ -628,15 +628,25 @@ test('every built surface has a chrome menu destination; unbuilt routes stay hid
   const base = PROFILES[profile].baseUrl.replace(/\/$/, '');
   const menu = page.locator('[data-dbs-component="Navbar / Full"] nav a, footer nav a');
   const hrefs = await menu.evaluateAll((links) =>
-    links.map((link) => new URL((link as HTMLAnchorElement).href).pathname.replace(/\/$/, '')),
+    links.map((link) => {
+      const url = new URL((link as HTMLAnchorElement).href);
+      return url.pathname.replace(/\/$/, '') + url.hash;
+    }),
   );
   for (const surface of Object.values(SURFACES)) {
-    const response = await page.request.get(`${base}${surface}/`);
-    if (response.status() === 200) expect(hrefs).toContain(`${base}${surface}`);
+    const [path, fragment] = surface.split('#');
+    const response = await page.request.get(`${base}${path}/`);
+    if (response.status() === 200) {
+      expect(hrefs).toContain(`${base}${surface}`);
+      if (fragment) {
+        await page.goto(`${base}${surface}`);
+        await expect(page.locator(`[id="${fragment}"]`)).toHaveCount(1);
+      }
+    }
   }
   for (const item of [...NAVBAR_MENU, ...FOOTER_MENU.flatMap((column) => column.items)]) {
     if (!item.href.startsWith('/')) continue;
-    const response = await page.request.get(`${base}${item.href}/`);
+    const response = await page.request.get(`${base}${item.href.split('#')[0]}/`);
     expect(hrefs.includes(`${base}${item.href}`)).toBe(response.status() === 200);
   }
 });

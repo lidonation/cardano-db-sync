@@ -51,3 +51,27 @@ describe('repository activity CI', () => {
     expect(scheduler.jobs.dispatch.steps[0].run).toContain('ref=release/community-site');
   });
 });
+
+it('restores the roadmap cache in every build or deployment without making cache errors fatal', () => {
+  const workflow = yaml.load(
+    readFileSync(path.resolve('../.github/workflows/docs-site.yml'), 'utf8'),
+  ) as {
+    jobs: Record<
+      string,
+      {
+        steps: {
+          name?: string;
+          uses?: string;
+          with?: Record<string, unknown>;
+          'continue-on-error'?: boolean;
+        }[];
+      }
+    >;
+  };
+  for (const job of ['build', 'deploy-dev', 'deploy-production']) {
+    const cache = workflow.jobs[job].steps.find((step) => step.name === 'Restore roadmap cache');
+    expect(cache?.uses).toBe('actions/cache@v4');
+    expect(cache?.with?.path).toBe('docs/.cache/roadmap');
+    expect(cache?.['continue-on-error']).toBe(true);
+  }
+});
