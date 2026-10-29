@@ -13,6 +13,13 @@ import {smallTargets} from './audits';
  */
 const english = ({message}: {message: string}) => message;
 
+function requireRepositoryFixture() {
+  test.skip(
+    Boolean(test.info().project.use.baseURL) && process.env.DBS_REPOSITORY_FIXTURE_BUILT !== '1',
+    'Repository fixture not included in this build',
+  );
+}
+
 async function open(page: Page, width: number, palette = 'light') {
   await page.setViewportSize({width, height: 900});
   await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
@@ -98,7 +105,7 @@ test.describe('content', () => {
   });
 
   test('repository figures, people and country table come from the fixture', async ({page}) => {
-    test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
+    requireRepositoryFixture();
     await page.route('**/repository-avatars/*.png', async (route) => {
       await route.fulfill({
         path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
@@ -109,7 +116,8 @@ test.describe('content', () => {
     page.on('request', (request) => {
       if (
         request.resourceType() === 'image' &&
-        new URL(request.url()).origin !== new URL(SITE_URL).origin
+        new URL(request.url()).origin !==
+          new URL(test.info().project.use.baseURL ?? SITE_URL).origin
       )
         externalImages.push(request.url());
     });
@@ -211,7 +219,7 @@ test('empty tools fixture names the state and offers recovery without accessibil
 });
 
 test('activity ranges change the chart, summary and table with the keyboard', async ({page}) => {
-  test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
+  requireRepositoryFixture();
   await open(page, 1440);
   const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
   const tabs = section.getByRole('tablist');
@@ -234,7 +242,7 @@ test('activity ranges change the chart, summary and table with the keyboard', as
 });
 
 test('heatmap weekly table agrees with its day cells', async ({page}) => {
-  test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
+  requireRepositoryFixture();
   await open(page, 1440);
   const section = page.locator('section[aria-labelledby="ecosystem-activity-title"]');
   const cells = await section.locator('[data-week][data-count]').evaluateAll((nodes) => {
@@ -252,7 +260,7 @@ test('heatmap weekly table agrees with its day cells', async ({page}) => {
 
 for (const palette of ['light', 'dark', 'cream', 'navy']) {
   test(`each activity range is accessible in ${palette}`, async ({page}) => {
-    test.skip(Boolean(test.info().project.use.baseURL), 'Repository fixture is development-only');
+    requireRepositoryFixture();
     await open(page, 375, palette);
     const section = page.locator('section[aria-labelledby="ecosystem-code-title"]');
     for (const name of ['12 months', '30 days', '7 days']) {
