@@ -2,7 +2,6 @@ import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
 import {SITE_URL} from '../../playwright.config';
-import {loadReleaseHistory} from '../../src/data/release-history';
 import {teams, tools} from '../../src/ecosystem/entries';
 
 import {smallTargets} from './audits';
@@ -98,18 +97,41 @@ test.describe('content', () => {
     );
   });
 
-  test('the facts strip shows the committed changelog', async ({page}) => {
+  test('repository figures, people and country table come from the fixture', async ({page}) => {
+    await page.route('**/repository-avatars/*.png', async (route) => {
+      await route.fulfill({
+        path: 'test/fixtures/repository-activity/avatars/' + 'c'.repeat(64) + '.png',
+        contentType: 'image/png',
+      });
+    });
+    const externalImages: string[] = [];
+    page.on('request', (request) => {
+      if (
+        request.resourceType() === 'image' &&
+        new URL(request.url()).origin !== new URL(SITE_URL).origin
+      )
+        externalImages.push(request.url());
+    });
     await open(page, 1440);
-    const history = loadReleaseHistory();
-    const values = await page
-      .locator('section[aria-labelledby="ecosystem-facts"] [data-dbs-component="Metric"]')
-      .evaluateAll((items) => items.map((item) => item.firstElementChild?.textContent));
-    expect(values).toEqual([
-      String(history.releases),
-      history.latest,
-      String(history.since),
-      String(tools(english).filter((tool) => tool.kind === 'built-on').length),
-    ]);
+    const facts = page.locator(
+      'section[aria-labelledby="ecosystem-facts"] [data-dbs-component="Metric"]',
+    );
+    await expect(facts).toHaveCount(5);
+    expect(
+      await facts.evaluateAll((nodes) => nodes.map((node) => node.firstElementChild?.textContent)),
+    ).toEqual(['2', '1', '17', '2', '5']);
+    await expect(page.locator('#ecosystem-title')).toContainText('Built by 2 people.');
+    await expect(page.locator('section[aria-labelledby="ecosystem-origins"] table')).toContainText(
+      'Kenya',
+    );
+    await expect(page.locator('section[aria-labelledby="ecosystem-origins"] table')).toContainText(
+      'Unknown',
+    );
+    await expect(
+      page.locator('section[aria-labelledby="ecosystem-people"] [data-dbs-component="Avatar"]'),
+    ).toHaveCount(7);
+    await expect(page.locator('section[aria-labelledby="ecosystem-people"] img')).toHaveCount(1);
+    expect(externalImages).toEqual([]);
   });
 
   test('the navbar marks Ecosystem as the current page', async ({page}) => {

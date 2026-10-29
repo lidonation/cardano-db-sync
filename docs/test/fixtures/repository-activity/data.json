@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "builtAt": "2026-06-01T00:00:00.000Z",
+  "firstCommit": "2020-07-01",
+  "commits": [
+    {
+      "sha": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      "date": "2025-06-01",
+      "subject": "first",
+      "author": "Erik"
+    },
+    {
+      "sha": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "date": "2020-07-01",
+      "subject": "initial",
+      "author": "Other"
+    }
+  ],
+  "contributors": [
+    {
+      "login": "erikd",
+      "name": "Erik",
+      "commits": 1,
+      "avatar": "/repository-avatars/cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc.png"
+    },
+    {
+      "login": "alice",
+      "name": "Alice",
+      "commits": 1,
+      "avatar": null
+    }
+  ],
+  "dailyLines": [
+    {
+      "date": "2020-07-01",
+      "haskell": 12,
+      "sql": 2,
+      "nix": -1,
+      "cabal": 1,
+      "docs": 3
+    }
+  ],
+  "countries": [
+    {
+      "country": "Kenya",
+      "count": 1
+    }
+  ],
+  "unknownCountries": 1
+}

@@ -85,3 +85,20 @@ failed` issue opens.
 | Per-locale asset budget   | Docs CI, `check:budget` (PERF-1)        |
 
 B38 replaces the asset budget's placeholder limits with the specification's.
+
+### Weekly repository activity refresh (B52)
+
+GitHub only runs scheduled workflow definitions from the default branch. Once the B52
+change is merged into `release/community-site`, copy `.github/workflows/docs-weekly-dispatch.yml`
+to the fork's default branch as `.github/workflows/docs-site.yml` via its normal review process.
+That name registers the workflow on the default branch, which GitHub requires for dispatch. Its
+weekly schedule dispatches `docs-site.yml` at `release/community-site`; that run executes the
+docs gate and deploys the developer profile in the release branch's cache scope. Merely adding `schedule` on the release branch does not enable a schedule. The workflow
+checks out upstream `master` with full history and caches the last good public data and local
+avatar assets. When the checkout or GitHub API is unavailable, builds use the last valid cache;
+without one, the page names the data as unavailable. No profile locations or emails are stored in
+the cache. Routine `docs/` changes continue to trigger the existing push workflow.
+The plugin exposes the full location-free snapshot at
+`@generated/repository-activity/default/history.json` for build-time chart and activity
+consumers; the Ecosystem page imports only the compact summary. Aggregate history before
+shipping future charts so the site stays within its existing payload limits.

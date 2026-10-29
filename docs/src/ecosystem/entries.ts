@@ -175,3 +175,13 @@ export function teams(translate: Translate): readonly Team[] {
     },
   ];
 }
+
+/** Curated core-team logins; membership and optional roles are editorial, counts are measured. */
+export const CORE_TEAM = [
+  {login: 'erikd'},
+  {login: 'kderme'},
+  {login: 'sgillespie'},
+  {login: 'Cmdv'},
+  {login: 'ArturWieczorek'},
+  {login: 'profd2004', role: 'Community Maintainer'},
+] as const;

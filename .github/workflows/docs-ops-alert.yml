@@ -13,6 +13,11 @@ on:
         required: true
         type: string
 
+      ref:
+        description: Branch to check out for the alert script (defaults to the calling ref).
+        required: false
+        type: string
+
 permissions:
   contents: read
   issues: write
@@ -24,6 +29,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
+          ref: ${{ inputs.ref || github.ref }}
           sparse-checkout: docs/scripts
       - uses: actions/setup-node@v4
         with:

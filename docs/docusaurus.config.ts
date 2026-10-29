@@ -1,4 +1,5 @@
 import surveyResultsPlugin from './plugins/survey-results';
+import repositoryActivityPlugin from './plugins/repository-activity';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
@@ -110,6 +111,7 @@ const config: Config = {
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
     surveyResultsPlugin,
+    repositoryActivityPlugin,
     cnamePlugin,
     routeManifestPlugin,
     environmentPlugin,

@@ -7,12 +7,10 @@ import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
 import Button from '../components/Button';
 import {TeamCard, ToolCard} from '../components/Card';
-import Metric from '../components/Metric';
 import Tag from '../components/Tag';
 import Icon from '../components/shared/Icon';
 import {EmptyState} from '../components/shared/Status';
 import {DISCORD_URL, REPO_URL} from '../data/links';
-import type {ReleaseHistory} from '../data/release-history';
 import {SURFACES} from '../data/surfaces';
 import {pageTranslator} from '../i18n/pageTranslator';
 import Eyebrow from '../landing/Eyebrow';
@@ -21,6 +19,8 @@ import styles from '../landing/styles.module.css';
 
 import {teams, tools, toolsView, type Tool} from './entries';
 import {ECOSYSTEM_IDS} from './ids';
+import state from '@generated/repository-activity/default/resolved.json';
+import {RepositoryFacts, RepositoryPeople} from './People';
 
 const NEW_ISSUE = `${REPO_URL}/issues/new/choose`;
 const GOOD_FIRST_ISSUES = `${REPO_URL}/issues?q=is%3Aopen+label%3A%22good+first+issue%22`;
@@ -94,42 +94,32 @@ export function ToolGrid({
 
 /**
  * B44-b — the Ecosystem page, after the design's `Ecosystem` board: the tools built on db-sync,
- * the teams that run it in production, and the ways to join in. The design's contributor,
- * activity and roadmap sections need live repository data and are not built here.
+ * the teams that use it, its build-time contributor snapshot, and the ways to join in.
+ * Activity charts and the roadmap are covered by separate tickets.
  */
 export default function Ecosystem(): React.JSX.Element {
   const t = useEcosystemTranslate();
   const surface = useSurface();
-  const history = useDocusaurusContext().siteConfig.customFields?.releaseHistory as ReleaseHistory;
   const allTools = tools(t);
-  const builtOn = allTools.filter((tool) => tool.kind === 'built-on');
   const allTeams = teams(t);
   const tellUs = surface('survey') ?? NEW_ISSUE;
-  const facts = [
-    {
-      value: history.releases.toLocaleString('en'),
-      label: t({id: 'ecosystem.facts.releases', message: 'releases in the changelog'}),
-    },
-    {
-      value: history.latest,
-      label: t({id: 'ecosystem.facts.latest', message: 'latest release'}),
-    },
-    {
-      value: String(history.since),
-      label: t({id: 'ecosystem.facts.since', message: 'year of the first release'}),
-    },
-    {
-      value: builtOn.length.toLocaleString('en'),
-      label: t({id: 'ecosystem.facts.tools', message: 'tools built on db-sync listed here'}),
-    },
-  ];
   return (
     <div className={styles.landing}>
       <section className={styles.section} aria-labelledby="ecosystem-title">
         <div className={styles.inner}>
           <Eyebrow>{t({id: 'ecosystem.eyebrow', message: 'the ecosystem'})}</Eyebrow>
-          <h1 id="ecosystem-title" className={styles.heading}>
-            {t({id: 'ecosystem.title', message: 'Depended on by the chain'})}
+          <h1 id="ecosystem-title" className={`${styles.heading} ${styles.title}`}>
+            {state.status === 'available' && (
+              <span className={styles.titleLine}>
+                {t({id: 'ecosystem.activity.hero', message: 'Built by {count} people.'}).replace(
+                  '{count}',
+                  String(state.data.contributors.length),
+                )}{' '}
+              </span>
+            )}
+            <span className={styles.titleAccent}>
+              {t({id: 'ecosystem.title', message: 'Depended on by the chain.'})}
+            </span>
           </h1>
           <p className={styles.intro}>
             {t({
@@ -148,18 +138,14 @@ export default function Ecosystem(): React.JSX.Element {
             {t({
               id: 'ecosystem.facts.eyebrow',
               message: 'in this build',
-              description: 'Heading of the strip of facts counted from the changelog and this page',
+              description: 'Heading of the strip of facts counted from repository history',
             })}
           </h2>
-          <ul className={styles.facts}>
-            {facts.map((fact) => (
-              <li key={fact.label}>
-                <Metric value={fact.value} label={fact.label} />
-              </li>
-            ))}
-          </ul>
+          <RepositoryFacts state={state} t={t} />
         </div>
       </section>
+
+      <RepositoryPeople state={state} t={t} />
 
       <section className={styles.section} aria-labelledby="ecosystem-tools">
         <div className={styles.inner}>

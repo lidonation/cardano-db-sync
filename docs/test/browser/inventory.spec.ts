@@ -121,6 +121,22 @@ test.describe('axe, WCAG 2.2 AA', () => {
             }),
         );
         expect(unchecked.filter(Boolean)).toEqual([]);
+        // The theme plate paints its fill on ::before, which axe cannot resolve. Measure its
+        // actual computed text and fill colours at every audited palette and width instead.
+        const plates = await page
+          .locator('#inventory [data-dbs-component="Theme switcher"] button.dbs-control-plate')
+          .evaluateAll((elements) =>
+            elements.map((element) => ({
+              text: getComputedStyle(element).color,
+              fill: getComputedStyle(element, '::before').backgroundColor,
+            })),
+          );
+        expect(plates.length).toBeGreaterThan(0);
+        for (const plate of plates) {
+          const alpha = (plate.fill.match(/[\d.]+/g) ?? []).map(Number)[3] ?? 1;
+          expect(alpha).toBe(1);
+          expect(contrast(plate.text, plate.fill)).toBeGreaterThanOrEqual(4.5);
+        }
         const found = results.violations.flatMap((violation) =>
           violation.nodes.map(
             (node) => `${violation.id}: ${node.target.join(' ')} — ${node.failureSummary}`,

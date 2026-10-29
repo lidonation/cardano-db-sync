@@ -16,3 +16,6 @@
 
 # Crowdin source strings, written by `npm run i18n:sources`
 /i18n/en
+
+# Build-time repository activity cache
+/.cache/repository-activity

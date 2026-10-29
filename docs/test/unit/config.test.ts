@@ -141,9 +141,11 @@ describe('build hygiene', () => {
     const {default: palettePlugin} = await import('../../plugins/palette');
     const {default: cssPrunePlugin} = await import('../../plugins/css-prune');
     const {default: surveyResultsPlugin} = await import('../../plugins/survey-results');
+    const {default: repositoryActivity} = await import('../../plugins/repository-activity');
     const {default: sharedCodePlugin} = await import('../../plugins/shared-code');
     expect(config.plugins).toEqual([
       surveyResultsPlugin,
+      repositoryActivity,
       cnamePlugin,
       routeManifestPlugin,
       environmentPlugin,
