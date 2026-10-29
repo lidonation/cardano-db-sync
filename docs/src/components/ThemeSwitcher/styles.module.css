@@ -8,56 +8,12 @@
 }
 
 .button {
-  display: inline-flex;
-  align-items: center;
-  gap: var(--dbs-space-8);
-  min-block-size: var(--dbs-layout-target-min);
-  min-inline-size: var(--dbs-layout-target-min);
-  padding: 0 var(--dbs-space-12);
-  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
-  border-radius: var(--dbs-radius-md);
-  background: var(--dbs-surface-base);
-  color: var(--dbs-text-primary);
-  cursor: pointer;
-  composes: dbs-type-label from global;
-  white-space: nowrap;
-}
-
-.button:hover {
-  background: var(--dbs-surface-sunken);
-}
-
-.button:active {
-  background: var(--dbs-surface-accent-subtle);
-}
-
-.dot {
-  inline-size: var(--dbs-space-12);
-  block-size: var(--dbs-space-12);
-  flex: none;
-  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
-  border-radius: var(--dbs-radius-pill);
-  background: var(--dbs-surface-sunken);
-}
-
-.dot[data-palette='dark'] {
-  background: var(--dbs-code-surface);
-}
-
-.dot[data-palette='cream'] {
-  background: var(--dbs-surface-warm);
-}
-
-.dot[data-palette='navy'] {
-  background: var(--dbs-brand-intersect-navy);
+  composes: dbs-control-plate dbs-type-label from global;
+  inline-size: var(--dbs-size-chrome-theme-control);
 }
 
 .buttonText {
   color: var(--dbs-text-secondary);
-}
-
-.current {
-  display: none;
 }
 
 .menu {
@@ -102,20 +58,8 @@
   color: var(--dbs-text-primary);
 }
 
-/* xs: the button collapses to its dot so the tools never overlap the wordmark (DF-7).
-   The words leave the screen but stay the button's name via aria-label (A11Y-17). */
+/* The control stays labelled inside the mobile drawer. */
 @media (max-width: 767px) {
-  .button {
-    justify-content: center;
-    min-inline-size: var(--dbs-layout-target-min);
-    padding: 0;
-  }
-
-  .buttonText,
-  .current {
-    display: none;
-  }
-
   .menu {
     position: fixed;
     inset-block-start: var(--dbs-layout-navbar-height);

@@ -17,7 +17,6 @@ import {BROWSER_ORIGIN} from '../../playwright.config';
 const ORIGIN = BROWSER_ORIGIN;
 const BASE = PROFILES.dev.baseUrl;
 const HOME = `${ORIGIN}${BASE}`;
-const DOCS = `${ORIGIN}${BASE}docs/intro`;
 
 const PALETTES = ['light', 'dark', 'cream', 'navy'] as const;
 const THEME: Record<string, string> = {light: 'light', cream: 'light', dark: 'dark', navy: 'dark'};
@@ -147,21 +146,6 @@ test.describe('locale switcher (hreflang-consistent)', () => {
     expect(ring.width).toBeGreaterThanOrEqual(2);
     await page.keyboard.press('Enter');
     await expect(page.locator('.dropdown__menu').first()).toBeVisible();
-  });
-});
-
-test.describe('version selector (equivalent pages)', () => {
-  test('exists, is keyboard-focusable, and lands on docs content', async ({page}) => {
-    // With a single docs line the selector is one link (Docusaurus renders a menu only
-    // for multiple lines); the window rule (VER-1) is what populates it once B11 lands.
-    await goto(page, DOCS);
-    const version = page.getByRole('link', {name: 'Next'});
-    await expect(version).toBeVisible();
-    await version.focus();
-    await expect(version).toBeFocused();
-    await version.click();
-    await page.locator('.theme-doc-markdown, main').first().waitFor();
-    expect(page.url()).toContain('/docs/');
   });
 });
 

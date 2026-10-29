@@ -191,9 +191,7 @@ export default function ThemeSwitcher({
         onClick={() => setOpen(!open)}
         onKeyDown={onButtonKeyDown}
       >
-        <span aria-hidden="true" className={styles.dot} data-palette={palette} />
         <span className={styles.buttonText}>{label}</span>
-        <span className={styles.current}>{currentName}</span>
       </button>
       {open && (
         <ul id={menuId} role="menu" className={styles.menu} aria-label={buttonName}>
