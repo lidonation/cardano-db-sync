@@ -1,4 +1,5 @@
 import {expect, test} from '@playwright/test';
+import AxeBuilder from '@axe-core/playwright';
 
 test('installation methods support roving keyboard focus and activate panels', async ({page}) => {
   await page.goto('docs/guides/installation/');
@@ -43,3 +44,30 @@ test('guide code blocks obey the site CSP before and after highlighting', async 
     page.locator('main .theme-code-block[style], main .theme-code-block [style]'),
   ).toHaveCount(0);
 });
+
+test('links in guide prose remain distinguishable without relying on color', async ({page}) => {
+  await page.goto('docs/intro/');
+  const link = page.getByRole('link', {name: 'installation guide', exact: true});
+  await expect(link).toHaveCSS('text-decoration-line', /underline/);
+});
+
+for (const guide of [
+  'installation',
+  'first-queries',
+  'kubernetes',
+  'monitoring-rollback',
+  'pool-metadata',
+  'restore-from-snapshot',
+  'smash-operations',
+  'trimming',
+  'ubuntu-systemd',
+]) {
+  test(`${guide} guide has no WCAG A/AA violations`, async ({page}) => {
+    await page.goto(`docs/guides/${guide}/`);
+    const result = await new AxeBuilder({page})
+      .include('main')
+      .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
+      .analyze();
+    expect(result.violations).toEqual([]);
+  });
+}
