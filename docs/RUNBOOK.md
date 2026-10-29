@@ -131,7 +131,7 @@ path as a failed request, rather than keeping a build waiting on an unstable end
 ### Headless prose search (B20)
 
 The production and development builds emit one Pagefind 1.5.2 index for each Docusaurus
-`(version, locale)` under the locale's `pagefind/<version>/` directory. Only rendered docs
+`(version, locale)` under the locale's `pagefind/<version>/` directory, with one shared runtime per locale. Only rendered docs
 are indexed, not navigation or redirects. The build fails if indexing fails. The Pagefind UI
 and highlighter are not shipped: the planned search interface consumes the headless API.
 

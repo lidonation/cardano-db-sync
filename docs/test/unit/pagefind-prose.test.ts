@@ -27,6 +27,7 @@ describe('Pagefind prose bundles', () => {
       ],
       create,
       read,
+      compact: async () => {},
     });
     expect(create).toHaveBeenCalledTimes(2);
     expect(add.mock.calls.map(([value]) => value.url)).toEqual([
@@ -61,6 +62,7 @@ describe('Pagefind prose bundles', () => {
         versions: [{versionName: 'current', docs: [{permalink: '/docs/a'}]}],
         create,
         read: async () => '',
+        compact: async () => {},
       }),
     ).rejects.toThrow('bad HTML');
     expect(drop).toHaveBeenCalledOnce();
@@ -138,6 +140,7 @@ describe('build lifecycle and error handling', () => {
       baseUrl: '/',
       versions: version,
       read: async () => '',
+      compact: async () => {},
     };
     await expect(
       indexVersions({...args, create: async () => ({errors: ['create failed']})}),

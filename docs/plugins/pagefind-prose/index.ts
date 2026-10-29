@@ -18,6 +18,29 @@ function check(errors: string[]): void {
   if (errors.length) throw new Error(`Pagefind: ${errors.join('; ')}`);
 }
 
+/** Keep the immutable runtime once per locale; Pagefind workers still resolve each index path. */
+export async function shareRuntime(outputPath: string): Promise<void> {
+  const runtime = path.join(path.dirname(outputPath), '_runtime');
+  await fs.mkdir(runtime, {recursive: true});
+  for (const file of ['pagefind.js', 'pagefind-worker.js']) {
+    const source = await fs.readFile(path.join(outputPath, file));
+    const destination = path.join(runtime, file);
+    try {
+      await fs.writeFile(destination, source, {flag: 'wx'});
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== 'EEXIST') throw error;
+      if (!source.equals(await fs.readFile(destination))) {
+        throw new Error(`Pagefind runtime differs across versions: ${file}`);
+      }
+    }
+  }
+  await fs.rm(path.join(outputPath, 'pagefind.js'));
+  await fs.writeFile(
+    path.join(outputPath, 'pagefind-worker.js'),
+    'importScripts("../_runtime/pagefind-worker.js");\n',
+  );
+}
+
 /** Index the rendered documentation, not navigation, retired redirects, or other versions. */
 export async function indexVersions(options: {
   outDir: string;
@@ -25,8 +48,9 @@ export async function indexVersions(options: {
   versions: readonly Version[];
   create: Create;
   read: (file: string) => Promise<string>;
+  compact?: (outputPath: string) => Promise<void>;
 }): Promise<void> {
-  const {outDir, baseUrl, versions, create, read} = options;
+  const {outDir, baseUrl, versions, create, read, compact = shareRuntime} = options;
   for (const version of versions) {
     const name = versionSegment(version.versionName);
     const result = await create();
@@ -46,6 +70,7 @@ export async function indexVersions(options: {
       }
       const outputPath = path.join(outDir, 'pagefind', name);
       check((await index.writeFiles({outputPath})).errors);
+      await compact(outputPath);
       // Pagefind emits three optional UI implementations and a highlighter by default. This
       // integration is headless; none is loaded, and retaining them breaks the asset budget.
       await Promise.all(

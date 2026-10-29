@@ -38,5 +38,6 @@ export function searchProse(
 
 /** Import the generated runtime only in response to a search, not on page load. */
 export async function loadProseApi(bundle: string): Promise<PagefindApi> {
-  return import(/* webpackIgnore: true */ `${bundle}pagefind.js`) as Promise<PagefindApi>;
+  const runtime = bundle.replace(/[^/]+\/$/, '_runtime/pagefind.js');
+  return import(/* webpackIgnore: true */ runtime) as Promise<PagefindApi>;
 }

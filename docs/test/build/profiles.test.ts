@@ -60,7 +60,8 @@ describe('headless prose indexes (SRCH-10)', () => {
         const bundle = path.join(OUT[profile], prefix, 'pagefind', 'current');
         const entry = JSON.parse(await fs.readFile(path.join(bundle, 'pagefind-entry.json'), 'utf8'));
         expect(entry.languages[locale].page_count).toBeGreaterThan(0);
-        expect(await exists(path.join(bundle, 'pagefind.js'))).toBe(true);
+        expect(await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/pagefind.js'))).toBe(true);
+        expect(await exists(path.join(bundle, 'pagefind.js'))).toBe(false);
         expect(await exists(path.join(bundle, 'pagefind-worker.js'))).toBe(true);
         expect(await exists(path.join(bundle, 'pagefind-ui.js'))).toBe(false);
       });
