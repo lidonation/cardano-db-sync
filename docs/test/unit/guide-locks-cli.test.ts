@@ -306,3 +306,50 @@ it('does not treat variant-map key order as a compatibility change', () => {
   write('guide-locks.json', lock);
   expect(run().status).toBe(0);
 });
+
+it('fails the real gate when an inherited config default changes', () => {
+  mkdirSync(path.join(root, 'generated'), {recursive: true});
+  mkdirSync(path.join(root, 'docs/guides'), {recursive: true});
+  const schema = {tables: []};
+  const config = {
+    config: {
+      keys: [
+        {
+          name: 'options',
+          required: false,
+          default: {flag: false},
+          shape: {
+            type: 'object',
+            haskell: 'Options',
+            line: 1,
+            keys: [{name: 'flag', required: false, shape: {type: 'boolean'}}],
+          },
+        },
+      ],
+    },
+  };
+  const write = (file: string, value: unknown) =>
+    writeFileSync(path.join(root, 'generated', file), JSON.stringify(value));
+  write('schema.json', schema);
+  write('config-schema.json', config);
+  write('versions.json', {versions: [{tag: 'v1'}]});
+  write('guide-history.json', packHistory({versions: [{tag: 'v1', schema, config}]}));
+  writeFileSync(
+    path.join(root, 'docs/guides/config.md'),
+    '---\nrequires:\n  config: [options.flag]\n---\nBody\n',
+  );
+  const run = (...args: string[]) =>
+    spawnSync(process.execPath, [path.resolve('scripts/check-guide-locks.mjs'), ...args], {
+      cwd: root,
+      encoding: 'utf8',
+    });
+  expect(run('--update').status).toBe(0);
+  expect(run().status).toBe(0);
+  config.config.keys[0].default.flag = true;
+  write('config-schema.json', config);
+  const failed = run();
+  expect(failed.status).toBe(1);
+  expect(failed.stderr).toContain('docs/guides/config.md');
+  expect(failed.stderr).toContain('"default":false');
+  expect(failed.stderr).toContain('"default":true');
+});

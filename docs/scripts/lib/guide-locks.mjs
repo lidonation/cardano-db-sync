@@ -26,6 +26,38 @@ function semanticConfig(value) {
   return value;
 }
 
+/** Project inherited defaults and preset overrides onto just the declared child path. */
+function configContract(path, node, ancestors) {
+  const project = (value, parts) => {
+    for (const part of parts) {
+      if (!value || typeof value !== 'object' || !Object.hasOwn(value, part)) return undefined;
+      value = value[part];
+    }
+    return value;
+  };
+  const context = ancestors.map(({path: parentPath, node: parent}) => {
+    const parts = path.slice(parentPath.length + 1).split('.');
+    const presets = (parent.shape?.presets ?? []).flatMap(({key, values}) => {
+      const relevant = Object.fromEntries(
+        Object.entries(values).flatMap(([name, overrides]) => {
+          const value = project(overrides, parts);
+          return value === undefined ? [] : [[name, value]];
+        }),
+      );
+      return Object.keys(relevant).length ? [{key, values: relevant}] : [];
+    });
+    const inheritedDefault = project(parent.default, parts);
+    return {
+      path: parentPath,
+      ...(parent.required !== undefined ? {required: parent.required} : {}),
+      nullable: parent.shape?.nullable ?? false,
+      ...(inheritedDefault !== undefined ? {default: inheritedDefault} : {}),
+      ...(presets.length ? {presets} : {}),
+    };
+  });
+  return semanticConfig({path, key: node, context});
+}
+
 /** Evaluate a guide against the current extracted contracts.
  * @param {string} name
  * @param {string} source
@@ -62,11 +94,11 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
   const declared = new Set();
   const tables = schema.tables ?? [];
   const keys = Object.create(null);
-  function visit(nodes, prefix = '') {
+  function visit(nodes, prefix = '', ancestors = []) {
     for (const node of nodes ?? []) {
       const key = prefix ? `${prefix}.${node.name}` : node.name;
-      keys[key] = node;
-      visit(node.shape?.keys, key);
+      keys[key] = {node, ancestors};
+      visit(node.shape?.keys, key, [...ancestors, {path: key, node}]);
     }
   }
   visit(config.config?.keys);
@@ -106,7 +138,8 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
       } else {
         const candidates = Object.keys(keys).filter((key) => key === id || key.endsWith(`.${id}`));
         if (candidates.length === 1) {
-          const contract = semanticConfig(keys[candidates[0]]);
+          const {node, ancestors} = keys[candidates[0]];
+          const contract = configContract(candidates[0], node, ancestors);
           value = {fingerprint: digest(contract), contract};
         } else if (candidates.length > 1)
           errors.push(`${name}: ambiguous config entity ${id}; use a full path`);
@@ -132,7 +165,16 @@ export function evaluateGuide(name, source, schema, config, previous, renames = 
   const body = source
     .slice(match[0].length)
     .replace(/\]\([^\n)]*\)/g, ']()')
-    .replace(/https?:\/\/[^\s<>)]+/g, '');
+    .replace(/https?:\/\/[^\s<>)]+/g, '')
+    // Lowercase quoted SQL identifiers name the same entities as their unquoted forms.
+    .replace(/"([a-z][a-z0-9_]*)"/g, '$1')
+    // SQL permits whitespace around dots. Limit that rewrite to SQL fences so a prose
+    // sentence ending in a table name cannot turn into a spurious column reference.
+    .replace(
+      /(`{3,}|~{3,})(sql|postgresql|postgres)[^\n]*\n([\s\S]*?)\1/g,
+      (_, fence, language, sql) =>
+        `${fence}${language}\n${sql.replace(/([a-z0-9_])[ \t]*\.[ \t]*(?=[a-z])/g, '$1.')}${fence}`,
+    );
   for (const ref of body.matchAll(/\b(?:public\.)?([a-z][a-z0-9_]*\.[a-z][a-z0-9_]*)\b/g)) {
     const id = ref[1];
     const [table, column] = id.split('.');

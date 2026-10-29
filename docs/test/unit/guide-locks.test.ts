@@ -691,3 +691,125 @@ it('does not lock an incompatible variant for a variant-specific guide', async (
   );
   expect(result.changes).toEqual([]);
 });
+
+it('locks inherited defaults for declared config children without sibling churn', () => {
+  const cfg = {
+    config: {
+      keys: [
+        {
+          name: 'insert_options',
+          default: {tx_out: {value: 'enable', force_tx_in: false}, ledger: 'enable'},
+          required: false,
+          shape: {
+            type: 'object',
+            haskell: 'Options',
+            line: 10,
+            keys: [
+              {
+                name: 'tx_out',
+                required: false,
+                default: {value: 'enable'},
+                shape: {
+                  type: 'object',
+                  haskell: 'TxOut',
+                  line: 20,
+                  keys: [
+                    {
+                      name: 'value',
+                      required: true,
+                      shape: {type: 'enum', values: ['enable', 'disable']},
+                    },
+                  ],
+                },
+              },
+            ],
+          },
+        },
+      ],
+    },
+  };
+  const source = guide('', 'requires:\n  config: [tx_out.value]');
+  const lock = evaluateGuide('a.md', source, schema, cfg).lock;
+  const changed = structuredClone(cfg);
+  changed.config.keys[0].default.tx_out.value = 'disable';
+  expect(evaluateGuide('a.md', source, schema, changed, lock).changes).toHaveLength(1);
+  const nested = structuredClone(cfg);
+  nested.config.keys[0].shape.keys[0].default.value = 'disable';
+  expect(evaluateGuide('a.md', source, schema, nested, lock).changes).toHaveLength(1);
+  const sibling = structuredClone(cfg);
+  sibling.config.keys[0].default.ledger = 'disable';
+  sibling.config.keys[0].default.tx_out.force_tx_in = true;
+  expect(evaluateGuide('a.md', source, schema, sibling, lock).changes).toEqual([]);
+});
+
+it('locks only ancestor preset overrides relevant to a declared config child', () => {
+  const cfg = {
+    config: {
+      keys: [
+        {
+          name: 'options',
+          required: false,
+          shape: {
+            type: 'object',
+            haskell: 'Options',
+            line: 1,
+            keys: [{name: 'flag', required: false, shape: {type: 'boolean'}}],
+            presets: [{key: 'preset', values: {full: {flag: true, other: true}}}],
+          },
+        },
+      ],
+    },
+  };
+  const source = guide('', 'requires:\n  config: [options.flag]');
+  const lock = evaluateGuide('a.md', source, schema, cfg).lock;
+  const changed = structuredClone(cfg);
+  changed.config.keys[0].shape.presets[0].values.full.flag = false;
+  expect(evaluateGuide('a.md', source, schema, changed, lock).changes).toHaveLength(1);
+  const sibling = structuredClone(cfg);
+  sibling.config.keys[0].shape.presets[0].values.full.other = false;
+  expect(evaluateGuide('a.md', source, schema, sibling, lock).changes).toEqual([]);
+});
+
+it('tracks the resolved config path when a short identifier changes ownership', () => {
+  const cfg = (parent: string) => ({
+    config: {
+      keys: [
+        {
+          name: parent,
+          shape: {
+            keys: [{name: 'flag', required: false, shape: {type: 'boolean'}}],
+          },
+        },
+      ],
+    },
+  });
+  const source = guide('', 'requires:\n  config: [flag]');
+  const lock = evaluateGuide('a.md', source, schema, cfg('old')).lock;
+  expect(evaluateGuide('a.md', source, schema, cfg('new'), lock).changes).toHaveLength(1);
+});
+
+it.each(['"tx_out"."missing"', '"public"."tx_out"."missing"', 'public . "tx_out" . missing'])(
+  'does not skip SQL-quoted or spaced column references: %s',
+  (reference) => {
+    const result = evaluateGuide(
+      'a.md',
+      guide(`\`\`\`sql\nSELECT ${reference} FROM tx_out;\n\`\`\``, 'requires:\n  tables: [tx_out]'),
+      schema,
+      config,
+    );
+    expect(result.errors.join('\n')).toContain('tx_out.missing');
+  },
+);
+
+it('warns for undeclared quoted SQL columns but accepts declared ones', () => {
+  const body = '```sql\nSELECT "tx_out"."value" FROM "tx_out";\n```';
+  expect(
+    evaluateGuide(
+      'a.md',
+      guide(body, 'requires:\n  tables: [tx_out]'),
+      schema,
+      config,
+    ).warnings.join('\n'),
+  ).toContain('undeclared column tx_out.value');
+  expect(evaluateGuide('a.md', guide(body), schema, config).errors).toEqual([]);
+});
