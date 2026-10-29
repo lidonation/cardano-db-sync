@@ -20,7 +20,7 @@ describe('staged guide safety regressions', () => {
     expect(docker).not.toMatch(/--volume node-ipc\s*\\/);
     expect(docker).not.toMatch(/--volume \$PWD:\/data\n\s+ghcr/);
     expect(docker).not.toContain('run --config');
-    expect(docker).toMatch(/ghcr.io\/intersectmbo\/cardano-smash-server:[^\n]+ \\\n  --config/);
+    expect(docker).toMatch(/ghcr.io\/intersectmbo\/cardano-smash-server:[^\n]+ \\\n {2}--config/);
   });
   it('checks the rollback tip before the deletion point while writers remain stopped', () => {
     const rollback = read('manual-rollbacks');
