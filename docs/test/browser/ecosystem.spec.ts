@@ -168,10 +168,19 @@ test('empty tools fixture names the state and offers recovery without accessibil
   await page.keyboard.press('Tab');
   await page.keyboard.press('Enter');
   await expect(page.locator('main')).toBeFocused();
-  await expect(page.getByRole('link', {name: 'Tell us about a tool on Discord'})).toHaveAttribute(
-    'href',
-    /discord/,
-  );
+  const recovery = page.getByRole('link', {name: 'Tell us about a tool on Discord'});
+  await expect(recovery).toHaveAttribute('href', /discord/);
+  await page.keyboard.press('Tab');
+  await expect(recovery).toBeFocused();
+  // Exercise native link activation without sending a test browser to Discord.
+  await recovery.evaluate((link) => {
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      link.setAttribute('data-activated', 'true');
+    });
+  });
+  await page.keyboard.press('Enter');
+  await expect(recovery).toHaveAttribute('data-activated', 'true');
   const results = await new AxeBuilder({page})
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
     .analyze();

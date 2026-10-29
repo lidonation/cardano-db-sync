@@ -10,6 +10,7 @@ import {TeamCard, ToolCard} from '../components/Card';
 import Metric from '../components/Metric';
 import Tag from '../components/Tag';
 import Icon from '../components/shared/Icon';
+import {EmptyState} from '../components/shared/Status';
 import {DISCORD_URL, REPO_URL} from '../data/links';
 import type {ReleaseHistory} from '../data/release-history';
 import {SURFACES} from '../data/surfaces';
@@ -44,7 +45,7 @@ export function ToolGrid({
   if (view.kind === 'empty')
     return (
       <div>
-        <p>{view.message}</p>
+        <EmptyState>{view.message}</EmptyState>
         <Link className={styles.more} to={view.href}>
           {view.action}
         </Link>
