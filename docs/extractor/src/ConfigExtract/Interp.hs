@@ -365,6 +365,13 @@ objectShape env t scope f = case f of
     unresolved ("object parser for " <> t <> ": unrecognised form")
     pure (SObject t (lineOf env t) [] [])
   where
+    build o body | Just (key, _, childTy, options) <- legacyObjectSpec env o body = do
+      child <- typeShape env childTy
+      case child of
+        SObject _ _ keys presets
+          | all ((/= key) . keyName) keys -> pure (SObject t (lineOf env t) (Key key False (SNullable (SEnum (map fst options))) Nothing : keys) presets)
+          | otherwise -> unresolved "legacy preset collides with a child key" >> pure (SObject t (lineOf env t) [] [])
+        _ -> unresolved ("legacy object child is not an object") >> pure (SObject t (lineOf env t) [] [])
     build o body = do
       let analysis = analyseObject env scope o body
           -- with no preset, a switch takes its Nothing branch (the plain defaults)
@@ -376,6 +383,37 @@ objectShape env t scope f = case f of
 
 lineOf :: Env -> Text -> Int
 lineOf env t = maybe 0 (bLine . fst) (Map.lookup ("FromJSON", t) (msInstances (envMod env)))
+
+-- | Older config parsers used a preset switch whose Nothing branch delegates
+-- the same object to a single-field wrapper. Accept only this exhaustive idiom.
+legacyObjectSpec :: Env -> Text -> Ex -> Maybe (Text, Text, Ty, [(Text, Text)])
+legacyObjectSpec env o body = case body of
+  EDo [SBind (PVar v) (EOp ".:?" (EVar obj) (EStr key)), SBody (ECase (ESig (EVar v') _) alts)]
+    | obj == o
+    , v == v' -> do
+        wrapper <- listToMaybe [c | Alt (PCon "Nothing" []) (EOp "<$>" (ECon c) (EApp (EVar "parseJSON") (EApp (ECon "Object") (EVar obj')))) <- alts, obj' == o]
+        childTy <- case conFields env wrapper of [(_, ty)] -> Just ty; _ -> Nothing
+        let options = [(name, con) | Alt (PCon "Just" [PStr name]) e <- alts, ECon con <- [stripPure e]]
+            valid (Alt pat e) = case pat of
+              PCon "Nothing" [] -> case e of EOp "<$>" (ECon c) (EApp (EVar "parseJSON") (EApp (ECon "Object") (EVar obj'))) -> c == wrapper && obj' == o; _ -> False
+              PCon "Just" [PStr _] -> case stripPure e of ECon _ -> True; _ -> False
+              _ -> False
+            fallback (Alt pat e) =
+              isFail e && case pat of
+                PCon "Just" [PVar _] -> True
+                PCon "Just" [PWild] -> True
+                PWild -> True
+                _ -> False
+            nothingCount = length [() | Alt (PCon "Nothing" []) _ <- alts]
+        if null options || null alts || nothingCount /= 1 || not (fallback (last alts)) || not (all valid (init alts)) then Nothing else Just (key, wrapper, childTy, options)
+  _ -> Nothing
+
+legacyForType :: Env -> Text -> Maybe (Text, Text, Ty, [(Text, Text)])
+legacyForType env t = do
+  (b, _) <- Map.lookup ("FromJSON", t) (msInstances (envMod env))
+  case bBody b of
+    EApp (EApp (EVar "withObject") _) (ELam [PVar o] body) -> legacyObjectSpec env o body
+    _ -> Nothing
 
 data ObjectAnalysis = ObjectAnalysis
   { oaErrors :: [Text]
@@ -400,7 +438,7 @@ analyseObject env scope o body = case body of
           parsed = zipWith3 (\i a fty -> (i, keyArg i a fty)) [0 :: Int ..] args fieldTys
           infos = [ki | (_, Right (ki, _)) <- parsed]
           exprArg (i, Right (ki, wrap)) = (Just (kiVar ki, kiTy ki, i), wrap (EVar (kiVar ki)))
-          exprArg (_, Left e) = (Nothing, e)
+          exprArg (_, Left e) = (Nothing, fromMaybe e (evalEx env [] Nothing e))
           argExs = map exprArg parsed
           template = [(kiName ki, TVar (kiVar ki)) | ki <- infos]
           varTys = [(v, ty) | (Just (v, Just ty, _), _) <- argExs]
@@ -414,6 +452,7 @@ analyseObject env scope o body = case body of
       EOp "<$>" (ECon k) inner -> wrapNewtype k inner
       EApp (EApp (EVar "fmap") (EApp (EVar "fromMaybe") d)) inner ->
         fmap (\(ki, w) -> (ki {kiDefault = Just d}, w)) (keyArg i inner fty)
+      EApp (EVar "parseJSON") (EApp (ECon "Object") (EVar obj)) | obj == o, fty == TCon "Representation", Map.notMember "Representation" (msData (envMod env)) -> Left a
       EApp (EVar p) x | p `elem` ["pure", "return"] -> Left x
       _ -> case access a of
         Just (k, req, d) -> Right (KeyInfo k req (Just fty) Nothing Nothing d (var k), id)
@@ -791,6 +830,13 @@ invert env ty v = case (ty, v) of
   _ -> pure Nothing
   where
     readBound = fmap (read . Text.unpack)
+    named t | Just (key, wrapper, childTy, options) <- legacyForType env t =
+      case spine v of
+        (ECon c, [x]) | c == wrapper -> invert env childTy x
+        (ECon c, []) -> pure $ do
+          name <- lookup c [(con, text) | (text, con) <- options]
+          Just (Object (KM.singleton (Key.fromText key) (String name)))
+        _ -> pure Nothing
     named t = case Map.lookup t (msData (envMod env)) of
       Just d
         | diNewtypeDerivesFromJSON d

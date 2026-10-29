@@ -205,3 +205,46 @@ Fetch all tags (`git fetch --tags`) before regeneration. Commit the resulting ar
 tags change. `npm run check:versions` checks for byte-identical regeneration; the docs CI unit job
 fetches full history and tags to run this check and the six historical regression tests. The site
 build itself needs only the committed JSON, not Git history or a Haskell toolchain.
+
+### Guide compatibility and reviewed locks (B12)
+
+Guides in `docs/docs/guides/` declare dependencies rather than a hand-written
+version range:
+
+```yaml
+---
+title: Output example
+requires:
+  tables: [tx_out]
+  columns: [tx_out.value]
+  config: [tx_out.value]
+---
+```
+
+`npm run check:guide-locks` checks the declarations, body references and reviewed
+fingerprints; it fails on changes and names every affected guide. After updating
+or explicitly re-affirming the prose, run `npm run guide-locks:update` and commit
+`generated/guide-locks.json`. A short configuration path must resolve uniquely;
+otherwise use the full path. An undeclared known body reference is a warning;
+a reference to a nonexistent column is an error.
+
+The applicable release set comes from intersecting actual tagged schema and
+configuration snapshots, plus the current schema. To intentionally document a
+removed behaviour, use a `range_override` with a nonempty `versions` list and
+`reason`; every selected version must still satisfy every declaration. An
+override cannot make an unknown dependency valid or widen the derived range:
+
+```yaml
+range_override:
+  versions: ['13.7.0.0', '13.7.0.1']
+  reason: Documents the retired behaviour in these releases.
+```
+
+The committed `generated/guide-history.json` is regenerated with
+`npm run extract:guide-history` (or verified with `-- --check`). It requires
+the full release tags, Postgres 17, and the built `extract-config` executable:
+`cd extractor && cabal build exe:extract-config`. It replays each tag's own
+migrations and extracts its own Haskell configuration parser. For 13.7.2.0,
+the fresh stage-four sequence attempts an index on the new `epoch` view; the
+extractor explicitly replays the upgrade order, applying stage four before
+stage-two migration 0049. The separate history workflow checks regeneration.

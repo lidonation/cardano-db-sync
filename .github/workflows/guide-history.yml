@@ -1,0 +1,73 @@
+name: Verify guide history
+on:
+  push:
+    branches: [master, release/community-site]
+    paths: &history-paths
+      - "schema/**"
+      - "cardano-db/src/Cardano/Db/**"
+      - "cardano-db-sync/src/Cardano/DbSync/Config*"
+      - "cardano-db-sync/src/Cardano/DbSync/Config/**"
+      - "docs/extractor/**"
+      - "docs/scripts/extract-guide-history.mjs"
+      - "docs/scripts/extract-schema.mjs"
+      - "docs/scripts/lib/guide-history.mjs"
+      - "docs/scripts/lib/schema-*.mjs"
+      - "docs/generated/versions.json"
+      - "docs/generated/guide-history.json"
+      - "docs/package*.json"
+      - ".github/workflows/guide-history.yml"
+  pull_request:
+    paths: *history-paths
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: guide-history-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+jobs:
+  history:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    services:
+      postgres:
+        image: postgres:17.11-bookworm
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: postgres
+      PGPASSWORD: postgres
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: ./.github/actions/docs-setup
+      - uses: haskell-actions/setup@v2
+        with:
+          ghc-version: "9.6.7"
+          cabal-version: "3.12.1.0"
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cabal/store
+            ~/.cabal/packages
+            docs/extractor/dist-newstyle
+          key: b07-${{ runner.os }}-ghc-9.6.7-${{ hashFiles('docs/extractor/cabal.project', 'docs/extractor/haddock-extractor.cabal') }}
+          restore-keys: |
+            b07-${{ runner.os }}-ghc-9.6.7-
+      - name: Build config extractor
+        working-directory: docs/extractor
+        run: |
+          cabal update
+          cabal build exe:extract-config
+      - name: Verify historic schema and configuration
+        working-directory: docs
+        run: npm run extract:guide-history -- --check

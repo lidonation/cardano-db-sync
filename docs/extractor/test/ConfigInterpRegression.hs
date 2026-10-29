@@ -98,6 +98,40 @@ main = do
             , "  def = Child " <> enabled
             ]
   check "object default change affects artifact" (not (bad (objectDefault "True")) && schemaJson [] "Root" (objectDefault "True") /= schemaJson [] "Root" (objectDefault "False"))
+  let unknownPassthrough =
+        schema $
+          Text.unlines
+            [ "data Root = Root Unknown"
+            , "instance FromJSON Root where"
+            , "  parseJSON = Aeson.withObject \"root\" $ \\o -> Root <$> parseJSON (Object o)"
+            ]
+  check "unknown object passthrough still fails closed" (bad unknownPassthrough)
+  let legacySource =
+        Text.unlines
+          [ "data Root = Root Representation Child"
+          , "data Child = Basic | Child Options"
+          , "data Options = Options { flag :: Bool, hidden :: Bool }"
+          , "instance FromJSON Root where"
+          , "  parseJSON = Aeson.withObject \"root\" $ \\o -> Root <$> parseJSON (Object o) <*> o .:? \"options\" .!= def"
+          , "instance FromJSON Child where"
+          , "  parseJSON = Aeson.withObject \"child\" $ \\o -> do"
+          , "    preset <- o .:? \"preset\""
+          , "    case preset :: Maybe Text of"
+          , "      Nothing -> Child <$> parseJSON (Object o)"
+          , "      Just \"basic\" -> pure Basic"
+          , "      Just x -> fail x"
+          , "instance FromJSON Options where"
+          , "  parseJSON = Aeson.withObject \"options\" $ \\o -> Options <$> o .:? \"flag\" .!= True <*> pure (hidden def)"
+          , "instance Default Child where"
+          , "  def = Child def"
+          , "instance Default Options where"
+          , "  def = Options { flag = True, hidden = False }"
+          ]
+  let legacyObject = schema legacySource
+  check "legacy object-wrapper rejects non-exhaustive presets" (bad (schema (Text.replace "      Just x -> fail x\n" "" legacySource)))
+  check "legacy object-wrapper rejects open-ended presets" (bad (schema (Text.replace "Just x -> fail x" "Just x -> pure Basic" legacySource)))
+  check "legacy object-wrapper parser fully resolved" (not (bad legacyObject))
+  check "legacy object-wrapper exposes child keys" (case shapeAt "options" legacyObject of Just (SNullable (SObject _ _ keys _)) -> any ((== "flag") . keyName) keys; _ -> False)
   putStrLn "config-interp-regression-test: all checks passed"
 
 schema :: Text -> Schema
