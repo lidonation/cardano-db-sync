@@ -47,3 +47,19 @@ test('only Guides is current in the header while reading a guide', async ({page}
     'page',
   );
 });
+
+for (const locale of ['ja', 'es', 'de', 'vi']) {
+  test(`${locale} keeps guide navigation in the selected locale`, async ({page}) => {
+    await page.setViewportSize({width: 1440, height: 900});
+    await page.goto(`${locale}/docs/guides/running/`);
+    await expect(page.locator('main [data-static-guide="guides/running"]')).toBeVisible();
+    const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+    const guideLink = header
+      .getByRole('link', {name: 'Guides', exact: true})
+      .filter({visible: true});
+    await expect(guideLink).toHaveAttribute('href', new RegExp(`/${locale}/docs/guides/?$`));
+    await guideLink.click();
+    await expect(page).toHaveURL(new RegExp(`/${locale}/docs/guides/?$`));
+    await expect(page.getByRole('heading', {name: 'Guides', level: 1})).toBeVisible();
+  });
+}
