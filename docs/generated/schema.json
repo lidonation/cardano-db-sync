@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
   "postgres": 17,
-  "dbSchemaVersion": {"stage_one": 15, "stage_two": 51, "stage_three": 6},
+  "dbSchemaVersion": {"stage_one": 15, "stage_two": 52, "stage_three": 6},
   "domains": {
     "addr29type": {"base": "bytea", "domains": ["addr29type"], "checks": [], "not_null": false},
     "asset32type": {"base": "bytea", "domains": ["asset32type"], "checks": [], "not_null": false},
@@ -6524,6 +6524,34 @@
           "default": null,
           "fingerprint": "sha256:7c8e3b8385cab041048d0fdd1385b3cf64f6e177bdeb464bc1ac487e0bac4d97",
           "haskell": {"field": "stakeRegistrationDeposit", "sqltype": "lovelace"}
+        }
+      ]
+    },
+    {
+      "variant": "all",
+      "name": "sync_filter_config",
+      "kind": "table",
+      "haskell": {
+        "record": "SyncFilterConfig",
+        "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs"
+      },
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null,
+          "fingerprint": "sha256:9eaaf41d68c73a036d00dc7c098b7a604047d08fa56b6407961e3a7434b63924"
+        },
+        {
+          "name": "selection",
+          "type": "text",
+          "resolved_type": {"base": "text", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null,
+          "fingerprint": "sha256:484c15cbd35047761f45ff826202d1aaa195543b964a053f8c11078538b1578e",
+          "haskell": {"field": "syncFilterConfigSelection"}
         }
       ]
     },

@@ -34,6 +34,7 @@ import Cardano.DbSync.Cache (
 import Cardano.DbSync.Cache.Types (CacheAction (..))
 import qualified Cardano.DbSync.Era.Shelley.Generic as Generic
 import Cardano.DbSync.Era.Universal.Insert.GovAction (insertCommitteeHash, insertCredDrepHash, insertDrep, insertVotingAnchor)
+import Cardano.DbSync.Era.Universal.Insert.Other (stakeAddressSelected)
 import Cardano.DbSync.Era.Universal.Insert.Pool (IsPoolMember, insertPoolCert)
 import Cardano.DbSync.Error (SyncNodeError)
 import Cardano.DbSync.Types
@@ -113,9 +114,11 @@ insertDelegCert ::
   ExceptT SyncNodeError DB.DbM ()
 insertDelegCert syncEnv mDeposits network txId idx mRedeemerId epochNo slotNo dCert =
   case dCert of
-    ShelleyRegCert cred -> insertStakeRegistration syncEnv epochNo mDeposits txId idx $ Generic.annotateStakingCred network cred
-    ShelleyUnRegCert cred -> insertStakeDeregistration syncEnv network epochNo txId idx mRedeemerId cred
-    ShelleyDelegCert cred poolkh -> insertDelegation syncEnv network epochNo slotNo txId idx mRedeemerId cred poolkh
+    ShelleyRegCert cred -> when (selected cred) $ insertStakeRegistration syncEnv epochNo mDeposits txId idx $ Generic.annotateStakingCred network cred
+    ShelleyUnRegCert cred -> when (selected cred) $ insertStakeDeregistration syncEnv network epochNo txId idx mRedeemerId cred
+    ShelleyDelegCert cred poolkh -> when (selected cred) $ insertDelegation syncEnv network epochNo slotNo txId idx mRedeemerId cred poolkh
+  where
+    selected = stakeAddressSelected syncEnv . Generic.annotateStakingCred network
 
 insertConwayDelegCert ::
   SyncEnv ->
@@ -130,34 +133,35 @@ insertConwayDelegCert ::
 insertConwayDelegCert syncEnv mDeposits txId idx mRedeemerId epochNo slotNo dCert =
   case dCert of
     ConwayRegCert cred _dep ->
-      when (ioShelley iopts) $
+      when (ioShelley iopts && selected cred) $
         insertStakeRegistration syncEnv epochNo mDeposits txId idx $
           Generic.annotateStakingCred network cred
     ConwayUnRegCert cred _dep ->
-      when (ioShelley iopts) $
+      when (ioShelley iopts && selected cred) $
         insertStakeDeregistration syncEnv network epochNo txId idx mRedeemerId cred
     ConwayDelegCert cred delegatee -> insertDeleg cred delegatee
     ConwayRegDelegCert cred delegatee _dep -> do
-      when (ioShelley iopts) $
+      when (ioShelley iopts && selected cred) $
         insertStakeRegistration syncEnv epochNo mDeposits txId idx $
           Generic.annotateStakingCred network cred
       insertDeleg cred delegatee
   where
     insertDeleg cred = \case
       DelegStake poolkh ->
-        when (ioShelley iopts) $
+        when (ioShelley iopts && selected cred) $
           insertDelegation syncEnv network epochNo slotNo txId idx mRedeemerId cred poolkh
       DelegVote drep ->
         when (ioGov iopts) $
           insertDelegationVote syncEnv network txId idx cred drep
       DelegStakeVote poolkh drep -> do
-        when (ioShelley iopts) $
+        when (ioShelley iopts && selected cred) $
           insertDelegation syncEnv network epochNo slotNo txId idx mRedeemerId cred poolkh
         when (ioGov iopts) $
           insertDelegationVote syncEnv network txId idx cred drep
 
     iopts = getInsertOptions syncEnv
     network = getNetwork syncEnv
+    selected = stakeAddressSelected syncEnv . Generic.annotateStakingCred network
 
 insertMirCert ::
   SyncEnv ->
@@ -180,7 +184,7 @@ insertMirCert syncEnv network txId idx mcert = do
     insertMirReserves ::
       (StakeCred, Ledger.DeltaCoin) ->
       ExceptT SyncNodeError DB.DbM ()
-    insertMirReserves (cred, dcoin) = do
+    insertMirReserves (cred, dcoin) = when (stakeAddressSelected syncEnv $ Generic.annotateStakingCred network cred) $ do
       addrId <- queryOrInsertStakeAddress syncEnv UpdateCacheStrong network cred
       void . lift $
         DB.insertReserve $
@@ -194,7 +198,7 @@ insertMirCert syncEnv network txId idx mcert = do
     insertMirTreasury ::
       (StakeCred, Ledger.DeltaCoin) ->
       ExceptT SyncNodeError DB.DbM ()
-    insertMirTreasury (cred, dcoin) = do
+    insertMirTreasury (cred, dcoin) = when (stakeAddressSelected syncEnv $ Generic.annotateStakingCred network cred) $ do
       addrId <- queryOrInsertStakeAddress syncEnv UpdateCacheStrong network cred
       void . lift $
         DB.insertTreasury $

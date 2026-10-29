@@ -20,84 +20,84 @@
         {
           "doc": "@--config FILEPATH@: path to the db-sync node config file.",
           "kind": "function",
-          "line": 120,
+          "line": 122,
           "name": "pConfigFile",
           "position": "before"
         },
         {
           "doc": "@--state-dir FILEPATH@: directory for persisting ledger state.",
           "kind": "function",
-          "line": 131,
+          "line": 133,
           "name": "pLedgerStateDir",
           "position": "before"
         },
         {
           "doc": "@--schema-dir FILEPATH@: directory containing the database migrations.",
           "kind": "function",
-          "line": 142,
+          "line": 144,
           "name": "pMigrationDir",
           "position": "before"
         },
         {
           "doc": "@--pg-pass-env ENV@: alternative environment variable for PostgreSQL credentials; defaults to @PGPASSFILE@.",
           "kind": "function",
-          "line": 153,
+          "line": 155,
           "name": "pPGPassSource",
           "position": "before"
         },
         {
           "doc": "@--force-indexes@: create indexes at the start of db-sync instead of later.",
           "kind": "function",
-          "line": 164,
+          "line": 166,
           "name": "pForceIndexes",
           "position": "before"
         },
         {
           "doc": "@--disable-cache@: disable db-sync caches, reducing memory usage at the cost of sync speed.",
           "kind": "function",
-          "line": 174,
+          "line": 176,
           "name": "pHasCache",
           "position": "before"
         },
         {
           "doc": "@--allow-private-offchain-urls@: allow off-chain pool and vote metadata fetches to private, loopback, or link-local hosts and IPs. Off by default; intended for local-cluster testing.",
           "kind": "function",
-          "line": 184,
+          "line": 186,
           "name": "pAllowPrivateOffChainUrls",
           "position": "before"
         },
         {
           "doc": "@--socket-path FILEPATH@: path to a cardano-node socket.",
           "kind": "function",
-          "line": 198,
+          "line": 200,
           "name": "pSocketPath",
           "position": "before"
         },
         {
           "doc": "@--tracer-socket-path-connect FILEPATH@: connect to cardano-tracer for logs and metrics.",
           "kind": "function",
-          "line": 209,
+          "line": 211,
           "name": "pTracerSocketPath",
           "position": "before"
         },
         {
           "doc": "@--rollback-to-slot SLOTNO@: force deletion of the block at this slot and all descendants,\ninclusive. If there is no block at that slot, deletion starts at the next greater slot with a\nblock; the resulting tip is the preceding block. If no block exists at or after the requested\nslot, no blocks are removed. Primarily for testing and debugging.",
           "kind": "function",
-          "line": 222,
+          "line": 224,
           "name": "pRollbackSlotNo",
           "position": "before"
         },
         {
-          "doc": "@--disable-in-out@ is accepted for compatibility, but its parsed value is not used by the\ncurrent runtime option builder. Use @insert_options.tx_out.value = \"disable\"@ to disable @tx_in@\nand @tx_out@ insertion.",
+          "doc": "@--disable-in-out@ has been retired because it did not affect insertion.\nConfigure @insert_options.tx_out.value = \"disable\"@ to disable @tx_in@ and @tx_out@ instead.\nThe flag is rejected\nbefore startup even when the configuration already disables inputs and outputs.",
           "kind": "function",
-          "line": 235,
-          "name": "pHasInOut",
+          "line": 238,
+          "name": "pRejectDisableInOut",
           "position": "before"
         },
         {
           "doc": "The @version@ command and hidden @--version@ flag print the program version.",
           "kind": "function",
-          "line": 245,
+          "line": 247,
           "name": "pVersionCommand",
           "position": "before"
         }
@@ -176,7 +176,7 @@
                   "name": "enpForceIndexes"
                 },
                 {
-                  "doc": "",
+                  "doc": "Retained for source compatibility; 'False' is rejected before startup. Use @tx_out@ instead.",
                   "name": "enpHasInOut"
                 },
                 {
@@ -193,7 +193,7 @@
           ],
           "doc": "The product type of all command line arguments",
           "kind": "data",
-          "line": 108,
+          "line": 113,
           "name": "SyncNodeParams",
           "position": "before"
         },
@@ -214,9 +214,9 @@
               "name": "SyncInsertConfig"
             }
           ],
-          "doc": "The optional @insert_options.preset@ selects base settings: @full@, @only_utxo@, @only_governance@,\nor @disable_all@. Explicit sibling options override the selected preset. Without a preset the\nstandard defaults apply.",
+          "doc": "The optional @insert_options.preset@ selects base settings: @full@, @only_utxo@, @only_governance@,\nor @disable_all@. Explicit sibling options override the selected preset. Without a preset the\nstandard defaults apply.\n\nThe formerly ignored @json_type@ selector is rejected before database startup. Remove it and\nuse @remove_jsonb_from_schema@ to select text versus JSONB columns; JSON payload insertion remains\nenabled. Existing databases follow the existing startup conversion and restart rules.",
           "kind": "data",
-          "line": 180,
+          "line": 190,
           "name": "SyncInsertConfig",
           "position": "before"
         },
@@ -245,7 +245,7 @@
           ],
           "doc": "Preset choices are @full@, @only_utxo@, @only_governance@ and @disable_all@. These establish base\ninsert options; individual keys may override them.\n\nThe full preset enables pool statistics but leaves transaction CBOR and both off-chain fetchers\ndisabled. The only_utxo preset uses bootstrap outputs and ignores ledger data; only_governance\nretains governance with ledger enabled; disable_all disables the optional insertion categories.",
           "kind": "data",
-          "line": 192,
+          "line": 202,
           "name": "SyncInsertPreset",
           "position": "before"
         },
@@ -304,10 +304,6 @@
                 },
                 {
                   "doc": "",
-                  "name": "sioJsonType"
-                },
-                {
-                  "doc": "",
                   "name": "sioRemoveJsonbFromSchema"
                 },
                 {
@@ -324,7 +320,7 @@
           ],
           "doc": "The @insert_options@ object controls which chain data db-sync inserts. Optional @stop_at_block@\nstops after the specified block number; absent means no configured stop. Individual settings\noverride a selected preset.",
           "kind": "data",
-          "line": 202,
+          "line": 212,
           "name": "SyncInsertOptions",
           "position": "before"
         },
@@ -343,7 +339,7 @@
           ],
           "doc": "@tx_cbor@ accepts @enable@ or @disable@ to control collection of transaction CBOR; the default is\n@disable@.",
           "kind": "newtype",
-          "line": 224,
+          "line": 233,
           "name": "TxCBORConfig",
           "position": "before"
         },
@@ -362,7 +358,7 @@
           ],
           "doc": "@pool_stat@ accepts @enable@ or @disable@ to control pool statistics. It defaults to @disable@\nwithout a preset and is enabled by the @full@ preset.",
           "kind": "newtype",
-          "line": 231,
+          "line": 240,
           "name": "PoolStatsConfig",
           "position": "before"
         },
@@ -381,7 +377,7 @@
           ],
           "doc": "@disable_epoch@ defaults to false. When true, the public @epoch@ view and @epoch_current@ view\nreturn no rows; @epoch_finalized@ contains finalized aggregates. Epoch views are also disabled\nduring bootstrap or when transaction output insertion is disabled, even if this flag is false.",
           "kind": "newtype",
-          "line": 239,
+          "line": 248,
           "name": "EpochConfig",
           "position": "before"
         },
@@ -415,7 +411,7 @@
           ],
           "doc": "@tx_out.value@ is required when the object is supplied. @enable@ stores inputs and outputs;\n@disable@ leaves them empty; @consumed@ tracks consuming transactions; @prune@ removes consumed\noutputs; @bootstrap@ defers UTxO insertion until near tip using the ledger. The optional\n@force_tx_in@ and @use_address_table@ booleans default to false. Changing from prune or consumed\nmodes requires care on subsequent runs.\n\nWith disable, tx_in, tx_out and ma_tx_out remain empty; tx.fee may be zero and redeemer.script_hash\nnull. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap\nrequires in-memory ledger state; it supports Babbage, Conway and Dijkstra. The LSM backend is not supported.\nIt loads the UTxO in bulk and leaves tx.fee and redeemer.script_hash incomplete during bootstrap.\nOnce used, consumed mode must remain enabled on subsequent runs unless switching to pruning.\nOnce used, pruning must remain enabled on subsequent runs; dropping it is rejected and can cause\nfailures. Bootstrap must remain selected until the UTxO migration completes. After completion,\nbootstrap can be changed, but the database's consumed/pruning requirements still apply.",
           "kind": "data",
-          "line": 259,
+          "line": 268,
           "name": "TxOutConfig",
           "position": "before"
         },
@@ -434,7 +430,7 @@
           ],
           "doc": "@tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is\nignored for @enable@ and @disable@. Once input/output insertion is active, setting it to true\npopulates @tx_in@ in consumed, prune and bootstrap modes, which otherwise omit transaction\ninputs. It does not override the disabled insertion phase before bootstrap's UTxO migration.",
           "kind": "newtype",
-          "line": 271,
+          "line": 280,
           "name": "ForceTxIn",
           "position": "before"
         },
@@ -453,7 +449,7 @@
           ],
           "doc": "@tx_out.use_address_table@ defaults to false. When enabled, address details live in a separate\n@address@ table referenced by outputs. This schema variant requires an empty database.\n\nThe normalized address table stores address, raw bytes, script flag, payment credential and stake\naddress. Both tx_out and collateral_tx_out then refer to address_id; the variant has payment\ncredential and raw-address indexes. Once selected, this schema variant cannot be reverted on\nthe same database; keep @use_address_table@ enabled on subsequent runs.",
           "kind": "newtype",
-          "line": 282,
+          "line": 291,
           "name": "UseTxOutAddress",
           "position": "before"
         },
@@ -472,7 +468,7 @@
           ],
           "doc": "Choose the backend for storing ledger tables (UTxO set).\n'LedgerBackendInMemory' keeps everything in RAM (current default).\n'LedgerBackendLSM' uses LSM trees on disk for lower memory usage.\nThe top-level @ledger_backend@ selects @inmemory@ (default) or @lsm@. The former keeps the UTxO set\nin RAM; the latter uses disk-backed LSM trees.",
           "kind": "data",
-          "line": 291,
+          "line": 300,
           "name": "LedgerBackend",
           "position": "before"
         },
@@ -496,7 +492,7 @@
           ],
           "doc": "@ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable\ndoes not maintain one; ignore maintains it for UTxO loading but does not use its other data.\n\nWith disable or ignore, new ledger-derived @reward@, @epoch_stake@, @ada_pots@, @epoch_param@ and\n@drep_distr@ data are unavailable. @redeemer.fee@ is null; stake-registration and pool-update\ndeposits and ledger-derived governance epochs may be absent. @tx.deposit@ can be computed from resolved inputs,\noutputs, withdrawals, fees and treasury donations even without ledger data; it is null when the\nrequired values cannot be resolved, rather than always null in these modes.\n\nStarting with either disable or ignore irreversibly clears existing @reward@, @epoch_stake@,\n@ada_pots@ and @epoch_param@ rows and redeemer fees through the no-ledger migration. Do not change\nledger mode casually on an existing database. A supplied @--state-dir@ with ledger disabled\nproduces a warning, not an error; disable does not maintain ledger snapshots, while ignore does.",
           "kind": "data",
-          "line": 315,
+          "line": 324,
           "name": "LedgerInsertConfig",
           "position": "before"
         },
@@ -518,9 +514,9 @@
               "name": "ShelleyStakeAddrs"
             }
           ],
-          "doc": "@shelley.enable@ controls transaction-era stake/pool certificates, withdrawals and parameter\nproposals, not epoch stake or rewards. Genesis-era stake and pool registrations are still inserted.\nGovernance certificates and vote delegations use the separate @governance@ option.\nThe non-empty @stake_addresses@ list is parsed but not enforced by the current insertion pipeline;\nwith @enable = true@ it does not restrict addresses. Do not treat it as a filter.",
+          "doc": "@shelley.enable@ controls transaction-era stake/pool certificates, withdrawals and parameter\nproposals, not epoch stake or rewards. Genesis-era stake and pool registrations are still inserted.\nGovernance certificates and vote delegations use the separate @governance@ option.\nA non-empty @stake_addresses@ list selects canonical bech32 stake accounts for Shelley stake\ncertificates, MIR recipients and withdrawals. Identity rows required by transaction outputs,\nepoch stake, rewards and governance remain available. Pool certificates, parameter proposals,\nnon-address-specific pot transfers and Conway vote delegation are not filtered. A changed\nselection requires a fresh database and replay.",
           "kind": "data",
-          "line": 326,
+          "line": 338,
           "name": "ShelleyInsertConfig",
           "position": "before"
         },
@@ -542,9 +538,9 @@
               "name": "MultiAssetPolicies"
             }
           ],
-          "doc": "@multi_asset.enable@ controls multi-asset entries. The optional non-empty @policies@ list is\nparsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is\nnot restricted to these policy hashes. Do not rely on it for selective ingestion.",
+          "doc": "@multi_asset.enable@ controls multi-asset entries. An optional non-empty @policies@ list\nselects 28-byte policy IDs written as hexadecimal, for both minted and output assets.\nScript and redeemer data are governed independently by @plutus@. A changed selection\nrequires a fresh database and replay.",
           "kind": "data",
-          "line": 339,
+          "line": 352,
           "name": "MultiAssetConfig",
           "position": "before"
         },
@@ -568,7 +564,7 @@
           ],
           "doc": "@metadata.enable@ controls transaction metadata. An optional non-empty @keys@ list restricts enabled\ninsertion to those integer metadata keys.",
           "kind": "data",
-          "line": 347,
+          "line": 360,
           "name": "MetadataConfig",
           "position": "before"
         },
@@ -590,9 +586,9 @@
               "name": "PlutusScripts"
             }
           ],
-          "doc": "@plutus.enable@ controls Plutus and script data. The optional non-empty @script_hashes@ list is\nparsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is\nnot restricted to these script hashes. Do not rely on it for selective ingestion.",
+          "doc": "@plutus.enable@ controls Plutus and script data. The non-empty @script_hashes@ list selects\n28-byte script hashes in hex for witness, auxiliary and reference scripts. Datums, redeemers,\ncollateral and reference inputs are retained independently; excluded reference-script IDs are null.\nA changed selection requires a fresh database and replay.",
           "kind": "data",
-          "line": 356,
+          "line": 370,
           "name": "PlutusConfig",
           "position": "before"
         },
@@ -611,7 +607,7 @@
           ],
           "doc": "@governance@ accepts @enable@ or @disable@ for governance data; off-chain vote metadata has its own\nindependent setting.",
           "kind": "newtype",
-          "line": 364,
+          "line": 378,
           "name": "GovernanceConfig",
           "position": "before"
         },
@@ -630,7 +626,7 @@
           ],
           "doc": "@offchain_pool_data@ accepts @enable@ or @disable@ for fetching stake-pool metadata and defaults to\n@disable@. Fetch restrictions and the testing-only private-URL flag also apply.\n\nPool metadata includes the registered name, ticker, homepage and description. Fetches are subject to\nnetwork-address restrictions; the private-URL switch is intended only for local-cluster tests.",
           "kind": "newtype",
-          "line": 374,
+          "line": 388,
           "name": "OffchainPoolDataConfig",
           "position": "before"
         },
@@ -649,7 +645,7 @@
           ],
           "doc": "@offchain_vote_data@ accepts @enable@ or @disable@ for governance-anchor metadata and defaults to\n@disable@. It is independent of the @governance@ option.\n\nGovernance anchors include DRep registrations (CIP-119), governance action proposals (CIP-108), and\nvote metadata (CIP-100). Prior releases coupled fetching to the governance option.",
           "kind": "newtype",
-          "line": 384,
+          "line": 398,
           "name": "OffchainVoteDataConfig",
           "position": "before"
         },
@@ -668,32 +664,8 @@
           ],
           "doc": "@remove_jsonb_from_schema@ accepts @enable@ or @disable@. Enabling removes JSONB types from\nsupported schema columns to improve insertion performance; changing an existing schema requires\ncare. Disabling this option or removing it converts the affected columns back to JSONB on startup;\neither conversion can take time.\n\nAffected JSONB columns include tx_metadata.json, script.json, datum.value, redeemer_data.value,\ncost_model.costs, gov_action_proposal.description, off_chain_pool_data.json and\noff_chain_vote_data.json.",
           "kind": "newtype",
-          "line": 397,
+          "line": 411,
           "name": "RemoveJsonbFromSchemaConfig",
-          "position": "before"
-        },
-        {
-          "constructors": [
-            {
-              "doc": "",
-              "fields": [],
-              "name": "JsonTypeText"
-            },
-            {
-              "doc": "",
-              "fields": [],
-              "name": "JsonTypeJsonb"
-            },
-            {
-              "doc": "",
-              "fields": [],
-              "name": "JsonTypeDisable"
-            }
-          ],
-          "doc": "@json_type@ accepts @text@, @jsonb@ or @disable@; the default is @text@. It is parsed and serialized\nbut not consumed by the current runtime option builder. It does not select storage types or\ndisable JSON insertion; @remove_jsonb_from_schema@ controls the schema conversion.",
-          "kind": "data",
-          "line": 410,
-          "name": "JsonTypeConfig",
           "position": "before"
         },
         {
@@ -711,7 +683,7 @@
           ],
           "doc": "The top-level @snapshot_interval.near_tip_epoch@ threshold defaults to 580. Snapshot frequency\nchanges when syncing near the tip; earlier syncing uses less frequent snapshots.\n\nAt an epoch boundary above zero, snapshots are taken every epoch at or above this threshold,\neven while lagging. Below it, snapshots occur on multiples of ten epochs, or on every epoch when\nthe database is consistent and the chain time is within ten days of current time.",
           "kind": "newtype",
-          "line": 422,
+          "line": 427,
           "name": "SnapshotIntervalConfig",
           "position": "before"
         }
@@ -1888,6 +1860,25 @@
               "doc": "",
               "fields": [
                 {
+                  "doc": "Canonical, sorted stake-address, policy and script selections.",
+                  "name": "syncFilterConfigSelection"
+                }
+              ],
+              "name": "SyncFilterConfig"
+            }
+          ],
+          "doc": "Persisted selective-ingestion contract. There is at most one row; changing the selection\nrequires a fresh database and replay so existing rows cannot masquerade as a filtered history.",
+          "kind": "newtype",
+          "line": 861,
+          "name": "SyncFilterConfig",
+          "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
                   "doc": "",
                   "name": "extraMigrationsToken"
                 },
@@ -1901,7 +1892,7 @@
           ],
           "doc": "Schema reference for @extra_migrations@:\nExtra optional migrations. New in 13.2.",
           "kind": "data",
-          "line": 861,
+          "line": 872,
           "name": "ExtraMigrations",
           "position": "before"
         }
@@ -4174,7 +4165,7 @@
           ],
           "doc": "TxOut variants",
           "kind": "newtype",
-          "line": 109,
+          "line": 112,
           "name": "TxOutCoreId",
           "position": "before"
         },
@@ -4193,7 +4184,7 @@
           ],
           "doc": "CollateralTxOut variants",
           "kind": "newtype",
-          "line": 133,
+          "line": 136,
           "name": "CollateralTxOutCoreId",
           "position": "before"
         },
@@ -4212,7 +4203,7 @@
           ],
           "doc": "Multi-asset variants",
           "kind": "newtype",
-          "line": 148,
+          "line": 151,
           "name": "MaTxOutCoreId",
           "position": "before"
         },
@@ -4231,7 +4222,7 @@
           ],
           "doc": "STAKE DELEGATION",
           "kind": "newtype",
-          "line": 327,
+          "line": 330,
           "name": "StakeAddressId",
           "position": "before"
         }
@@ -4793,6 +4784,13 @@
           "line": 1423,
           "name": "queryTxInFailedTxStmt",
           "position": "before"
+        },
+        {
+          "doc": "Atomically establish or verify the selective-ingestion contract. Call inside a transaction.\nExisting databases without a marker may adopt unfiltered defaults, but cannot safely adopt\nselective insertion without replay: their historic rows may already contain excluded data.",
+          "kind": "function",
+          "line": 1501,
+          "name": "validateSyncFilterConfig",
+          "position": "before"
         }
       ],
       "header": null,
@@ -4865,23 +4863,30 @@
           "position": "before"
         },
         {
+          "doc": "Counts identity, mint and output rows for an exact policy, used by chain-gen integration tests.",
+          "kind": "function",
+          "line": 158,
+          "name": "queryPolicyRowCounts",
+          "position": "before"
+        },
+        {
           "doc": "Exclude all 'faked' generated TxId values from the genesis block (block_id == 1).",
           "kind": "function",
-          "line": 459,
+          "line": 473,
           "name": "queryTestTxIds",
           "position": "before"
         },
         {
           "doc": "It is probably not possible to have two withdrawals in a single Tx.\nIf it is possible then there will be an accounting error.",
           "kind": "function",
-          "line": 627,
+          "line": 641,
           "name": "queryTxWithdrawal",
           "position": "before"
         },
         {
           "doc": "The @pool_relay.port@ of a single relay, looked up by row id and decoded straight\nfrom the int4 column. A relay port is an unsigned Word16 (0-65535), so the result must\nnever be negative; a negative value would mean a port > 32767 was wrapped by a\nsigned-16-bit encoder. Used as regression coverage for issue #2135.",
           "kind": "function",
-          "line": 845,
+          "line": 859,
           "name": "queryPoolRelayPortStmt",
           "position": "before"
         },
@@ -4912,22 +4917,36 @@
           ],
           "doc": "Simple column comparison result",
           "kind": "data",
-          "line": 879,
+          "line": 893,
           "name": "ColumnComparisonResult",
           "position": "before"
         },
         {
           "doc": "Get the actual column order from the database",
           "kind": "function",
-          "line": 888,
+          "line": 902,
           "name": "getTableColumnOrderStmt",
           "position": "before"
         },
         {
           "doc": "Compare expected columns with actual database columns",
           "kind": "function",
-          "line": 913,
+          "line": 927,
           "name": "queryTableColumns",
+          "position": "before"
+        },
+        {
+          "doc": "Test-only helper for emulating a database upgraded from before filter tracking.",
+          "kind": "function",
+          "line": 951,
+          "name": "clearSyncFilterConfigForTest",
+          "position": "before"
+        },
+        {
+          "doc": "MIR certificate row counts for an exact reward account, used by chain-gen tests.",
+          "kind": "function",
+          "line": 955,
+          "name": "queryMIRCountsForStake",
           "position": "before"
         }
       ],

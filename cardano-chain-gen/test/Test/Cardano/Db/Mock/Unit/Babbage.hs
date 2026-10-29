@@ -11,6 +11,7 @@ import Data.Text (Text)
 import Test.Tasty (TestTree, testGroup)
 import Test.Tasty.HUnit (Assertion, testCase)
 
+import qualified Test.Cardano.Db.Mock.Unit.Babbage.PolicySelection as BabPlutus
 import qualified Test.Cardano.Db.Mock.Unit.Babbage.Reward as BabReward
 import qualified Test.Cardano.Db.Mock.Unit.Babbage.Simple as BabSimple
 import qualified Test.Cardano.Db.Mock.Unit.Babbage.Tx as BabTx
@@ -35,9 +36,18 @@ unitTests iom knownMigrations =
         , test "consume utxo same block" BabTx.consumeSameBlock
         ]
     , testGroup
+        "policy selection"
+        [ test "core outputs" BabPlutus.selectedPoliciesCore
+        , test "address outputs" BabPlutus.selectedPoliciesAddress
+        , test "rollback and replay" BabPlutus.selectedPoliciesRollback
+        , test "unfiltered policies" BabPlutus.unfilteredPolicies
+        , test "disabled multi-assets" BabPlutus.disabledPolicies
+        ]
+    , testGroup
         "rewards"
         [ -- test "rewards simple" BabReward.simpleRewards TODO: possible upstream changed in shelley genesis
-          test "rewards with deregistration" BabReward.rewardsDeregistration
+          test "selected MIR recipients" BabReward.selectedMIRRecipients
+        , test "rewards with deregistration" BabReward.rewardsDeregistration
         , test "rewards with reregistration. Fixed in Babbage." BabReward.rewardsReregistration
         , test "Mir Cert" BabReward.mirReward
         , -- , test "Mir rollback" mirRewardRollback

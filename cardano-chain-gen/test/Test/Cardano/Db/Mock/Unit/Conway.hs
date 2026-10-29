@@ -34,6 +34,13 @@ unitTests iom knownMigrations =
         , testCase "mismatched conway genesis hash" Config.wrongConwayGenesisHash
         , testCase "default insert config" Config.defaultInsertConfig
         , testCase "insert config" Config.insertConfig
+        , testCase "policy selection parsing" Config.policySelectionParsing
+        , testCase "stake selection parsing" Config.stakeSelectionParsing
+        , testCase "script selection parsing" Config.scriptSelectionParsing
+        , testCase "retired json_type" Config.retiredJsonType
+        , testCase "selection propagation and duplicates" Config.selectionPropagation
+        , testCase "preset filter overrides" Config.presetFilterOverrides
+        , testCase "legacy programmatic option" Config.legacyProgrammaticOption
         , testGroup
             "simple"
             [ test "simple forge blocks" Simple.forgeBlocks
@@ -53,7 +60,9 @@ unitTests iom knownMigrations =
             ]
         , testGroup
             "Schema"
-            [ test "validate schema table columns" Schema.validateSchemaColumns
+            [ test "filter selection restart guard" Schema.filterConfigRestartGuard
+            , test "filtered mode on existing database rejected" Schema.filterConfigExistingDatabase
+            , test "validate schema table columns" Schema.validateSchemaColumns
             , test "validate schema table columns address variant" Schema.validateVariantAddressSchemaColumns
             ]
         , testGroup
@@ -155,7 +164,8 @@ unitTests iom knownMigrations =
         ]
     , testGroup
         "stake addresses"
-        [ test "(de)registrations" Stake.registrationTx
+        [ test "selected stake registrations and restart" Stake.selectedStakeRegistrations
+        , test "(de)registrations" Stake.registrationTx
         , test "(de)registrations in same block" Stake.registrationsSameBlock
         , test "(de)registrations in same tx" Stake.registrationsSameTx
         , test "stake address pointers" Stake.stakeAddressPtr
@@ -229,6 +239,9 @@ unitTests iom knownMigrations =
         [ test "spend inline datum" InlineRef.unlockDatumOutput
         , test "spend inline datum same block" InlineRef.unlockDatumOutputSameBlock
         , test "inline datum with noncanonical CBOR" InlineRef.inlineDatumCBOR
+        , test "selected auxiliary scripts" InlineRef.selectedAuxiliaryScripts
+        , test "selected reference scripts, core" InlineRef.selectedReferenceScriptsCore
+        , test "selected reference scripts, address" InlineRef.selectedReferenceScriptsAddress
         , test "spend reference script" InlineRef.spendRefScript
         , test "spend reference script same block" InlineRef.spendRefScriptSameBlock
         , test "spend collateral output of invalid tx" InlineRef.spendCollateralOutput

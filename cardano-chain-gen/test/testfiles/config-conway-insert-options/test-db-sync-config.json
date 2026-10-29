@@ -129,7 +129,6 @@
       "enable": false,
     },
     "governance": "disable",
-    "offchain_pool_data": "disable",
-    "json_type": "disable"
+    "offchain_pool_data": "disable"
   }
 }

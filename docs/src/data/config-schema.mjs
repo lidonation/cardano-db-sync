@@ -10,6 +10,8 @@
  */
 
 /** Must match `configSchemaVersion` in `docs/extractor/src/ConfigExtract.hs`. */
+import {bech32} from 'bech32';
+
 export const CONFIG_SCHEMA_VERSION = 2;
 
 /**
@@ -236,8 +238,10 @@ function validateObject(shape, value, at, problems, {passthrough, relaxRequired}
   for (const [name, child] of Object.entries(value)) {
     const key = keys.get(name);
     const path = join(at, name);
-    if (key) {
-      validateValue(key.shape, child, path, problems);
+    if (path === 'insert_options.json_type') {
+      problems.push(`${path}: retired; remove it and use remove_jsonb_from_schema`);
+    } else if (key) {
+      validateValue(key.shape, child, path, problems, value.enable !== false);
     } else if (!(passthrough?.has(name) ?? false)) {
       problems.push(
         `${path}: not an option db-sync reads — ${shape.haskell} accepts ${[...keys.keys()].join(', ')}`,
@@ -253,7 +257,7 @@ function validateObject(shape, value, at, problems, {passthrough, relaxRequired}
   }
 }
 
-function validateValue(shape, value, at, problems) {
+function validateValue(shape, value, at, problems, selectionEnabled = true) {
   if (value === null) {
     if (!shape.nullable) problems.push(`${at}: null is not accepted`);
     return;
@@ -276,8 +280,23 @@ function validateValue(shape, value, at, problems) {
       }
       return;
     case 'string':
-      if (typeof value !== 'string')
+      if (typeof value !== 'string') {
         problems.push(`${at}: expected a string, got ${describe(value)}`);
+      } else if (
+        selectionEnabled &&
+        /^(?:config\.)?insert_options\.(?:multi_asset\.policies|plutus\.script_hashes)\[\d+\]$/.test(
+          at,
+        ) &&
+        !/^[0-9a-f]{56}$/i.test(value)
+      ) {
+        problems.push(`${at}: expected a 28-byte hexadecimal hash`);
+      } else if (
+        selectionEnabled &&
+        /^(?:config\.)?insert_options\.shelley\.stake_addresses\[\d+\]$/.test(at) &&
+        !isStakeAddress(value)
+      ) {
+        problems.push(`${at}: expected a valid bech32 stake address`);
+      }
       return;
     case 'enum':
       if (!shape.values.includes(value)) {
@@ -292,7 +311,9 @@ function validateValue(shape, value, at, problems) {
       if (value.length < (shape.minItems ?? 0)) {
         problems.push(`${at}: expected at least ${shape.minItems} item(s), got ${value.length}`);
       }
-      value.forEach((item, i) => validateValue(shape.items, item, `${at}[${i}]`, problems));
+      value.forEach((item, i) =>
+        validateValue(shape.items, item, `${at}[${i}]`, problems, selectionEnabled),
+      );
       return;
     case 'object':
       validateObject(shape, value, at, problems, {passthrough: null, relaxRequired: false});
@@ -301,6 +322,21 @@ function validateValue(shape, value, at, problems) {
       return;
     default:
       problems.push(`${at}: the schema has an unknown shape type ${JSON.stringify(shape.type)}`);
+  }
+}
+
+function isStakeAddress(value) {
+  try {
+    const decoded = bech32.decode(value);
+    const bytes = bech32.fromWords(decoded.words);
+    if (bytes.length !== 29 || ![14, 15].includes(bytes[0] >> 4)) return false;
+    const network = bytes[0] & 15;
+    return (
+      (network === 0 && decoded.prefix === 'stake_test') ||
+      (network === 1 && decoded.prefix === 'stake')
+    );
+  } catch {
+    return false;
   }
 }
 

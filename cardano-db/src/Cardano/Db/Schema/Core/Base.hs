@@ -856,6 +856,17 @@ withdrawalEncoder =
 -- Description: = A table containing information about extra migrations.
 -----------------------------------------------------------------------------------------------------------------------------------
 
+-- | Persisted selective-ingestion contract. There is at most one row; changing the selection
+-- requires a fresh database and replay so existing rows cannot masquerade as a filtered history.
+newtype SyncFilterConfig = SyncFilterConfig
+  { syncFilterConfigSelection :: Text
+  -- ^ Canonical, sorted stake-address, policy and script selections.
+  }
+  deriving (Eq, Show, Generic)
+
+type instance Key SyncFilterConfig = SyncFilterConfigId
+instance DbInfo SyncFilterConfig
+
 -- | Schema reference for @extra_migrations@:
 -- Extra optional migrations. New in 13.2.
 data ExtraMigrations = ExtraMigrations

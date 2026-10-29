@@ -5,6 +5,7 @@
 module Test.Cardano.Db.Mock.Unit.Conway.Stake (
   -- * Stake Address
   registrationTx,
+  selectedStakeRegistrations,
   registrationsSameBlock,
   registrationsSameTx,
   stakeAddressPtr,
@@ -24,21 +25,30 @@ module Test.Cardano.Db.Mock.Unit.Conway.Stake (
 ) where
 
 import qualified Cardano.Db as DB
-import Cardano.Ledger.BaseTypes (CertIx (..), SlotNo (..), TxIx (..))
+import Cardano.DbSync.Config.Types (ShelleyInsertConfig (..), SyncInsertOptions (..), SyncNodeConfig (..))
+import Cardano.DbSync.Era.Shelley.Generic.Util (annotateStakingCred, renderRewardAccount)
+import qualified Cardano.Ledger.Address as Ledger
+import Cardano.Ledger.BaseTypes (CertIx (..), Network (..), SlotNo (..), TxIx (..))
 import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Credential (Ptr (..), SlotNo32 (..))
 import Cardano.Mock.ChainSync.Server (IOManager (), addBlock)
+import Cardano.Mock.Forging.Interpreter (withConwayLedgerState)
 import qualified Cardano.Mock.Forging.Tx.Conway as Conway
 import qualified Cardano.Mock.Forging.Tx.Conway.Scenarios as Conway
+import Cardano.Mock.Forging.Tx.Generic (resolveStakeCreds)
 import Cardano.Mock.Forging.Types (StakeIndex (..), UTxOIndex (..))
-import Cardano.Prelude
+import Cardano.Prelude hiding (NonEmpty (..))
+import Data.ByteString.Short (toShort)
 import Data.IntCast (intCastMaybe)
+import Data.List.NonEmpty (NonEmpty (..))
+import qualified Data.Map.Strict as Map
 import Data.Maybe.Strict (StrictMaybe (..))
-import Ouroboros.Network.Block (blockSlot)
+import qualified Data.Text as Text
+import Ouroboros.Network.Block (blockSlot, genesisPoint)
 import Test.Cardano.Db.Mock.Config
 import qualified Test.Cardano.Db.Mock.UnifiedApi as Api
 import Test.Cardano.Db.Mock.Validate
-import Test.Tasty.HUnit (Assertion (), assertBool)
+import Test.Tasty.HUnit (Assertion (), assertBool, (@?=))
 import Prelude ()
 
 registrationTx :: IOManager -> [(Text, Text)] -> Assertion
@@ -489,3 +499,48 @@ unsafeToSlotNo32 =
 
     toSlotNo32 :: SlotNo -> Maybe SlotNo32
     toSlotNo32 (SlotNo n) = SlotNo32 <$> intCastMaybe @Word64 @Word32 n
+
+-- Both registrations are in one transaction; only the selected account receives a certificate row.
+selectedStakeRegistrations :: IOManager -> [(Text, Text)] -> Assertion
+selectedStakeRegistrations =
+  withFullConfigDropDB conwayConfigDir "selectedStakeRegistrations" $ \interpreter mockServer original -> do
+    cred <- withConwayLedgerState interpreter $ resolveStakeCreds (StakeIndexNew 1)
+    other <- withConwayLedgerState interpreter $ resolveStakeCreds (StakeIndexNew 2)
+    let selectedAccount = annotateStakingCred Testnet cred
+        otherAccount = annotateStakingCred Testnet other
+        account = toShort . encodeUtf8 $ renderRewardAccount selectedAccount
+        cfg = dbSyncConfig original
+        selected = original {dbSyncConfig = cfg {dncInsertOptions = (dncInsertOptions cfg) {sioShelley = ShelleyStakeAddrs (account :| [])}}}
+    startDBSync selected
+    void $
+      Api.withConwayFindLeaderAndSubmitTx interpreter mockServer $ \_ ->
+        Conway.mkDCertTx
+          [Conway.mkRegTxCert SNothing cred, Conway.mkRegTxCert SNothing other]
+          (Ledger.Withdrawals mempty)
+          Nothing
+    void $
+      Api.withConwayFindLeaderAndSubmitTx interpreter mockServer $ \_ ->
+        Conway.mkDCertTx [] (Ledger.Withdrawals $ Map.fromList [(selectedAccount, Coin 0), (otherAccount, Coin 0)]) Nothing
+    assertBlockNoBackoff selected 2
+    assertCertCounts selected (1, 0, 0, 1)
+    selectedId <- queryDBSync selected $ DB.queryStakeAddress (Ledger.serialiseAccountAddress selectedAccount)
+    actualIds <- queryDBSync selected DB.queryWithdrawalAddresses
+    map Just actualIds @?= [selectedId]
+    registrationsBefore <- queryDBSync selected DB.queryStakeRegistrationCount
+    stopDBSync selected
+    incompatible <- try (partialRunDbSync selected (dbSyncParams selected) cfg) :: IO (Either IOException ())
+    case incompatible of
+      Left err -> assertBool "changed selection must explain replay" ("fresh database" `Text.isInfixOf` textShow err)
+      Right () -> assertBool "changed selection must be rejected" False
+    registrationsAfter <- DB.runDbStandaloneTransSilent (getDBSyncPGPass selected) DB.queryStakeRegistrationCount
+    registrationsAfter @?= registrationsBefore
+    startDBSync selected
+    assertBlockNoBackoff selected 2
+    assertCertCounts selected (1, 0, 0, 1)
+    void $ Api.rollbackTo interpreter mockServer genesisPoint
+    void $ Api.withConwayFindLeaderAndSubmitTx interpreter mockServer $ \_ ->
+      Conway.mkDCertTx [Conway.mkRegTxCert SNothing cred, Conway.mkRegTxCert SNothing other] (Ledger.Withdrawals mempty) Nothing
+    void $ Api.withConwayFindLeaderAndSubmitTx interpreter mockServer $ \_ ->
+      Conway.mkDCertTx [] (Ledger.Withdrawals $ Map.fromList [(selectedAccount, Coin 0), (otherAccount, Coin 0)]) Nothing
+    assertBlockNoBackoff selected 3
+    assertCertCounts selected (1, 0, 0, 1)

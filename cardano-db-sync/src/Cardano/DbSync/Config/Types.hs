@@ -41,7 +41,6 @@ module Cardano.DbSync.Config.Types (
   GovernanceConfig (..),
   OffchainPoolDataConfig (..),
   OffchainVoteDataConfig (..),
-  JsonTypeConfig (..),
   SnapshotIntervalConfig (..),
   LedgerStateDir (..),
   LogFileDir (..),
@@ -73,6 +72,7 @@ import qualified Cardano.Chain.Update as Byron
 import Cardano.Crypto (RequiresNetworkMagic (..))
 import qualified Cardano.Crypto.Hash as Crypto
 import Cardano.Db (MigrationDir, PGPassSource (..), TxOutVariantType (..))
+import Cardano.DbSync.Util.Address (deserialiseRewardAccount, serialiseRewardAccount)
 import Cardano.Logging.Types (TraceConfig)
 import Cardano.Prelude
 import Cardano.Slotting.Slot (SlotNo (..))
@@ -80,9 +80,14 @@ import Control.Monad (fail)
 import Data.Aeson (FromJSON (..), ToJSON (..), Value (..), (.!=), (.:), (.:?), (.=))
 import qualified Data.Aeson as Aeson
 import Data.Aeson.Key (fromText)
+import qualified Data.Aeson.KeyMap as KeyMap
 import Data.Aeson.Types (Pair, Parser, typeMismatch)
+import qualified Data.ByteString as BS
+import qualified Data.ByteString.Base16 as Base16
 import Data.ByteString.Short (ShortByteString (), fromShort, toShort)
 import Data.Default.Class (Default (..))
+import Data.String (String)
+import qualified Data.Text as Text
 import Ouroboros.Consensus.Cardano (CardanoHardForkTrigger (..))
 import Ouroboros.Consensus.Cardano.Block (AllegraEra, AlonzoEra, BabbageEra, ConwayEra, MaryEra, ShelleyEra, StandardCrypto)
 import Ouroboros.Consensus.Protocol.Praos (Praos)
@@ -116,6 +121,7 @@ data SyncNodeParams = SyncNodeParams
   , enpHasCache :: !Bool
   , enpForceIndexes :: !Bool
   , enpHasInOut :: !Bool
+  -- ^ Retained for source compatibility; 'False' is rejected before startup. Use @tx_out@ instead.
   , enpMaybeRollback :: !(Maybe SlotNo)
   , enpAllowPrivateOffChainUrls :: !Bool
   -- ^ When 'True', the off-chain HTTP fetcher (pool and vote metadata) does not
@@ -177,6 +183,10 @@ data SyncPreConfig = SyncPreConfig
 -- | The optional @insert_options.preset@ selects base settings: @full@, @only_utxo@, @only_governance@,
 -- or @disable_all@. Explicit sibling options override the selected preset. Without a preset the
 -- standard defaults apply.
+--
+-- The formerly ignored @json_type@ selector is rejected before database startup. Remove it and
+-- use @remove_jsonb_from_schema@ to select text versus JSONB columns; JSON payload insertion remains
+-- enabled. Existing databases follow the existing startup conversion and restart rules.
 data SyncInsertConfig = SyncInsertConfig
   { sicPreset :: Maybe SyncInsertPreset
   , sicOptions :: SyncInsertOptions
@@ -212,7 +222,6 @@ data SyncInsertOptions = SyncInsertOptions
   , sioOffchainPoolData :: OffchainPoolDataConfig
   , sioOffchainVoteData :: OffchainVoteDataConfig
   , sioPoolStats :: PoolStatsConfig
-  , sioJsonType :: JsonTypeConfig
   , sioRemoveJsonbFromSchema :: RemoveJsonbFromSchemaConfig
   , sioEpoch :: EpochConfig
   , sioStopAtBlock :: Maybe Word64
@@ -321,8 +330,11 @@ data LedgerInsertConfig
 -- | @shelley.enable@ controls transaction-era stake/pool certificates, withdrawals and parameter
 -- proposals, not epoch stake or rewards. Genesis-era stake and pool registrations are still inserted.
 -- Governance certificates and vote delegations use the separate @governance@ option.
--- The non-empty @stake_addresses@ list is parsed but not enforced by the current insertion pipeline;
--- with @enable = true@ it does not restrict addresses. Do not treat it as a filter.
+-- A non-empty @stake_addresses@ list selects canonical bech32 stake accounts for Shelley stake
+-- certificates, MIR recipients and withdrawals. Identity rows required by transaction outputs,
+-- epoch stake, rewards and governance remain available. Pool certificates, parameter proposals,
+-- non-address-specific pot transfers and Conway vote delegation are not filtered. A changed
+-- selection requires a fresh database and replay.
 data ShelleyInsertConfig
   = ShelleyEnable
   | ShelleyDisable
@@ -333,9 +345,10 @@ newtype RewardsConfig = RewardsConfig
   {areRewardsEnabled :: Bool}
   deriving (Eq, Show)
 
--- | @multi_asset.enable@ controls multi-asset entries. The optional non-empty @policies@ list is
--- parsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is
--- not restricted to these policy hashes. Do not rely on it for selective ingestion.
+-- | @multi_asset.enable@ controls multi-asset entries. An optional non-empty @policies@ list
+-- selects 28-byte policy IDs written as hexadecimal, for both minted and output assets.
+-- Script and redeemer data are governed independently by @plutus@. A changed selection
+-- requires a fresh database and replay.
 data MultiAssetConfig
   = MultiAssetEnable
   | MultiAssetDisable
@@ -350,9 +363,10 @@ data MetadataConfig
   | MetadataKeys (NonEmpty Word)
   deriving (Eq, Show)
 
--- | @plutus.enable@ controls Plutus and script data. The optional non-empty @script_hashes@ list is
--- parsed but not enforced by the current insertion pipeline: with @enable = true@ insertion is
--- not restricted to these script hashes. Do not rely on it for selective ingestion.
+-- | @plutus.enable@ controls Plutus and script data. The non-empty @script_hashes@ list selects
+-- 28-byte script hashes in hex for witness, auxiliary and reference scripts. Datums, redeemers,
+-- collateral and reference inputs are retained independently; excluded reference-script IDs are null.
+-- A changed selection requires a fresh database and replay.
 data PlutusConfig
   = PlutusEnable
   | PlutusDisable
@@ -402,15 +416,6 @@ newtype RemoveJsonbFromSchemaConfig = RemoveJsonbFromSchemaConfig
 newtype TxOutVariantTypeConfig = TxOutVariantTypeConfig
   { unTxOutVariantTypeConfig :: TxOutVariantType
   }
-  deriving (Eq, Show)
-
--- | @json_type@ accepts @text@, @jsonb@ or @disable@; the default is @text@. It is parsed and serialized
--- but not consumed by the current runtime option builder. It does not select storage types or
--- disable JSON insertion; @remove_jsonb_from_schema@ controls the schema conversion.
-data JsonTypeConfig
-  = JsonTypeText
-  | JsonTypeJsonb
-  | JsonTypeDisable
   deriving (Eq, Show)
 
 -- | The top-level @snapshot_interval.near_tip_epoch@ threshold defaults to 580. Snapshot frequency
@@ -591,6 +596,8 @@ instance FromJSON SyncInsertConfig where
 
 parseOverrides :: Aeson.Object -> SyncInsertOptions -> Parser SyncInsertOptions
 parseOverrides obj baseOptions = do
+  when (KeyMap.member "json_type" obj) $
+    fail "insert_options.json_type is retired: remove it; use remove_jsonb_from_schema to choose text or jsonb columns (JSON payload insertion cannot be disabled)"
   SyncInsertOptions
     <$> obj .:? "tx_cbor" .!= sioTxCBOR baseOptions
     <*> obj .:? "tx_out" .!= sioTxOut baseOptions
@@ -604,7 +611,6 @@ parseOverrides obj baseOptions = do
     <*> obj .:? "offchain_pool_data" .!= sioOffchainPoolData baseOptions
     <*> obj .:? "offchain_vote_data" .!= sioOffchainVoteData baseOptions
     <*> obj .:? "pool_stat" .!= sioPoolStats baseOptions
-    <*> obj .:? "json_type" .!= sioJsonType baseOptions
     <*> obj .:? "remove_jsonb_from_schema" .!= sioRemoveJsonbFromSchema baseOptions
     <*> obj .:? "disable_epoch" .!= sioEpoch baseOptions
     <*> obj .:? "stop_at_block" .!= sioStopAtBlock baseOptions
@@ -628,7 +634,6 @@ optionsToList SyncInsertOptions {..} =
     , toJsonIfSet "offchain_pool_data" sioOffchainPoolData
     , toJsonIfSet "offchain_vote_data" sioOffchainVoteData
     , toJsonIfSet "pool_stat" sioPoolStats
-    , toJsonIfSet "json_type" sioJsonType
     , toJsonIfSet "remove_jsonb_from_schema" sioRemoveJsonbFromSchema
     , toJsonIfSet "disable_epoch" sioEpoch
     , toJsonIfSet "stop_at_block" sioStopAtBlock
@@ -638,24 +643,7 @@ toJsonIfSet :: ToJSON a => Text -> a -> Maybe Pair
 toJsonIfSet key value = Just $ fromText key .= value
 
 instance FromJSON SyncInsertOptions where
-  parseJSON = Aeson.withObject "SyncInsertOptions" $ \obj ->
-    SyncInsertOptions
-      <$> obj .:? "tx_cbor" .!= sioTxCBOR def
-      <*> obj .:? "tx_out" .!= sioTxOut def
-      <*> obj .:? "ledger" .!= sioLedger def
-      <*> obj .:? "shelley" .!= sioShelley def
-      <*> pure (sioRewards def)
-      <*> obj .:? "multi_asset" .!= sioMultiAsset def
-      <*> obj .:? "metadata" .!= sioMetadata def
-      <*> obj .:? "plutus" .!= sioPlutus def
-      <*> obj .:? "governance" .!= sioGovernance def
-      <*> obj .:? "offchain_pool_data" .!= sioOffchainPoolData def
-      <*> obj .:? "offchain_vote_data" .!= sioOffchainVoteData def
-      <*> obj .:? "pool_stat" .!= sioPoolStats def
-      <*> obj .:? "json_type" .!= sioJsonType def
-      <*> obj .:? "remove_jsonb_from_schema" .!= sioRemoveJsonbFromSchema def
-      <*> obj .:? "disable_epoch" .!= sioEpoch def
-      <*> obj .:? "stop_at_block" .!= sioStopAtBlock def
+  parseJSON = Aeson.withObject "SyncInsertOptions" $ \obj -> parseOverrides obj def
 
 instance ToJSON SyncInsertOptions where
   toJSON SyncInsertOptions {..} =
@@ -671,7 +659,6 @@ instance ToJSON SyncInsertOptions where
       , "offchain_pool_data" .= sioOffchainPoolData
       , "offchain_vote_data" .= sioOffchainVoteData
       , "pool_stat" .= sioPoolStats
-      , "json_type" .= sioJsonType
       , "remove_jsonb_from_schema" .= sioRemoveJsonbFromSchema
       , "disable_epoch" .= sioEpoch
       , "stop_at_block" .= sioStopAtBlock
@@ -768,12 +755,10 @@ instance FromJSON ShelleyInsertConfig where
     enable <- obj .: "enable"
     stakeAddrs <- obj .:? "stake_addresses"
 
-    pure $
-      case (enable, stakeAddrs) of
-        (False, _) -> ShelleyDisable
-        (True, Nothing) -> ShelleyEnable
-        (True, Just addrs) -> ShelleyStakeAddrs (map parseShortByteString addrs)
-
+    case (enable, stakeAddrs) of
+      (False, _) -> pure ShelleyDisable
+      (True, Nothing) -> pure ShelleyEnable
+      (True, Just addrs) -> ShelleyStakeAddrs <$> traverse parseStakeAddress addrs
 instance ToJSON MultiAssetConfig where
   toJSON cfg =
     Aeson.object
@@ -781,7 +766,7 @@ instance ToJSON MultiAssetConfig where
       , "policies" .= policies cfg
       ]
     where
-      policies (MultiAssetPolicies ps) = toJSON (map shortByteStringToJSON ps)
+      policies (MultiAssetPolicies ps) = toJSON (map (decodeUtf8 . Base16.encode . fromShort) ps)
       policies _ = Aeson.Null
 
 instance FromJSON MultiAssetConfig where
@@ -789,12 +774,10 @@ instance FromJSON MultiAssetConfig where
     enable <- obj .: "enable"
     policies <- obj .:? "policies"
 
-    pure $
-      case (enable, policies) of
-        (False, _) -> MultiAssetDisable
-        (True, Nothing) -> MultiAssetEnable
-        (True, Just ps) -> MultiAssetPolicies (map parseShortByteString ps)
-
+    case (enable, policies) of
+      (False, _) -> pure MultiAssetDisable
+      (True, Nothing) -> pure MultiAssetEnable
+      (True, Just ps) -> MultiAssetPolicies <$> traverse parsePolicyHash ps
 instance ToJSON MetadataConfig where
   toJSON cfg =
     Aeson.object
@@ -823,7 +806,7 @@ instance ToJSON PlutusConfig where
       , "script_hashes" .= scriptHashes cfg
       ]
     where
-      scriptHashes (PlutusScripts ps) = toJSON (map shortByteStringToJSON ps)
+      scriptHashes (PlutusScripts ps) = toJSON (map (decodeUtf8 . Base16.encode . fromShort) ps)
       scriptHashes _ = Aeson.Null
 
 instance FromJSON PlutusConfig where
@@ -831,12 +814,10 @@ instance FromJSON PlutusConfig where
     enable <- obj .: "enable"
     scriptHashes <- obj .:? "script_hashes"
 
-    pure $
-      case (enable, scriptHashes) of
-        (False, _) -> PlutusDisable
-        (True, Nothing) -> PlutusEnable
-        (True, Just hs) -> PlutusScripts (map parseShortByteString hs)
-
+    case (enable, scriptHashes) of
+      (False, _) -> pure PlutusDisable
+      (True, Nothing) -> pure PlutusEnable
+      (True, Just hs) -> PlutusScripts <$> traverse parseScriptHash hs
 instance ToJSON GovernanceConfig where
   toJSON = boolToEnableDisable . isGovernanceEnabled
 
@@ -882,18 +863,6 @@ instance FromJSON OffchainVoteDataConfig where
       Just g -> pure (OffchainVoteDataConfig g)
       Nothing -> fail $ "unexpected offchain_vote_data: " <> show v
 
-instance ToJSON JsonTypeConfig where
-  toJSON JsonTypeText = "text"
-  toJSON JsonTypeJsonb = "jsonb"
-  toJSON JsonTypeDisable = "disable"
-
-instance FromJSON JsonTypeConfig where
-  parseJSON = Aeson.withText "json_type" $ \case
-    "text" -> pure JsonTypeText
-    "jsonb" -> pure JsonTypeJsonb
-    "disable" -> pure JsonTypeDisable
-    other -> fail $ "unexpected json_type: " <> show other
-
 instance ToJSON SnapshotIntervalConfig where
   toJSON cfg =
     Aeson.object
@@ -929,7 +898,6 @@ instance Default SyncInsertOptions where
       , sioOffchainPoolData = OffchainPoolDataConfig False
       , sioOffchainVoteData = OffchainVoteDataConfig False
       , sioPoolStats = PoolStatsConfig False
-      , sioJsonType = JsonTypeText
       , sioRemoveJsonbFromSchema = RemoveJsonbFromSchemaConfig False
       , sioEpoch = EpochConfig False
       , sioStopAtBlock = Nothing
@@ -950,7 +918,6 @@ fullInsertOptions =
     , sioOffchainPoolData = OffchainPoolDataConfig False
     , sioOffchainVoteData = OffchainVoteDataConfig False
     , sioPoolStats = PoolStatsConfig True
-    , sioJsonType = JsonTypeText
     , sioRemoveJsonbFromSchema = RemoveJsonbFromSchemaConfig False
     , sioEpoch = EpochConfig False
     , sioStopAtBlock = Nothing
@@ -971,7 +938,6 @@ onlyUTxOInsertOptions =
     , sioOffchainPoolData = OffchainPoolDataConfig False
     , sioOffchainVoteData = OffchainVoteDataConfig False
     , sioPoolStats = PoolStatsConfig False
-    , sioJsonType = JsonTypeText
     , sioRemoveJsonbFromSchema = RemoveJsonbFromSchemaConfig False
     , sioEpoch = EpochConfig True
     , sioStopAtBlock = Nothing
@@ -1000,7 +966,6 @@ disableAllInsertOptions =
     , sioOffchainVoteData = OffchainVoteDataConfig False
     , sioPoolStats = PoolStatsConfig False
     , sioGovernance = GovernanceConfig False
-    , sioJsonType = JsonTypeText
     , sioRemoveJsonbFromSchema = RemoveJsonbFromSchemaConfig False
     , sioEpoch = EpochConfig True
     , sioStopAtBlock = Nothing
@@ -1025,6 +990,24 @@ enableDisableToBool = \case
   "enable" -> Just True
   "disable" -> Just False
   _ -> Nothing
+
+parseStakeAddress :: Text -> Parser ShortByteString
+parseStakeAddress txt = case deserialiseRewardAccount txt of
+  Just account
+    | Text.toLower txt == serialiseRewardAccount account ->
+        pure (parseShortByteString $ serialiseRewardAccount account)
+  _ -> fail "shelley.stake_addresses entries must be valid bech32 stake addresses"
+
+parsePolicyHash :: Text -> Parser ShortByteString
+parsePolicyHash = parseHash28 "multi_asset.policies entries must be 28-byte hexadecimal policy IDs"
+
+parseScriptHash :: Text -> Parser ShortByteString
+parseScriptHash = parseHash28 "plutus.script_hashes entries must be 28-byte hexadecimal script hashes"
+
+parseHash28 :: String -> Text -> Parser ShortByteString
+parseHash28 message txt = case Base16.decode (encodeUtf8 txt) of
+  Right bytes | BS.length bytes == 28 -> pure (toShort bytes)
+  _ -> fail message
 
 parseShortByteString :: Text -> ShortByteString
 parseShortByteString = toShort . encodeUtf8

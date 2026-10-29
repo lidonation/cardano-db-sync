@@ -127,8 +127,9 @@ jobs:
           echo "${PG_DIR}:5432:$DBUSER:$DBUSER:*" > $PGPASSFILE
           chmod 600 $PGPASSFILE
 
-          # Run tests
+          # Run tests, including the real executable's retired-option boundary.
           cabal test all -j1
+          sh cardano-db-sync/test/cli/disable-in-out.sh "$(cabal list-bin exe:cardano-db-sync)"
       - name: postgres shutdown
         if: ${{ always() }}
         run: |

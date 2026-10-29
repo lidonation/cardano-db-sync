@@ -9,6 +9,9 @@ module Test.Cardano.Db.Mock.Unit.Conway.InlineAndReference (
   unlockDatumOutput,
   unlockDatumOutputSameBlock,
   inlineDatumCBOR,
+  selectedAuxiliaryScripts,
+  selectedReferenceScriptsCore,
+  selectedReferenceScriptsAddress,
   spendRefScript,
   spendRefScriptSameBlock,
   spendCollateralOutput,
@@ -21,6 +24,9 @@ module Test.Cardano.Db.Mock.Unit.Conway.InlineAndReference (
   referenceDelegation,
 ) where
 
+import qualified Cardano.Db as DB
+import Cardano.DbSync.Config.Types (PlutusConfig (..), SyncInsertOptions (..), SyncNodeConfig (..), TxOutConfig (..), UseTxOutAddress (..))
+import Cardano.DbSync.Era.Shelley.Generic.Util (unScriptHash)
 import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Mary.Value (MaryValue (..), MultiAsset (..), PolicyID (..))
 import Cardano.Mock.ChainSync.Server (IOManager (), ServerHandle ())
@@ -28,9 +34,11 @@ import Cardano.Mock.Forging.Interpreter (Interpreter (), withConwayLedgerState)
 import qualified Cardano.Mock.Forging.Tx.Alonzo.ScriptsExamples as Examples
 import qualified Cardano.Mock.Forging.Tx.Conway as Conway
 import Cardano.Mock.Forging.Types
-import Cardano.Prelude hiding (head)
-import Data.ByteString.Short (fromShort)
+import Cardano.Prelude hiding (NonEmpty (..), head, isJust)
+import Data.ByteString.Short (fromShort, toShort)
+import Data.List.NonEmpty (NonEmpty (..))
 import qualified Data.Map as Map
+import Data.Maybe (isJust)
 import Ouroboros.Network.Block (blockPoint)
 import Test.Cardano.Db.Mock.Config
 import qualified Test.Cardano.Db.Mock.UnifiedApi as Api
@@ -669,3 +677,45 @@ referenceDelegation =
     assertBabbageCounts dbSync (1, 1, 1, 1, 1, 0, 0, 0, 1, 1, 0, 1, 1)
   where
     testLabel = "conwayReferenceDelegation"
+
+selectedReferenceScriptsCore :: IOManager -> [(Text, Text)] -> Assertion
+selectedReferenceScriptsCore = selectedReferenceScripts False
+
+selectedReferenceScriptsAddress :: IOManager -> [(Text, Text)] -> Assertion
+selectedReferenceScriptsAddress = selectedReferenceScripts True
+
+selectedReferenceScripts :: Bool -> IOManager -> [(Text, Text)] -> Assertion
+selectedReferenceScripts addressVariant =
+  withCustomConfigDropDB initCommandLineArgs (Just selectScript) conwayConfigDir label $ \interpreter mockServer dbSync -> do
+    startDBSync dbSync
+    void $ Api.registerAllStakeCreds interpreter mockServer
+    tx <-
+      withConwayLedgerState interpreter $
+        Conway.mkLockByScriptTx
+          (UTxOIndex 0)
+          [ Conway.TxOutInline True Conway.InlineDatum (Conway.ReferenceScript True)
+          , Conway.TxOutInline True Conway.InlineDatum (Conway.ReferenceScript False)
+          ]
+          20_000
+          20_000
+    void $ Api.forgeNextAndSubmit interpreter mockServer $ MockBlock [TxConway tx] (NodeId 1)
+    assertBlockNoBackoff dbSync 2
+    assertEqQuery dbSync (isJust <$> DB.queryScriptWithId (unScriptHash Examples.alwaysSucceedsScriptHash)) True "selected reference script present"
+    assertEqQuery dbSync (isJust <$> DB.queryScriptWithId (unScriptHash Examples.alwaysFailsScriptHash)) False "unselected reference script absent"
+    assertEqQuery dbSync (if addressVariant then DB.queryReferenceScriptAddressCount else DB.queryReferenceScriptCoreCount) 1 "only one output has a reference-script ID"
+    assertEqQuery dbSync (if addressVariant then DB.queryInlineDatumAddressCount else DB.queryInlineDatumCoreCount) 2 "inline datums remain linked"
+  where
+    label = if addressVariant then "selectedReferenceScriptsAddress" else "selectedReferenceScriptsCore"
+    selectScript cfg = cfg {dncInsertOptions = (dncInsertOptions cfg) {sioPlutus = PlutusScripts (toShort (unScriptHash Examples.alwaysSucceedsScriptHash) :| []), sioTxOut = TxOutEnable (UseTxOutAddress addressVariant)}}
+
+selectedAuxiliaryScripts :: IOManager -> [(Text, Text)] -> Assertion
+selectedAuxiliaryScripts =
+  withCustomConfigDropDB initCommandLineArgs (Just selectScript) conwayConfigDir "selectedAuxiliaryScripts" $ \interpreter mockServer dbSync -> do
+    startDBSync dbSync
+    void $ Api.withConwayFindLeaderAndSubmitTx interpreter mockServer $ \_ ->
+      Right $ Conway.mkAuxDataTxWithScripts True Conway.mkDummyTxBody Map.empty [Examples.alwaysSucceedsScript, Examples.alwaysFailsScript]
+    assertBlockNoBackoff dbSync 1
+    assertEqQuery dbSync (isJust <$> DB.queryScriptWithId (unScriptHash Examples.alwaysSucceedsScriptHash)) True "selected auxiliary script present"
+    assertEqQuery dbSync (isJust <$> DB.queryScriptWithId (unScriptHash Examples.alwaysFailsScriptHash)) False "unselected auxiliary script absent"
+  where
+    selectScript cfg = cfg {dncInsertOptions = (dncInsertOptions cfg) {sioPlutus = PlutusScripts (toShort (unScriptHash Examples.alwaysSucceedsScriptHash) :| [])}}

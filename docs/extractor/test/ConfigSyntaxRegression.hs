@@ -3,7 +3,7 @@ module Main (main) where
 
 import ConfigExtract.Interp (extractSchema, schemaPassthrough, schemaUnresolved)
 import ConfigExtract.Syntax (lowerModule)
-import Control.Monad (unless)
+import Control.Monad (when)
 import qualified Data.Text as Text
 import GHC.Types.SrcLoc (unLoc)
 import HaddockExtract.Parse (ParseOutcome (..), parseSource)
@@ -53,7 +53,7 @@ main = do
     Failed err -> fail ("trace fixture did not parse: " <> Text.unpack err)
     Parsed _ _ parsed -> do
       let schema = extractSchema (lowerModule (unLoc parsed)) "Root"
-      unless (not (null (schemaPassthrough schema))) $
+      when (null (schemaPassthrough schema)) $
         fail "boolean guards lost trace passthrough keys"
   putStrLn "config-syntax-regression-test: all checks passed"
 
@@ -62,7 +62,7 @@ rejects name parser = case parseSource source "SyntaxRegression.hs" of
   Failed err -> fail (name <> ": fixture did not parse: " <> Text.unpack err)
   Parsed _ _ parsed -> do
     let schema = extractSchema (lowerModule (unLoc parsed)) "Root"
-    unless (not (null (schemaUnresolved schema))) $
+    when (null (schemaUnresolved schema)) $
       fail (name <> ": unsupported syntax extracted without an unresolved error")
   where
     source =

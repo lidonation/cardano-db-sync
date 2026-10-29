@@ -96,6 +96,9 @@ newtype MetaId = MetaId {getMetaId :: Int64}
 newtype WithdrawalId = WithdrawalId {getWithdrawalId :: Int64}
   deriving (Eq, Show, Ord)
 
+newtype SyncFilterConfigId = SyncFilterConfigId {getSyncFilterConfigId :: Int64}
+  deriving (Eq, Show, Ord)
+
 newtype ExtraMigrationsId = ExtraMigrationsId {getExtraMigrationsId :: Int64}
   deriving (Eq, Show, Ord)
 
