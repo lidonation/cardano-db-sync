@@ -36,7 +36,7 @@
     "test:build": "vitest run --config vitest.build.config.mts",
     "test:components": "playwright test",
     "test:schema-db": "vitest run --config vitest.db.config.mts",
-    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run check:config && npm run check:schema && npm run check:renames && npm run check:tokens && npm run check:token-lint && npm run check:deps && npm run check:audit && npm run check:i18n && npm run check:manifest && npm run test && npm run test:components && npm run test:switchers:built && npm run test:build && npm run test:landing:built && npm run test:chrome && npm run check:links && npm run check:csp && npm run check:budget",
+    "verify": "npm run format:check && npm run lint && npm run typecheck && npm run check:baseurl && npm run check:css && npm run check:annotations && npm run check:config && npm run check:schema && npm run check:renames && npm run check:tokens && npm run check:token-lint && npm run check:deps && npm run check:audit && npm run check:i18n && npm run check:manifest && npm run test && npm run test:components && npm run test:prism:built && npm run test:switchers:built && npm run test:build && npm run test:landing:built && npm run test:chrome && npm run check:links && npm run check:csp && npm run check:budget",
     "check:annotations": "node scripts/check-annotations.mjs",
     "check:config": "node scripts/check-config.mjs",
     "check:schema": "node scripts/check-schema.mjs",
@@ -44,7 +44,8 @@
     "check:renames": "node scripts/check-renames.mjs",
     "test:switchers:built": "playwright test --config playwright.built.config.ts",
     "test:chrome": "cross-env PLAYWRIGHT_JSON_OUTPUT_FILE=test-results/chrome-dev.json DBS_BUILT_PROFILE=dev DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/chrome.spec.ts --output=test-results/chrome-dev --reporter=list,json && cross-env PLAYWRIGHT_JSON_OUTPUT_FILE=test-results/chrome-prod.json DBS_BUILT_PROFILE=prod DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/chrome.spec.ts --output=test-results/chrome-prod --reporter=list,json",
-    "test:landing:built": "playwright test --config playwright.landing-built.config.ts"
+    "test:landing:built": "playwright test --config playwright.landing-built.config.ts",
+    "test:prism:built": "node test/fixtures/prism/run.mjs"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

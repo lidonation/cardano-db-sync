@@ -129,13 +129,14 @@ describe('build hygiene', () => {
     expect(config.markdown?.hooks?.onBrokenMarkdownLinks).toBe('throw');
   });
 
-  it('registers the CNAME, route-manifest, environment, security, i18n, inventory, CSS-prune and shared-code plugins', async () => {
+  it('registers the CNAME, route-manifest, environment, security, i18n, inventory, CSS-prune, lazy-Prism and shared-code plugins', async () => {
     const config = await loadConfig('prod');
     const {default: cnamePlugin} = await import('../../plugins/cname');
     const {default: routeManifestPlugin} = await import('../../plugins/route-manifest');
     const {default: environmentPlugin} = await import('../../plugins/environment');
     const {default: securityPlugin} = await import('../../plugins/security');
     const {default: i18nPlugin} = await import('../../plugins/i18n');
+    const {default: lazyPrismPlugin} = await import('../../plugins/lazy-prism');
     const {default: inventoryPlugin} = await import('../../plugins/inventory');
     const {default: palettePlugin} = await import('../../plugins/palette');
     const {default: cssPrunePlugin} = await import('../../plugins/css-prune');
@@ -148,6 +149,7 @@ describe('build hygiene', () => {
       environmentPlugin,
       securityPlugin,
       i18nPlugin,
+      lazyPrismPlugin,
       inventoryPlugin,
       palettePlugin,
       cssPrunePlugin,

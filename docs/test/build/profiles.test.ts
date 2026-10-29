@@ -11,6 +11,7 @@ import {PROFILES} from '../../config/profiles';
 import {PALETTE_BOOTSTRAP} from '../../src/lib/palette';
 import {inlineScripts} from '../../plugins/security';
 import {faqPageProblems} from '../../scripts/lib/faq-jsonld.mjs';
+import {localeSites, measure} from '../../scripts/check-asset-budget.mjs';
 
 const run = promisify(execFile);
 const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
@@ -381,4 +382,27 @@ describe('Numbers production isolation (NUM-5)', () => {
       await fs.readFile(path.join(DOCS_ROOT, 'config/route-manifest.json'), 'utf8'),
     ).not.toContain('__numbers');
   });
+});
+
+describe('homepage Prism payload (B51)', () => {
+  for (const locale of ['en', 'ja'] as const) {
+    it(`keeps the Prism renderer out of the ${locale} dev homepage initial scripts`, async () => {
+      const root = locale === 'en' ? OUT.dev : path.join(OUT.dev, locale);
+      const html = await fs.readFile(path.join(root, 'index.html'), 'utf8');
+      const $ = load(html);
+      const scripts = $('script[src]').toArray();
+      expect(scripts.length).toBeGreaterThan(0);
+      // Use the shipping gate's locale isolation, URL resolution and gzip accounting.
+      const {pages} = await measure(root, await localeSites(root));
+      const homepage = pages.find((page) => page.page === 'index.html');
+      expect(homepage).toBeDefined();
+      expect(homepage!.bytes).toBeLessThanOrEqual(150 * 1024);
+      for (const script of scripts) {
+        const url = $(script).attr('src')!;
+        const relative = url.slice(url.indexOf('/assets/') + 1);
+        const contents = await fs.readFile(path.join(root, relative), 'utf8');
+        expect(contents).not.toContain('highlightAllUnder');
+      }
+    });
+  }
 });

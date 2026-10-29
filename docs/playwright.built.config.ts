@@ -26,6 +26,8 @@ export const BUILT_HOME = `http://127.0.0.1:${PORT}${PROFILES[profile].baseUrl}`
 /** Real static output: all locales and the exact CSP-hashed scripts, before hydration. */
 export default defineConfig({
   testDir: 'test/built-browser',
+  // Prism runs against its own temporary built fixture, not the published scaffold.
+  testIgnore: '**/prism.spec.ts',
   fullyParallel: true,
   workers: 4,
   forbidOnly: Boolean(process.env.CI),
