@@ -99,6 +99,15 @@ it('groups only optimized guide modules and their metadata in a lazy chunk', asy
   const group = config.optimization.splitChunks.cacheGroups.guideMetadata;
   expect(group.name).toBe('guide-metadata');
   expect(group.chunks).toBe('async');
+  expect(group.test({})).toBe(false);
+  expect(group.test(null as never)).toBe(false);
+  expect(group.test({resource: 42} as never)).toBe(false);
+  expect(group.test({resource: `${siteDir}/docs/intro.md`})).toBe(false);
+  expect(
+    group.test({
+      resource: `${siteDir}/.docusaurus/docusaurus-plugin-content-docs/default/unrelated.json`,
+    }),
+  ).toBe(false);
   expect(group.test({resource: `${siteDir}/docs/guides/interesting-queries.md`})).toBe(true);
   expect(
     group.test({
@@ -138,6 +147,7 @@ it('uses content-only names for generated route chunks while retaining named uti
   expect(config.output.chunkFilename({chunk: {name: 'code-block'}})).toBe(
     'assets/js/[name].[contenthash:8].js',
   );
+  expect(config.output.chunkFilename({} as never)).toBe('assets/js/[name].[contenthash:8].js');
 });
 
 it('keeps an opted-in guide native if it later adds tabbed procedures', async () => {

@@ -71,3 +71,28 @@ it('accepts current and version-prefixed documentation routes without allowing a
   expect(validateRenderedGuide(markup('/docs/next/guides/b')).join()).toContain('route identity');
   expect(validateRenderedGuide(markup('/other/guides/a')).join()).toContain('route identity');
 });
+
+it('accepts ordinary and valid optimized pages in the post-build scan', async () => {
+  const {mkdtemp, mkdir, writeFile, rm} = await import('node:fs/promises');
+  const {default: os} = await import('node:os');
+  const {default: path} = await import('node:path');
+  const {default: plugin} = await import('../../plugins/static-guide-content');
+  const dir = await mkdtemp(path.join(os.tmpdir(), 'static-guard-valid-'));
+  try {
+    await mkdir(path.join(dir, 'docs'), {recursive: true});
+    await mkdir(path.join(dir, 'assets'), {recursive: true});
+    await writeFile(path.join(dir, 'ordinary.html'), '<html><body>ordinary page</body></html>');
+    await writeFile(
+      path.join(dir, 'docs', 'valid.html'),
+      '<div data-static-guide="guides/a" data-static-permalink="/docs/guides/a"><p>safe</p></div>',
+    );
+    await writeFile(
+      path.join(dir, 'assets', 'ignored.html'),
+      '<div data-static-guide="bad"><script>bad()</script></div>',
+    );
+    const check = plugin({siteDir: dir} as never).postBuild!;
+    await expect(check({outDir: dir} as never)).resolves.toBeUndefined();
+  } finally {
+    await rm(dir, {recursive: true, force: true});
+  }
+});
