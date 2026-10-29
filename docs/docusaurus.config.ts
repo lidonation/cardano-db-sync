@@ -1,3 +1,4 @@
+import pagefindProse from './plugins/pagefind-prose';
 import roadmapPlugin from './plugins/roadmap';
 import guideMarkdown from './plugins/guide-markdown/index.mjs';
 import surveyResultsPlugin from './plugins/survey-results';
@@ -113,6 +114,7 @@ const config: Config = {
   // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
+    pagefindProse,
     roadmapPlugin,
     surveyResultsPlugin,
     repositoryActivityPlugin,

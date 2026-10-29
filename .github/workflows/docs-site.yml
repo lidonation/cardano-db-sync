@@ -117,6 +117,8 @@ jobs:
       # The Chromium build is the one @playwright/test pins, not the runner's browser.
       - name: Install Chromium for Playwright
         run: npx playwright install --with-deps chromium
+      - name: Pagefind version isolation and identifier regression (SRCH-10, SRCH-11)
+        run: npm run test:pagefind:built
       - name: Components (THM-5, THM-6, FLOOR-4, FLOOR-5, DF-2, DF-4, A11Y-28, NAV-3)
         run: npm run test:components
       - name: Built code highlighting (B51)
@@ -188,6 +190,8 @@ jobs:
           npm run build:prod -- --out-dir .cache/browser-fixtures/prod
         env:
           REPOSITORY_ACTIVITY_CACHE: test/fixtures/repository-activity
+      - name: Pagefind on both shipped profiles and all locales (SRCH-10, SEC-2)
+        run: npm run test:pagefind:profiles
       - name: Landing on shipped assets (B44-a, PERF-1, A11Y-18)
         run: npm run test:landing:built
         env:
