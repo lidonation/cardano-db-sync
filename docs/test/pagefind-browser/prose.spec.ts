@@ -6,6 +6,7 @@ import path from 'node:path';
 import {createServer, type Server} from 'node:http';
 import {once} from 'node:events';
 import ts from 'typescript';
+import {gzipSync} from 'node:zlib';
 
 let root: string;
 let server: Server;
@@ -17,6 +18,9 @@ test.beforeAll(async () => {
   for (const [version, text] of [
     ['v1', 'Prune tx_out safely with the snapshot procedure.'],
     ['v2', 'Zebraquartz is available exclusively in this newer guide.'],
+    ['v3', 'Third version content.'],
+    ['v4', 'Fourth version content.'],
+    ['v5', 'Fifth version content.'],
   ]) {
     const dir = path.join(root, 'docs', version, 'guide');
     await mkdir(dir, {recursive: true});
@@ -29,7 +33,7 @@ test.beforeAll(async () => {
     await indexVersions({
       outDir: root,
       baseUrl: '/preview/ja/',
-      versions: ['v1', 'v2'].map((versionName) => ({
+      versions: ['v1', 'v2', 'v3', 'v4', 'v5'].map((versionName) => ({
         versionName,
         docs: [{permalink: `/preview/ja/docs/${versionName}/guide`}],
       })),
@@ -149,16 +153,20 @@ test('identical source regenerates byte-identical headless bundles', async () =>
     await indexVersions({
       outDir: second,
       baseUrl: '/preview/ja/',
-      versions: ['v1', 'v2'].map((versionName) => ({
+      versions: ['v1', 'v2', 'v3', 'v4', 'v5'].map((versionName) => ({
         versionName,
         docs: [{permalink: `/preview/ja/docs/${versionName}/guide`}],
       })),
       create: () => pagefind.createIndex({rootSelector: 'article .markdown'}),
       read: (file) => readFile(file.replace(second, root), 'utf8'),
     });
-    expect(await snapshot(path.join(second, 'pagefind'))).toEqual(
-      await snapshot(path.join(root, 'pagefind')),
-    );
+    const files = await snapshot(path.join(second, 'pagefind'));
+    expect(files).toEqual(await snapshot(path.join(root, 'pagefind')));
+    const jsBytes = files
+      .filter(([name]) => name.endsWith('.js'))
+      .reduce((total, [, encoded]) => total + gzipSync(Buffer.from(encoded, 'base64')).length, 0);
+    expect(jsBytes).toBeLessThan(28 * 1024);
+    expect(files.filter(([name]) => name.endsWith('/pagefind.js'))).toHaveLength(1);
   } finally {
     await pagefind.close();
     await rm(second, {recursive: true, force: true});

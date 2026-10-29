@@ -181,3 +181,31 @@ describe('build lifecycle and error handling', () => {
     }
   });
 });
+
+it('shares only identical Pagefind runtimes between versions', async () => {
+  const {shareRuntime} = await import('../../plugins/pagefind-prose');
+  const fs = await import('node:fs/promises');
+  const path = await import('node:path');
+  const {tmpdir} = await import('node:os');
+  const root = await fs.mkdtemp(path.join(tmpdir(), 'pagefind-runtime-'));
+  try {
+    for (const [name, contents] of [
+      ['v1', 'same'],
+      ['v2', 'same'],
+      ['v3', 'different'],
+    ]) {
+      const dir = path.join(root, name);
+      await fs.mkdir(dir);
+      await fs.writeFile(path.join(dir, 'pagefind.js'), contents);
+      await fs.writeFile(path.join(dir, 'pagefind-worker.js'), 'worker');
+      if (name === 'v3') await expect(shareRuntime(dir)).rejects.toThrow('runtime differs');
+      else await shareRuntime(dir);
+    }
+    expect(await fs.readFile(path.join(root, '_runtime/pagefind.js'), 'utf8')).toBe('same');
+    expect(await fs.readFile(path.join(root, 'v2/pagefind-worker.js'), 'utf8')).toContain(
+      '_runtime/pagefind-worker.js',
+    );
+  } finally {
+    await fs.rm(root, {recursive: true, force: true});
+  }
+});
