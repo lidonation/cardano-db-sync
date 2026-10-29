@@ -57,6 +57,9 @@ describe('public retrieval and cache validation', () => {
     expect(parseCache(JSON.stringify(data))).toEqual(data);
     expect(() => parseCache('{')).toThrow();
     expect(() =>
+      parseCache(JSON.stringify({...data, statuses: {...data.statuses, todo: 100, done: 10}})),
+    ).toThrow();
+    expect(() =>
       parseCache(JSON.stringify({...data, objectives: [{name: 'bad', done: 2, total: 1}]})),
     ).toThrow();
   });
@@ -70,3 +73,21 @@ it.skipIf(!process.env.ROADMAP_LIVE)(
     expect(data.statuses.todo + data.statuses.inProgress + data.statuses.done).toBeGreaterThan(0);
   },
 );
+
+it('rejects seeded missing-field mutations across the complete snapshot', () => {
+  let seed = 123456789;
+  for (let i = 0; i < 60; i++) {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    const pages = structuredClone(fixture.pages);
+    const page = seed % pages.length;
+    const index = (seed >>> 8) % pages[page].nodes.length;
+    pages[page].nodes[index].memexProjectColumnValues = [];
+    expect(() => transform(fixture.fields, pages, '2026-10-29T00:00:00.000Z')).toThrow();
+  }
+});
+
+it('rejects a changed board format before accepting source data', async () => {
+  const {readRoadmap} = await import('../../plugins/roadmap/source');
+  const send = async () => new Response('<html>format changed</html>', {status: 200});
+  await expect(readRoadmap(send as typeof fetch)).rejects.toThrow('Board format changed');
+});

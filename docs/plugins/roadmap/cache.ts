@@ -36,6 +36,7 @@ export function parseCache(json: string): RoadmapData {
   if (
     new Set(objectives.map((o) => o.name)).size !== objectives.length ||
     objectives.reduce((sum, o) => sum + o.total, 0) > total ||
+    objectives.reduce((sum, o) => sum + o.done, 0) > x.statuses.done ||
     !x.releases.every(label) ||
     new Set(x.releases).size !== x.releases.length
   )
