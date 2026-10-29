@@ -403,7 +403,7 @@ describe('Numbers production isolation (NUM-5)', () => {
 });
 
 describe('homepage Prism payload (B51)', () => {
-  for (const locale of ['en', 'ja'] as const) {
+  for (const locale of LOCALES) {
     it(`keeps the Prism renderer out of the ${locale} dev homepage initial scripts`, async () => {
       const root = locale === 'en' ? OUT.dev : path.join(OUT.dev, locale);
       const html = await fs.readFile(path.join(root, 'index.html'), 'utf8');

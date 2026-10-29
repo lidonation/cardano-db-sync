@@ -1,7 +1,8 @@
 import {readFileSync} from 'node:fs';
-import {describe, expect, it} from 'vitest';
+import {describe, expect, it, vi} from 'vitest';
 
 import {FOOTER_MENU, NAVBAR_MENU, SURFACES, gateMenu, routePaths} from '../../src/data/surfaces';
+import type {NavbarItemConfig} from '../../src/theme/Navbar/items';
 
 describe('chrome route gating', () => {
   const paths = routePaths([
@@ -80,4 +81,30 @@ it('shows the roadmap anchor only with its ecosystem page', () => {
 it('routes Guides and Installation to real guide pages', () => {
   expect(SURFACES.guides).toBe('/docs/guides');
   expect(SURFACES.installation).toBe('/docs/guides/installation');
+});
+
+it('keeps stock navbar dispatch limited to selectors and their links', async () => {
+  const {default: path} = await import('node:path');
+  const source = readFileSync(
+    path.resolve(import.meta.dirname, '../../src/theme/NavbarItem/ComponentTypes.tsx'),
+    'utf8',
+  );
+  const registered = [...source.matchAll(/^ {2}(\w+):/gm)].map((match) => match[1]);
+  expect(registered.sort()).toEqual([
+    'default',
+    'docsVersionDropdown',
+    'dropdown',
+    'localeDropdown',
+  ]);
+  const {deriveNav} = await import('../../src/theme/Navbar/items');
+  vi.stubEnv('DOCS_PROFILE', 'dev');
+  let config;
+  try {
+    config = await import('../../docusaurus.config');
+  } finally {
+    vi.unstubAllEnvs();
+  }
+  const items = (config.default.themeConfig as {navbar: {items: NavbarItemConfig[]}}).navbar.items;
+  const nav = deriveNav(items, '/', '/', {sidebarLinks: {}, docPaths: {}});
+  for (const item of [...nav.actions, ...nav.preferences]) expect(registered).toContain(item.type);
 });
