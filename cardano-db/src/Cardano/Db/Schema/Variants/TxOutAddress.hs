@@ -238,11 +238,11 @@ addressEncoder =
 -- A table containing Multi-Asset transaction outputs.
 data MaTxOutAddress = MaTxOutAddress
   { maTxOutAddressIdent :: !Id.MultiAssetId
-  -- ^ The Multi Asset transaction output amount (denominated in the Multi Asset).
-  , maTxOutAddressQuantity :: !DbWord64
-  -- ^ The TxOut table index for the transaction that this Multi Asset transaction output.
-  , maTxOutAddressTxOutId :: !Id.TxOutAddressId
   -- ^ The MultiAsset table index specifying the asset.
+  , maTxOutAddressQuantity :: !DbWord64
+  -- ^ The Multi Asset transaction output amount (denominated in the Multi Asset).
+  , maTxOutAddressTxOutId :: !Id.TxOutAddressId
+  -- ^ The TxOut table index for the output containing this asset.
   }
   deriving (Eq, Show, Generic)
 

@@ -229,7 +229,7 @@ delegationEncoder =
 --   This table should never get rolled back.
 -- Schema reference for @reward@:
 -- A table for earned staking rewards. After 13.2 release it includes only 3 types of rewards: member,
--- leader and refund, since the other 2 types have moved to a separate table instant_reward. The
+-- leader and refund, since the other 2 types have moved to a separate table reward_rest. The
 -- rewards are inserted incrementally and this procedure is finalised when the spendable epoch comes.
 -- Before the epoch comes, some entries may be missing.
 data Reward = Reward
@@ -250,7 +250,7 @@ data Reward = Reward
   -- earned or for the pool that there is a deposit refund.
   , rewardEarnedEpoch :: !Word64 -- generated="((CASE WHEN (type='refund') then spendable_epoch else (CASE WHEN spendable_epoch >= 2 then spendable_epoch-2 else 0 end) end) STORED)"
 
-  -- ^ The epoch in which the reward was earned. For @pool@ and @leader@ rewards spendable in epoch
+  -- ^ The epoch in which the reward was earned. For @member@ and @leader@ rewards spendable in epoch
   -- @N@, this will be @N - 2@, @refund@ N.
   }
   deriving (Show, Eq, Generic)

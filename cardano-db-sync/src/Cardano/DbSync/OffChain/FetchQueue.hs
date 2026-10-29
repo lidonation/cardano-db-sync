@@ -9,6 +9,9 @@ import Cardano.DbSync.Types
 import Cardano.Prelude hiding (retry)
 import Data.Time.Clock.POSIX (POSIXTime)
 
+-- | Start an immediately eligible metadata fetch. Pool registrations create @pool_metadata_ref@
+-- entries; the fetch queue selects new or previously failed references. Successful pool fetches are
+-- stored in @off_chain_pool_data@; failures go to @off_chain_pool_fetch_error@ for a later retry.
 newRetry :: POSIXTime -> Retry
 newRetry now =
   Retry

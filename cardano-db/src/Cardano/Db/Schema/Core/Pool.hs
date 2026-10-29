@@ -142,7 +142,7 @@ data PoolUpdate = PoolUpdate
   -- ^ The margin (as a percentage) this pool charges.
   , poolUpdateFixedCost :: !DbLovelace -- sqltype=lovelace
 
-  -- ^ The fixed per epoch fee (in ADA) this pool charges.
+  -- ^ The fixed per epoch fee (in Lovelace) this pool charges.
   , poolUpdateRegisteredTxId :: !Id.TxId -- noreference -- Slot number in which the pool was registered.
 
   -- ^ The Tx table index of the transaction in which provided this pool update.

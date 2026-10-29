@@ -413,9 +413,9 @@
               "name": "TxOutConsumedBootstrap"
             }
           ],
-          "doc": "@tx_out.value@ is required when the object is supplied. @enable@ stores inputs and outputs;\n@disable@ leaves them empty; @consumed@ tracks consuming transactions; @prune@ removes consumed\noutputs; @bootstrap@ defers UTxO insertion until near tip using the ledger. The optional\n@force_tx_in@ and @use_address_table@ booleans default to false. Changing from prune or consumed\nmodes requires care on subsequent runs.\n\nWith disable, tx_in, tx_out and ma_tx_out remain empty; tx.fee may be zero and redeemer.script_hash\nnull. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap\nrequires in-memory ledger state; it supports Babbage, Conway and Dijkstra. The LSM backend is not supported.\nIt loads the UTxO in bulk and leaves tx.fee and redeemer.script_hash incomplete during bootstrap.\nReusing a database with incompatible modes can cause failures.",
+          "doc": "@tx_out.value@ is required when the object is supplied. @enable@ stores inputs and outputs;\n@disable@ leaves them empty; @consumed@ tracks consuming transactions; @prune@ removes consumed\noutputs; @bootstrap@ defers UTxO insertion until near tip using the ledger. The optional\n@force_tx_in@ and @use_address_table@ booleans default to false. Changing from prune or consumed\nmodes requires care on subsequent runs.\n\nWith disable, tx_in, tx_out and ma_tx_out remain empty; tx.fee may be zero and redeemer.script_hash\nnull. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap\nrequires in-memory ledger state; it supports Babbage, Conway and Dijkstra. The LSM backend is not supported.\nIt loads the UTxO in bulk and leaves tx.fee and redeemer.script_hash incomplete during bootstrap.\nOnce used, consumed mode must remain enabled on subsequent runs unless switching to pruning.\nOnce used, pruning must remain enabled on subsequent runs; dropping it is rejected and can cause\nfailures. Bootstrap must remain selected until the UTxO migration completes. After completion,\nbootstrap can be changed, but the database's consumed/pruning requirements still apply.",
           "kind": "data",
-          "line": 255,
+          "line": 258,
           "name": "TxOutConfig",
           "position": "before"
         },
@@ -432,9 +432,9 @@
               "name": "ForceTxIn"
             }
           ],
-          "doc": "@tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is\nignored for @enable@ and @disable@.",
+          "doc": "@tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is\nignored for @enable@ and @disable@. Setting it to true populates @tx_in@ in consumed, prune and\nbootstrap modes, which otherwise omit transaction inputs.",
           "kind": "newtype",
-          "line": 265,
+          "line": 269,
           "name": "ForceTxIn",
           "position": "before"
         },
@@ -451,9 +451,9 @@
               "name": "UseTxOutAddress"
             }
           ],
-          "doc": "@tx_out.use_address_table@ defaults to false. When enabled, address details live in a separate\n@address@ table referenced by outputs. This schema variant requires an empty database.\n\nThe normalized address table stores address, raw bytes, script flag, payment credential and stake\naddress. Both tx_out and collateral_tx_out then refer to address_id; the variant has payment\ncredential and raw-address indexes.",
+          "doc": "@tx_out.use_address_table@ defaults to false. When enabled, address details live in a separate\n@address@ table referenced by outputs. This schema variant requires an empty database.\n\nThe normalized address table stores address, raw bytes, script flag, payment credential and stake\naddress. Both tx_out and collateral_tx_out then refer to address_id; the variant has payment\ncredential and raw-address indexes. Once selected, this schema variant cannot be reverted on\nthe same database; keep @use_address_table@ enabled on subsequent runs.",
           "kind": "newtype",
-          "line": 275,
+          "line": 280,
           "name": "UseTxOutAddress",
           "position": "before"
         },
@@ -472,7 +472,7 @@
           ],
           "doc": "Choose the backend for storing ledger tables (UTxO set).\n'LedgerBackendInMemory' keeps everything in RAM (current default).\n'LedgerBackendLSM' uses LSM trees on disk for lower memory usage.\nThe top-level @ledger_backend@ selects @inmemory@ (default) or @lsm@. The former keeps the UTxO set\nin RAM; the latter uses disk-backed LSM trees.",
           "kind": "data",
-          "line": 284,
+          "line": 289,
           "name": "LedgerBackend",
           "position": "before"
         },
@@ -494,9 +494,9 @@
               "name": "LedgerIgnore"
             }
           ],
-          "doc": "@ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable does\nnot maintain one; ignore maintains it for UTxO loading but does not use its other data. Disabling\nledger affects historical rewards, epoch stake, ada pots, epoch parameters and related fields.\nChanging modes on an existing database can be unsafe.\n\nWhen ledger is disabled, historic rewards and epoch stake, ada pots and epoch parameter data are\nunavailable, and several deposit and reward-related fields are null. Restoring a snapshot with\nledger disabled may delete existing data; consult the operational guide before switching modes.",
+          "doc": "@ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable does\nnot maintain one; ignore maintains it for UTxO loading but does not use its other data. Disabling\nledger affects historical rewards, epoch stake, ada pots, epoch parameters and related fields.\nChanging modes on an existing database can be unsafe.\n\nWhen ledger is disabled, historic rewards and epoch stake, ada pots and epoch parameter data are\nunavailable: @reward@, @epoch_stake@, @ada_pots@, @epoch_param@ and @drep_distr@ are not populated.\n@redeemer.fee@ and @tx.deposit@ are null, as are ledger-derived governance epochs and certificate\ndeposits. Starting with ledger disabled after restoring a ledger-enabled snapshot irreversibly\nremoves existing rewards, epoch stake, ada pots and epoch parameters, and clears redeemer fees.\nDo not change ledger mode casually on an existing database. A supplied @--state-dir@ with ledger\ndisabled produces a warning, not an error; no ledger snapshots are maintained in that mode.",
           "kind": "data",
-          "line": 303,
+          "line": 312,
           "name": "LedgerInsertConfig",
           "position": "before"
         },
@@ -520,7 +520,7 @@
           ],
           "doc": "@shelley.enable@ controls transaction-era certificates, withdrawals and parameter proposals, not\nepoch stake or rewards. Genesis-era stake and pool registrations are still inserted. Optional\n@stake_addresses@ filters enabled data.",
           "kind": "data",
-          "line": 312,
+          "line": 321,
           "name": "ShelleyInsertConfig",
           "position": "before"
         },
@@ -544,7 +544,7 @@
           ],
           "doc": "@multi_asset.enable@ controls multi-asset entries. An optional non-empty @policies@ list restricts\nenabled insertion to those policies.",
           "kind": "data",
-          "line": 324,
+          "line": 333,
           "name": "MultiAssetConfig",
           "position": "before"
         },
@@ -568,7 +568,7 @@
           ],
           "doc": "@metadata.enable@ controls transaction metadata. An optional non-empty @keys@ list restricts enabled\ninsertion to those integer metadata keys.",
           "kind": "data",
-          "line": 332,
+          "line": 341,
           "name": "MetadataConfig",
           "position": "before"
         },
@@ -592,7 +592,7 @@
           ],
           "doc": "@plutus.enable@ controls Plutus and script data. An optional non-empty @script_hashes@ list\nrestricts enabled insertion to those script hashes.",
           "kind": "data",
-          "line": 340,
+          "line": 349,
           "name": "PlutusConfig",
           "position": "before"
         },
@@ -611,7 +611,7 @@
           ],
           "doc": "@governance@ accepts @enable@ or @disable@ for governance data; off-chain vote metadata has its own\nindependent setting.",
           "kind": "newtype",
-          "line": 348,
+          "line": 357,
           "name": "GovernanceConfig",
           "position": "before"
         },
@@ -630,7 +630,7 @@
           ],
           "doc": "@offchain_pool_data@ accepts @enable@ or @disable@ for fetching stake-pool metadata and defaults to\n@disable@. Fetch restrictions and the testing-only private-URL flag also apply.\n\nPool metadata includes the registered name, ticker, homepage and description. Fetches are subject to\nnetwork-address restrictions; the private-URL switch is intended only for local-cluster tests.",
           "kind": "newtype",
-          "line": 358,
+          "line": 367,
           "name": "OffchainPoolDataConfig",
           "position": "before"
         },
@@ -649,7 +649,7 @@
           ],
           "doc": "@offchain_vote_data@ accepts @enable@ or @disable@ for governance-anchor metadata and defaults to\n@disable@. It is independent of the @governance@ option.\n\nGovernance anchors include DRep registrations (CIP-119), governance action proposals (CIP-108), and\nvote metadata (CIP-100). Prior releases coupled fetching to the governance option.",
           "kind": "newtype",
-          "line": 368,
+          "line": 377,
           "name": "OffchainVoteDataConfig",
           "position": "before"
         },
@@ -668,7 +668,7 @@
           ],
           "doc": "@remove_jsonb_from_schema@ accepts @enable@ or @disable@. Enabling removes JSONB types from\nsupported schema columns to improve insertion performance; changing an existing schema requires\ncare.\n\nAffected JSONB columns include tx_metadata.json, script.json, datum.value, redeemer_data.value,\ncost_model.costs, gov_action_proposal.description, off_chain_pool_data.json and\noff_chain_vote_data.json.",
           "kind": "newtype",
-          "line": 380,
+          "line": 389,
           "name": "RemoveJsonbFromSchemaConfig",
           "position": "before"
         },
@@ -692,7 +692,7 @@
           ],
           "doc": "@json_type@ accepts @text@, @jsonb@ or @disable@; the default is @text@.",
           "kind": "data",
-          "line": 391,
+          "line": 400,
           "name": "JsonTypeConfig",
           "position": "before"
         },
@@ -711,7 +711,7 @@
           ],
           "doc": "The top-level @snapshot_interval.near_tip_epoch@ threshold defaults to 580. Snapshot frequency\nchanges when syncing near the tip; earlier syncing uses less frequent snapshots.\n\nEarlier syncing takes snapshots every ten epochs. Near tip, snapshots are taken every epoch, with\ntime-based detection when within ten days of current time.",
           "kind": "newtype",
-          "line": 402,
+          "line": 411,
           "name": "SnapshotIntervalConfig",
           "position": "before"
         }
@@ -723,9 +723,16 @@
     {
       "annotations": [
         {
+          "doc": "Start an immediately eligible metadata fetch. Pool registrations create @pool_metadata_ref@\nentries; the fetch queue selects new or previously failed references. Successful pool fetches are\nstored in @off_chain_pool_data@; failures go to @off_chain_pool_fetch_error@ for a later retry.",
+          "kind": "function",
+          "line": 15,
+          "name": "newRetry",
+          "position": "before"
+        },
+        {
           "doc": "Schedule a retry after a failed off-chain metadata fetch. The first retry delay is 150 seconds;\ndelays increase with the retry count and reach 24 hours at count five.",
           "kind": "function",
-          "line": 22,
+          "line": 25,
           "name": "retryAgain",
           "position": "before"
         }
@@ -2220,7 +2227,7 @@
                   "name": "epochSyncTimeNo"
                 },
                 {
-                  "doc": "The time (in seconds) required to sync this epoch (may be NULL for an epoch that was already\npartially synced when @db-sync@ was started).",
+                  "doc": "The time (in seconds) recorded for syncing this epoch. This column is non-nullable.",
                   "name": "epochSyncTimeSeconds"
                 },
                 {
@@ -2292,7 +2299,7 @@
           ],
           "doc": "Table Name: ada_pots\nDescription: A table with all the different types of total balances.\n  This is only populated for the Shelley and later eras, and only on epoch boundaries.\n  The treasury and rewards fields will be correct for the whole epoch, but all other\n  fields change block by block.\nSchema reference for @ada_pots@:\nA table with all the different types of total balances (Shelley only). The treasury and rewards\nfields will be correct for the whole epoch, but all other fields change block by block.",
           "kind": "data",
-          "line": 476,
+          "line": 475,
           "name": "AdaPots",
           "position": "before"
         },
@@ -2323,7 +2330,7 @@
           ],
           "doc": "Table Name: pot_transfer\nDescription: Records transfers between different pots (e.g., from the rewards pot to the treasury pot).\nSchema reference for @pot_transfer@:\nA table containing transfers between the reserves pot and the treasury pot.",
           "kind": "data",
-          "line": 563,
+          "line": 562,
           "name": "PotTransfer",
           "position": "before"
         },
@@ -2354,7 +2361,7 @@
           ],
           "doc": "Table Name: treasury\nDescription: Holds funds allocated to the treasury, which can be used for network upgrades or other community initiatives.\nSchema reference for @treasury@:\nA table for payments from the treasury to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)\nif more than one payment was made to a stake address in a single epoch, only the last payment was\nkept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a\nsingle reward with type @treasury@.",
           "kind": "data",
-          "line": 600,
+          "line": 599,
           "name": "Treasury",
           "position": "before"
         },
@@ -2385,7 +2392,7 @@
           ],
           "doc": "Table Name: reserve\nDescription: Stores reserves set aside by the protocol to stabilize the cryptocurrency's value or fund future activities.\nSchema reference for @reserve@:\nA table for payments from the reserves to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)\nif more than one payment was made to a stake address in a single epoch, only the last payment was\nkept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a\nsingle reward with type @reserves@",
           "kind": "data",
-          "line": 637,
+          "line": 636,
           "name": "Reserve",
           "position": "before"
         },
@@ -2408,7 +2415,7 @@
           ],
           "doc": "Table Name: cost_model\nDescription: Defines the cost model used for estimating transaction fees, ensuring efficient resource allocation on the network.\nSchema reference for @cost_model@:\nCostModel for EpochParam and ParamProposal.",
           "kind": "data",
-          "line": 671,
+          "line": 670,
           "name": "CostModel",
           "position": "before"
         }
@@ -3665,7 +3672,7 @@
                   "name": "poolUpdateMargin"
                 },
                 {
-                  "doc": "The fixed per epoch fee (in ADA) this pool charges.",
+                  "doc": "The fixed per epoch fee (in Lovelace) this pool charges.",
                   "name": "poolUpdateFixedCost"
                 },
                 {
@@ -4029,14 +4036,14 @@
                   "name": "rewardPoolId"
                 },
                 {
-                  "doc": "The epoch in which the reward was earned. For @pool@ and @leader@ rewards spendable in epoch\n@N@, this will be @N - 2@, @refund@ N.",
+                  "doc": "The epoch in which the reward was earned. For @member@ and @leader@ rewards spendable in epoch\n@N@, this will be @N - 2@, @refund@ N.",
                   "name": "rewardEarnedEpoch"
                 }
               ],
               "name": "Reward"
             }
           ],
-          "doc": "Table Name: reward\nDescription: Reward, Stake and Treasury need to be obtained from the ledger state.\n  The reward for each stake address and. This is not a balance, but a reward amount and the\n  epoch in which the reward was earned.\n  This table should never get rolled back.\nSchema reference for @reward@:\nA table for earned staking rewards. After 13.2 release it includes only 3 types of rewards: member,\nleader and refund, since the other 2 types have moved to a separate table instant_reward. The\nrewards are inserted incrementally and this procedure is finalised when the spendable epoch comes.\nBefore the epoch comes, some entries may be missing.",
+          "doc": "Table Name: reward\nDescription: Reward, Stake and Treasury need to be obtained from the ledger state.\n  The reward for each stake address and. This is not a balance, but a reward amount and the\n  epoch in which the reward was earned.\n  This table should never get rolled back.\nSchema reference for @reward@:\nA table for earned staking rewards. After 13.2 release it includes only 3 types of rewards: member,\nleader and refund, since the other 2 types have moved to a separate table reward_rest. The\nrewards are inserted incrementally and this procedure is finalised when the spendable epoch comes.\nBefore the epoch comes, some entries may be missing.",
           "kind": "data",
           "line": 235,
           "name": "Reward",
@@ -4482,15 +4489,15 @@
               "doc": "",
               "fields": [
                 {
-                  "doc": "The Multi Asset transaction output amount (denominated in the Multi Asset).",
+                  "doc": "The MultiAsset table index specifying the asset.",
                   "name": "maTxOutAddressIdent"
                 },
                 {
-                  "doc": "The TxOut table index for the transaction that this Multi Asset transaction output.",
+                  "doc": "The Multi Asset transaction output amount (denominated in the Multi Asset).",
                   "name": "maTxOutAddressQuantity"
                 },
                 {
-                  "doc": "The MultiAsset table index specifying the asset.",
+                  "doc": "The TxOut table index for the output containing this asset.",
                   "name": "maTxOutAddressTxOutId"
                 }
               ],
@@ -6301,114 +6308,121 @@
           "position": "before"
         },
         {
-          "doc": "SMASH management endpoints use HTTP Basic authentication unless the server is built with\n@DISABLE_BASIC_AUTH@. Deploy behind HTTPS to protect credentials in transit.",
+          "doc": "SMASH management endpoints use HTTP Basic authentication unless the server is built with\n@DISABLE_BASIC_AUTH@. Supply credentials with @--admins FILE@, one @username,password@ pair per\nline. These protect delist, enlist, ticker reservation and policy-fetch operations. Deploy behind\nHTTPS to protect credentials in transit.",
           "kind": "type-synonym",
-          "line": 86,
+          "line": 88,
           "name": "BasicAuthURL",
           "position": "before"
         },
         {
           "doc": "GET @/api/v1/metadata/{id}/{hash}@ serves stored pool metadata for the requested pool identifier and\nmetadata hash. Metadata collection is performed by db-sync.",
           "kind": "type-synonym",
-          "line": 92,
+          "line": 94,
           "name": "OffChainPoolMetadataAPI",
           "position": "before"
         },
         {
           "doc": "GET @/api/v1/tickers@ returns reserved pool ticker names.",
           "kind": "type-synonym",
-          "line": 100,
+          "line": 102,
           "name": "ReservedTickersAPI",
           "position": "before"
         },
         {
           "doc": "GET @/api/v1/delisted@ returns the pools on the server's delisted list.",
           "kind": "type-synonym",
-          "line": 105,
+          "line": 107,
           "name": "DelistedPoolsAPI",
           "position": "before"
         },
         {
-          "doc": "GET @/api/v1/errors/{poolId}@ returns recorded pool metadata fetch errors, optionally filtered by\n@fromDate@.",
+          "doc": "GET @/api/v1/errors/{poolId}@ returns recorded pool metadata fetch errors, optionally filtered by\n@fromDate@ in @DD.MM.YYYY@ format. Results are newest first and limited to 10 even with a date\nfilter. Each result contains @time@, @utcTime@, @poolId@, @poolHash@, @cause@ and @retryCount@.\n@time@ is formatted as @DD.MM.YYYY. HH:MM:SS@; @utcTime@ is the serialized POSIX time in seconds.",
           "kind": "type-synonym",
-          "line": 111,
+          "line": 115,
           "name": "FetchPoolErrorAPI",
           "position": "before"
         },
         {
           "doc": "PATCH @/api/v1/delist@ adds a pool to the delisted list; subsequent metadata requests for it are\nrejected.",
           "kind": "type-synonym",
-          "line": 117,
+          "line": 121,
           "name": "DelistPoolAPI",
           "position": "before"
         },
         {
           "doc": "PATCH @/api/v1/enlist@ removes a pool from the delisted list.",
           "kind": "type-synonym",
-          "line": 120,
+          "line": 124,
           "name": "EnlistPoolAPI",
           "position": "before"
         },
         {
-          "doc": "POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that\nticker is not returned.",
+          "doc": "POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that\nticker is not returned. The ticker does not need to be currently used by its reserved pool.",
           "kind": "type-synonym",
-          "line": 124,
+          "line": 128,
           "name": "AddTickerAPI",
           "position": "before"
         },
         {
           "doc": "POST @/api/v1/policies@ fetches policy information, including delisted pools and reserved tickers,\nfrom another SMASH server.",
           "kind": "type-synonym",
-          "line": 129,
+          "line": 133,
           "name": "FetchPoliciesAPI",
           "position": "before"
         },
         {
           "doc": "PATCH @/api/v1/delist@ adds a pool to the delisted list; subsequent metadata requests for it are\nrejected.",
           "kind": "type-synonym",
-          "line": 133,
+          "line": 137,
           "name": "DelistPoolAPI",
           "position": "before"
         },
         {
           "doc": "PATCH @/api/v1/enlist@ removes a pool from the delisted list.",
           "kind": "type-synonym",
-          "line": 136,
+          "line": 140,
           "name": "EnlistPoolAPI",
           "position": "before"
         },
         {
-          "doc": "POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that\nticker is not returned.",
+          "doc": "POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that\nticker is not returned. The ticker does not need to be currently used by its reserved pool.",
           "kind": "type-synonym",
-          "line": 140,
+          "line": 144,
           "name": "AddTickerAPI",
           "position": "before"
         },
         {
           "doc": "POST @/api/v1/policies@ fetches policy information, including delisted pools and reserved tickers,\nfrom another SMASH server.",
           "kind": "type-synonym",
-          "line": 145,
+          "line": 149,
           "name": "FetchPoliciesAPI",
+          "position": "before"
+        },
+        {
+          "doc": "GET @/api/v1/retired@ lists retired pools. Metadata requests for retired pools are rejected.",
+          "kind": "type-synonym",
+          "line": 153,
+          "name": "RetiredPoolsAPI",
           "position": "before"
         },
         {
           "doc": "API for serving @swagger.json@.",
           "kind": "type-synonym",
-          "line": 167,
+          "line": 172,
           "name": "SwaggerAPI",
           "position": "before"
         },
         {
           "doc": "Combined API of a Todo service with Swagger documentation.",
           "kind": "type-synonym",
-          "line": 170,
+          "line": 175,
           "name": "API",
           "position": "before"
         },
         {
           "doc": "Just the @Proxy@ for the API type.",
           "kind": "function",
-          "line": 176,
+          "line": 181,
           "name": "smashApi",
           "position": "before"
         }

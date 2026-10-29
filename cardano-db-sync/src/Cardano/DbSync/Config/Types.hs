@@ -251,7 +251,10 @@ newtype EpochConfig = EpochConfig
 -- null. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap
 -- requires in-memory ledger state; it supports Babbage, Conway and Dijkstra. The LSM backend is not supported.
 -- It loads the UTxO in bulk and leaves tx.fee and redeemer.script_hash incomplete during bootstrap.
--- Reusing a database with incompatible modes can cause failures.
+-- Once used, consumed mode must remain enabled on subsequent runs unless switching to pruning.
+-- Once used, pruning must remain enabled on subsequent runs; dropping it is rejected and can cause
+-- failures. Bootstrap must remain selected until the UTxO migration completes. After completion,
+-- bootstrap can be changed, but the database's consumed/pruning requirements still apply.
 data TxOutConfig
   = TxOutEnable UseTxOutAddress
   | TxOutDisable
@@ -261,7 +264,8 @@ data TxOutConfig
   deriving (Eq, Show)
 
 -- | @tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is
--- ignored for @enable@ and @disable@.
+-- ignored for @enable@ and @disable@. Setting it to true populates @tx_in@ in consumed, prune and
+-- bootstrap modes, which otherwise omit transaction inputs.
 newtype ForceTxIn = ForceTxIn {unForceTxIn :: Bool}
   deriving (Eq, Show)
   deriving newtype (ToJSON, FromJSON)
@@ -271,7 +275,8 @@ newtype ForceTxIn = ForceTxIn {unForceTxIn :: Bool}
 --
 -- The normalized address table stores address, raw bytes, script flag, payment credential and stake
 -- address. Both tx_out and collateral_tx_out then refer to address_id; the variant has payment
--- credential and raw-address indexes.
+-- credential and raw-address indexes. Once selected, this schema variant cannot be reverted on
+-- the same database; keep @use_address_table@ enabled on subsequent runs.
 newtype UseTxOutAddress = UseTxOutAddress {unUseTxOutAddress :: Bool}
   deriving (Eq, Show)
   deriving newtype (ToJSON, FromJSON)
@@ -298,8 +303,12 @@ instance FromJSON LedgerBackend where
 -- Changing modes on an existing database can be unsafe.
 --
 -- When ledger is disabled, historic rewards and epoch stake, ada pots and epoch parameter data are
--- unavailable, and several deposit and reward-related fields are null. Restoring a snapshot with
--- ledger disabled may delete existing data; consult the operational guide before switching modes.
+-- unavailable: @reward@, @epoch_stake@, @ada_pots@, @epoch_param@ and @drep_distr@ are not populated.
+-- @redeemer.fee@ and @tx.deposit@ are null, as are ledger-derived governance epochs and certificate
+-- deposits. Starting with ledger disabled after restoring a ledger-enabled snapshot irreversibly
+-- removes existing rewards, epoch stake, ada pots and epoch parameters, and clears redeemer fees.
+-- Do not change ledger mode casually on an existing database. A supplied @--state-dir@ with ledger
+-- disabled produces a warning, not an error; no ledger snapshots are maintained in that mode.
 data LedgerInsertConfig
   = LedgerEnable
   | LedgerDisable

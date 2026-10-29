@@ -441,8 +441,7 @@ data EpochSyncTime = EpochSyncTime
   -- ^ The epoch number for this sync time.
   , epochSyncTimeSeconds :: !Word64 -- sqltype=word63type
 
-  -- ^ The time (in seconds) required to sync this epoch (may be NULL for an epoch that was already
-  -- partially synced when @db-sync@ was started).
+  -- ^ The time (in seconds) recorded for syncing this epoch. This column is non-nullable.
   , epochSyncTimeState :: !SyncState -- sqltype=syncstatetype
 
   -- ^ The sync state when the sync time is recorded (either 'lagging' or 'following').

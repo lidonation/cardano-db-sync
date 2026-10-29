@@ -304,3 +304,89 @@ describe('configuration source locations', () => {
     }
   });
 });
+
+// Pin meanings, not just annotation counts: the two output variants order fields differently.
+describe('reference semantics', () => {
+  const annotation = (file: string, name: string) =>
+    artifact.files
+      .find((entry: {path: string}) => entry.path === file)
+      ?.annotations.find((entry: {name: string}) => entry.name === name);
+  it.each([
+    ['TxOutCore', 'MaTxOutCore', 'maTxOutCoreIdent', 'MultiAsset table index'],
+    ['TxOutCore', 'MaTxOutCore', 'maTxOutCoreQuantity', 'amount'],
+    ['TxOutCore', 'MaTxOutCore', 'maTxOutCoreTxOutId', 'TxOut table index'],
+    ['TxOutAddress', 'MaTxOutAddress', 'maTxOutAddressIdent', 'MultiAsset table index'],
+    ['TxOutAddress', 'MaTxOutAddress', 'maTxOutAddressQuantity', 'amount'],
+    ['TxOutAddress', 'MaTxOutAddress', 'maTxOutAddressTxOutId', 'TxOut table index'],
+    ['Core/Pool', 'PoolUpdate', 'poolUpdateFixedCost', 'Lovelace'],
+  ])('%s.%s.%s keeps its actual field meaning', (module, record, name, meaning) => {
+    const entry = annotation(
+      `cardano-db/src/Cardano/Db/Schema/${module.startsWith('Core/') ? module : `Variants/${module}`}.hs`,
+      record,
+    );
+    const doc = entry?.constructors
+      .flatMap((ctor: {fields: {name: string; doc: string}[]}) => ctor.fields)
+      .find((field: {name: string}) => field.name === name)?.doc;
+    expect(doc).toContain(meaning);
+  });
+  it('does not describe a NOT NULL epoch sync duration as nullable', () => {
+    const entry = annotation(
+      'cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs',
+      'EpochSyncTime',
+    );
+    const field = entry.constructors
+      .flatMap((ctor: {fields: {name: string; doc: string}[]}) => ctor.fields)
+      .find((field: {name: string}) => field.name === 'epochSyncTimeSeconds');
+    expect(field.doc).not.toContain('NULL');
+  });
+  it('names the actual staking reward category and renamed reward table', () => {
+    const entry = annotation('cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs', 'Reward');
+    expect(entry.doc).toContain('reward_rest');
+    expect(entry.doc).not.toContain('instant_reward');
+    const field = entry.constructors
+      .flatMap((ctor: {fields: {name: string; doc: string}[]}) => ctor.fields)
+      .find((field: {name: string}) => field.name === 'rewardEarnedEpoch');
+    expect(field.doc).toContain('@member@');
+    expect(field.doc).not.toContain('@pool@');
+  });
+  it.each([
+    ['TxOutConfig', 'consumed mode must remain enabled'],
+    ['TxOutConfig', 'pruning must remain enabled'],
+    ['TxOutConfig', 'until the UTxO migration completes'],
+    ['ForceTxIn', 'populates @tx_in@'],
+    ['UseTxOutAddress', 'cannot be reverted'],
+    ['LedgerInsertConfig', 'irreversibly'],
+    ['LedgerInsertConfig', '@redeemer.fee@'],
+    ['LedgerInsertConfig', '@tx.deposit@'],
+  ])('%s preserves the operational contract: %s', (name, fact) => {
+    expect(annotation('cardano-db-sync/src/Cardano/DbSync/Config/Types.hs', name)?.doc).toContain(
+      fact,
+    );
+  });
+  it.each([
+    ['FetchPoolErrorAPI', 'DD.MM.YYYY'],
+    ['FetchPoolErrorAPI', '10'],
+    ['FetchPoolErrorAPI', 'retryCount'],
+    ['RetiredPoolsAPI', '/api/v1/retired'],
+    ['BasicAuthURL', '--admins'],
+    ['AddTickerAPI', 'not need to be currently used'],
+  ])('%s preserves the SMASH reference: %s', (name, fact) => {
+    const entries = artifact.files
+      .find(
+        (entry: {path: string}) =>
+          entry.path === 'cardano-smash-server/src/Cardano/SMASH/Server/Api.hs',
+      )
+      .annotations.filter((entry: {name: string}) => entry.name === name);
+    expect(entries.length).toBeGreaterThan(0);
+    for (const entry of entries) expect(entry.doc).toContain(fact);
+  });
+  it('records pool metadata queue success and failure destinations', () => {
+    const doc = annotation(
+      'cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs',
+      'newRetry',
+    )?.doc;
+    expect(doc).toContain('pool_metadata_ref');
+    expect(doc).toContain('off_chain_pool_data');
+    expect(doc).toContain('off_chain_pool_fetch_error');
+  });
+});

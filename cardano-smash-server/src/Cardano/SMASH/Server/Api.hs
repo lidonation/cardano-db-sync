@@ -82,7 +82,9 @@ type ApiRes verb a = verb '[JSON] (ApiResult DBFail a)
 -- The basic auth.
 
 -- | SMASH management endpoints use HTTP Basic authentication unless the server is built with
--- @DISABLE_BASIC_AUTH@. Deploy behind HTTPS to protect credentials in transit.
+-- @DISABLE_BASIC_AUTH@. Supply credentials with @--admins FILE@, one @username,password@ pair per
+-- line. These protect delist, enlist, ticker reservation and policy-fetch operations. Deploy behind
+-- HTTPS to protect credentials in transit.
 type BasicAuthURL = BasicAuth "smash" User
 
 -- GET api/v1/metadata/{hash}
@@ -107,7 +109,9 @@ type DelistedPoolsAPI = "api" :> APIVersion :> "delisted" :> ApiRes Get [PoolId]
 -- GET api/v1/errors
 
 -- | GET @/api/v1/errors/{poolId}@ returns recorded pool metadata fetch errors, optionally filtered by
--- @fromDate@.
+-- @fromDate@ in @DD.MM.YYYY@ format. Results are newest first and limited to 10 even with a date
+-- filter. Each result contains @time@, @utcTime@, @poolId@, @poolHash@, @cause@ and @retryCount@.
+-- @time@ is formatted as @DD.MM.YYYY. HH:MM:SS@; @utcTime@ is the serialized POSIX time in seconds.
 type FetchPoolErrorAPI = "api" :> APIVersion :> "errors" :> Capture "poolId" PoolId :> QueryParam "fromDate" TimeStringFormat :> ApiRes Get [PoolFetchError]
 
 #ifdef DISABLE_BASIC_AUTH
@@ -120,7 +124,7 @@ type DelistPoolAPI = "api" :> APIVersion :> "delist" :> ReqBody '[JSON] PoolId :
 type EnlistPoolAPI = "api" :> APIVersion :> "enlist" :> ReqBody '[JSON] PoolId :> ApiRes Patch PoolId
 
 -- | POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that
--- ticker is not returned.
+-- ticker is not returned. The ticker does not need to be currently used by its reserved pool.
 type AddTickerAPI = "api" :> APIVersion :> "tickers" :> Capture "name" TickerName :> ReqBody '[JSON] PoolId :> ApiRes Post TickerName
 
 -- Enabling the SMASH server to fetch the policies from remote SMASH server. Policies like delisting or unique ticker names.
@@ -136,7 +140,7 @@ type DelistPoolAPI = BasicAuthURL :> "api" :> APIVersion :> "delist" :> ReqBody 
 type EnlistPoolAPI = BasicAuthURL :> "api" :> APIVersion :> "enlist" :> ReqBody '[JSON] PoolId :> ApiRes Patch PoolId
 
 -- | POST @/api/v1/tickers/{name}@ reserves a ticker for a pool. Metadata for another pool using that
--- ticker is not returned.
+-- ticker is not returned. The ticker does not need to be currently used by its reserved pool.
 type AddTickerAPI = BasicAuthURL :> "api" :> APIVersion :> "tickers" :> Capture "name" TickerName :> ReqBody '[JSON] PoolId :> ApiRes Post TickerName
 
 -- Enabling the SMASH server to fetch the policies from remote SMASH server. Policies like delisting or unique ticker names.
@@ -145,6 +149,7 @@ type AddTickerAPI = BasicAuthURL :> "api" :> APIVersion :> "tickers" :> Capture 
 type FetchPoliciesAPI = BasicAuthURL :> "api" :> APIVersion :> "policies" :> ReqBody '[JSON] SmashURL :> ApiRes Post PolicyResult
 #endif
 
+-- | GET @/api/v1/retired@ lists retired pools. Metadata requests for retired pools are rejected.
 type RetiredPoolsAPI = "api" :> APIVersion :> "retired" :> ApiRes Get [PoolId]
 
 type CheckPoolAPI = "api" :> APIVersion :> "exists" :> Capture "poolId" PoolId :> ApiRes Get PoolId
