@@ -44,9 +44,12 @@ selectedPolicy = MultiAssetPolicies (toShort (unScriptHash alwaysMintScriptHash)
 selectedPolicies :: Bool -> Bool -> MultiAssetConfig -> FilePath -> IOManager -> [(Text, Text)] -> Assertion
 selectedPolicies addressVariant shouldRollback policyMode label =
   withCustomConfigDropDB initCommandLineArgs (Just selectPolicy) babbageConfigDir label $ \interpreter mockServer dbSync -> do
+    assetName <- case assetNames of
+      [] -> fail "policy selection test requires an asset name"
+      first : _ -> pure first
     startDBSync dbSync
     let forge = void $ withBabbageFindLeaderAndSubmitTx interpreter mockServer $ \st -> do
-          let assets = Map.singleton (head assetNames) 1
+          let assets = Map.singleton assetName 1
               minted = MultiAsset $ Map.fromList [(PolicyID alwaysMintScriptHash, assets), (PolicyID alwaysSucceedsScriptHash, assets)]
               output = MaryValue (Coin 10000) minted
           Babbage.mkMAssetsScriptTx [UTxOIndex 0] (UTxOIndex 1) [(UTxOAddressNew 0, output)] [] minted True 100 st
