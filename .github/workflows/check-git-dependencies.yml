@@ -4,7 +4,32 @@ on:
   push:
 
 jobs:
+  changes:
+    name: Detect community-site-only changes
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    outputs:
+      run: ${{ steps.classify.outputs.run }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Test change detection
+        run: python3 -m unittest discover -s .github/tests -v
+      - id: classify
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          BEFORE: ${{ github.event.before }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+        run: python3 .github/scripts/classify-ci-diff.py
+
   build:
+    needs: changes
+    # Fail open: detection errors and non-diff events run the full checks.
+    if: always() && needs.changes.outputs.run != 'false'
     runs-on: ubuntu-latest
 
     defaults:
