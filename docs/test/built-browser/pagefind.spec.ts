@@ -13,6 +13,13 @@ for (const locale of LOCALES) {
     baseURL,
   }) => {
     const errors: string[] = [];
+    const searchRequests: string[] = [];
+    let workers = 0;
+    page.on('worker', () => workers++);
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname.includes('/pagefind/'))
+        searchRequests.push(request.url());
+    });
     page.on('pageerror', (error) => errors.push(error.message));
     await page.addInitScript(() => {
       const violations: string[] = [];
@@ -33,6 +40,7 @@ for (const locale of LOCALES) {
       }),
     );
     await page.goto(`${localeBase}docs/intro/`);
+    expect(searchRequests).toEqual([]);
     const result = await page.evaluate(
       async ({helperUrl, localeBase}) => {
         const helper = await import(/* webpackIgnore: true */ helperUrl);
@@ -49,6 +57,8 @@ for (const locale of LOCALES) {
       },
       {helperUrl, localeBase},
     );
+    expect(workers).toBe(1);
+    expect(searchRequests.length).toBeGreaterThan(0);
     expect(result.first.length).toBeGreaterThan(0);
     expect(result.second).toEqual(result.first);
     for (const item of result.first) {

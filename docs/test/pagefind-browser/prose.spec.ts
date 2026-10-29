@@ -174,3 +174,25 @@ test('identical source regenerates byte-identical headless bundles', async () =>
     await rm(second, {recursive: true, force: true});
   }
 });
+
+test('a missing bundle rejects and a valid bundle can recover', async ({page}) => {
+  await page.goto(origin);
+  const result = await page.evaluate(async () => {
+    const helperUrl = '/helper.js';
+    const helper = await import(/* webpackIgnore: true */ helperUrl);
+    const base = '/preview/ja/pagefind/';
+    const api = await helper.loadProseApi(`${base}v1/`);
+    let failure = '';
+    try {
+      await helper.searchProse(api, `${base}missing/`, 'tx_out');
+    } catch (error) {
+      failure = String(error);
+    }
+    const results = await helper.searchProse(api, `${base}v1/`, 'tx_out');
+    await api.destroy();
+    return {failure, results};
+  });
+  expect(result.failure).not.toBe('');
+  expect(result.results).toHaveLength(1);
+  expect(result.results[0].url).toBe('/preview/ja/docs/v1/guide');
+});
