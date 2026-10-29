@@ -4,6 +4,13 @@
   block-size: auto;
   margin-block: var(--dbs-space-24);
 }
+/* Keep the pale design fill, with a visible boundary at every viewport size. */
+.bar,
+.barRecent {
+  stroke: var(--dbs-accent-primary);
+  stroke-width: var(--dbs-border-width-emphasis);
+  vector-effect: non-scaling-stroke;
+}
 .bar {
   fill: var(--dbs-accent-primary-tint);
 }
@@ -19,12 +26,12 @@
   background: var(--dbs-accent-primary-tint);
 }
 .level2 {
-  fill: var(--dbs-accent-primary-mid);
-  background: var(--dbs-accent-primary-mid);
-}
-.level3 {
   fill: var(--dbs-accent-primary);
   background: var(--dbs-accent-primary);
+}
+.level3 {
+  fill: var(--dbs-accent-primary-hover);
+  background: var(--dbs-accent-primary-hover);
 }
 .legend {
   display: flex;

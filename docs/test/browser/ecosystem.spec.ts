@@ -5,6 +5,7 @@ import {SITE_URL} from '../../playwright.config';
 import {teams, tools} from '../../src/ecosystem/entries';
 
 import {smallTargets} from './audits';
+import {contrast, paintedBackground} from './contrast';
 
 /**
  * B44-b — the Ecosystem page in a browser: margins and reflow per tier, 44px targets, every entry
@@ -269,6 +270,36 @@ for (const palette of ['light', 'dark', 'cream', 'navy']) {
         .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'wcag22aa'])
         .analyze();
       expect(results.violations).toEqual([]);
+    }
+  });
+}
+
+for (const palette of ['light', 'dark', 'cream', 'navy']) {
+  test(`chart marks stay visible and intensity increases in ${palette}`, async ({page}) => {
+    requireRepositoryFixture();
+    await open(page, 375, palette);
+    const code = page.locator('section[aria-labelledby="ecosystem-code-title"]');
+    const backdrop = await code.evaluate(paintedBackground);
+    const bars = await code.locator('[role=tabpanel]:visible svg rect').evaluateAll((nodes) =>
+      nodes.map((node) => {
+        const style = getComputedStyle(node);
+        return {fill: style.fill, stroke: style.stroke, width: parseFloat(style.strokeWidth)};
+      }),
+    );
+    expect(bars).toHaveLength(12);
+    for (const bar of bars) {
+      const boundary = bar.stroke !== 'none' && bar.width > 0 ? bar.stroke : bar.fill;
+      expect.soft(contrast(boundary, backdrop)).toBeGreaterThanOrEqual(3);
+    }
+    const activity = page.locator('section[aria-labelledby="ecosystem-activity-title"]');
+    const background = await activity.evaluate(paintedBackground);
+    const swatches = await activity
+      .locator('ul span[aria-hidden]')
+      .evaluateAll((nodes) => nodes.map((node) => getComputedStyle(node).backgroundColor));
+    const steps = swatches.map((colour) => contrast(colour, background));
+    expect(steps).toHaveLength(4);
+    for (let index = 1; index < steps.length; index++) {
+      expect(steps[index]).toBeGreaterThan(steps[index - 1]);
     }
   });
 }
