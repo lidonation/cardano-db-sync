@@ -103,6 +103,7 @@
   --dbs-layer-raised: 10;
   --dbs-layer-navbar: 100;
   --dbs-layer-skip: 201;
+  --dbs-layer-behind: -1;
   --dbs-code-surface: #0f1117;
   --dbs-code-surface-raised: #161b22;
   --dbs-code-border: #30363d;
@@ -152,6 +153,10 @@
   --dbs-size-chrome-search-small: 180px;
   --dbs-size-chrome-dropdown: 200px;
   --dbs-size-chrome-footer-column-min: 160px;
+  --dbs-size-chrome-control-height: 32px;
+  --dbs-size-chrome-theme-control: 96px;
+  --dbs-size-chrome-caret-width: 10px;
+  --dbs-size-chrome-caret-height: 6px;
 
   /* type families and the 13-style scale (DF-1) */
   --dbs-font-heading: "Space Grotesk", system-ui, sans-serif;

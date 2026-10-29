@@ -117,6 +117,8 @@ jobs:
         run: npm run test:prism:built
       - name: Built switchers (THM-1, A11Y-29, locale navigation)
         run: npm run test:switchers:built
+      - name: Built multi-version header (B57, DF-7)
+        run: npm run test:versions:built
       - if: failure()
         uses: actions/upload-artifact@v4
         with:

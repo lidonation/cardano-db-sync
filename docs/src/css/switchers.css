@@ -17,23 +17,74 @@
   min-block-size: var(--dbs-layout-target-min);
 }
 
-/* The locale/version toggles read as controls, like the theme switcher. */
+/* B57: one shared plate for theme, locale and version. The drawn 32px surface
+   is centred inside the 44px keyboard/pointer target, never a smaller hit box. */
+.dbs-control-plate,
+.navbar__item.dropdown > .navbar__link {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-block-size: var(--dbs-layout-target-min);
+  min-inline-size: var(--dbs-layout-target-min);
+  gap: var(--dbs-space-8);
+  padding: 0 var(--dbs-space-12);
+  border: 0;
+  border-radius: 0;
+  background: none;
+  color: var(--dbs-text-primary);
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+}
+
 .navbar__item.dropdown > .navbar__link {
   font: var(--dbs-font-label);
   letter-spacing: var(--dbs-font-label-tracking);
-  gap: var(--dbs-space-8);
-  margin-inline-start: var(--dbs-space-8);
-  padding: 0 var(--dbs-space-12);
-  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
-  border-radius: var(--dbs-radius-md);
-  background: var(--dbs-surface-base);
-  color: var(--dbs-text-primary);
-  text-decoration: none;
 }
 
-.navbar__item.dropdown > .navbar__link:hover {
+.dbs-control-plate::before,
+.navbar__item.dropdown > .navbar__link::before {
+  content: '';
+  position: absolute;
+  z-index: var(--dbs-layer-behind);
+  box-sizing: border-box;
+  inset-inline: 0;
+  inset-block-start: 50%;
+  transform: translateY(-50%);
+  block-size: var(--dbs-size-chrome-control-height);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
+  border-radius: 0;
+  background: var(--dbs-surface-base);
+  pointer-events: none;
+}
+
+/* The design's 10 by 6 caret, shared rather than a second icon implementation. */
+.dbs-control-plate::after,
+.navbar__item.dropdown > .navbar__link::after {
+  content: '';
+  display: block;
+  flex: none;
+  position: static;
+  inset: auto;
+  margin: 0;
+  inline-size: var(--dbs-size-chrome-caret-width);
+  block-size: var(--dbs-size-chrome-caret-height);
+  border: 0;
+  transform: none;
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: currentColor;
+}
+
+.dbs-control-plate:hover::before,
+.navbar__item.dropdown > .navbar__link:hover::before {
   background: var(--dbs-surface-sunken);
-  color: var(--dbs-text-primary);
+}
+
+.dbs-control-plate:active::before,
+.navbar__item.dropdown > .navbar__link:active::before {
+  background: var(--dbs-surface-accent-subtle);
 }
 
 /* The menus: token surface, control boundary, no shadow (the design has none). */
