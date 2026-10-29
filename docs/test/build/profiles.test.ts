@@ -2,6 +2,7 @@ import {execFile} from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {promisify} from 'node:util';
+import {gzipSync} from 'node:zlib';
 
 import {beforeAll, describe, expect, it} from 'vitest';
 import {load} from 'cheerio';
@@ -381,4 +382,29 @@ describe('Numbers production isolation (NUM-5)', () => {
       await fs.readFile(path.join(DOCS_ROOT, 'config/route-manifest.json'), 'utf8'),
     ).not.toContain('__numbers');
   });
+});
+
+describe('homepage Prism payload (B51)', () => {
+  for (const locale of ['en', 'ja'] as const) {
+    it(`keeps the Prism renderer out of the ${locale} dev homepage initial scripts`, async () => {
+      const root = locale === 'en' ? OUT.dev : path.join(OUT.dev, locale);
+      const html = await fs.readFile(path.join(root, 'index.html'), 'utf8');
+      const $ = load(html);
+      const scripts = $('script[src]').toArray();
+      expect(scripts.length).toBeGreaterThan(0);
+      let initialBytes = gzipSync(Buffer.from(html), {level: 9}).length;
+      const assets = [...new Set([...$('script[src]').toArray().map((el) => $(el).attr('src')!), ...$('link[rel=stylesheet][href]').toArray().map((el) => $(el).attr('href')!)])];
+      for (const url of assets) {
+        const relative = url.slice(url.indexOf('/assets/') + 1);
+        initialBytes += gzipSync(await fs.readFile(path.join(root, relative)), {level: 9}).length;
+      }
+      expect(initialBytes).toBeLessThanOrEqual(150 * 1024);
+      for (const script of scripts) {
+        const url = $(script).attr('src')!;
+        const relative = url.slice(url.indexOf('/assets/') + 1);
+        const contents = await fs.readFile(path.join(root, relative), 'utf8');
+        expect(contents).not.toContain('highlightAllUnder');
+      }
+    });
+  }
 });

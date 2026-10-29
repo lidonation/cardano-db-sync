@@ -227,7 +227,7 @@ describe('complete site asset policy', () => {
       ),
     );
     expect(Object.keys(budget.totals!).sort()).toEqual(['css', 'font', 'html', 'image', 'js']);
-    expect(budget.page?.initial).toBe(220 * 1024);
+    expect(budget.page?.initial).toBe(180 * 1024);
     for (const kind of ['js', 'css', 'font', 'image', 'html'] as const) {
       const cap = budget.totals![kind]!;
       expect(overBudget({totals: {[kind]: cap}, pages: []}, budget)).toEqual([]);
@@ -300,12 +300,12 @@ describe('per-page HTML budget', () => {
     ).toBe(1);
     expect(lines.join('\n')).toContain('over budget: HTML of index.html');
   });
-  it('ships the approved 20 KiB HTML and 220 KiB combined limits', async () => {
+  it('ships the approved 20 KiB HTML and 180 KiB combined limits', async () => {
     const budget = parseBudget(
       JSON.parse(
         await fs.readFile(path.join(import.meta.dirname, '../../config/asset-budget.json'), 'utf8'),
       ),
     );
-    expect(budget.page).toEqual({html: 20480, initial: 225280});
+    expect(budget.page).toEqual({html: 20480, initial: 184320});
   });
 });
