@@ -138,3 +138,8 @@ export function deriveNav(
   }
   return {links, github, actions, preferences};
 }
+
+/** Hide the version control when no choice exists. */
+export function showVersionSelector(versions: readonly unknown[]): boolean {
+  return versions.length > 1;
+}

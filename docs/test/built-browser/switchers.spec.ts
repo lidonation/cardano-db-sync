@@ -61,30 +61,35 @@ test('the locale control reaches the same built doc and preserves query and frag
   await expect(page.locator('.theme-doc-markdown')).toBeVisible();
 });
 
-test('the sole version links to the current equivalent doc', async ({page}) => {
-  // B11 owns populating the retained version window; this checks today's one-line integration.
-  await page.goto(`${BUILT_HOME}docs/intro`);
-  await expect(
-    page.locator('.navbar').getByRole('link', {name: 'Next', exact: true}),
-  ).toHaveAttribute('href', /\/docs\/intro$/);
-});
-
 for (const width of [1440, 1024, 768, 767, 375]) {
-  test(`the shipped version selector follows DF-7 at ${width}px`, async ({page}) => {
+  test(`a single version has no selector at ${width}px`, async ({page}) => {
     await page.setViewportSize({width, height: 900});
     await page.goto(`${BUILT_HOME}docs/intro`);
     const header = page.locator('header[data-dbs-component="Navbar / Full"]');
-    const version = header.getByRole('link', {name: 'Next', exact: true});
-    if (width < 768) await header.getByRole('button', {name: 'Menu'}).click();
-    await expect(version).toBeVisible();
-    await expect(version).toHaveAttribute('href', /\/docs\/intro$/);
-    await version.focus();
-    if (width === 768) {
-      await page.setViewportSize({width: 767, height: 900});
-      await expect(header.getByRole('button', {name: 'Menu'})).toBeFocused();
-    } else if (width === 767) {
-      await page.setViewportSize({width: 768, height: 900});
-      await expect(version).toBeFocused();
+    if (width < 1280) await header.getByRole('button', {name: 'Menu'}).click();
+    await expect(header.getByRole('link', {name: /^(Next|Unreleased)$/})).toHaveCount(0);
+  });
+}
+
+for (const palette of PALETTES) {
+  test(`header control plates and targets in ${palette}`, async ({page}) => {
+    await page.addInitScript((name) => localStorage.setItem('dbs-palette', name), palette);
+    await page.goto(BUILT_HOME);
+    const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+    const theme = header.getByRole('button', {name: /^Theme:/});
+    const locale = header.locator('.navbar__item.dropdown > .navbar__link').first();
+    for (const control of [theme, locale]) {
+      const box = await control.boundingBox();
+      expect(box!.height).toBeGreaterThanOrEqual(44);
+      expect(box!.width).toBeGreaterThanOrEqual(44);
+      const plate = await control.evaluate((el) => {
+        const style = getComputedStyle(el, '::before');
+        return {height: style.height, border: style.borderTopWidth};
+      });
+      expect(plate).toEqual({height: '32px', border: '1px'});
     }
+    expect((await theme.boundingBox())!.width).toBe(96);
+    await expect(theme.locator('[data-palette]')).toHaveCount(0);
+    await expect(theme.locator('svg')).toBeVisible();
   });
 }
