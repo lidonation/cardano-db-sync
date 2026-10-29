@@ -5,7 +5,7 @@ sidebar_position: 1
 
 # Cardano DB Sync
 
-This site is being rebuilt. The scaffold is in place; content lands in later phases.
+Start with the [installation guide](./guides/installation.md), or browse the guides in the sidebar.
 
 `cardano-db-sync` follows the Cardano chain and writes it into a Postgres database you can query
 with ordinary SQL. The reference documentation currently lives in the repository's `doc/`

@@ -1,4 +1,5 @@
 import roadmapPlugin from './plugins/roadmap';
+import guideMarkdown from './plugins/guide-markdown/index.mjs';
 import surveyResultsPlugin from './plugins/survey-results';
 import repositoryActivityPlugin from './plugins/repository-activity';
 import type {Config} from '@docusaurus/types';
@@ -83,6 +84,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
+          remarkPlugins: [guideMarkdown],
           routeBasePath: 'docs',
           versions: {current: {label: 'Unreleased'}},
           editUrl: `${profile.repoUrl}/tree/master/docs/`,

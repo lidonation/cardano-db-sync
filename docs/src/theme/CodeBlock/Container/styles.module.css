@@ -1,0 +1,9 @@
+.container {
+  --prism-color: var(--dbs-code-text);
+  --prism-background-color: var(--dbs-code-surface);
+  margin-block-end: var(--dbs-space-24);
+  border: var(--dbs-border-width-hairline) solid var(--dbs-code-border);
+  border-radius: var(--dbs-radius-md);
+  background: var(--dbs-code-surface);
+  color: var(--dbs-code-text);
+}
