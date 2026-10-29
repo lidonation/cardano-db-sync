@@ -174,12 +174,21 @@ data SyncPreConfig = SyncPreConfig
   }
   deriving (Show)
 
+-- | The optional @insert_options.preset@ selects base settings: @full@, @only_utxo@, @only_governance@,
+-- or @disable_all@. Explicit sibling options override the selected preset. Without a preset the
+-- standard defaults apply.
 data SyncInsertConfig = SyncInsertConfig
   { sicPreset :: Maybe SyncInsertPreset
   , sicOptions :: SyncInsertOptions
   }
   deriving (Eq, Show)
 
+-- | Preset choices are @full@, @only_utxo@, @only_governance@ and @disable_all@. These establish base
+-- insert options; individual keys may override them.
+--
+-- The full preset enables pool statistics but leaves transaction CBOR and both off-chain fetchers
+-- disabled. The only_utxo preset uses bootstrap outputs and ignores ledger data; only_governance
+-- retains governance with ledger enabled; disable_all disables the optional insertion categories.
 data SyncInsertPreset
   = FullInsertPreset
   | OnlyUTxOInsertPreset
@@ -187,6 +196,9 @@ data SyncInsertPreset
   | DisableAllInsertPreset
   deriving (Eq, Show)
 
+-- | The @insert_options@ object controls which chain data db-sync inserts. Optional @stop_at_block@
+-- stops after the specified block number; absent means no configured stop. Individual settings
+-- override a selected preset.
 data SyncInsertOptions = SyncInsertOptions
   { sioTxCBOR :: TxCBORConfig
   , sioTxOut :: TxOutConfig
@@ -207,22 +219,39 @@ data SyncInsertOptions = SyncInsertOptions
   }
   deriving (Eq, Show)
 
+-- | @tx_cbor@ accepts @enable@ or @disable@ to control collection of transaction CBOR; the default is
+-- @disable@.
 newtype TxCBORConfig = TxCBORConfig
   { isTxCBOREnabled :: Bool
   }
   deriving (Eq, Show)
 
+-- | @pool_stat@ accepts @enable@ or @disable@ to control pool statistics. It defaults to @disable@
+-- without a preset and is enabled by the @full@ preset.
 newtype PoolStatsConfig = PoolStatsConfig
   { isPoolStatsEnabled :: Bool
   }
   deriving (Eq, Show)
 
+-- | @disable_epoch@ defaults to false. When true, the public @epoch@ view and @epoch_current@ view
+-- return no rows; @epoch_finalized@ contains finalized aggregates.
 newtype EpochConfig = EpochConfig
   { isEpochDisabled :: Bool
   }
   deriving (Eq, Show)
   deriving newtype (ToJSON, FromJSON)
 
+-- | @tx_out.value@ is required when the object is supplied. @enable@ stores inputs and outputs;
+-- @disable@ leaves them empty; @consumed@ tracks consuming transactions; @prune@ removes consumed
+-- outputs; @bootstrap@ defers UTxO insertion until near tip using the ledger. The optional
+-- @force_tx_in@ and @use_address_table@ booleans default to false. Changing from prune or consumed
+-- modes requires care on subsequent runs.
+--
+-- With disable, tx_in, tx_out and ma_tx_out remain empty; tx.fee may be zero and redeemer.script_hash
+-- null. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap
+-- requires ledger state and a Babbage or Conway network; it loads the UTxO in bulk and leaves tx.fee
+-- and redeemer.script_hash incomplete during bootstrap. Reusing a database with incompatible modes can
+-- cause failures.
 data TxOutConfig
   = TxOutEnable UseTxOutAddress
   | TxOutDisable
@@ -231,10 +260,18 @@ data TxOutConfig
   | TxOutConsumedBootstrap ForceTxIn UseTxOutAddress
   deriving (Eq, Show)
 
+-- | @tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is
+-- ignored for @enable@ and @disable@.
 newtype ForceTxIn = ForceTxIn {unForceTxIn :: Bool}
   deriving (Eq, Show)
   deriving newtype (ToJSON, FromJSON)
 
+-- | @tx_out.use_address_table@ defaults to false. When enabled, address details live in a separate
+-- @address@ table referenced by outputs. This schema variant requires an empty database.
+--
+-- The normalized address table stores address, raw bytes, script flag, payment credential and stake
+-- address. Both tx_out and collateral_tx_out then refer to address_id; the variant has payment
+-- credential and raw-address indexes.
 newtype UseTxOutAddress = UseTxOutAddress {unUseTxOutAddress :: Bool}
   deriving (Eq, Show)
   deriving newtype (ToJSON, FromJSON)
@@ -242,6 +279,8 @@ newtype UseTxOutAddress = UseTxOutAddress {unUseTxOutAddress :: Bool}
 -- | Choose the backend for storing ledger tables (UTxO set).
 -- 'LedgerBackendInMemory' keeps everything in RAM (current default).
 -- 'LedgerBackendLSM' uses LSM trees on disk for lower memory usage.
+-- The top-level @ledger_backend@ selects @inmemory@ (default) or @lsm@. The former keeps the UTxO set
+-- in RAM; the latter uses disk-backed LSM trees.
 data LedgerBackend
   = LedgerBackendInMemory
   | LedgerBackendLSM (Maybe FilePath)
@@ -253,12 +292,23 @@ instance FromJSON LedgerBackend where
     "lsm" -> pure (LedgerBackendLSM Nothing)
     other -> fail $ "unexpected ledger_backend: " <> show other <> ". Expected \"inmemory\" or \"lsm\"."
 
+-- | @ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable does
+-- not maintain one; ignore maintains it for UTxO loading but does not use its other data. Disabling
+-- ledger affects historical rewards, epoch stake, ada pots, epoch parameters and related fields.
+-- Changing modes on an existing database can be unsafe.
+--
+-- When ledger is disabled, historic rewards and epoch stake, ada pots and epoch parameter data are
+-- unavailable, and several deposit and reward-related fields are null. Restoring a snapshot with
+-- ledger disabled may delete existing data; consult the operational guide before switching modes.
 data LedgerInsertConfig
   = LedgerEnable
   | LedgerDisable
   | LedgerIgnore
   deriving (Eq, Show)
 
+-- | @shelley.enable@ controls transaction-era certificates, withdrawals and parameter proposals, not
+-- epoch stake or rewards. Genesis-era stake and pool registrations are still inserted. Optional
+-- @stake_addresses@ filters enabled data.
 data ShelleyInsertConfig
   = ShelleyEnable
   | ShelleyDisable
@@ -269,39 +319,64 @@ newtype RewardsConfig = RewardsConfig
   {areRewardsEnabled :: Bool}
   deriving (Eq, Show)
 
+-- | @multi_asset.enable@ controls multi-asset entries. An optional non-empty @policies@ list restricts
+-- enabled insertion to those policies.
 data MultiAssetConfig
   = MultiAssetEnable
   | MultiAssetDisable
   | MultiAssetPolicies (NonEmpty ShortByteString)
   deriving (Eq, Show)
 
+-- | @metadata.enable@ controls transaction metadata. An optional non-empty @keys@ list restricts enabled
+-- insertion to those integer metadata keys.
 data MetadataConfig
   = MetadataEnable
   | MetadataDisable
   | MetadataKeys (NonEmpty Word)
   deriving (Eq, Show)
 
+-- | @plutus.enable@ controls Plutus and script data. An optional non-empty @script_hashes@ list
+-- restricts enabled insertion to those script hashes.
 data PlutusConfig
   = PlutusEnable
   | PlutusDisable
   | PlutusScripts (NonEmpty ShortByteString)
   deriving (Eq, Show)
 
+-- | @governance@ accepts @enable@ or @disable@ for governance data; off-chain vote metadata has its own
+-- independent setting.
 newtype GovernanceConfig = GovernanceConfig
   { isGovernanceEnabled :: Bool
   }
   deriving (Eq, Show)
 
+-- | @offchain_pool_data@ accepts @enable@ or @disable@ for fetching stake-pool metadata and defaults to
+-- @disable@. Fetch restrictions and the testing-only private-URL flag also apply.
+--
+-- Pool metadata includes the registered name, ticker, homepage and description. Fetches are subject to
+-- network-address restrictions; the private-URL switch is intended only for local-cluster tests.
 newtype OffchainPoolDataConfig = OffchainPoolDataConfig
   { isOffchainPoolDataEnabled :: Bool
   }
   deriving (Eq, Show)
 
+-- | @offchain_vote_data@ accepts @enable@ or @disable@ for governance-anchor metadata and defaults to
+-- @disable@. It is independent of the @governance@ option.
+--
+-- Governance anchors include DRep registrations (CIP-119), governance action proposals (CIP-108), and
+-- vote metadata (CIP-100). Prior releases coupled fetching to the governance option.
 newtype OffchainVoteDataConfig = OffchainVoteDataConfig
   { isOffchainVoteDataEnabled :: Bool
   }
   deriving (Eq, Show)
 
+-- | @remove_jsonb_from_schema@ accepts @enable@ or @disable@. Enabling removes JSONB types from
+-- supported schema columns to improve insertion performance; changing an existing schema requires
+-- care.
+--
+-- Affected JSONB columns include tx_metadata.json, script.json, datum.value, redeemer_data.value,
+-- cost_model.costs, gov_action_proposal.description, off_chain_pool_data.json and
+-- off_chain_vote_data.json.
 newtype RemoveJsonbFromSchemaConfig = RemoveJsonbFromSchemaConfig
   { isRemoveJsonbFromSchemaEnabled :: Bool
   }
@@ -312,12 +387,18 @@ newtype TxOutVariantTypeConfig = TxOutVariantTypeConfig
   }
   deriving (Eq, Show)
 
+-- | @json_type@ accepts @text@, @jsonb@ or @disable@; the default is @text@.
 data JsonTypeConfig
   = JsonTypeText
   | JsonTypeJsonb
   | JsonTypeDisable
   deriving (Eq, Show)
 
+-- | The top-level @snapshot_interval.near_tip_epoch@ threshold defaults to 580. Snapshot frequency
+-- changes when syncing near the tip; earlier syncing uses less frequent snapshots.
+--
+-- Earlier syncing takes snapshots every ten epochs. Near tip, snapshots are taken every epoch, with
+-- time-based detection when within ten days of current time.
 newtype SnapshotIntervalConfig = SnapshotIntervalConfig
   { sicNearTipEpoch :: Word64
   }

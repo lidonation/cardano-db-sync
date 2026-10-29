@@ -17,6 +17,8 @@ newRetry now =
     , retryCount = 0
     }
 
+-- | Schedule a retry after a failed off-chain metadata fetch. The first retry delay is 150 seconds;
+-- delays increase with the retry count and reach 24 hours at count five.
 retryAgain :: POSIXTime -> Word -> Retry
 retryAgain fetchTime existingRetryCount =
   -- When to retry. Maximum of a day for a retry.

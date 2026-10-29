@@ -54,14 +54,33 @@ import Hasql.Encoders as E
 --   overflow (sum of tx outputs in an epoch) is detected. 'maxBound :: !Int` is big enough to
 --   hold 204 times the total Lovelace distribution. The chance of that much being transacted
 --   in a single epoch is relatively low.
+-- Schema reference for @epoch@:
+-- A view aggregating data within an epoch. As of schema stage-two v49 (migration-2-0049) @epoch@ is a
+-- view, not a table: the @UNION ALL@ of @epoch_finalized@ (materialised past epochs) and
+-- @epoch_current@ (the live, in-progress epoch). It returns rows only when epoch sync is enabled (see
+-- @epoch_sync_enabled@); otherwise it is empty.
 data Epoch = Epoch
   { epochOutSum :: !Word128 -- sqltype=word128type
+
+  -- ^ The sum of the transaction output values (in Lovelace) in this epoch.
   , epochFees :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The sum of the fees (in Lovelace) in this epoch.
   , epochTxCount :: !Word64 -- sqltype=word31type
+
+  -- ^ The number of transactions in this epoch.
   , epochBlkCount :: !Word64 -- sqltype=word31type
+
+  -- ^ The number of blocks in this epoch.
   , epochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch number.
   , epochStartTime :: !UTCTime -- sqltype=timestamp
+
+  -- ^ The epoch start time.
   , epochEndTime :: !UTCTime -- sqltype=timestamp
+
+  -- ^ The epoch end time.
   }
   deriving (Eq, Show, Generic)
 
@@ -91,59 +110,149 @@ epochDecoder =
 -- |
 -- Table Name: epochparam
 -- Description: Stores parameters relevant to each epoch, such as the number of slots per epoch or the block size limit.
+-- Schema reference for @epoch_param@:
+-- The accepted protocol parameters for an epoch.
 data EpochParam = EpochParam
   { epochParamEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The first epoch for which these parameters are valid.
   , epochParamMinFeeA :: !Word64 -- sqltype=word31type
+
+  -- ^ The 'a' parameter to calculate the minimum transaction fee.
   , epochParamMinFeeB :: !Word64 -- sqltype=word31type
+
+  -- ^ The 'b' parameter to calculate the minimum transaction fee.
   , epochParamMaxBlockSize :: !Word64 -- sqltype=word31type
+
+  -- ^ The maximum block size (in bytes).
   , epochParamMaxTxSize :: !Word64 -- sqltype=word31type
+
+  -- ^ The maximum transaction size (in bytes).
   , epochParamMaxBhSize :: !Word64 -- sqltype=word31type
+
+  -- ^ The maximum block header size (in bytes).
   , epochParamKeyDeposit :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) require for a deposit to register a StakeAddress.
   , epochParamPoolDeposit :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) require for a deposit to register a stake pool.
   , epochParamMaxEpoch :: !Word64 -- sqltype=word31type
+
+  -- ^ The maximum number of epochs in the future that a pool retirement is allowed to be scheduled
+  -- for.
   , epochParamOptimalPoolCount :: !Word64 -- sqltype=word31type
+
+  -- ^ The optimal number of stake pools.
   , epochParamInfluence :: !Double
+  -- ^ The influence of the pledge on a stake pool's probability on minting a block.
   , epochParamMonetaryExpandRate :: !Double
+  -- ^ The monetary expansion rate.
   , epochParamTreasuryGrowthRate :: !Double
+  -- ^ The treasury growth rate.
   , epochParamDecentralisation :: !Double
+  -- ^ The decentralisation parameter (1 fully centralised, 0 fully decentralised).
   , epochParamProtocolMajor :: !Word16 -- sqltype=word31type
+
+  -- ^ The protocol major number.
   , epochParamProtocolMinor :: !Word16 -- sqltype=word31type
+
+  -- ^ The protocol minor number.
   , epochParamMinUtxoValue :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The minimum value of a UTxO entry.
   , epochParamMinPoolCost :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The minimum pool cost.
   , epochParamNonce :: !(Maybe ByteString) -- sqltype=hash32type
+
+  -- ^ The nonce value for this epoch.
   , epochParamCostModelId :: !(Maybe CostModelId) -- noreference
+
+  -- ^ The CostModel table index for the params.
   , epochParamPriceMem :: !(Maybe Double)
+  -- ^ The per word cost of script memory usage.
   , epochParamPriceStep :: !(Maybe Double)
+  -- ^ The cost of script execution step usage.
   , epochParamMaxTxExMem :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution memory allowed to be used in a single transaction.
   , epochParamMaxTxExSteps :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution steps allowed to be used in a single transaction.
   , epochParamMaxBlockExMem :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution memory allowed to be used in a single block.
   , epochParamMaxBlockExSteps :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum number of execution steps allowed to be used in a single block.
   , epochParamMaxValSize :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ The maximum Val size.
   , epochParamCollateralPercent :: !(Maybe Word16) -- sqltype=word31type
+
+  -- ^ The percentage of the txfee which must be provided as collateral when including non-native
+  -- scripts.
   , epochParamMaxCollateralInputs :: !(Maybe Word16) -- sqltype=word31type
+
+  -- ^ The maximum number of collateral inputs allowed in a transaction.
   , epochParamBlockId :: !BlockId -- noreference -- The first block where these parameters are valid.
+
+  -- ^ The Block table index for the first block where these parameters are valid.
   , epochParamExtraEntropy :: !(Maybe ByteString) -- sqltype=hash32type
+
+  -- ^ The 32 byte string of extra random-ness to be added into the protocol's entropy pool. New in
+  -- v13: renamed from entopy.
   , epochParamCoinsPerUtxoSize :: !(Maybe DbLovelace) -- sqltype=lovelace
+
+  -- ^ For Alonzo this is the cost per UTxO word. For Babbage and later per UTxO byte. New in v13:
+  -- Renamed from coins_per_utxo_word.
   , epochParamPvtMotionNoConfidence :: !(Maybe Double)
+  -- ^ Pool Voting threshold for motion of no-confidence. New in 13.2-Conway.
   , epochParamPvtCommitteeNormal :: !(Maybe Double)
+  -- ^ Pool Voting threshold for new committee/threshold (normal state). New in 13.2-Conway.
   , epochParamPvtCommitteeNoConfidence :: !(Maybe Double)
+  -- ^ Pool Voting threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.
   , epochParamPvtHardForkInitiation :: !(Maybe Double)
+  -- ^ Pool Voting threshold for hard-fork initiation. New in 13.2-Conway.
   , epochParamDvtMotionNoConfidence :: !(Maybe Double)
+  -- ^ DRep Vote threshold for motion of no-confidence. New in 13.2-Conway.
   , epochParamDvtCommitteeNormal :: !(Maybe Double)
+  -- ^ DRep Vote threshold for new committee/threshold (normal state). New in 13.2-Conway.
   , epochParamDvtCommitteeNoConfidence :: !(Maybe Double)
+  -- ^ DRep Vote threshold for new committee/threshold (state of no-confidence). New in 13.2-Conway.
   , epochParamDvtUpdateToConstitution :: !(Maybe Double)
+  -- ^ DRep Vote threshold for update to the Constitution. New in 13.2-Conway.
   , epochParamDvtHardForkInitiation :: !(Maybe Double)
+  -- ^ DRep Vote threshold for hard-fork initiation. New in 13.2-Conway.
   , epochParamDvtPPNetworkGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, network group. New in 13.2-Conway.
   , epochParamDvtPPEconomicGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, economic group. New in 13.2-Conway.
   , epochParamDvtPPTechnicalGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, technical group. New in 13.2-Conway.
   , epochParamDvtPPGovGroup :: !(Maybe Double)
+  -- ^ DRep Vote threshold for protocol parameter changes, governance group. New in 13.2-Conway.
   , epochParamDvtTreasuryWithdrawal :: !(Maybe Double)
+  -- ^ DRep Vote threshold for treasury withdrawal. New in 13.2-Conway.
   , epochParamCommitteeMinSize :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ Minimal constitutional committee size. New in 13.2-Conway.
   , epochParamCommitteeMaxTermLength :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ Constitutional committee term limits. New in 13.2-Conway.
   , epochParamGovActionLifetime :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ Governance action expiration. New in 13.2-Conway.
   , epochParamGovActionDeposit :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ Governance action deposit. New in 13.2-Conway.
   , epochParamDrepDeposit :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ DRep deposit amount. New in 13.2-Conway.
   , epochParamDrepActivity :: !(Maybe DbWord64) -- sqltype=word64type
+
+  -- ^ DRep activity period. New in 13.2-Conway.
   , epochParamPvtppSecurityGroup :: !(Maybe Double)
   , epochParamMinFeeRefScriptCostPerByte :: !(Maybe Double)
   }
@@ -281,11 +390,21 @@ epochParamEncoder =
 -- |
 -- Table Name: epochstate
 -- Description: Contains the state of the blockchain at the end of each epoch, including the committee, constitution, and no-confidence votes.
+-- Schema reference for @epoch_state@:
+-- Table with governance (and in the future other) stats per epoch.
 data EpochState = EpochState
   { epochStateCommitteeId :: !(Maybe CommitteeId) -- noreference
+
+  -- ^ The reference to the current committee.
   , epochStateNoConfidenceId :: !(Maybe GovActionProposalId) -- noreference
+
+  -- ^ The reference to the current gov_action_proposal of no confidence. TODO: This remains NULL.
   , epochStateConstitutionId :: !(Maybe ConstitutionId) -- noreference
+
+  -- ^ The reference to the current constitution. Should never be null.
   , epochStateEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch in question (unique).
   }
   deriving (Eq, Show, Generic)
 
@@ -314,10 +433,19 @@ epochStateEncoder =
 -- |
 -- Table Name: epochsync_time
 -- Description: Tracks synchronization times for epochs, ensuring nodes are in consensus regarding the current state.
+-- Schema reference for @epoch_sync_time@:
+-- A table containing the time required to fully sync an epoch.
 data EpochSyncTime = EpochSyncTime
   { epochSyncTimeNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch number for this sync time.
   , epochSyncTimeSeconds :: !Word64 -- sqltype=word63type
+
+  -- ^ The time (in seconds) required to sync this epoch (may be NULL for an epoch that was already
+  -- partially synced when @db-sync@ was started).
   , epochSyncTimeState :: !SyncState -- sqltype=syncstatetype
+
+  -- ^ The sync state when the sync time is recorded (either 'lagging' or 'following').
   }
   deriving (Show, Eq, Generic)
 
@@ -342,18 +470,46 @@ epochSyncTimeEncoder =
 --   This is only populated for the Shelley and later eras, and only on epoch boundaries.
 --   The treasury and rewards fields will be correct for the whole epoch, but all other
 --   fields change block by block.
+-- Schema reference for @ada_pots@:
+-- A table with all the different types of total balances (Shelley only). The treasury and rewards
+-- fields will be correct for the whole epoch, but all other fields change block by block.
 data AdaPots = AdaPots
   { adaPotsSlotNo :: !Word64 -- sqltype=word63type
+
+  -- ^ The slot number where this AdaPots snapshot was taken.
   , adaPotsEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch number where this AdaPots snapshot was taken.
   , adaPotsTreasury :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the treasury pot.
   , adaPotsReserves :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the reserves pot.
   , adaPotsRewards :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the rewards pot.
   , adaPotsUtxo :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the UTxO set.
   , adaPotsDepositsStake :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the obligation pot coming from stake key and pool deposits. Renamed
+  -- from deposits in 13.3.
   , adaPotsFees :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the fee pot.
   , adaPotsBlockId :: !BlockId -- noreference
+
+  -- ^ The Block table index of the block for which this snapshot was taken.
   , adaPotsDepositsDrep :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the obligation pot coming from drep registrations deposits. New in
+  -- 13.3.
   , adaPotsDepositsProposal :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) in the obligation pot coming from governance proposal deposits. New in
+  -- 13.3.
   }
   deriving (Show, Eq, Generic)
 
@@ -402,11 +558,20 @@ adaPotsEncoder =
 -- |
 -- Table Name: pot_transfer
 -- Description: Records transfers between different pots (e.g., from the rewards pot to the treasury pot).
+-- Schema reference for @pot_transfer@:
+-- A table containing transfers between the reserves pot and the treasury pot.
 data PotTransfer = PotTransfer
   { potTransferCertIndex :: !Word16
+  -- ^ The index of this transfer certificate within the certificates of this transaction.
   , potTransferTreasury :: !DbInt65 -- sqltype=int65type
+
+  -- ^ The amount (in Lovelace) the treasury balance changes by.
   , potTransferReserves :: !DbInt65 -- sqltype=int65type
+
+  -- ^ The amount (in Lovelace) the reserves balance changes by.
   , potTransferTxId :: !TxId -- noreference
+
+  -- ^ The Tx table index for the transaction that contains this transfer.
   }
   deriving (Show, Eq, Generic)
 
@@ -427,11 +592,23 @@ potTransferEncoder =
 -- |
 -- Table Name: treasury
 -- Description: Holds funds allocated to the treasury, which can be used for network upgrades or other community initiatives.
+-- Schema reference for @treasury@:
+-- A table for payments from the treasury to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)
+-- if more than one payment was made to a stake address in a single epoch, only the last payment was
+-- kept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a
+-- single reward with type @treasury@.
 data Treasury = Treasury
   { treasuryAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address for this Treasury entry.
   , treasuryCertIndex :: !Word16
+  -- ^ The index of this payment certificate within the certificates of this transaction.
   , treasuryAmount :: !DbInt65 -- sqltype=int65type
+
+  -- ^ The payment amount (in Lovelace).
   , treasuryTxId :: !TxId -- noreference
+
+  -- ^ The Tx table index for the transaction that contains this payment.
   }
   deriving (Show, Eq, Generic)
 
@@ -452,11 +629,23 @@ treasuryEncoder =
 -- |
 -- Table Name: reserve
 -- Description: Stores reserves set aside by the protocol to stabilize the cryptocurrency's value or fund future activities.
+-- Schema reference for @reserve@:
+-- A table for payments from the reserves to a StakeAddress. Note: Before protocol version 5.0 (Alonzo)
+-- if more than one payment was made to a stake address in a single epoch, only the last payment was
+-- kept and earlier ones removed. For protocol version 5.0 and later, they are summed and produce a
+-- single reward with type @reserves@
 data Reserve = Reserve
   { reserveAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address for this Treasury entry.
   , reserveCertIndex :: !Word16
+  -- ^ The index of this payment certificate within the certificates of this transaction.
   , reserveAmount :: !DbInt65 -- sqltype=int65type
+
+  -- ^ The payment amount (in Lovelace).
   , reserveTxId :: !TxId -- noreference
+
+  -- ^ The Tx table index for the transaction that contains this payment.
   }
   deriving (Show, Eq, Generic)
 
@@ -477,9 +666,15 @@ reserveEncoder =
 -- |
 -- Table Name: cost_model
 -- Description: Defines the cost model used for estimating transaction fees, ensuring efficient resource allocation on the network.
+-- Schema reference for @cost_model@:
+-- CostModel for EpochParam and ParamProposal.
 data CostModel = CostModel
   { costModelCosts :: !Text -- sqltype=jsonb
+
+  -- ^ The actual costs formatted as json.
   , costModelHash :: !ByteString -- sqltype=hash32type
+
+  -- ^ The hash of cost model. It ensures uniqueness of entries. New in v13.
   }
   deriving (Eq, Show, Generic)
 

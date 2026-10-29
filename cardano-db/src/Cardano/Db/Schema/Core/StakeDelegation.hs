@@ -27,17 +27,25 @@ import Cardano.Db.Types (
 -----------------------------------------------------------------------------------------------------------------------------------
 
 -- | STAKE DELEGATION
--- | These tables handle stake addresses, delegation, and reward
+-- These tables handle stake addresses, delegation, and reward
 
 -----------------------------------------------------------------------------------------------------------------------------------
 
 -- |
 -- Table Name: stake_address
 -- Description: Contains information about stakeholder addresses.
+-- Schema reference for @stake_address@:
+-- A table of unique stake addresses. Can be an actual address or a script hash. The existance of an
+-- entry doesn't mean the address is registered or in fact that is was ever registered.
 data StakeAddress = StakeAddress -- Can be an address of a script hash
   { stakeAddressHashRaw :: !ByteString -- sqltype=addr29type
+
+  -- ^ The raw bytes of the stake address hash.
   , stakeAddressView :: !Text
+  -- ^ The Bech32 encoded version of the stake address.
   , stakeAddressScriptHash :: !(Maybe ByteString) -- sqltype=hash28type
+
+  -- ^ The script hash, in case this address is locked by a script.
   }
   deriving (Show, Eq, Generic)
 
@@ -71,11 +79,20 @@ stakeAddressEncoder =
 -- |
 -- Table Name: stake_registration
 -- Description: Contains information about stakeholder registrations.
+-- Schema reference for @stake_registration@:
+-- A table containing stake address registrations.
 data StakeRegistration = StakeRegistration
   { stakeRegistrationAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address.
   , stakeRegistrationCertIndex :: !Word16
+  -- ^ The index of this stake registration within the certificates of this transaction.
   , stakeRegistrationEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch in which the registration took place.
   , stakeRegistrationTxId :: !TxId -- noreference
+
+  -- ^ The Tx table index of the transaction where this stake address was registered.
   , stakeRegistrationDeposit :: !(Maybe DbLovelace) -- sqltype=lovelace
   }
   deriving (Eq, Show, Generic)
@@ -98,12 +115,23 @@ stakeRegistrationEncoder =
 -- |
 -- Table Name: stake_deregistration
 -- Description: Contains information about stakeholder deregistrations.
+-- Schema reference for @stake_deregistration@:
+-- A table containing stake address deregistrations.
 data StakeDeregistration = StakeDeregistration
   { stakeDeregistrationAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address.
   , stakeDeregistrationCertIndex :: !Word16
+  -- ^ The index of this stake deregistration within the certificates of this transaction.
   , stakeDeregistrationEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch in which the deregistration took place.
   , stakeDeregistrationTxId :: !TxId -- noreference
+
+  -- ^ The Tx table index of the transaction where this stake address was deregistered.
   , stakeDeregistrationRedeemerId :: !(Maybe RedeemerId) -- noreference
+
+  -- ^ The Redeemer table index that is related with this certificate.
   }
   deriving (Eq, Show, Generic)
 
@@ -134,14 +162,28 @@ stakeDeregistrationEncoder =
 -- |
 -- Table Name: delegation
 -- Description:Contains information about stakeholder delegations, including the stakeholder's address and the pool to which they are delegating.
+-- Schema reference for @delegation@:
+-- A table containing delegations from a stake address to a stake pool.
 data Delegation = Delegation
   { delegationAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address.
   , delegationCertIndex :: !Word16
+  -- ^ The index of this delegation within the certificates of this transaction.
   , delegationPoolHashId :: !PoolHashId -- noreference
+
+  -- ^ The PoolHash table index for the pool being delegated to.
   , delegationActiveEpochNo :: !Word64
+  -- ^ The epoch number where this delegation becomes active.
   , delegationTxId :: !TxId -- noreference
+
+  -- ^ The Tx table index of the transaction that contained this delegation.
   , delegationSlotNo :: !Word64 -- sqltype=word63type
+
+  -- ^ The slot number of the block that contained this delegation.
   , delegationRedeemerId :: !(Maybe RedeemerId) -- noreference
+
+  -- ^ The Redeemer table index that is related with this certificate.
   }
   deriving (Eq, Show, Generic)
 
@@ -185,13 +227,31 @@ delegationEncoder =
 --   The reward for each stake address and. This is not a balance, but a reward amount and the
 --   epoch in which the reward was earned.
 --   This table should never get rolled back.
+-- Schema reference for @reward@:
+-- A table for earned staking rewards. After 13.2 release it includes only 3 types of rewards: member,
+-- leader and refund, since the other 2 types have moved to a separate table instant_reward. The
+-- rewards are inserted incrementally and this procedure is finalised when the spendable epoch comes.
+-- Before the epoch comes, some entries may be missing.
 data Reward = Reward
   { rewardAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address that earned the reward.
   , rewardType :: !RewardSource -- sqltype=rewardtype
+
+  -- ^ The type of the rewards
   , rewardAmount :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The reward amount (in Lovelace).
   , rewardSpendableEpoch :: !Word64
+  -- ^ The epoch in which the reward is actually distributed and can be spent.
   , rewardPoolId :: !PoolHashId -- noreference
+
+  -- ^ The PoolHash table index for the pool the stake address was delegated to when the reward is
+  -- earned or for the pool that there is a deposit refund.
   , rewardEarnedEpoch :: !Word64 -- generated="((CASE WHEN (type='refund') then spendable_epoch else (CASE WHEN spendable_epoch >= 2 then spendable_epoch-2 else 0 end) end) STORED)"
+
+  -- ^ The epoch in which the reward was earned. For @pool@ and @leader@ rewards spendable in epoch
+  -- @N@, this will be @N - 2@, @refund@ N.
   }
   deriving (Show, Eq, Generic)
 
@@ -216,12 +276,25 @@ rewardBulkEncoder =
 -- |
 -- Table Name: reward_rest
 -- Description: Contains information about the remaining reward for each stakeholder.
+-- Schema reference for @reward_rest@:
+-- A table for rewards which are not correlated to a pool. It includes 3 types of rewards: reserves,
+-- treasury and proposal_refund. Instant rewards are depredated after Conway.  New in 13.2
 data RewardRest = RewardRest
   { rewardRestAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address that earned the reward.
   , rewardRestType :: !RewardSource -- sqltype=rewardtype
+
+  -- ^ The type of the rewards.
   , rewardRestAmount :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The reward amount (in Lovelace).
   , rewardRestSpendableEpoch :: !Word64
+  -- ^ The epoch in which the reward is actually distributed and can be spent.
   , rewardRestEarnedEpoch :: !Word64 -- generated="(CASE WHEN spendable_epoch >= 1 then spendable_epoch-1 else 0 end)"
+
+  -- ^ The epoch in which the reward was earned. For rewards spendable in epoch @N@, this will be @N -
+  -- 1@.
   }
   deriving (Show, Eq, Generic)
 
@@ -251,11 +324,23 @@ rewardRestBulkEncoder =
 -- Table Name: epoch_stake
 -- Description: Contains information about the stake of each stakeholder in each epoch.
 -- This table should never get rolled back
+-- Schema reference for @epoch_stake@:
+-- A table containing the epoch stake distribution for each epoch. This is inserted incrementally in
+-- the first blocks of the previous epoch. The stake distribution is extracted from the @set@ snapshot
+-- of the ledger. See Shelley specs Sec. 11.2 for more details.
 data EpochStake = EpochStake
   { epochStakeAddrId :: !StakeAddressId -- noreference
+
+  -- ^ The StakeAddress table index for the stake address for this EpochStake entry.
   , epochStakePoolId :: !PoolHashId -- noreference
+
+  -- ^ The PoolHash table index for the pool this entry is delegated to.
   , epochStakeAmount :: !DbLovelace -- sqltype=lovelace
+
+  -- ^ The amount (in Lovelace) being staked.
   , epochStakeEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The epoch number.
   }
   deriving (Show, Eq, Generic)
 
@@ -286,9 +371,14 @@ epochStakeBulkEncoder =
 -- |
 -- Table Name: epoch_stake_progress
 -- Description: Contains information about the progress of the epoch stake calculation.
+-- Schema reference for @epoch_stake_progress@:
+-- A table which shows when the epoch_stake for an epoch is complete
 data EpochStakeProgress = EpochStakeProgress
   { epochStakeProgressEpochNo :: !Word64 -- sqltype=word31type
+
+  -- ^ The related epoch
   , epochStakeProgressCompleted :: !Bool
+  -- ^ True if completed. If not completed the entry won't exist or more rarely be False.
   }
   deriving (Show, Eq, Generic)
 

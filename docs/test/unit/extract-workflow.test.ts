@@ -23,6 +23,23 @@ describe('Haddock extraction workflow (CON-2)', () => {
     expect(workflow).toContain('timeout 60s "$extractor"');
     expect(workflow).toContain('shell: bash');
   });
+  it('extracts and watches the reference-bearing source files', () => {
+    const doc = yaml.load(workflow) as ExtractionWorkflow;
+    const inputs = [
+      'cardano-db-sync/app/cardano-db-sync.hs',
+      'cardano-db-sync/app/http-get-json-metadata.hs',
+      'cardano-db-sync/app/test-http-get-json-metadata.hs',
+      'cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs',
+      'cardano-db-sync/src/Cardano/DbSync/OffChain/FetchQueue.hs',
+      'cardano-smash-server/src/Cardano/SMASH/Server/Api.hs',
+    ];
+    for (const input of inputs) {
+      expect(workflow).toContain(`--input ${input}`);
+      for (const event of ['push', 'pull_request'] as const) {
+        expect(doc.on[event].paths).toContain(input);
+      }
+    }
+  });
   it('runs executable regression tests before extraction', () => {
     expect(workflow).toContain('cabal test');
     expect(workflow).toContain('sh test/cli.sh');

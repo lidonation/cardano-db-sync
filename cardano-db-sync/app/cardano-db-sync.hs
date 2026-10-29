@@ -84,6 +84,16 @@ opts =
     )
 
 -- * Flags
+
+-- | Command-line entry point. Historical documentation listed @--skip-fix@
+-- and @--fix-only@ for datum and redeemer repair; neither is accepted by this
+-- parser. Other historical switches replaced by configuration include
+-- @--disable-ledger@, @--dont-use-ledger@, @--disable-epoch@,
+-- @--disable-shelley@, @--disable-multiassets@, @--disable-metadata@,
+-- @--disable-plutus-extra@, @--disable-gov@, @--disable-offchain-pool-data@,
+-- @--disable-offline-data@, @--keep-tx-metadata@, @--force-tx-in@,
+-- @--disable-all@, @--full@, @--only-utxo@, @--only-gov@,
+-- @--consumed-tx-out@, @--prune-tx-out@ and @--bootstrap-tx-out@.
 pCommandLine :: Parser SyncCommand
 pCommandLine =
   asum
@@ -106,6 +116,7 @@ pRunDbSyncNode = do
     <*> optional pRollbackSlotNo
     <*> pAllowPrivateOffChainUrls
 
+-- | @--config FILEPATH@: path to the db-sync node config file.
 pConfigFile :: Parser ConfigFile
 pConfigFile =
   ConfigFile
@@ -116,6 +127,7 @@ pConfigFile =
           <> Opt.metavar "FILEPATH"
       )
 
+-- | @--state-dir FILEPATH@: directory for persisting ledger state.
 pLedgerStateDir :: Parser LedgerStateDir
 pLedgerStateDir =
   LedgerStateDir
@@ -126,6 +138,7 @@ pLedgerStateDir =
           <> Opt.metavar "FILEPATH"
       )
 
+-- | @--schema-dir FILEPATH@: directory containing the database migrations.
 pMigrationDir :: Parser MigrationDir
 pMigrationDir =
   MigrationDir
@@ -136,6 +149,7 @@ pMigrationDir =
           <> Opt.metavar "FILEPATH"
       )
 
+-- | @--pg-pass-env ENV@: alternative environment variable for PostgreSQL credentials; defaults to @PGPASSFILE@.
 pPGPassSource :: Parser PGPassSource
 pPGPassSource =
   Opt.option
@@ -146,6 +160,7 @@ pPGPassSource =
         <> Opt.metavar "ENV"
     )
 
+-- | @--force-indexes@: create indexes at the start of db-sync instead of later.
 pForceIndexes :: Parser Bool
 pForceIndexes =
   Opt.flag
@@ -155,6 +170,7 @@ pForceIndexes =
         <> Opt.help "Forces the Index creation at the start of db-sync. Normally they're created later."
     )
 
+-- | @--disable-cache@: disable db-sync caches, reducing memory usage at the cost of sync speed.
 pHasCache :: Parser Bool
 pHasCache =
   Opt.flag
@@ -164,6 +180,7 @@ pHasCache =
         <> Opt.help "Disables the db-sync caches. Reduces memory usage but it takes longer to sync."
     )
 
+-- | @--allow-private-offchain-urls@: allow off-chain pool and vote metadata fetches to private, loopback, or link-local hosts and IPs. Off by default; intended for local-cluster testing.
 pAllowPrivateOffChainUrls :: Parser Bool
 pAllowPrivateOffChainUrls =
   Opt.flag
@@ -177,6 +194,7 @@ pAllowPrivateOffChainUrls =
           )
     )
 
+-- | @--socket-path FILEPATH@: path to a cardano-node socket.
 pSocketPath :: Parser SocketPath
 pSocketPath =
   SocketPath
@@ -187,6 +205,7 @@ pSocketPath =
           <> Opt.metavar "FILEPATH"
       )
 
+-- | @--tracer-socket-path-connect FILEPATH@: connect to cardano-tracer for logs and metrics.
 pTracerSocketPath :: Parser FilePath
 pTracerSocketPath =
   Opt.strOption
@@ -196,6 +215,7 @@ pTracerSocketPath =
         <> Opt.metavar "FILEPATH"
     )
 
+-- | @--rollback-to-slot SLOTNO@: force a rollback; if the requested slot has no block, use the next greater slot that has one. Primarily for testing and debugging.
 pRollbackSlotNo :: Parser SlotNo
 pRollbackSlotNo =
   SlotNo
@@ -206,6 +226,7 @@ pRollbackSlotNo =
           <> Opt.metavar "WORD"
       )
 
+-- | @--disable-in-out@: disable the @tx_in@ and @tx_out@ tables.
 pHasInOut :: Parser Bool
 pHasInOut =
   Opt.flag
@@ -215,6 +236,7 @@ pHasInOut =
         <> Opt.help "Disables the tx_in and tx_out table"
     )
 
+-- | The @version@ command and hidden @--version@ flag print the program version.
 pVersionCommand :: Parser SyncCommand
 pVersionCommand =
   asum
