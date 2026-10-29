@@ -259,6 +259,20 @@
           "default": null
         }
       ],
+      "columns:block.slot_no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:c22559e2150bb67852d72fd040e088739dae07be89d06e125ad0ba9c22a6bef4",
+          "resolved_type": {
+            "base": "bigint",
+            "domains": ["word63type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": true,
+          "default": null
+        }
+      ],
       "columns:block.time": [
         {
           "variant": "all",
@@ -269,6 +283,15 @@
             "checks": [],
             "not_null": false
           },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:block.tx_count": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:9bb960fdfe5b4b096eed7811df505627c5fd55ed45bc04ccee6022e95a962e21",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
           "nullable": false,
           "default": null
         }
@@ -328,29 +351,6 @@
           "default": null
         }
       ],
-      "columns:off_chain_pool_data.pmr_id": [
-        {
-          "variant": "all",
-          "fingerprint": "sha256:8bb923fd4ec8d6cfdae74d1e6a322e1c5bae618a42a0f4c4f2c16dbb40e47891",
-          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
-          "nullable": false,
-          "default": null
-        }
-      ],
-      "columns:off_chain_pool_data.ticker_name": [
-        {
-          "variant": "all",
-          "fingerprint": "sha256:3643f3e7f5bd9d21e4222682b2f62d519e08ebabf1c8417142f41f4f72d6fe00",
-          "resolved_type": {
-            "base": "character varying",
-            "domains": [],
-            "checks": [],
-            "not_null": false
-          },
-          "nullable": false,
-          "default": null
-        }
-      ],
       "columns:delegation.active_epoch_no": [
         {
           "variant": "all",
@@ -384,6 +384,42 @@
           "fingerprint": "sha256:8f5355d9f71df47fa71fe8faf03500760a2bf1910ac4c0f93e00ac9ad706a543",
           "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
           "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:delegation.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:epoch.blk_count": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:3f4bdab91a0195068fa55d34d974760710d0691dc20334a17fd73b015f40e41a",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:epoch.no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:f20c99d85ba938656105d76b96c9074b0767d22c7b88fed4a1f16b54088f8bed",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
+          "default": null
+        }
+      ],
+      "columns:epoch.tx_count": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:a8d2136fbbd3fb974bb4f85f893242a726cf0a4d8ccc0cbe03d58e6e58779a47",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": true,
           "default": null
         }
       ],
@@ -429,6 +465,29 @@
           "variant": "all",
           "fingerprint": "sha256:ceefa4b7f0cec08321945ab3342aa2e2c8285a9c2e6dd4e5a1adf880e75ad4bf",
           "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:epoch_sync_time.no": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:ceb03654aa3a836f522eda0283da245f57e316325025e466b1b8e0804ef986b3",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:epoch_sync_time.seconds": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:e89af614d5200244ba132f12cf0a9d0683dfcba7f8caa6f373132bd40a5d540b",
+          "resolved_type": {
+            "base": "bigint",
+            "domains": ["word63type"],
+            "checks": [],
+            "not_null": false
+          },
           "nullable": false,
           "default": null
         }
@@ -483,12 +542,12 @@
           "default": "nextval('meta_id_seq'::regclass)"
         }
       ],
-      "columns:meta.start_time": [
+      "columns:meta.network_name": [
         {
           "variant": "all",
-          "fingerprint": "sha256:dc06a7b6aa22353e5428d900b630915c1128f5208b4bc3e196a71e8cd0f62587",
+          "fingerprint": "sha256:4d8f45fb1d14ebd6ab117591a5c995865026853d6fa3184dfa36dabb063a5263",
           "resolved_type": {
-            "base": "timestamp without time zone",
+            "base": "character varying",
             "domains": [],
             "checks": [],
             "not_null": false
@@ -497,12 +556,12 @@
           "default": null
         }
       ],
-      "columns:meta.network_name": [
+      "columns:meta.start_time": [
         {
           "variant": "all",
-          "fingerprint": "sha256:4d8f45fb1d14ebd6ab117591a5c995865026853d6fa3184dfa36dabb063a5263",
+          "fingerprint": "sha256:dc06a7b6aa22353e5428d900b630915c1128f5208b4bc3e196a71e8cd0f62587",
           "resolved_type": {
-            "base": "character varying",
+            "base": "timestamp without time zone",
             "domains": [],
             "checks": [],
             "not_null": false
@@ -555,6 +614,29 @@
           "resolved_type": {
             "base": "bytea",
             "domains": ["hash28type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:off_chain_pool_data.pmr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:8bb923fd4ec8d6cfdae74d1e6a322e1c5bae618a42a0f4c4f2c16dbb40e47891",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:off_chain_pool_data.ticker_name": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:3643f3e7f5bd9d21e4222682b2f62d519e08ebabf1c8417142f41f4f72d6fe00",
+          "resolved_type": {
+            "base": "character varying",
+            "domains": [],
             "checks": [],
             "not_null": false
           },
@@ -682,6 +764,15 @@
             "checks": [],
             "not_null": false
           },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:pool_update.registered_tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:7e5a981524c883d71577fe1291c97688360d39e86885e038f1ccfdfe79a1f8d7",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
           "nullable": false,
           "default": null
         }
@@ -875,6 +966,15 @@
           "default": "nextval('stake_deregistration_id_seq'::regclass)"
         }
       ],
+      "columns:stake_deregistration.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
       "columns:stake_registration.addr_id": [
         {
           "variant": "all",
@@ -891,6 +991,47 @@
           "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
           "nullable": false,
           "default": "nextval('stake_registration_id_seq'::regclass)"
+        }
+      ],
+      "columns:stake_registration.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:treasury.addr_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:5e1031c4acb45c464e32835610531f9c12ad5c5f618530fdab55b814a1960aac",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:treasury.amount": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:f35a58b3cbc5864317789e85ea6922113d26c191ae1023a9f39fd3b91c1cc2e1",
+          "resolved_type": {
+            "base": "numeric(20,0)",
+            "domains": ["int65type"],
+            "checks": [],
+            "not_null": false
+          },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:treasury.tx_id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:037abe799bc0d14b19ff93be5c96344e15d2a328a58997faf5f4514b8f88ac44",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": null
         }
       ],
       "columns:tx.block_id": [
@@ -976,6 +1117,15 @@
           "default": null
         }
       ],
+      "columns:tx_in.id": [
+        {
+          "variant": "all",
+          "fingerprint": "sha256:7aeaf4ca2f9c2c81595964f3c77d4894ed5af702e510629f5ee11db2cf7871f6",
+          "resolved_type": {"base": "bigint", "domains": [], "checks": [], "not_null": false},
+          "nullable": false,
+          "default": "nextval('tx_in_id_seq'::regclass)"
+        }
+      ],
       "columns:tx_in.redeemer_id": [
         {
           "variant": "all",
@@ -1027,6 +1177,15 @@
             "checks": [],
             "not_null": false
           },
+          "nullable": false,
+          "default": null
+        }
+      ],
+      "columns:tx_out.address_has_script": [
+        {
+          "variant": "core",
+          "fingerprint": "sha256:7b89a340b96ab58605e6294165196ada7d918b4a445577322f894225b599d27d",
+          "resolved_type": {"base": "boolean", "domains": [], "checks": [], "not_null": false},
           "nullable": false,
           "default": null
         }

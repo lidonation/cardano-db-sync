@@ -231,3 +231,31 @@ it('uses the project’s numeric DbWord64 codecs and database column order', () 
   expect(text).not.toContain('fromIntegral . unDbWord64 >$< E.int8');
   expect(text).not.toContain('DbWord64 . fromIntegral <$> D.int8');
 });
+
+// Concrete column references found by parsing all 35 executable SQL examples.
+it('locks every additionally referenced column in the published SQL examples', () => {
+  const text = readFileSync(migratedPath('interesting-queries'), 'utf8');
+  const front = yaml.load(/^---\n([\s\S]*?)\n---/.exec(text)![1]) as {
+    requires: {columns: string[]};
+  };
+  expect(front.requires.columns).toEqual(
+    expect.arrayContaining([
+      'block.slot_no',
+      'block.tx_count',
+      'delegation.tx_id',
+      'epoch.blk_count',
+      'epoch.no',
+      'epoch.tx_count',
+      'epoch_sync_time.no',
+      'epoch_sync_time.seconds',
+      'pool_update.registered_tx_id',
+      'stake_deregistration.tx_id',
+      'stake_registration.tx_id',
+      'treasury.addr_id',
+      'treasury.amount',
+      'treasury.tx_id',
+      'tx_in.id',
+      'tx_out.address_has_script',
+    ]),
+  );
+});
