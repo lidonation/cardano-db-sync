@@ -1,0 +1,80 @@
+import {execFileSync} from 'node:child_process';
+
+export type Language = 'haskell' | 'sql' | 'nix' | 'cabal' | 'docs';
+export type DailyLines = {date: string} & Record<Language, number>;
+export interface GitHistory {
+  commits: {sha: string; date: string; subject: string; author: string}[];
+  authors: {name: string; email: string; commits: number}[];
+  firstCommit: string | null;
+  dailyLines: DailyLines[];
+}
+
+function language(file: string): Language | undefined {
+  if (/\.l?hs$/i.test(file)) return 'haskell';
+  if (/\.sql$/i.test(file)) return 'sql';
+  if (/\.nix$/i.test(file)) return 'nix';
+  if (/\.cabal$/i.test(file)) return 'cabal';
+  if (/\.(md|mdx|rst)$/i.test(file)) return 'docs';
+  return undefined;
+}
+
+/** Read from a full local checkout; author email stays in the build process, never client data. */
+export function readHistory(directory: string): GitHistory {
+  const git = (...args: string[]) =>
+    execFileSync('git', args, {
+      cwd: directory,
+      encoding: 'utf8',
+      maxBuffer: 100 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  if (git('rev-parse', '--is-shallow-repository').trim() !== 'false')
+    throw new Error('Shallow history');
+  const text = git(
+    'log',
+    '--no-renames',
+    '--numstat',
+    '--format=%x1e%H%x00%aI%x00%aN%x00%aE%x00%s',
+  );
+  const commits: GitHistory['commits'] = [];
+  const authors = new Map<string, GitHistory['authors'][number]>();
+  const days = new Map<string, DailyLines>();
+  for (const record of text.split('\x1e').slice(1)) {
+    const newline = record.indexOf('\n');
+    if (newline < 0) throw new Error('Malformed git record');
+    const fields = record.slice(0, newline).split('\0');
+    if (fields.length !== 5) throw new Error('Malformed git header');
+    const [sha, timestamp, name, email, subject] = fields;
+    const instant = new Date(timestamp);
+    if (!/^[a-f0-9]{40,64}$/.test(sha) || !Number.isFinite(instant.getTime()) || !name || !email)
+      throw new Error('Malformed git commit');
+    const date = instant.toISOString().slice(0, 10);
+    commits.push({sha, date, subject, author: name});
+    if (!/\[bot\]$/i.test(name) && !/\[bot\]@/i.test(email)) {
+      const key = email.toLowerCase();
+      const author = authors.get(key) ?? {name, email, commits: 0};
+      author.commits++;
+      authors.set(key, author);
+    }
+    const day = days.get(date) ?? {date, haskell: 0, sql: 0, nix: 0, cabal: 0, docs: 0};
+    for (const line of record
+      .slice(newline + 1)
+      .split('\n')
+      .filter(Boolean)) {
+      const match = /^(\d+|-)\t(\d+|-)\t(.+)$/.exec(line);
+      if (!match) throw new Error('Malformed numstat');
+      const kind = language(match[3]);
+      if (kind && match[1] !== '-' && match[2] !== '-')
+        day[kind] += Number(match[1]) - Number(match[2]);
+    }
+    days.set(date, day);
+  }
+  return {
+    commits,
+    authors: [...authors.values()],
+    firstCommit: commits.reduce<string | null>(
+      (first, commit) => (first === null || commit.date < first ? commit.date : first),
+      null,
+    ),
+    dailyLines: [...days.values()].sort((a, b) => a.date.localeCompare(b.date)),
+  };
+}
