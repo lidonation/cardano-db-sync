@@ -8,11 +8,11 @@
  * machine with no GHC or cabal present, because this file consumes a
  * committed JSON document and nothing else.
  *
- * Regenerate after touching Haskell documentation in `cardano-db/src` (or the
- * extractor) by running the workflow, or locally:
+ * Regenerate after touching any configured Haskell input (or the extractor) by
+ * running the workflow, or locally:
  *
  *     cd docs/extractor && cabal run extract-haddock -- \
- *       --repo-root ../.. --out ../generated/haddock-annotations.json --input cardano-db/src
+ *       --repo-root ../.. --out ../generated/haddock-annotations.json
  *
  * The shape mirrors `HaddockExtract.Model`; `check:annotations` verifies the
  * committed file against the same rules.

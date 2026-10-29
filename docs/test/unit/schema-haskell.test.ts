@@ -217,6 +217,24 @@ describe('the real schema modules', () => {
     });
   });
 
+  it('associates every real SQL column by field name, not record position', () => {
+    for (const variant of ['core', 'address']) {
+      for (const table of readHaskellTables(repoRoot, variant).values()) {
+        for (const column of table.columns) {
+          expect(column.column, `${variant}/${table.record}/${column.field}`).toBe(
+            fieldToColumn(table.record, column.field),
+          );
+        }
+      }
+    }
+    const columns = readHaskellTables(repoRoot, 'address').get('ma_tx_out')!.columns;
+    expect(columns.map(({column, field}) => [column, field])).toEqual([
+      ['quantity', 'maTxOutAddressQuantity'],
+      ['tx_out_id', 'maTxOutAddressTxOutId'],
+      ['ident', 'maTxOutAddressIdent'],
+    ]);
+  });
+
   it('rejects an unknown variant', () => {
     expect(() => readHaskellTables(repoRoot, 'shared')).toThrow(/unknown tx_out variant/);
   });
@@ -248,6 +266,26 @@ describe('readHaskellTables failure modes', () => {
       write(`cardano-db/src/Cardano/Db/Schema/Core/${rel}`, text);
     return root;
   }
+
+  it('retains each reordered field nullability and SQL type hint', () => {
+    const source =
+      'data A = A\n  { aFirst :: !(Maybe Text) -- sqltype=hash32type\n  , aSecond :: !Int\n  }\n\ninstance DbInfo A where\n  columnNames _ = NE.fromList ["second", "first"]\n';
+    expect(readHaskellTables(tree({'A.hs': source}), 'core').get('a')!.columns).toEqual([
+      {column: 'second', field: 'aSecond', nullable: false},
+      {column: 'first', field: 'aFirst', nullable: true, sqltype: 'hash32type'},
+    ]);
+  });
+
+  it('rejects ambiguous, duplicate or unknown explicit column names', () => {
+    const source =
+      'data A = A\n  { aFirst :: Int\n  , aSecond :: Int\n  }\n\ninstance DbInfo A where\n  columnNames _ = NE.fromList ["first", "second"]\n';
+    for (const names of ['["first", "first"]', '["first", "renamed"]']) {
+      const changed = source.replace('["first", "second"]', names);
+      expect(() => readHaskellTables(tree({'A.hs': changed}), 'core')).toThrow(
+        /cannot associate columnNames/,
+      );
+    }
+  });
 
   it('fails on an instance without a record, a column count mismatch, or a duplicate table', () => {
     expect(() => readHaskellTables(tree({'A.hs': 'instance DbInfo Ghost\n'}), 'core')).toThrow(
