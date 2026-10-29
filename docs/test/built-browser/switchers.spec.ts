@@ -67,29 +67,66 @@ for (const width of [1440, 1024, 768, 767, 375]) {
     await page.goto(`${BUILT_HOME}docs/intro`);
     const header = page.locator('header[data-dbs-component="Navbar / Full"]');
     if (width < 1280) await header.getByRole('button', {name: 'Menu'}).click();
-    await expect(header.getByRole('link', {name: /^(Next|Unreleased)$/})).toHaveCount(0);
+    await expect(
+      header.locator('.navbar__link').filter({hasText: /^(Next|Unreleased)$/}),
+    ).toHaveCount(0);
   });
 }
 
 for (const palette of PALETTES) {
-  test(`header control plates and targets in ${palette}`, async ({page}) => {
-    await page.addInitScript((name) => localStorage.setItem('dbs-palette', name), palette);
-    await page.goto(BUILT_HOME);
-    const header = page.locator('header[data-dbs-component="Navbar / Full"]');
-    const theme = header.getByRole('button', {name: /^Theme:/});
-    const locale = header.locator('.navbar__item.dropdown > .navbar__link').first();
-    for (const control of [theme, locale]) {
-      const box = await control.boundingBox();
-      expect(box!.height).toBeGreaterThanOrEqual(44);
-      expect(box!.width).toBeGreaterThanOrEqual(44);
-      const plate = await control.evaluate((el) => {
-        const style = getComputedStyle(el, '::before');
-        return {height: style.height, border: style.borderTopWidth};
-      });
-      expect(plate).toEqual({height: '32px', border: '1px'});
-    }
-    expect((await theme.boundingBox())!.width).toBe(96);
-    await expect(theme.locator('[data-palette]')).toHaveCount(0);
-    await expect(theme.locator('svg')).toBeVisible();
-  });
+  for (const route of ['', 'docs/intro', 'ecosystem', 'survey']) {
+    test(`header control plates and targets in ${palette} on /${route}`, async ({page}) => {
+      await page.addInitScript((name) => localStorage.setItem('dbs-palette', name), palette);
+      await page.goto(`${BUILT_HOME}${route}`);
+      await page.evaluate(() => document.fonts.ready);
+      const header = page.locator('header[data-dbs-component="Navbar / Full"]');
+      const theme = header.getByRole('button', {name: /^Theme:/});
+      const locale = header.locator('.navbar__item.dropdown > .navbar__link').first();
+      const plates = [];
+      for (const control of [theme, locale]) {
+        const box = await control.boundingBox();
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+        expect(box!.width).toBeGreaterThanOrEqual(44);
+        const plate = await control.evaluate((el) => {
+          const style = getComputedStyle(el, '::before');
+          const root = getComputedStyle(document.documentElement);
+          const expected = document.createElement('span');
+          expected.style.borderColor = root.getPropertyValue('--dbs-border-interactive');
+          expected.style.background = root.getPropertyValue('--dbs-surface-base');
+          document.body.append(expected);
+          const tokens = getComputedStyle(expected);
+          const result = {
+            height: style.height,
+            border: style.borderTopWidth,
+            radius: style.borderRadius,
+            color: style.borderTopColor,
+            fill: style.backgroundColor,
+            expectedColor: tokens.borderTopColor,
+            expectedFill: tokens.backgroundColor,
+          };
+          expected.remove();
+          return result;
+        });
+        expect(plate.height).toBe('32px');
+        expect(plate.border).toBe('1px');
+        expect(plate.radius).toBe('0px');
+        expect(plate.color).toBe(plate.expectedColor);
+        expect(plate.fill).toBe(plate.expectedFill);
+        plates.push(plate);
+        const caret = await control.evaluate((el) => {
+          const style = getComputedStyle(el, '::after');
+          return {width: style.width, height: style.height, clip: style.clipPath};
+        });
+        expect(caret).toEqual({
+          width: '10px',
+          height: '6px',
+          clip: 'polygon(0px 0px, 100% 0px, 50% 100%)',
+        });
+      }
+      expect(plates[0]).toEqual(plates[1]);
+      expect((await theme.boundingBox())!.width).toBe(96);
+      await expect(theme.locator('[data-palette]')).toHaveCount(0);
+      await expect(theme).toHaveText('Theme');
+    });
+  }
 }
