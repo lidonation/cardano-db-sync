@@ -163,5 +163,7 @@ describe('repository browser fixtures', () => {
     const artifact = steps.find((step) => step.with?.name === 'docs-build');
     expect(artifact?.with?.path).toBe('docs/build/');
     expect(fixture?.run).not.toMatch(/--out-dir build\//);
+    const lintConfig = await fs.readFile(path.join(ROOT, 'docs/eslint.config.mjs'), 'utf8');
+    expect(lintConfig).toContain("'.cache/browser-fixtures/**'");
   });
 });
