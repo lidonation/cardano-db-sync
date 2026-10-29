@@ -1,0 +1,1 @@
+{"version":1,"builtAt":"2026-10-29T00:00:00.000Z","statuses":{"todo":3,"inProgress":1,"done":104},"objectives":[{"name":"Sync speed","done":11,"total":12},{"name":"Memory","done":5,"total":5},{"name":"Modularity","done":4,"total":4},{"name":"Disk space","done":1,"total":1}],"releases":["13.5.0.0","13.6.0.0","13.7.0.1","13.7.1.1","14.0.0.0"]}

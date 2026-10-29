@@ -1,0 +1,30 @@
+.statuses {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-48);
+  margin-block: var(--dbs-space-32);
+}
+.statuses dd {
+  margin: 0;
+}
+.objectives {
+  list-style: none;
+  padding: 0;
+}
+.objectives li {
+  margin-block: var(--dbs-space-24);
+}
+.objectives progress {
+  display: block;
+  inline-size: 100%;
+  accent-color: var(--dbs-accent-primary);
+}
+
+.releases {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--dbs-space-16);
+  padding: var(--dbs-space-16) 0 0;
+  border-block-start: var(--dbs-border-width-hairline) solid var(--dbs-border-interactive);
+  list-style: none;
+}

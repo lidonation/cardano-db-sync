@@ -1,3 +1,4 @@
+import roadmapPlugin from './plugins/roadmap';
 import surveyResultsPlugin from './plugins/survey-results';
 import repositoryActivityPlugin from './plugins/repository-activity';
 import type {Config} from '@docusaurus/types';
@@ -110,6 +111,7 @@ const config: Config = {
   // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
+    roadmapPlugin,
     surveyResultsPlugin,
     repositoryActivityPlugin,
     cnamePlugin,

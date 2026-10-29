@@ -22,6 +22,8 @@ import {ECOSYSTEM_IDS} from './ids';
 import {UPDATES_IDS} from '../updates/messages';
 import state from '@generated/repository-activity/default/resolved.json';
 import {RepositoryFacts, RepositoryPeople} from './People';
+import {Roadmap} from './Roadmap';
+import roadmap from '@generated/roadmap/default/resolved.json';
 
 const NEW_ISSUE = `${REPO_URL}/issues/new/choose`;
 const GOOD_FIRST_ISSUES = `${REPO_URL}/issues?q=is%3Aopen+label%3A%22good+first+issue%22`;
@@ -250,6 +252,12 @@ export default function Ecosystem(): React.JSX.Element {
           </div>
         </div>
       </section>
+      <Roadmap
+        state={roadmap}
+        contributors={state.status === 'available' ? state.data.contributors.length : null}
+        issueUrl={NEW_ISSUE}
+        t={t}
+      />
     </div>
   );
 }

@@ -55,3 +55,9 @@ it('keeps Docs as a version-aware sidebar destination', () => {
   expect(config).toContain("type: 'docSidebar'");
   expect(config).toContain("sidebarId: 'docsSidebar'");
 });
+
+it('shows the roadmap anchor only with its ecosystem page', () => {
+  const roadmap = {label: 'Roadmap', href: '/ecosystem#roadmap'};
+  expect(gateMenu([roadmap], new Set(['/base/ecosystem']), '/base/')).toEqual([roadmap]);
+  expect(gateMenu([roadmap], new Set(), '/base/')).toEqual([]);
+});

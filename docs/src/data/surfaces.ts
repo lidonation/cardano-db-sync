@@ -17,6 +17,7 @@ export const SURFACES = {
   survey: '/survey',
   surveyResults: '/survey/results',
   ecosystem: '/ecosystem',
+  roadmap: '/ecosystem#roadmap',
   config: '/config',
   faq: '/faq',
   updates: '/updates',
@@ -52,7 +53,7 @@ export function routePaths(routes: readonly RouteNode[]): Set<string> {
  * section index under it. `baseUrl` is the site's base, which the route table includes.
  */
 export function routeExists(paths: ReadonlySet<string>, baseUrl: string, path: string): boolean {
-  const full = trim(`${baseUrl.replace(/\/+$/, '')}${path}`);
+  const full = trim(`${baseUrl.replace(/\/+$/, '')}${path.split('#')[0]}`);
   return paths.has(full);
 }
 
@@ -86,6 +87,7 @@ export const FOOTER_MENU: readonly {
       {label: 'Releases', href: 'repository/releases'},
       {label: 'Issues', href: 'repository/issues'},
       {label: 'Updates', href: SURFACES.updates},
+      {label: 'Roadmap', href: SURFACES.roadmap},
     ],
   },
   {
