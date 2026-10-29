@@ -49,11 +49,13 @@ for (const locale of LOCALES) {
         const first = await helper.searchProse(api, bundle, 'tx_out');
         const second = await helper.searchProse(api, bundle, 'tx_out');
         const migrated = await helper.searchProse(api, bundle, 'cexplorer database table');
+        const natural = await helper.searchProse(api, bundle, 'how do I prune tx_out?');
         await api.destroy();
         return {
           first,
           second,
           migrated,
+          natural,
           violations: (window as unknown as {proseCspViolations: string[]}).proseCspViolations,
         };
       },
@@ -68,6 +70,10 @@ for (const locale of LOCALES) {
         item.url.includes('/guides/interesting-queries'),
       ),
     ).toBe(true);
+    if (locale === 'en') {
+      expect(result.natural[0]?.url).toContain('/guides/trimming');
+      expect(result.natural[0]?.excerpt.toLowerCase()).toMatch(/prun/);
+    }
     for (const item of result.first) {
       expect(item.url.startsWith(`${localeBase}docs/`)).toBe(true);
       expect(item.excerpt.length).toBeGreaterThan(0);

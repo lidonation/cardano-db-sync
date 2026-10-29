@@ -35,17 +35,31 @@ export function searchProse(
           await api.init();
           activeBundles.set(api, bundle);
         }
-        const response = await api.search(query);
-        // A rejected fragment must not let the next bundle destroy a worker still hydrating
-        // other fragments. Drain all results before releasing the serialized operation.
-        const hydrated = await Promise.allSettled(
-          (response?.results ?? []).map((result) => result.data()),
-        );
-        return hydrated.map((result) => {
-          if (result.status === 'rejected') throw result.reason;
-          // Direct Pagefind API implementations may reuse mutable cached fragment objects.
-          return structuredClone(result.value);
-        });
+        const hydrate = async (term: string): Promise<ProseResult[]> => {
+          const response = await api.search(term);
+          // Drain all hydration before releasing the bundle lock even when one fragment fails.
+          const hydrated = await Promise.allSettled(
+            (response?.results ?? []).map((result) => result.data()),
+          );
+          return hydrated.map((result) => {
+            if (result.status === 'rejected') throw result.reason;
+            return structuredClone(result.value);
+          });
+        };
+        // For a short English question, rank documents that match both the action and
+        // object by the action search. That preserves the useful action-focused excerpt.
+        // Other languages, quoted syntax, and longer queries retain Pagefind semantics.
+        const question =
+          /^\s*how\s+(?:do|can|should)\s+(?:i|we)\s+([a-z][a-z0-9_-]{1,39})\s+([a-z0-9_][a-z0-9_-]{1,79})\s*\?\s*$/i.exec(
+            query,
+          );
+        if (question) {
+          const action = await hydrate(question[1]);
+          const object = new Set((await hydrate(question[2])).map((result) => result.url));
+          const matching = action.filter((result) => object.has(result.url));
+          if (matching.length) return matching;
+        }
+        return await hydrate(query);
       } catch (error) {
         activeBundles.delete(api);
         throw error;

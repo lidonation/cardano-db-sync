@@ -301,3 +301,83 @@ it('invalidates the warm bundle on external cleanup or option changes', async ()
   expect(raw.init).toHaveBeenCalledTimes(3);
   expect(raw.options).toHaveBeenLastCalledWith({basePath: '/pagefind/v1/', baseUrl: '/'});
 });
+
+it('finds a relevant excerpt for a natural-language question without leaking unrelated results', async () => {
+  const item = (url: string, excerpt: string) => ({
+    data: async () => ({url, excerpt, sub_results: []}),
+  });
+  const api = {
+    destroy: async () => {},
+    options: async () => {},
+    init: async () => {},
+    search: vi.fn(async (q: string) => ({
+      results:
+        q === 'prune'
+          ? [item('/trim', 'prune outputs'), item('/other', 'pruned')]
+          : q === 'tx_out'
+            ? [item('/trim', 'tx_out'), item('/queries', 'tx_out')]
+            : [item('/queries', 'how much')],
+    })),
+  };
+  const result = await searchProse(api, '/pagefind/current/', 'how do I prune tx_out?');
+  expect(result.map((x) => x.url)).toEqual(['/trim']);
+  expect(result[0].excerpt).toContain('prune');
+});
+
+it('falls back to the original question if no document matches both meaningful terms', async () => {
+  const item = (url: string) => ({data: async () => ({url, excerpt: url, sub_results: []})});
+  const api = {
+    destroy: async () => {},
+    options: async () => {},
+    init: async () => {},
+    search: vi.fn(async (q: string) => ({
+      results: q === 'prune' ? [item('/a')] : q === 'tx_out' ? [item('/b')] : [item('/fallback')],
+    })),
+  };
+  expect((await searchProse(api, '/pagefind/current/', 'how can we prune tx_out?'))[0].url).toBe(
+    '/fallback',
+  );
+  expect(api.search).toHaveBeenCalledTimes(3);
+});
+
+it('preserves ordinary and quoted Pagefind query semantics', async () => {
+  const api = {
+    destroy: async () => {},
+    options: async () => {},
+    init: async () => {},
+    search: vi.fn(async (_query: string) => ({results: []})),
+  };
+  for (const query of [
+    'tx_out',
+    'prune tx_out',
+    '"how do I prune tx_out?"',
+    '¿cómo podar tx_out?',
+    'how do I safely prune tx_out?',
+  ]) {
+    await searchProse(api, '/pagefind/current/', query);
+  }
+  expect(api.search.mock.calls.map(([query]) => query)).toEqual([
+    'tx_out',
+    'prune tx_out',
+    '"how do I prune tx_out?"',
+    '¿cómo podar tx_out?',
+    'how do I safely prune tx_out?',
+  ]);
+});
+
+it('resets the active bundle if the second question lookup fails', async () => {
+  const api = {
+    destroy: vi.fn(async () => {}),
+    options: vi.fn(async () => {}),
+    init: vi.fn(async () => {}),
+    search: vi.fn(async (term: string) => {
+      if (term === 'tx_out') throw new Error('object lookup failed');
+      return {results: []};
+    }),
+  };
+  await expect(searchProse(api, '/pagefind/v1/', 'how do I prune tx_out?')).rejects.toThrow(
+    'object lookup failed',
+  );
+  await searchProse(api, '/pagefind/v1/', 'other');
+  expect(api.init).toHaveBeenCalledTimes(2);
+});
