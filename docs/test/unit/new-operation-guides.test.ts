@@ -39,12 +39,23 @@ describe('new operating guides (CON-11)', () => {
     expect(text).toMatch(/persistentvolumeclaim/i);
     expect(text).toMatch(/rollback/i);
   });
+  it('documents the release parser limitations and credential safety', () => {
+    const text = read('ubuntu-systemd.md');
+    expect(text).toMatch(/first line/i);
+    expect(text).toMatch(/no colons or backslashes/i);
+    expect(text).toMatch(/does not unescape/i);
+    expect(text).toMatch(/restrict access to logs/i);
+    expect(text).toMatch(/rotate/i);
+    expect(text).not.toMatch(/escape colons and backslashes/i);
+  });
   it('documents a least-privilege systemd service with protected credentials and recovery', () => {
     const text = read('ubuntu-systemd.md');
     expect(text).toMatch(/User=dbsync/);
     expect(text).toMatch(/PGPASSFILE=/);
     expect(text).toMatch(/chmod 600/);
     expect(text).toMatch(/--socket-path/);
+    expect(text).toMatch(/socket itself.*write access/i);
+    expect(text).toMatch(/after node restarts/i);
     expect(text).toMatch(/--schema-dir/);
     expect(text).toMatch(/journalctl/);
     expect(text).toMatch(/rollback/i);
