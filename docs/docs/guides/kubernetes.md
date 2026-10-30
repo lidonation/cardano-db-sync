@@ -24,7 +24,10 @@ persistent volumes. It is a starting point for an operator, not a production-rea
 - A Secret named `dbsync-postgres` with keys `host`, `port`, `database`, `user`, and `password`.
   Create it using your normal secret-management process; do not commit its values to Git. Limit
   Secret access with Kubernetes RBAC and encryption at rest. The container receives these values
-  as environment variables; restrict who can inspect pods and their processes.
+  as environment variables; restrict who can inspect pods and their processes. In the 13.7.2.1 image,
+  use no colons or backslashes in any of these values and no line breaks within a value: the image
+  writes them to a colon-separated password file without escaping. Choose a high-entropy password from an alphabet that excludes
+  those characters and verify the requirements of the image version you deploy.
 - Sufficient disk, memory and time for initial sync. Verify the image tags and their compatibility
   with your chosen node and db-sync release before deployment.
 

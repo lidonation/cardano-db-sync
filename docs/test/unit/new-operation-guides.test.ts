@@ -37,12 +37,16 @@ describe('new operating guides (CON-11)', () => {
     ).toBeTruthy();
     expect(text).toMatch(/preview/i);
     expect(text).toMatch(/persistentvolumeclaim/i);
+    expect(text).toMatch(/no colons or backslashes/i);
+    expect(text).toMatch(/no line breaks/i);
+    expect(text).toMatch(/high-entropy/i);
     expect(text).toMatch(/rollback/i);
   });
   it('documents the release parser limitations and credential safety', () => {
     const text = read('ubuntu-systemd.md');
     expect(text).toMatch(/first line/i);
     expect(text).toMatch(/no colons or backslashes/i);
+    expect(text).toMatch(/no line breaks/i);
     expect(text).toMatch(/does not unescape/i);
     expect(text).toMatch(/restrict access to logs/i);
     expect(text).toMatch(/rotate/i);

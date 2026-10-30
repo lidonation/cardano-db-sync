@@ -38,7 +38,8 @@ sudo install -d -o root -g dbsync -m 750 /etc/dbsync
 
 Create `/etc/dbsync/pgpass` securely using your secret-management process. For db-sync 13.7.2.1,
 the first line must contain `hostname:port:database:username:password`, with no colons or backslashes
-in any field. Unlike PostgreSQL's general password-file format, db-sync does not unescape escaped
+in any field and no line breaks within a field. Unlike PostgreSQL's general password-file format,
+db-sync does not unescape escaped
 characters. Use a high-entropy password from an alphabet that excludes those characters and confirm
 these rules against the release you run. Avoid entering passwords in shell history or committing
 this file.

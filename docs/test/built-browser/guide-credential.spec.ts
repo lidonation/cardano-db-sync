@@ -14,3 +14,11 @@ test('systemd guide publishes the correct release credential format', async ({pa
     .click();
   await expect(article).toContainText('no colons or backslashes');
 });
+
+test('Kubernetes guide publishes compatible image credential guidance', async ({page, baseURL}) => {
+  const base = new URL(baseURL!).pathname;
+  await page.goto(`${base}docs/guides/kubernetes`);
+  const article = page.locator('main article');
+  await expect(article).toContainText('no colons or backslashes');
+  await expect(article).toContainText('high-entropy password');
+});
