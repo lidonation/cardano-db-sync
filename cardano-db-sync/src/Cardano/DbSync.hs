@@ -67,6 +67,7 @@ import Cardano.DbSync.Rollback (handlePostRollbackSnapshots, unsafeRollback)
 import Cardano.DbSync.Sync (runSyncNodeClient)
 import Cardano.DbSync.Tracing.Setup (DbSyncTracers (..), mkDbSyncTracers)
 import Cardano.DbSync.Types
+import Cardano.DbSync.Util (jsonbNestingLimit, minMaxStackDepthKb)
 
 -- | The old field is retained for API compatibility, but false was never effective.
 -- Reject it before migrations, connections or rollback rather than silently ignoring it.
@@ -262,6 +263,19 @@ runSyncNode metricsSetters tracers iomgr dbConnSetting runNearTipMigrationFnc sy
           pool <- liftIO $ DB.createHasqlConnectionPool [dbConnSetting] 4 -- 4 connections for reasonable parallelism
           let dbEnv = DB.createDbEnv dbConn (Just pool) (Just trce)
           isJsonbInSchema <- liftSessionIO mkSyncNodeCallStack $ DB.queryJsonbInSchemaExists dbConn
+          maxStackDepthKb <- liftSessionIO mkSyncNodeCallStack $ DB.queryMaxStackDepthKb dbConn
+          when (fromIntegral maxStackDepthKb < minMaxStackDepthKb) $
+            liftIO . logWarning trce $
+              mconcat
+                [ "max_stack_depth is "
+                , textShow maxStackDepthKb
+                , "kB, below the "
+                , textShow minMaxStackDepthKb
+                , "kB a JSON value nested to db-sync's limit of "
+                , textShow jsonbNestingLimit
+                , " levels needs. Deeply nested values may abort the transaction that "
+                , "inserts them. Raise max_stack_depth in postgresql.conf."
+                ]
           logProtocolMagicId trce $ genesisProtocolMagicId genCfg
 
           -- Determine the final JSONB state after any schema migrations
@@ -348,7 +362,7 @@ genesisNetworkMagic =
 genesisSystemStart :: GenesisConfig -> UTCTime
 genesisSystemStart genCfg =
   case genCfg of
-    GenesisCardano _ bCfg _ _ _ ->
+    GenesisCardano _ bCfg _ _ _ _ ->
       Byron.gdStartTime (Byron.configGenesisData bCfg)
 
 -- -------------------------------------------------------------------------------------------------

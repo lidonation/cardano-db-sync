@@ -193,9 +193,152 @@
           ],
           "doc": "The product type of all command line arguments",
           "kind": "data",
-          "line": 113,
+          "line": 114,
           "name": "SyncNodeParams",
           "position": "before"
+        },
+        {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [
+                {
+                  "doc": "",
+                  "name": "dncNetworkName"
+                },
+                {
+                  "doc": "",
+                  "name": "dncTraceConfig"
+                },
+                {
+                  "doc": "",
+                  "name": "dncNodeConfigFile"
+                },
+                {
+                  "doc": "",
+                  "name": "dncProtocol"
+                },
+                {
+                  "doc": "",
+                  "name": "dncRequiresNetworkMagic"
+                },
+                {
+                  "doc": "",
+                  "name": "dncEnableLogging"
+                },
+                {
+                  "doc": "",
+                  "name": "dncEnableMetrics"
+                },
+                {
+                  "doc": "",
+                  "name": "dncPrometheusPort"
+                },
+                {
+                  "doc": "",
+                  "name": "dncPBftSignatureThreshold"
+                },
+                {
+                  "doc": "",
+                  "name": "dncByronGenesisFile"
+                },
+                {
+                  "doc": "",
+                  "name": "dncByronGenesisHash"
+                },
+                {
+                  "doc": "",
+                  "name": "dncShelleyGenesisFile"
+                },
+                {
+                  "doc": "",
+                  "name": "dncShelleyGenesisHash"
+                },
+                {
+                  "doc": "",
+                  "name": "dncAlonzoGenesisFile"
+                },
+                {
+                  "doc": "",
+                  "name": "dncAlonzoGenesisHash"
+                },
+                {
+                  "doc": "",
+                  "name": "dncConwayGenesisFile"
+                },
+                {
+                  "doc": "",
+                  "name": "dncConwayGenesisHash"
+                },
+                {
+                  "doc": "",
+                  "name": "dncDijkstraGenesisFile"
+                },
+                {
+                  "doc": "",
+                  "name": "dncDijkstraGenesisHash"
+                },
+                {
+                  "doc": "",
+                  "name": "dncByronProtocolVersion"
+                },
+                {
+                  "doc": "Mirrors the node's @ExperimentalHardForksEnabled@.",
+                  "name": "dncExperimentalHardForksEnabled"
+                },
+                {
+                  "doc": "",
+                  "name": "dncShelleyHardFork"
+                },
+                {
+                  "doc": "",
+                  "name": "dncAllegraHardFork"
+                },
+                {
+                  "doc": "",
+                  "name": "dncMaryHardFork"
+                },
+                {
+                  "doc": "",
+                  "name": "dncAlonzoHardFork"
+                },
+                {
+                  "doc": "",
+                  "name": "dncBabbageHardFork"
+                },
+                {
+                  "doc": "",
+                  "name": "dncConwayHardFork"
+                },
+                {
+                  "doc": "",
+                  "name": "dncDijkstraHardFork"
+                },
+                {
+                  "doc": "",
+                  "name": "dncInsertOptions"
+                },
+                {
+                  "doc": "",
+                  "name": "dncIpfsGateway"
+                },
+                {
+                  "doc": "",
+                  "name": "dncSnapshotInterval"
+                },
+                {
+                  "doc": "",
+                  "name": "dncLedgerBackend"
+                }
+              ],
+              "name": "SyncNodeConfig"
+            }
+          ],
+          "doc": "",
+          "kind": "data",
+          "line": 139,
+          "name": "SyncNodeConfig",
+          "position": "after"
         },
         {
           "constructors": [
@@ -216,7 +359,7 @@
           ],
           "doc": "The optional @insert_options.preset@ selects base settings: @full@, @only_utxo@, @only_governance@,\nor @disable_all@. Explicit sibling options override the selected preset. Without a preset the\nstandard defaults apply.\n\nThe formerly ignored @json_type@ selector is rejected before database startup. Remove it and\nuse @remove_jsonb_from_schema@ to select text versus JSONB columns; JSON payload insertion remains\nenabled. Existing databases follow the existing startup conversion and restart rules.",
           "kind": "data",
-          "line": 190,
+          "line": 196,
           "name": "SyncInsertConfig",
           "position": "before"
         },
@@ -245,7 +388,7 @@
           ],
           "doc": "Preset choices are @full@, @only_utxo@, @only_governance@ and @disable_all@. These establish base\ninsert options; individual keys may override them.\n\nThe full preset enables pool statistics but leaves transaction CBOR and both off-chain fetchers\ndisabled. The only_utxo preset uses bootstrap outputs and ignores ledger data; only_governance\nretains governance with ledger enabled; disable_all disables the optional insertion categories.",
           "kind": "data",
-          "line": 202,
+          "line": 208,
           "name": "SyncInsertPreset",
           "position": "before"
         },
@@ -320,7 +463,7 @@
           ],
           "doc": "The @insert_options@ object controls which chain data db-sync inserts. Optional @stop_at_block@\nstops after the specified block number; absent means no configured stop. Individual settings\noverride a selected preset.",
           "kind": "data",
-          "line": 212,
+          "line": 218,
           "name": "SyncInsertOptions",
           "position": "before"
         },
@@ -339,7 +482,7 @@
           ],
           "doc": "@tx_cbor@ accepts @enable@ or @disable@ to control collection of transaction CBOR; the default is\n@disable@.",
           "kind": "newtype",
-          "line": 233,
+          "line": 239,
           "name": "TxCBORConfig",
           "position": "before"
         },
@@ -358,7 +501,7 @@
           ],
           "doc": "@pool_stat@ accepts @enable@ or @disable@ to control pool statistics. It defaults to @disable@\nwithout a preset and is enabled by the @full@ preset.",
           "kind": "newtype",
-          "line": 240,
+          "line": 246,
           "name": "PoolStatsConfig",
           "position": "before"
         },
@@ -377,7 +520,7 @@
           ],
           "doc": "@disable_epoch@ defaults to false. When true, the public @epoch@ view and @epoch_current@ view\nreturn no rows; @epoch_finalized@ contains finalized aggregates. Epoch views are also disabled\nduring bootstrap or when transaction output insertion is disabled, even if this flag is false.",
           "kind": "newtype",
-          "line": 248,
+          "line": 254,
           "name": "EpochConfig",
           "position": "before"
         },
@@ -411,7 +554,7 @@
           ],
           "doc": "@tx_out.value@ is required when the object is supplied. @enable@ stores inputs and outputs;\n@disable@ leaves them empty; @consumed@ tracks consuming transactions; @prune@ removes consumed\noutputs; @bootstrap@ defers UTxO insertion until near tip using the ledger. The optional\n@force_tx_in@ and @use_address_table@ booleans default to false. Changing from prune or consumed\nmodes requires care on subsequent runs.\n\nWith disable, tx_in, tx_out and ma_tx_out remain empty; tx.fee may be zero and redeemer.script_hash\nnull. Consumed mode fills consumed_by_tx_id. Prune propagates deletions to ma_tx_out. Bootstrap\nrequires in-memory ledger state; it supports Babbage, Conway and Dijkstra. The LSM backend is not supported.\nIt loads the UTxO in bulk and leaves tx.fee and redeemer.script_hash incomplete during bootstrap.\nOnce used, consumed mode must remain enabled on subsequent runs unless switching to pruning.\nOnce used, pruning must remain enabled on subsequent runs; dropping it is rejected and can cause\nfailures. Bootstrap must remain selected until the UTxO migration completes. After completion,\nbootstrap can be changed, but the database's consumed/pruning requirements still apply.",
           "kind": "data",
-          "line": 268,
+          "line": 274,
           "name": "TxOutConfig",
           "position": "before"
         },
@@ -430,7 +573,7 @@
           ],
           "doc": "@tx_out.force_tx_in@ defaults to false. It applies to @consumed@, @prune@ and @bootstrap@; it is\nignored for @enable@ and @disable@. Once input/output insertion is active, setting it to true\npopulates @tx_in@ in consumed, prune and bootstrap modes, which otherwise omit transaction\ninputs. It does not override the disabled insertion phase before bootstrap's UTxO migration.",
           "kind": "newtype",
-          "line": 280,
+          "line": 286,
           "name": "ForceTxIn",
           "position": "before"
         },
@@ -449,7 +592,7 @@
           ],
           "doc": "@tx_out.use_address_table@ defaults to false. When enabled, address details live in a separate\n@address@ table referenced by outputs. This schema variant requires an empty database.\n\nThe normalized address table stores address, raw bytes, script flag, payment credential and stake\naddress. Both tx_out and collateral_tx_out then refer to address_id; the variant has payment\ncredential and raw-address indexes. Once selected, this schema variant cannot be reverted on\nthe same database; keep @use_address_table@ enabled on subsequent runs.",
           "kind": "newtype",
-          "line": 291,
+          "line": 297,
           "name": "UseTxOutAddress",
           "position": "before"
         },
@@ -468,7 +611,7 @@
           ],
           "doc": "Choose the backend for storing ledger tables (UTxO set).\n'LedgerBackendInMemory' keeps everything in RAM (current default).\n'LedgerBackendLSM' uses LSM trees on disk for lower memory usage.\nThe top-level @ledger_backend@ selects @inmemory@ (default) or @lsm@. The former keeps the UTxO set\nin RAM; the latter uses disk-backed LSM trees.",
           "kind": "data",
-          "line": 300,
+          "line": 306,
           "name": "LedgerBackend",
           "position": "before"
         },
@@ -492,7 +635,7 @@
           ],
           "doc": "@ledger@ accepts @enable@, @disable@ or @ignore@. Enable maintains and uses the ledger; disable\ndoes not maintain one; ignore maintains it for UTxO loading but does not use its other data.\n\nWith disable or ignore, new ledger-derived @reward@, @epoch_stake@, @ada_pots@, @epoch_param@ and\n@drep_distr@ data are unavailable. @redeemer.fee@ is null; stake-registration and pool-update\ndeposits and ledger-derived governance epochs may be absent. @tx.deposit@ can be computed from resolved inputs,\noutputs, withdrawals, fees and treasury donations even without ledger data; it is null when the\nrequired values cannot be resolved, rather than always null in these modes.\n\nStarting with either disable or ignore irreversibly clears existing @reward@, @epoch_stake@,\n@ada_pots@ and @epoch_param@ rows and redeemer fees through the no-ledger migration. Do not change\nledger mode casually on an existing database. A supplied @--state-dir@ with ledger disabled\nproduces a warning, not an error; disable does not maintain ledger snapshots, while ignore does.",
           "kind": "data",
-          "line": 324,
+          "line": 330,
           "name": "LedgerInsertConfig",
           "position": "before"
         },
@@ -516,7 +659,7 @@
           ],
           "doc": "@shelley.enable@ controls transaction-era stake/pool certificates, withdrawals and parameter\nproposals, not epoch stake or rewards. Genesis-era stake and pool registrations are still inserted.\nGovernance certificates and vote delegations use the separate @governance@ option.\nA non-empty @stake_addresses@ list selects canonical bech32 stake accounts for Shelley stake\ncertificates, MIR recipients and withdrawals. Identity rows required by transaction outputs,\nepoch stake, rewards and governance remain available. Pool certificates, parameter proposals,\nnon-address-specific pot transfers and Conway vote delegation are not filtered. A changed\nselection requires a fresh database and replay.",
           "kind": "data",
-          "line": 338,
+          "line": 344,
           "name": "ShelleyInsertConfig",
           "position": "before"
         },
@@ -540,7 +683,7 @@
           ],
           "doc": "@multi_asset.enable@ controls multi-asset entries. An optional non-empty @policies@ list\nselects 28-byte policy IDs written as hexadecimal, for both minted and output assets.\nScript and redeemer data are governed independently by @plutus@. A changed selection\nrequires a fresh database and replay.",
           "kind": "data",
-          "line": 352,
+          "line": 358,
           "name": "MultiAssetConfig",
           "position": "before"
         },
@@ -564,7 +707,7 @@
           ],
           "doc": "@metadata.enable@ controls transaction metadata. An optional non-empty @keys@ list restricts enabled\ninsertion to those integer metadata keys.",
           "kind": "data",
-          "line": 360,
+          "line": 366,
           "name": "MetadataConfig",
           "position": "before"
         },
@@ -588,7 +731,7 @@
           ],
           "doc": "@plutus.enable@ controls Plutus and script data. The non-empty @script_hashes@ list selects\n28-byte script hashes in hex for witness, auxiliary and reference scripts. Datums, redeemers,\ncollateral and reference inputs are retained independently; excluded reference-script IDs are null.\nA changed selection requires a fresh database and replay.",
           "kind": "data",
-          "line": 370,
+          "line": 376,
           "name": "PlutusConfig",
           "position": "before"
         },
@@ -607,7 +750,7 @@
           ],
           "doc": "@governance@ accepts @enable@ or @disable@ for governance data; off-chain vote metadata has its own\nindependent setting.",
           "kind": "newtype",
-          "line": 378,
+          "line": 384,
           "name": "GovernanceConfig",
           "position": "before"
         },
@@ -626,7 +769,7 @@
           ],
           "doc": "@offchain_pool_data@ accepts @enable@ or @disable@ for fetching stake-pool metadata and defaults to\n@disable@. Fetch restrictions and the testing-only private-URL flag also apply.\n\nPool metadata includes the registered name, ticker, homepage and description. Fetches are subject to\nnetwork-address restrictions; the private-URL switch is intended only for local-cluster tests.",
           "kind": "newtype",
-          "line": 388,
+          "line": 394,
           "name": "OffchainPoolDataConfig",
           "position": "before"
         },
@@ -645,7 +788,7 @@
           ],
           "doc": "@offchain_vote_data@ accepts @enable@ or @disable@ for governance-anchor metadata and defaults to\n@disable@. It is independent of the @governance@ option.\n\nGovernance anchors include DRep registrations (CIP-119), governance action proposals (CIP-108), and\nvote metadata (CIP-100). Prior releases coupled fetching to the governance option.",
           "kind": "newtype",
-          "line": 398,
+          "line": 404,
           "name": "OffchainVoteDataConfig",
           "position": "before"
         },
@@ -664,7 +807,7 @@
           ],
           "doc": "@remove_jsonb_from_schema@ accepts @enable@ or @disable@. Enabling removes JSONB types from\nsupported schema columns to improve insertion performance; changing an existing schema requires\ncare. Disabling this option or removing it converts the affected columns back to JSONB on startup;\neither conversion can take time.\n\nAffected JSONB columns include tx_metadata.json, script.json, datum.value, redeemer_data.value,\ncost_model.costs, gov_action_proposal.description, off_chain_pool_data.json and\noff_chain_vote_data.json.",
           "kind": "newtype",
-          "line": 411,
+          "line": 417,
           "name": "RemoveJsonbFromSchemaConfig",
           "position": "before"
         },
@@ -683,7 +826,7 @@
           ],
           "doc": "The top-level @snapshot_interval.near_tip_epoch@ threshold defaults to 580. Snapshot frequency\nchanges when syncing near the tip; earlier syncing uses less frequent snapshots.\n\nAt an epoch boundary above zero, snapshots are taken every epoch at or above this threshold,\neven while lagging. Below it, snapshots occur on multiples of ten epochs, or on every epoch when\nthe database is consistent and the chain time is within ten days of current time.",
           "kind": "newtype",
-          "line": 427,
+          "line": 433,
           "name": "SnapshotIntervalConfig",
           "position": "before"
         }
@@ -718,49 +861,49 @@
         {
           "doc": "Fetch and decode pool metadata. Responses are limited to 512 bytes; when an expected hash is\nsupplied, the blake2b-256 hash must match. The result stores the original bytes and JSON\nrepresentation.",
           "kind": "function",
-          "line": 55,
+          "line": 56,
           "name": "httpGetOffChainPoolData",
           "position": "before"
         },
         {
           "doc": "Fetch governance-anchor metadata, validating its hash when supplied. An @ipfs://@ URL is resolved\nthrough configured gateway prefixes; an empty gateway list cannot resolve it. The db-sync config\ndefault is @https://ipfs.io/ipfs@.",
           "kind": "function",
-          "line": 92,
+          "line": 96,
           "name": "httpGetOffChainVoteData",
           "position": "before"
         },
         {
           "doc": "Fetch bytes from a successful HTTP response subject to a size limit. A missing content-type is\naccepted. Headers containing @application/json@, @application/ld+json@, @text/plain@,\n@application/octet-stream@, @binary/octet-stream@ or @application/binary@ are accepted.\n@text/html@ is accepted only when the first non-whitespace character is an opening brace. Other\ncontent types are rejected.",
           "kind": "function",
-          "line": 170,
+          "line": 176,
           "name": "httpGetBytes",
           "position": "before"
         },
         {
           "doc": "Is the provided ByteSring possibly JSON object?\nIgnoring any leading whitespace, if the ByteString starts with a '{` character it might possibly\nbe a JSON object. We are are really only interested in differentiating between JSON and HTML\n(where the first non-whitespace character will be '<'.",
           "kind": "function",
-          "line": 227,
+          "line": 233,
           "name": "isPossiblyJsonObject",
           "position": "before"
         },
         {
           "doc": "Accept HTTP or HTTPS GET URLs. Private, loopback and link-local address restrictions are applied by\nthe restricted manager unless the testing-only private-URL flag is enabled.",
           "kind": "function",
-          "line": 239,
+          "line": 245,
           "name": "parseOffChainUrl",
           "position": "before"
         },
         {
           "doc": "Create the off-chain HTTP manager. When 'allowPrivate' is 'False' (the\ndefault), connections to private, loopback, and link-local IP addresses are\nblocked at connect time via 'offchainRestriction'. The restriction is checked\non the resolved IP, so it applies to redirects and prevents DNS rebinding\nattacks. When 'allowPrivate' is 'True' the restriction is replaced with a\nno-op that allows every address — this is intended for local-cluster testing\nonly and is wired in from the @--allow-private-offchain-urls@ CLI flag.",
           "kind": "function",
-          "line": 312,
+          "line": 318,
           "name": "newRestrictedManager",
           "position": "before"
         },
         {
           "doc": "A 'Restriction' that allows every resolved address. Selected by\n'newRestrictedManager' when @--allow-private-offchain-urls@ is set.",
           "kind": "function",
-          "line": 326,
+          "line": 332,
           "name": "permissiveRestriction",
           "position": "before"
         }
@@ -930,9 +1073,33 @@
           "position": "before"
         },
         {
+          "constructors": [
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MigrationApplied"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MigrationAlreadyApplied"
+            },
+            {
+              "doc": "",
+              "fields": [],
+              "name": "MigrationIdempotent"
+            }
+          ],
+          "doc": "What running a migration script did.\n\nStage 1 and 2 scripts are guarded by the schema version they bump and announce\nthemselves with a notice when they do work, so re-running one is a no-op. Stage 3 and\n4 scripts carry no version guard; they are idempotent DDL reapplied on every run.",
+          "kind": "data",
+          "line": 208,
+          "name": "MigrationOutcome",
+          "position": "before"
+        },
+        {
           "doc": "Create a database migration.",
           "kind": "function",
-          "line": 218,
+          "line": 259,
           "name": "createMigration",
           "position": "before"
         }
@@ -1089,65 +1256,107 @@
     {
       "annotations": [
         {
+          "doc": "Run a transaction-control statement, failing loudly if it does not take effect.",
+          "kind": "function",
+          "line": 46,
+          "name": "runTxControlStmt",
+          "position": "before"
+        },
+        {
+          "doc": "Run an action between BEGIN and COMMIT, rolling back if it throws or if\n@commitResult@ rejects what it returned.\n\nAn action that reports failure by returning 'Left' has to be rolled back here,\nbecause the error is a value rather than an exception and nothing else will do it.\nCommitting one leaves behind whatever the action wrote before it failed.",
+          "kind": "function",
+          "line": 61,
+          "name": "runInTransaction",
+          "position": "before"
+        },
+        {
           "doc": "Main database runner for blockchain synchronization operations\n\nThis is the primary runner used for cardano-db-sync block processing.\nWraps all operations in a single database transaction with full ACID guarantees.\nAutomatically handles BEGIN/COMMIT/ROLLBACK and provides comprehensive logging.\nAccepts an optional isolation level (defaults to RepeatableRead).",
           "kind": "function",
-          "line": 51,
+          "line": 86,
           "name": "runDbTransLogged",
+          "position": "before"
+        },
+        {
+          "doc": "'runDbTransLogged' for an action that reports failure by returning 'Left', which\nis rolled back rather than committed.",
+          "kind": "function",
+          "line": 97,
+          "name": "runDbTransLoggedEither",
           "position": "before"
         },
         {
           "doc": "Transaction runner without logging overhead\n\nSame transaction guarantees as runDbTransLogged but without logging.\nUseful for performance-critical operations or testing where log output isn't needed.\nAccepts an optional isolation level (defaults to RepeatableRead).",
           "kind": "function",
-          "line": 84,
+          "line": 135,
           "name": "runDbTransSilent",
+          "position": "before"
+        },
+        {
+          "doc": "'runDbTransSilent' for an action that reports failure by returning 'Left', which\nis rolled back rather than committed.",
+          "kind": "function",
+          "line": 145,
+          "name": "runDbTransSilentEither",
           "position": "before"
         },
         {
           "doc": "Database runner without transaction management\n\nExecutes DbM operations without wrapping them in BEGIN/COMMIT.\nUses auto-commit mode where each individual statement commits immediately.\nUseful for operations that manage their own transactions or don't need ACID guarantees.",
           "kind": "function",
-          "line": 114,
+          "line": 171,
           "name": "runDbDirectLogged",
           "position": "before"
         },
         {
           "doc": "Database runner without transaction management or logging",
           "kind": "function",
-          "line": 136,
+          "line": 193,
           "name": "runDbDirectSilent",
           "position": "before"
         },
         {
           "doc": "Connection pool-based transaction runner\n\nUses a connection from the pool rather than the main DbEnv connection.\nWraps operations in a transaction with logging. Designed for concurrent operations\nwhere multiple threads need independent database connections.\nAccepts an optional isolation level (defaults to RepeatableRead).",
           "kind": "function",
-          "line": 161,
+          "line": 218,
           "name": "runDbPoolTransLogged",
+          "position": "before"
+        },
+        {
+          "doc": "'runDbPoolTransLogged' for an action that reports failure by returning 'Left',\nwhich is rolled back rather than committed.",
+          "kind": "function",
+          "line": 229,
+          "name": "runDbPoolTransLoggedEither",
           "position": "before"
         },
         {
           "doc": "External service database runner with error handling\n\nDesigned for external services (like SMASH server) that manage their own connection pools.\nReturns Either for explicit error handling rather than throwing exceptions.\nCreates temporary DbEnv from the provided pool connection.",
           "kind": "function",
-          "line": 228,
+          "line": 272,
           "name": "runDbWithPool",
           "position": "before"
         },
         {
           "doc": "Simple standalone runner using default environment configuration\n\nSelf-contained runner that reads database configuration from environment variables.\nCreates its own temporary connection and cleans up automatically.\nPerfect for simple scripts and testing scenarios",
           "kind": "function",
-          "line": 249,
+          "line": 293,
           "name": "runDbStandaloneSilent",
           "position": "before"
         },
         {
           "doc": "Standalone runner with connection pool support\n\nCreates both a main connection and connection pool from the provided configuration.\nSelf-contained with full cleanup, suitable for applications needing both connection types",
           "kind": "function",
-          "line": 256,
+          "line": 300,
           "name": "runDbStandaloneTransSilent",
+          "position": "before"
+        },
+        {
+          "doc": "Acquire a standalone connection from @source@ and hand its 'DbEnv' to the action,\nreleasing the connection afterwards. Lets a caller pick the transaction runner.",
+          "kind": "function",
+          "line": 306,
+          "name": "withDbEnvStandalone",
           "position": "before"
         },
         {
           "doc": "Standalone runner without transaction management\n\nSelf-contained runner that creates its own connection but doesn't wrap operations\nin transactions. Uses auto-commit mode. Perfect for simple operations that don't\nneed ACID guarantees or tools that manage their own transaction boundaries.",
           "kind": "function",
-          "line": 275,
+          "line": 322,
           "name": "runDbStandaloneDirectSilent",
           "position": "before"
         },
@@ -1176,77 +1385,77 @@
           ],
           "doc": "Database transaction isolation levels supported by PostgreSQL",
           "kind": "data",
-          "line": 294,
+          "line": 341,
           "name": "IsolationLevel",
           "position": "before"
         },
         {
           "doc": "Convert isolation level to SQL string representation",
           "kind": "function",
-          "line": 306,
+          "line": 353,
           "name": "isolationLevelToSql",
           "position": "before"
         },
         {
           "doc": "Create a BEGIN statement with specified isolation level",
           "kind": "function",
-          "line": 313,
+          "line": 360,
           "name": "beginTransactionStmt",
           "position": "before"
         },
         {
           "doc": "Create a COMMIT statement",
           "kind": "function",
-          "line": 325,
+          "line": 372,
           "name": "commitTransactionStmt",
           "position": "before"
         },
         {
           "doc": "Create a ROLLBACK statement",
           "kind": "function",
-          "line": 334,
+          "line": 381,
           "name": "rollbackTransactionStmt",
           "position": "before"
         },
         {
           "doc": "Acquire a single database connection with error handling",
           "kind": "function",
-          "line": 372,
+          "line": 419,
           "name": "acquireConnection",
           "position": "before"
         },
         {
           "doc": "Acquire a database connection without transaction management",
           "kind": "function",
-          "line": 383,
+          "line": 430,
           "name": "acquireDbConnectionNoTrans",
           "position": "before"
         },
         {
           "doc": "Create a connection pool with specified settings and size\n\nThe pool uses a 30-second TTL and automatic connection cleanup.\nConnections are acquired lazily and released automatically.",
           "kind": "function",
-          "line": 394,
+          "line": 441,
           "name": "createHasqlConnectionPool",
           "position": "before"
         },
         {
           "doc": "Create a DbEnv containing both a primary connection and connection pool\n\nThe primary connection is used for sequential/transactional operations,\nwhile the pool is used for parallel/async operations.",
           "kind": "function",
-          "line": 415,
+          "line": 462,
           "name": "createDbEnv",
           "position": "before"
         },
         {
           "doc": "Run an action with a managed connection pool that will be properly cleaned up\n\nThis function ensures that the connection pool is destroyed when the action\ncompletes, preventing resource leaks. Uses 'finally' to guarantee cleanup\neven if the action throws an exception.",
           "kind": "function",
-          "line": 428,
+          "line": 475,
           "name": "withManagedPool",
           "position": "before"
         },
         {
           "doc": "Convert monad-logger LoggingT to trace-dispatcher tracing\n\nThis function bridges the gap between monad-logger's LoggingT and\nthe trace-dispatcher system used throughout the cardano ecosystem.",
           "kind": "function",
-          "line": 441,
+          "line": 488,
           "name": "runDbLogging",
           "position": "before"
         }
@@ -4254,7 +4463,7 @@
           ],
           "doc": "The raw binary hash of a stake pool's metadata.",
           "kind": "newtype",
-          "line": 34,
+          "line": 35,
           "name": "PoolMetaHash",
           "position": "before"
         },
@@ -4273,7 +4482,7 @@
           ],
           "doc": "The pool url wrapper so we have some additional safety.",
           "kind": "newtype",
-          "line": 39,
+          "line": 40,
           "name": "PoolUrl",
           "position": "before"
         }
@@ -5820,6 +6029,13 @@
           "line": 69,
           "name": "jsonbSchemaStatement",
           "position": "before"
+        },
+        {
+          "doc": "The server's @max_stack_depth@, in kB. It is what bounds how deeply nested a\nvalue the @jsonb@ parser can accept, Postgres having no setting of its own for that.",
+          "kind": "function",
+          "line": 95,
+          "name": "maxStackDepthStatement",
+          "position": "before"
         }
       ],
       "header": null,
@@ -6101,7 +6317,7 @@
           ],
           "doc": "Specifies which type of database connection to use for operations",
           "kind": "data",
-          "line": 48,
+          "line": 49,
           "name": "ConnectionType",
           "position": "before"
         },
@@ -6120,7 +6336,7 @@
           ],
           "doc": "Database session monad that wraps Hasql Session\nFunctions can return Either DbError a to handle validation errors",
           "kind": "newtype",
-          "line": 61,
+          "line": 62,
           "name": "DbM",
           "position": "before"
         },
@@ -6139,7 +6355,7 @@
           ],
           "doc": "Convert a `Scientific` to `Ada`.",
           "kind": "newtype",
-          "line": 79,
+          "line": 80,
           "name": "Ada",
           "position": "before"
         },
@@ -6166,7 +6382,7 @@
           ],
           "doc": "A Unique identifier for a certificate in the\nblockchain. Ord instance gives a chronological order.",
           "kind": "data",
-          "line": 317,
+          "line": 318,
           "name": "CertNo",
           "position": "before"
         },
@@ -6185,7 +6401,7 @@
           ],
           "doc": "The vote url wrapper so we have some additional safety.",
           "kind": "newtype",
-          "line": 401,
+          "line": 402,
           "name": "VoteUrl",
           "position": "before"
         },
@@ -6204,7 +6420,7 @@
           ],
           "doc": "The raw binary hash of a vote metadata.",
           "kind": "newtype",
-          "line": 414,
+          "line": 415,
           "name": "VoteMetaHash",
           "position": "before"
         },
@@ -6248,7 +6464,7 @@
           ],
           "doc": "The type of governance action.",
           "kind": "data",
-          "line": 457,
+          "line": 458,
           "name": "GovActionType",
           "position": "before"
         },
@@ -6287,21 +6503,21 @@
           ],
           "doc": "The type of anchor.",
           "kind": "data",
-          "line": 492,
+          "line": 493,
           "name": "AnchorType",
           "position": "before"
         },
         {
           "doc": "Convert a 'Word128' to a 'Scientific' for storage in a PostgreSQL @numeric@ column.\nThis is exposed for testing the encoder/decoder pair without a database connection.",
           "kind": "function",
-          "line": 539,
+          "line": 540,
           "name": "word128ToScientific",
           "position": "before"
         },
         {
           "doc": "Convert a 'Scientific' read from a PostgreSQL @numeric@ column back to a 'Word128'.\n\nPostgreSQL strips trailing zeros in its binary @numeric@ representation, so a\nvalue like @380_000_000_000_000_000@ may come back as @Scientific 38 16@\n(coefficient @38@, @base10Exponent = 16@). 'coefficient' alone would drop\nthe exponent, so we use 'floor' on the full 'Scientific' which is exact for\nnon-negative integral values - the only shape we ever encode here, since\n'Word128' is non-negative and stored in @numeric(39,0)@.\n\nThis is exposed for testing the encoder/decoder pair without a database connection.",
           "kind": "function",
-          "line": 552,
+          "line": 553,
           "name": "scientificToWord128",
           "position": "before"
         }

@@ -17,6 +17,7 @@ build-type:             Custom
 extra-source-files:     CHANGELOG.md
                         schema/*.sql
                         test/testfiles/*.jsonld
+                        test/testfiles/*.json
 
 flag enable-ghc-debug
   description: Enable ghc-debug profiling support for heap analysis.
@@ -58,6 +59,7 @@ library
                         Cardano.DbSync.Config.Byron
                         Cardano.DbSync.Config.Cardano
                         Cardano.DbSync.Config.Conway
+                        Cardano.DbSync.Config.Dijkstra
                         Cardano.DbSync.Config.Node
                         Cardano.DbSync.Config.Shelley
                         Cardano.DbSync.Config.Types
@@ -178,6 +180,7 @@ library
                       , cardano-ledger-shelley >= 1.12.3.0
                       , cardano-node
                       , cardano-prelude
+                      , cardano-protocol
                       , cardano-protocol-tpraos
                       , cardano-slotting
                       , cardano-strict-containers
@@ -202,6 +205,7 @@ library
                       , network
                       , lifted-base
                       , memory
+                      , mempack
                       , microlens
                       , network-mux
                       , ouroboros-consensus
@@ -212,7 +216,7 @@ library
                       , ouroboros-consensus:protocol
                       , ouroboros-network:api
                       , ouroboros-network:framework
-                      , ouroboros-network:framework-tracing
+                      , ouroboros-network:tracing
                       , ouroboros-network:protocols
                       , plutus-ledger-api
                       , prometheus
@@ -368,6 +372,7 @@ test-suite test
                         -Wunused-packages
 
   other-modules:        Cardano.DbSync.ApiTest
+                        Cardano.DbSync.Config.NodeTest
                         Cardano.DbSync.Config.TypesTest
                         Cardano.DbSync.Era.Shelley.Generic.ScriptDataTest
                         Cardano.DbSync.Era.Shelley.Generic.ScriptTest
@@ -377,6 +382,7 @@ test-suite test
                         Cardano.DbSync.Util.AddressTest
                         Cardano.DbSync.Util.Bech32Test
                         Cardano.DbSync.Util.CborTest
+                        Cardano.DbSync.UtilTest
                         Cardano.DbSyncTest
 
   build-depends:        base
@@ -407,5 +413,6 @@ test-suite test
                       , hedgehog-quickcheck
                       , network
                       , ouroboros-consensus:cardano
+                      , scientific
                       , text
                       , trace-dispatcher

@@ -150,42 +150,75 @@ for real-browser indexing, identifier, version-isolation, CSP and reproducibilit
 After building both profiles, run `npm run test:pagefind:profiles` to query their actual indexes
 under the emitted CSP in all five locales.
 
-## Fork-only Blacksmith site runner pilot
+## Fork-only balanced Blacksmith CI
 
-This is **fork-specific CI**; exclude the selector, its workflow changes and this
-section from changes proposed to Intersect upstream. GitHub-hosted Ubuntu 24.04
-is the default, including for every pull request and other repositories. The
-pilot selects Blacksmith only for the two expensive docs jobs on a trusted push
-to `lidonation/cardano-db-sync`'s `release/community-site`; other jobs and Pages
-deployments remain GitHub-hosted. Pull requests never receive the usage token.
-The selector job is skipped entirely outside enabled, trusted release pushes;
-dependent jobs still use the default GitHub runner. Selector and CI-policy Python
-regressions run in the required static-analysis job on pull requests too.
+This is **fork-specific CI**. Do not include these workflows, selectors, tests or
+this operating guidance in Intersect upstream contributions. GitHub-hosted
+Ubuntu 24.04 is the default if the budget check is disabled, unavailable, stale,
+invalid or not applicable. A balanced selection of Linux site, Haskell, format
+and extractor jobs can run on Blacksmith; other jobs, deployment, publication,
+translation, alerting and macOS remain on GitHub. This is an approximate split
+by selected job count, not a guarantee of equal runtime or cost. The initial
+Haskell mapping chooses GHC 9.12 for Blacksmith and leaves the other Linux
+compiler variants on GitHub. Jobs and workflows that do not use this selector
+remain GitHub-hosted. Each participating workflow also adds a short GitHub-hosted
+selector job; the PR budget workflow adds another. These control jobs and any
+fallbacks can offset queue savings, so monitor actual runner minutes and queue
+times rather than assuming a strict 50/50 result.
 
-To opt in, an organization administrator must install the Blacksmith GitHub app
-for this repository, provision its 4-vCPU Ubuntu 24.04 runner, create an
-organization token with the vendor's documented procedure, and configure the
-repository variable `BLACKSMITH_ORG` (its Blacksmith organization slug), secret
-`BLACKSMITH_ORG_TOKEN`, and variable `BLACKSMITH_SITE_ENABLED=true`. The vendor's
-organization token is powerful (including cache/testbox management); review its
-permissions and store it only as a GitHub Actions secret. Do not paste it into
-workflow files or logs. Set `BLACKSMITH_SITE_ENABLED=false` to return subsequent
-runs to GitHub-hosted runners; no secret is needed in the disabled state.
+### Required protected-token migration before enabling
 
-On each eligible push, the GitHub-hosted selector checks usage from the start of
-the UTC calendar month and selects GitHub if the report is unavailable, invalid,
-from a different organization, reports zero usage, or at least 2,400 Linux x64 2-vCPU equivalent
-minutes. The CLI's `billing_minutes` are normalized vCPU-minutes, hence the 4,800
-threshold. The selector pins a vendor CLI SHA-256; a changed `latest` download
-fails closed to GitHub until the digest is reviewed and updated. Zero usage also falls back because the CLI can normalize a missing billing field
-to zero; a fresh account needs a separately authorized seed run before the pilot
-can select Blacksmith. The CLI's
-actual organization response, window, units and usage freshness must be verified
-against the real account before enabling the pilot.
+The organization token can manage caches and testboxes and is highly privileged.
+A **repository-level** Actions secret can be referenced by a contributor who can
+change a same-repository workflow. Do not rely only on job `if` expressions to
+protect it. An administrator must:
 
-This is a **best-effort guard, not a spend cap**: reporting may lag and concurrent
-runs can all pass the check before usage is recorded. Already-running or queued
-Blacksmith jobs are not automatically moved to GitHub, and Blacksmith's
-published budget setting is an alert, not a documented hard cap. If its runner
-is unavailable, disable the opt-in and investigate; retry only with normal human
-authorization. Do not rely on this switch as protection against all charges.
+1. Disable the pilot with repository variable `BLACKSMITH_SITE_ENABLED=false`.
+2. Create the GitHub Actions environment `blacksmith-usage`, configure **selected
+   deployment branches** to allow only `release/community-site`, and verify PR
+   merge refs and all other branches are not permitted. Do not use an unrestricted
+   environment.
+3. Create environment secrets `BLACKSMITH_ORG_TOKEN` (a newly issued Blacksmith
+   organization token) and `BLACKSMITH_PR_SIGNING_KEY` (the Ed25519 private key
+   matching `.github/scripts/blacksmith-pr-public.pem`). GitHub cannot copy the
+   old repository secret. Never paste either secret into chat, workflow files or
+   logs. Verify the public/private key pairing in a trusted environment.
+4. Remove the repository-level `BLACKSMITH_ORG_TOKEN` and revoke the old token
+   after verifying the new one. Neither `BLACKSMITH_ORG_TOKEN` nor
+   `BLACKSMITH_PR_SIGNING_KEY` may exist as a repository- or organization-level
+   secret available to untrusted workflows.
+5. Verify the environment protection, token authentication, report and billing
+   cycle; then set repository variables `BLACKSMITH_ORG` and
+   `BLACKSMITH_SITE_ENABLED=true`. Set that flag back to `false` to make future
+   eligible jobs use GitHub-hosted runners.
+
+Trusted release pushes and the separate `pull_request_target` budget workflow
+use only protected release-branch code in the restricted environment. The latter
+never checks out or runs PR code. A PR workflow receives no Blacksmith token: it
+reads a short-lived signed, non-secret decision artifact produced by the trusted
+workflow. It validates the signature against the public key checked out from the
+trusted base, repository, workflow path, event, base commit, exact PR/head SHA,
+run ID and age. At runtime, the private signing key is available only in the
+restricted environment. Missing, delayed, invalid or stale signals fall back to GitHub.
+This depends
+on GitHub granting the PR token read access to Actions metadata; if not available,
+PR jobs simply fall back. PR workflow changes themselves can bypass application
+routing and consume vendor capacity after normal GitHub approval: this guard is
+not a security boundary or a hard spending limit.
+
+The selector validates the raw Blacksmith Actions usage response for the exact
+organization, installation and UTC-month window. It recognizes an explicitly
+present numeric zero as a genuine reset but rejects a missing value, malformed
+report, negative value, wrong identity, redirects or network errors. This uses a
+vendor API observed in the CLI, **not a documented stable public contract**; if
+it changes, the selector falls back to GitHub. `billing_minutes` are normalized
+vCPU-minutes: 4,800 corresponds to 2,400 Linux x64 2-vCPU-equivalent minutes.
+The 600-equivalent-minute buffer is best effort. The billing-cycle reset timezone,
+pricing and reporting latency must be confirmed with Blacksmith; UTC calendar
+months are an assumption, not a verified guarantee.
+
+Usage can lag and concurrent runs may all start before reporting catches up.
+Already queued Blacksmith jobs cannot automatically move to GitHub if capacity is
+unavailable. Configure provider alerts and treat all routing as **best effort,
+not a hard spend cap**. When the live service is unavailable, disable the flag
+and investigate; do not weaken the usage or identity checks to force use.
