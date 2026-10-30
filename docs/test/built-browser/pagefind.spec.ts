@@ -84,3 +84,39 @@ for (const locale of LOCALES) {
     expect(errors).toEqual([]);
   });
 }
+
+// Exercise the worker shipped by the built site directly: do not inject ranking code.
+test('published worker ranks the natural pruning question', async ({page, baseURL}) => {
+  const base = new URL(baseURL!).pathname;
+  await page.goto(`${base}docs/intro/`);
+  const results = await page.evaluate(async (base) => {
+    const worker = new Worker(`${base}pagefind/_runtime/prose-worker.js`, {type: 'module'});
+    let id = 0;
+    const call = (method: string, query?: string) =>
+      new Promise<Array<{url: string; excerpt: string}>>((resolve, reject) => {
+        const requestId = id++;
+        const timer = setTimeout(() => reject(new Error('worker timed out')), 30_000);
+        worker.addEventListener('message', function receive({data}) {
+          if (data.id !== requestId) return;
+          worker.removeEventListener('message', receive);
+          clearTimeout(timer);
+          if (data.error) reject(new Error(data.error));
+          else resolve(data.results ?? []);
+        });
+        worker.postMessage({
+          id: requestId,
+          method,
+          query,
+          options: {basePath: `${base}pagefind/current/`, baseUrl: '/', language: 'en'},
+        });
+      });
+    try {
+      await call('init');
+      return await call('search', 'how do I prune tx_out?');
+    } finally {
+      worker.terminate();
+    }
+  }, base);
+  expect(results[0]?.url).toContain('/guides/trimming');
+  expect(results[0]?.excerpt.toLowerCase()).toMatch(/prun/);
+});
