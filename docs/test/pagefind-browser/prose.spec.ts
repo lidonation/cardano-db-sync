@@ -118,6 +118,7 @@ test('real headless search preserves identifiers, excerpts, deep links and versi
       whole: await search('v1', 'tx_out'),
       split: await search('v1', 'tx'),
       absent: await search('v1', 'zebraquartz'),
+      naturalV2: await search('v2', 'how do I prune tx_out?'),
       navigation: await search('v1', 'Navigationonlyquartz'),
       present: await search('v2', 'zebraquartz'),
       concurrent: await Promise.all([search('v1', 'tx_out'), search('v2', 'zebraquartz')]),
@@ -132,6 +133,10 @@ test('real headless search preserves identifiers, excerpts, deep links and versi
   expect(results.whole).toHaveLength(1);
   expect(results.split).toHaveLength(1);
   expect(results.absent).toHaveLength(0);
+  expect(
+    results.naturalV2.every((item: {url: string}) => item.url.startsWith('/preview/ja/docs/v2/')),
+  ).toBe(true);
+  expect(results.naturalV2).toHaveLength(1);
   expect(results.navigation).toHaveLength(0);
   expect(results.present).toHaveLength(1);
   expect(results.concurrent[0][0].url).toBe('/preview/ja/docs/v1/guide');

@@ -20,7 +20,9 @@ substitute for a verified backup and upgrade plan.
    install the matching release's `schema/` directory at `/opt/dbsync/schema`.
 2. Configure a Cardano node on preview. Its socket is assumed to be
    `/run/cardano-node/node.socket`; arrange filesystem permissions so the db-sync service account
-   can traverse the directory and connect. Use a dedicated shared group where appropriate.
+   can traverse the directory and connect. Use a dedicated shared group where appropriate. The
+   socket itself must grant write access to that account or group; directory access alone is not
+   enough. Ensure that access is restored after node restarts, without making the socket world-writable.
 3. Place the matching preview db-sync configuration and all files it refers to under
    `/etc/cardano/preview/`. This example uses `/etc/cardano/preview/db-sync-config.json`.
 4. Provision an empty PostgreSQL database and a dedicated database user with the permissions
@@ -34,10 +36,16 @@ sudo install -d -o dbsync -g dbsync -m 750 /var/lib/cardano-db-sync
 sudo install -d -o root -g dbsync -m 750 /etc/dbsync
 ```
 
-Create `/etc/dbsync/pgpass` securely using your secret-management process. It uses the
-PostgreSQL format `hostname:port:database:username:password`; escape colons and backslashes in
-fields as documented by PostgreSQL. Avoid entering passwords in shell history or committing this
-file. Make it readable only by the service account:
+Create `/etc/dbsync/pgpass` securely using your secret-management process. For db-sync 13.7.2.1,
+the first line must contain `hostname:port:database:username:password`, with no colons or backslashes
+in any field and no line breaks within a field. Unlike PostgreSQL's general password-file format,
+db-sync does not unescape escaped
+characters. Use a high-entropy password from an alphabet that excludes those characters and confirm
+these rules against the release you run. Avoid entering passwords in shell history or committing
+this file.
+
+Restrict access to logs, do not paste credentials into tickets, and rotate a credential if it has
+been exposed. Make the file readable only by the service account:
 
 ```sh
 sudo chown dbsync:dbsync /etc/dbsync/pgpass
