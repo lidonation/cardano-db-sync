@@ -215,7 +215,7 @@ describe('redirectPage', () => {
     const html = redirectPage('/docs', prod, '/ja/');
     expect(html).toContain('url=/ja/docs"');
     expect(html).toContain('<script src="/ja/redirect.js" data-target="/ja/docs">');
-    expect(html).toContain('href="https://dbsync.cardano.intersect.org/ja/docs"');
+    expect(html).toContain('href="https://dbsync.cardano.intersectmbo.org/ja/docs"');
   });
 
   it('escapes the target', () => {

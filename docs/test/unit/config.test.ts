@@ -70,7 +70,7 @@ describe('docusaurus.config (ENV-1)', () => {
   it('gives every profile the production address for the environment banner (ENV-4)', async () => {
     for (const name of ['dev', 'prod']) {
       const config = await loadConfig(name);
-      expect(config.customFields?.productionUrl).toBe('https://dbsync.cardano.intersect.org/');
+      expect(config.customFields?.productionUrl).toBe('https://dbsync.cardano.intersectmbo.org/');
     }
   });
 

@@ -53,7 +53,7 @@ describe('ENV-3: noindex with crawling allowed', () => {
 
   it('advertises the sitemap only on the indexable build', () => {
     expect(robotsTxt(PROFILES.prod)).toContain(
-      'Sitemap: https://dbsync.cardano.intersect.org/sitemap.xml',
+      'Sitemap: https://dbsync.cardano.intersectmbo.org/sitemap.xml',
     );
     expect(robotsTxt(PROFILES.dev)).not.toMatch(/Sitemap/);
   });
@@ -101,8 +101,8 @@ describe('locale builds', () => {
   it('points production robots.txt at every locale sitemap', () => {
     expect(robotsTxt(PROFILES.prod, ['en', 'ja'])).toBe(
       'User-agent: *\nAllow: /\n\n' +
-        'Sitemap: https://dbsync.cardano.intersect.org/sitemap.xml\n' +
-        'Sitemap: https://dbsync.cardano.intersect.org/ja/sitemap.xml\n',
+        'Sitemap: https://dbsync.cardano.intersectmbo.org/sitemap.xml\n' +
+        'Sitemap: https://dbsync.cardano.intersectmbo.org/ja/sitemap.xml\n',
     );
   });
 });

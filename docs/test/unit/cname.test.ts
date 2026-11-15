@@ -29,7 +29,7 @@ async function readCname(): Promise<string | null> {
 describe('emitCname (ENV-6)', () => {
   it('writes the production host, newline-terminated, for the production profile', async () => {
     await emitCname(outDir, PROFILES.prod);
-    expect(await readCname()).toBe('dbsync.cardano.intersect.org\n');
+    expect(await readCname()).toBe('dbsync.cardano.intersectmbo.org\n');
   });
 
   it('writes nothing for the developer profile', async () => {
@@ -38,7 +38,7 @@ describe('emitCname (ENV-6)', () => {
   });
 
   it('removes a stray CNAME that reached the developer output', async () => {
-    await fs.writeFile(path.join(outDir, CNAME_FILE), 'dbsync.cardano.intersect.org\n', 'utf8');
+    await fs.writeFile(path.join(outDir, CNAME_FILE), 'dbsync.cardano.intersectmbo.org\n', 'utf8');
     await emitCname(outDir, PROFILES.dev);
     expect(await readCname()).toBeNull();
   });
@@ -46,7 +46,7 @@ describe('emitCname (ENV-6)', () => {
   it('overwrites rather than appends when run twice', async () => {
     await emitCname(outDir, PROFILES.prod);
     await emitCname(outDir, PROFILES.prod);
-    expect(await readCname()).toBe('dbsync.cardano.intersect.org\n');
+    expect(await readCname()).toBe('dbsync.cardano.intersectmbo.org\n');
   });
 
   it('is a no-op on the developer profile when no CNAME is present', async () => {
@@ -83,7 +83,7 @@ describe('cnamePlugin', () => {
         postBuild: (props: {outDir: string}) => Promise<void>;
       };
       await prodPlugin.postBuild({outDir});
-      expect(await readCname()).toBe('dbsync.cardano.intersect.org\n');
+      expect(await readCname()).toBe('dbsync.cardano.intersectmbo.org\n');
 
       process.env.DOCS_PROFILE = 'dev';
       const devPlugin = cnamePlugin(context) as Plugin & {

@@ -40,7 +40,7 @@ describe('Updates feed boundary', () => {
       entries: [{...feed.entries[0], url: 'https:example.com/change'}],
     }).entries[0];
     expect(entry.url).toBe('https://example.com/change');
-    expect(new URL(entry.url, 'https://dbsync.cardano.intersect.org/updates/').href).toBe(
+    expect(new URL(entry.url, 'https://dbsync.cardano.intersectmbo.org/updates/').href).toBe(
       entry.url,
     );
   });

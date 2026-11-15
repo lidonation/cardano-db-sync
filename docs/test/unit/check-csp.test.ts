@@ -101,7 +101,7 @@ describe('what each page does', () => {
   it('flags loads from another origin, not links people follow', () => {
     const head =
       '<link rel="stylesheet" href="https://fonts.googleapis.com/css2">' +
-      '<link rel="canonical" href="https://dbsync.cardano.intersect.org/">';
+      '<link rel="canonical" href="https://dbsync.cardano.intersectmbo.org/">';
     const body =
       '<a href="https://github.com/IntersectMBO/cardano-db-sync">GitHub</a>' +
       '<img src="//cdn.example/a.png"><img srcset="/a.png 1x, https://cdn.example/b.png 2x">';
