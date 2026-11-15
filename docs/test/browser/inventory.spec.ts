@@ -30,6 +30,23 @@ async function open(page: Page, palette: string = 'light', width = 1440) {
   await page.evaluate(() => document.fonts.ready);
 }
 
+test('full and minimal navbars include the logo, without changing the text-only footer', async ({
+  page,
+}) => {
+  await open(page);
+  for (const variant of ['Full', 'Minimal']) {
+    const home = page
+      .locator(`[data-dbs-component="Navbar / ${variant}"]`)
+      .first()
+      .getByRole('link', {name: 'Cardano DB Sync', exact: true});
+    await expect(home.locator('svg')).toBeVisible();
+    await expect(home.locator('svg')).toHaveAttribute('aria-hidden', 'true');
+  }
+  await expect(
+    page.locator('footer[data-dbs-component="Footer"]').first().locator('svg'),
+  ).toHaveCount(0);
+});
+
 test.describe('component count (THM-5, THM-6)', () => {
   test('the inventory holds the 27 definitions, one each', async ({page}) => {
     await open(page);
