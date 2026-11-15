@@ -23,6 +23,7 @@ import Test.Cardano.Db.Mock.Config
 import qualified Test.Cardano.Db.Mock.UnifiedApi as Api
 import Test.Cardano.Db.Mock.Validate
 import Test.Tasty.HUnit (Assertion, assertBool, assertFailure, (@?=))
+import Prelude hiding (map, show)
 
 configRemoveJsonbFromSchemaEnabled :: IOManager -> [(Text, Text)] -> Assertion
 configRemoveJsonbFromSchemaEnabled =
@@ -101,7 +102,7 @@ populateJsonPayloads interpreter mockServer env = do
       Conway.mkLockByScriptTx (UTxOIndex 0) [Conway.TxOutInline True Conway.InlineDatum Conway.NoReferenceScript] 20_000 20_000
   void $ Api.forgeNextAndSubmit interpreter mockServer $ MockBlock [TxConway lockTx] (NodeId 1)
   locked <- case Conway.mkUTxOConway lockTx of
-    first : _ -> pure first
+    output : _ -> pure output
     [] -> assertFailure "JSON fixture must create a script output"
   void $
     Api.withConwayFindLeaderAndSubmitTx interpreter mockServer $
