@@ -8,7 +8,7 @@
   },
   "scripts": {
     "docusaurus": "docusaurus",
-    "start": "cross-env DOCS_PROFILE=dev docusaurus start",
+    "start": "cross-env DOCS_PROFILE=dev docusaurus start --host 0.0.0.0 --port 3003 --no-open",
     "build:dev": "cross-env DOCS_PROFILE=dev docusaurus build --out-dir build/dev",
     "build:prod": "cross-env DOCS_PROFILE=prod docusaurus build --out-dir build/prod",
     "build": "npm run build:dev && npm run build:prod",
