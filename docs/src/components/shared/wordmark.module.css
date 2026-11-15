@@ -5,6 +5,17 @@
   white-space: nowrap;
 }
 
+/* Use the palette's accent for the mark, never a text colour or a parallel brand palette. */
+.mark {
+  flex: none;
+  inline-size: var(--dbs-icon-size-md);
+  block-size: var(--dbs-icon-size-md);
+  fill: var(--dbs-accent-primary);
+  stroke: var(--dbs-accent-primary);
+  stroke-width: var(--dbs-border-width-emphasis);
+  stroke-linejoin: miter;
+}
+
 .strong {
   font: inherit;
   letter-spacing: inherit;

@@ -194,7 +194,7 @@ export function NavbarFull({
     >
       <div className={styles.bar}>
         <Link ref={home} className={styles.home} to={homeHref}>
-          <Wordmark />
+          <Wordmark mark />
         </Link>
         <nav className={styles.wide} aria-label={sections}>
           {linkList}
@@ -293,7 +293,7 @@ export function NavbarMinimal({
     <header className={styles.navbar} data-dbs-component="Navbar / Minimal">
       <div className={styles.bar}>
         <Link className={styles.home} to={homeHref}>
-          <Wordmark />
+          <Wordmark mark />
         </Link>
         <Link className={styles.link} to={exit.href} {...demoAttributes(demo)}>
           {exit.label}
