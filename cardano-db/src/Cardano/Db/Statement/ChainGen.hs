@@ -963,3 +963,48 @@ queryMIRCountsForStake stake =
     encoder = HsqlE.param (HsqlE.nonNullable HsqlE.bytea)
     count = HsqlD.column (HsqlD.nonNullable (fromIntegral <$> HsqlD.int8))
     decoder = HsqlD.singleRow $ (,) <$> count <*> count
+
+------------------------------------------------------------------------------------------------
+
+-- Read JSON storage as text so tests can compare payloads independently of column type.
+-- Keep row identities and NULLs: conversions must not lose rows or replace payloads with NULL.
+queryJsonPayloads :: DbM [(Text.Text, Word64, Maybe Text.Text)]
+queryJsonPayloads =
+  runSession mkDbCallStack $ HsqlSes.statement () statement
+  where
+    statement = HsqlStmt.Statement sql HsqlE.noParams (HsqlD.rowList row) True
+    sql =
+      "SELECT 'tx_metadata'::text AS source, id, json::text AS payload FROM tx_metadata \
+      \UNION ALL SELECT 'script', id, json::text FROM script \
+      \UNION ALL SELECT 'datum', id, value::text FROM datum \
+      \UNION ALL SELECT 'redeemer_data', id, value::text FROM redeemer_data \
+      \UNION ALL SELECT 'cost_model', id, costs::text FROM cost_model \
+      \UNION ALL SELECT 'gov_action_proposal', id, description::text FROM gov_action_proposal \
+      \UNION ALL SELECT 'off_chain_pool_data', id, json::text FROM off_chain_pool_data \
+      \UNION ALL SELECT 'off_chain_vote_data', id, json::text FROM off_chain_vote_data \
+      \ORDER BY source, id"
+    row =
+      (,,)
+        <$> HsqlD.column (HsqlD.nonNullable HsqlD.text)
+        <*> HsqlD.column (HsqlD.nonNullable (fromIntegral <$> HsqlD.int8))
+        <*> HsqlD.column (HsqlD.nullable HsqlD.text)
+
+-- Check every column converted by the JSON schema machinery, not just tx_metadata.
+queryJsonColumnTypes :: DbM [(Text.Text, Text.Text)]
+queryJsonColumnTypes =
+  runSession mkDbCallStack $ HsqlSes.statement () statement
+  where
+    statement = HsqlStmt.Statement sql HsqlE.noParams (HsqlD.rowList row) True
+    sql =
+      "SELECT c.table_name || '.' || c.column_name, c.udt_name::text \
+      \FROM information_schema.columns c JOIN (VALUES \
+      \('tx_metadata', 'json'), ('script', 'json'), ('datum', 'value'), \
+      \('redeemer_data', 'value'), ('cost_model', 'costs'), \
+      \('gov_action_proposal', 'description'), ('off_chain_pool_data', 'json'), \
+      \('off_chain_vote_data', 'json')) AS expected(table_name, column_name) \
+      \ON c.table_name = expected.table_name AND c.column_name = expected.column_name \
+      \WHERE c.table_schema = current_schema() ORDER BY 1"
+    row =
+      (,)
+        <$> HsqlD.column (HsqlD.nonNullable HsqlD.text)
+        <*> HsqlD.column (HsqlD.nonNullable HsqlD.text)
