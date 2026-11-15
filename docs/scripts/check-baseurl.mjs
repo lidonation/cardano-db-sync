@@ -69,6 +69,11 @@ const RULES = [
     message: 'hardcoded production host',
   },
   {
+    id: 'retired-prod-host',
+    pattern: /dbsync\.cardano\.intersect\.org/,
+    message: 'retired production host; use the prod profile url',
+  },
+  {
     id: 'dev-host',
     pattern: /lidonation\.github\.io/,
     message: 'hardcoded developer host',

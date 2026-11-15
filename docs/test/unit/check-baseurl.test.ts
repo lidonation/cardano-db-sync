@@ -44,6 +44,15 @@ describe('check:baseurl gate (ENV-1)', () => {
     expect(violations.map((v) => v.rule)).toContain('prod-host');
   });
 
+  it('flags the retired production host so it cannot creep back in', async () => {
+    await fs.writeFile(
+      path.join(root, 'src', 'old.ts'),
+      "export const canonical = 'https://dbsync.cardano.intersect.org/docs';\n",
+    );
+    const violations = await findViolations(root);
+    expect(violations.map((v) => v.rule)).toContain('retired-prod-host');
+  });
+
   it('flags a hardcoded developer host', async () => {
     await fs.writeFile(
       path.join(root, 'src', 'origin.ts'),
