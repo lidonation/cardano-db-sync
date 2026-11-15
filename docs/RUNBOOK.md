@@ -11,7 +11,7 @@ One repository has one Pages site, so each repository publishes one profile (ENV
 | Repository                     | Branch                   | Profile | Environment    | URL                                           |
 | ------------------------------ | ------------------------ | ------- | -------------- | --------------------------------------------- |
 | `lidonation/cardano-db-sync`   | `release/community-site` | dev     | `github-pages` | https://lidonation.github.io/cardano-db-sync/ |
-| `IntersectMBO/cardano-db-sync` | `master`                 | prod    | `production`   | https://dbsync.cardano.intersectmbo.org/         |
+| `IntersectMBO/cardano-db-sync` | `master`                 | prod    | `production`   | https://dbsync.cardano.intersectmbo.org/      |
 
 Both deploy jobs live in `.github/workflows/docs-site.yml`, run on a push after the **Docs CI
 gate** passes, and never on a pull request or any other branch. Each asserts BLD-1: the published
