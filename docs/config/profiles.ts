@@ -60,13 +60,13 @@ export const PROFILES: Readonly<Record<ProfileName, BuildProfile>> = Object.free
   }),
   prod: Object.freeze({
     name: 'prod',
-    url: 'https://dbsync.cardano.intersect.org',
+    url: 'https://dbsync.cardano.intersectmbo.org',
     baseUrl: '/',
     network: 'mainnet',
     organizationName: 'IntersectMBO',
     projectName: 'cardano-db-sync',
     repoUrl: 'https://github.com/IntersectMBO/cardano-db-sync',
-    cname: 'dbsync.cardano.intersect.org',
+    cname: 'dbsync.cardano.intersectmbo.org',
     indexable: true,
   }),
 });

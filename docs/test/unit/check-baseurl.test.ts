@@ -38,10 +38,19 @@ describe('check:baseurl gate (ENV-1)', () => {
   it('flags a hardcoded production host', async () => {
     await fs.writeFile(
       path.join(root, 'src', 'meta.ts'),
-      "export const canonical = 'https://dbsync.cardano.intersect.org/docs';\n",
+      "export const canonical = 'https://dbsync.cardano.intersectmbo.org/docs';\n",
     );
     const violations = await findViolations(root);
     expect(violations.map((v) => v.rule)).toContain('prod-host');
+  });
+
+  it('flags the retired production host so it cannot creep back in', async () => {
+    await fs.writeFile(
+      path.join(root, 'src', 'old.ts'),
+      "export const canonical = 'https://dbsync.cardano.intersect.org/docs';\n",
+    );
+    const violations = await findViolations(root);
+    expect(violations.map((v) => v.rule)).toContain('retired-prod-host');
   });
 
   it('flags a hardcoded developer host', async () => {
@@ -121,7 +130,7 @@ describe('check:baseurl gate (ENV-1)', () => {
   it('reports every offending line, not just the first', async () => {
     await fs.writeFile(
       path.join(root, 'src', 'two.ts'),
-      "const a = '/cardano-db-sync/';\nconst b = 'https://dbsync.cardano.intersect.org';\n",
+      "const a = '/cardano-db-sync/';\nconst b = 'https://dbsync.cardano.intersectmbo.org';\n",
     );
     const violations = await findViolations(root);
     expect(violations).toHaveLength(2);

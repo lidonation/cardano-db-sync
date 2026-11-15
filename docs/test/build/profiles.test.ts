@@ -200,7 +200,7 @@ describe('environment banner (ENV-4)', () => {
       const html = await fs.readFile(path.join(OUT.dev, page), 'utf8');
       expect(html, page).toMatch(/<aside[^>]*aria-label="Build environment"[^>]*>/);
       expect(html, page).toContain('data-environment="preview"');
-      expect(html, page).toContain('href="https://dbsync.cardano.intersect.org/"');
+      expect(html, page).toContain('href="https://dbsync.cardano.intersectmbo.org/"');
     }
   });
 

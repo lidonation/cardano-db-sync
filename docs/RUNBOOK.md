@@ -11,7 +11,7 @@ One repository has one Pages site, so each repository publishes one profile (ENV
 | Repository                     | Branch                   | Profile | Environment    | URL                                           |
 | ------------------------------ | ------------------------ | ------- | -------------- | --------------------------------------------- |
 | `lidonation/cardano-db-sync`   | `release/community-site` | dev     | `github-pages` | https://lidonation.github.io/cardano-db-sync/ |
-| `IntersectMBO/cardano-db-sync` | `master`                 | prod    | `production`   | https://dbsync.cardano.intersect.org/         |
+| `IntersectMBO/cardano-db-sync` | `master`                 | prod    | `production`   | https://dbsync.cardano.intersectmbo.org/      |
 
 Both deploy jobs live in `.github/workflows/docs-site.yml`, run on a push after the **Docs CI
 gate** passes, and never on a pull request or any other branch. Each asserts BLD-1: the published
@@ -36,13 +36,13 @@ never runs.
 
 ### Upstream (`IntersectMBO/cardano-db-sync`), at cutover (B48)
 
-- **Pages → Source:** GitHub Actions. **Custom domain:** `dbsync.cardano.intersect.org`, with
+- **Pages → Source:** GitHub Actions. **Custom domain:** `dbsync.cardano.intersectmbo.org`, with
   "Enforce HTTPS" on once the certificate is issued. The production build also emits `CNAME`.
 - **Environments → `production`:**
   - **Required reviewers:** the maintainers who approve production deploys. A deploy waits for one
     of them.
   - **Deployment branches and tags:** selected branches, one rule, `master`.
-- DNS: a `CNAME` record for `dbsync.cardano.intersect.org` pointing at `intersectmbo.github.io`.
+- DNS: a `CNAME` record for `dbsync.cardano.intersectmbo.org` pointing at `intersectmbo.github.io`.
   The sequence is B48's to rehearse.
 
 ## Scheduled-job alerts

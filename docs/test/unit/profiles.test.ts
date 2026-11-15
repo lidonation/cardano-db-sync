@@ -21,7 +21,7 @@ describe('build profiles (ENV-1, ENV-6)', () => {
   });
 
   it('gives the production profile the domain root against mainnet', () => {
-    expect(PROFILES.prod.url).toBe('https://dbsync.cardano.intersect.org');
+    expect(PROFILES.prod.url).toBe('https://dbsync.cardano.intersectmbo.org');
     expect(PROFILES.prod.baseUrl).toBe('/');
     expect(PROFILES.prod.network).toBe('mainnet');
     expect(PROFILES.prod.indexable).toBe(true);
@@ -29,7 +29,7 @@ describe('build profiles (ENV-1, ENV-6)', () => {
 
   it('carries a CNAME host for production only (ENV-6)', () => {
     expect(PROFILES.dev.cname).toBeNull();
-    expect(PROFILES.prod.cname).toBe('dbsync.cardano.intersect.org');
+    expect(PROFILES.prod.cname).toBe('dbsync.cardano.intersectmbo.org');
   });
 
   it('names the GitHub owner and repository each build is published from', () => {
