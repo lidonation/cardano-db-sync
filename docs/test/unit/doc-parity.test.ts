@@ -1,4 +1,4 @@
-import {mkdtempSync, mkdirSync, readFileSync, rmSync, writeFileSync} from 'node:fs';
+import {mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
@@ -208,6 +208,37 @@ describe('CON-6 heading parity', () => {
     expect(problems).toContain('h1 Old navigation');
   });
 
+  it('rejects legacy symlinks and targets that resolve outside the repository', () => {
+    symlinkSync(path.join(repo, 'docs/docs/guides/install.md'), path.join(repo, 'doc/linked.md'));
+    expect(audit(docs).problems.join('\n')).toContain('symlink');
+    rmSync(path.join(repo, 'doc/linked.md'));
+    const outside = mkdtempSync(path.join(os.tmpdir(), 'parity-outside-'));
+    try {
+      writeFileSync(path.join(outside, 'guide.md'), guide);
+      rmSync(path.join(repo, 'docs/docs/guides/install.md'));
+      symlinkSync(path.join(outside, 'guide.md'), path.join(repo, 'docs/docs/guides/install.md'));
+      expect(audit(docs).problems.join('\n')).toContain('inside the repository');
+    } finally {
+      rmSync(outside, {recursive: true, force: true});
+    }
+  });
+
+  it('keeps malformed nested values and Markdown control characters in a failed report', () => {
+    json('docs/data/doc-parity.json', {
+      ...manifest,
+      sources: {
+        ...manifest.sources,
+        'Readme.md': {
+          ...manifest.sources['Readme.md'],
+          headings: {'h1 Old navigation': {sha256: digest(omission), omission: {toString: null}}},
+        },
+      },
+    });
+    const logs: string[] = [];
+    expect(main(docs, {log: (line: string) => logs.push(line)})).toBe(1);
+    expect(logs.join('\n')).toContain('accepted omission needs a reason');
+  });
+
   it('reports unreadable/invalid JSON as a failed check', () => {
     write('docs/data/doc-parity.json', '{invalid');
     expect(main(docs, {log: () => {}})).toBe(1);
@@ -235,7 +266,14 @@ it('parses real Markdown headings, repeated headings and stable line endings', (
 
 it('validates the real migration record without changing any inputs', () => {
   const root = path.resolve(import.meta.dirname, '../..');
-  const before = readFileSync(path.join(root, 'data/doc-triage.json'), 'utf8');
+  const inputs = [
+    'data/doc-triage.json',
+    'data/doc-parity.json',
+    'generated/haddock-annotations.json',
+    '../doc/installing.md',
+    'docs/guides/installing.md',
+  ];
+  const before = inputs.map((file) => readFileSync(path.join(root, file), 'utf8'));
   expect(audit(root).problems).toEqual([]);
-  expect(readFileSync(path.join(root, 'data/doc-triage.json'), 'utf8')).toBe(before);
+  expect(inputs.map((file) => readFileSync(path.join(root, file), 'utf8'))).toEqual(before);
 });

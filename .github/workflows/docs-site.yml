@@ -1,7 +1,7 @@
 name: Documentation site
 
-# B02 — the CI spine for the docs site. Five stages (SPECIFICATION §12): formatting, static
-# analysis, unit tests, link checking and the asset budget. Later items add checks to these stages
+# B02 — the CI spine for the docs site. Six stages (SPECIFICATION §12 and CON-6): formatting,
+# static analysis, heading parity, unit tests, link checking and the asset budget. Later items add checks to these stages
 # rather than new workflows. `Docs CI gate` is the single check to require on protected branches.
 
 on:
