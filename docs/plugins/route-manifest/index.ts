@@ -411,7 +411,7 @@ export default function routeManifestPlugin(context: LoadContext): Plugin {
 
   return {
     name: 'dbsync-route-manifest',
-    allContentLoaded({allContent, actions}) {
+    async allContentLoaded({allContent, actions}) {
       const docs = allContent['docusaurus-plugin-content-docs']?.default as
         {loadedVersions: LoadedVersion[]} | undefined;
       const pages = allContent['docusaurus-plugin-content-pages']?.default as
@@ -422,7 +422,8 @@ export default function routeManifestPlugin(context: LoadContext): Plugin {
         context.baseUrl,
         releases.versions.map((release) => release.tag),
       );
-      actions.setGlobalData(data);
+      // Route-scoped: global data would add all routes/tags to every homepage payload.
+      await actions.createData('recovery.json', JSON.stringify(data));
     },
     async postBuild({outDir, routesPaths}) {
       await runManifest({

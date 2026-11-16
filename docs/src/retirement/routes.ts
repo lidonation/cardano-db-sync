@@ -12,8 +12,6 @@ export interface RetirementData {
   readonly tags: readonly string[];
 }
 
-export const RETIREMENT_PLUGIN = 'dbsync-route-manifest';
-
 /** The closest ancestor of a missing route that is published, falling back to the site root. */
 export function nearestLiveAncestor(route: string, live: ReadonlySet<string>): string {
   const segments = route.split('/').filter(Boolean);

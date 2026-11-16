@@ -5,7 +5,7 @@ import Head from '@docusaurus/Head';
 import {useLocation} from '@docusaurus/router';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useIsBrowser from '@docusaurus/useIsBrowser';
-import {usePluginData} from '@docusaurus/useGlobalData';
+import data from '@generated/dbsync-route-manifest/default/recovery.json';
 import type {Props} from '@theme/NotFound/Content';
 import Heading from '@theme/Heading';
 
@@ -16,15 +16,12 @@ import {
   recoveryContext,
   retiredVersion,
   retirementTarget,
-  RETIREMENT_PLUGIN,
-  type RetirementData,
 } from '../../../retirement/routes';
 
 export default function NotFoundContent({className}: Props): ReactNode {
   const {pathname} = useLocation();
   const {i18n} = useDocusaurusContext();
   const isBrowser = useIsBrowser();
-  const data = usePluginData(RETIREMENT_PLUGIN) as RetirementData;
   const {profile} = useBuildEnvironment();
   // Static Pages serves one file at arbitrary addresses. Hydrate the same generic shell first,
   // then describe the actual requested path, not the build-time /404.html pathname.
