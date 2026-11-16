@@ -28,3 +28,6 @@
 
 # Local preview configuration (may contain secrets)
 /.env
+
+# Read-only CI parity report, retained as an artifact for B17
+/doc-parity-report.md
