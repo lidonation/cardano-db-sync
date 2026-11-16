@@ -21,6 +21,18 @@ Pages timeout after it. Both figures land in the job summary.
 The production job only exists in effect once the site is merged upstream (B48); on the fork it
 never runs.
 
+## Legacy documentation parity
+
+The **Legacy documentation parity (CON-6)** job is required by **Docs CI gate** and runs on
+`doc/**` as well as docs edits. Run `npm run check:doc-parity` from `docs/` locally. Its report
+lists all legacy headings, their destination definitions and accepted omission reasons. The CI
+job writes it to the job summary and retains the `doc-parity-report` artifact for 14 days, even
+when drift makes the check fail. Before B17 retires `doc/`, archive the green report summary and
+links to the commit-pinned manifest and CI report in that PR's description. The checker is
+read-only; review source and destination changes before updating the
+[heading-level migration record](doc-parity.md). Existing annotation extraction checks remain
+responsible for proving the committed Haddock artifact matches the Haskell sources.
+
 ## Repository settings
 
 ### Fork (`lidonation/cardano-db-sync`)

@@ -1,0 +1,3668 @@
+{
+  "schemaVersion": 1,
+  "sources": {
+    "Readme.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Documentation Table of Contents": {
+          "sha256": "02ce9f465aafceefc3fa5cd38756947f564152e5e46a50c594e00ff0b7ec109c",
+          "omission": "The table of contents is superseded by site navigation."
+        },
+        "h2 Overview": {
+          "sha256": "550f4199f3fa4e167ea9b7d7bb57b631169e17581a8775cc005d6389093dc461",
+          "omission": "The table of contents is superseded by site navigation."
+        }
+      }
+    },
+    "building-running.md": {
+      "preambleSha256": "ce4b06e6d11a25b57bfdec366068284b0d73b574ef438d42db68a2e9f1de91b7",
+      "headings": {
+        "h1 Building and Running the Cardano DB Sync Node": {
+          "sha256": "af6f3fc3b6bef9f4c998ddfef36d265017b8b304cd87db54e89da51a87bf0869",
+          "targets": ["guide:building-running.md#h1 Building and Running the Cardano DB Sync Node"]
+        },
+        "h3 Set up and run a local node": {
+          "sha256": "27910ce24f35797dba342283dc67896eb6f35bab4b3e996dc1cc7e73f21351fa",
+          "targets": ["guide:building-running.md#h3 Set up and run a local node"]
+        },
+        "h3 Set up and run the db-sync node": {
+          "sha256": "3005dad8b6ba1d43f70ebf6155e2b28d7d7caaed3647647823e84be666a850de",
+          "targets": ["guide:building-running.md#h3 Set up and run the db-sync node"]
+        },
+        "h3 Clone repository": {
+          "sha256": "2202f9b0d9d8a7c0afcf9024ff1bca05607db9f1998ac07fe987f368bfc263ee",
+          "targets": ["guide:building-running.md#h3 Clone repository"]
+        },
+        "h2 Using Cabal": {
+          "sha256": "896fb544221e690d57ba7611b88a2b5c7d24797a0d2ffd2ac02157ab3f03e4d3",
+          "targets": ["guide:building-running.md#h2 Using Cabal"]
+        },
+        "h2 Using Nix:": {
+          "sha256": "e100d0a75ef9ca10d0763958250897220ab3c5a02540db28768c14ad1cd2487a",
+          "targets": ["guide:building-running.md#h2 Using Nix:"]
+        },
+        "h3 Network Configuration, Genesis and Topology Files": {
+          "sha256": "3b7fae4242dc1310f0b359b871eef451f02e9512da1f2d0db4b0662adb73cb43",
+          "targets": [
+            "guide:building-running.md#h3 Network Configuration, Genesis and Topology Files"
+          ]
+        }
+      }
+    },
+    "command-line-options.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h3 Command Line Options": {
+          "sha256": "a39a9dff5a000c5efec46251a99efc4a5c497ddd585a7259f832690ac4d8655f",
+          "targets": [
+            "annotation:cardano-db-sync.hs:pCommandLine",
+            "annotation:cardano-db-sync.hs:pConfigFile",
+            "annotation:cardano-db-sync.hs:pLedgerStateDir",
+            "annotation:cardano-db-sync.hs:pMigrationDir",
+            "annotation:cardano-db-sync.hs:pPGPassSource",
+            "annotation:cardano-db-sync.hs:pForceIndexes",
+            "annotation:cardano-db-sync.hs:pHasCache",
+            "annotation:cardano-db-sync.hs:pAllowPrivateOffChainUrls",
+            "annotation:cardano-db-sync.hs:pSocketPath",
+            "annotation:cardano-db-sync.hs:pTracerSocketPath",
+            "annotation:cardano-db-sync.hs:pRollbackSlotNo",
+            "annotation:cardano-db-sync.hs:pRejectDisableInOut",
+            "annotation:cardano-db-sync.hs:pVersionCommand"
+          ]
+        }
+      }
+    },
+    "community-tools.md": {
+      "preambleSha256": "b79aaf2268208dfdda8a29bc374bdfab2e4b5cac9b5c968ebba595644e51c930",
+      "headings": {
+        "h3 Koios": {
+          "sha256": "0b088026417183dc83c9a73b48711ce38800c21c6f1985b72abd59dc40824dc3",
+          "omission": "Community tool information belongs on the Ecosystem page, not in a guide or annotation."
+        },
+        "h3 Blockfrost": {
+          "sha256": "a8d3cb78a03e523182dd16a6dde99f51ae3f9a74472bffafb8f267f22da2f702",
+          "omission": "Community tool information belongs on the Ecosystem page, not in a guide or annotation."
+        },
+        "h3 Govtool": {
+          "sha256": "4d0093ee8d4cd45ed003e7520d6cd95757b491eda8efb8d74ed3c8a459e1dbdd",
+          "omission": "Community tool information belongs on the Ecosystem page, not in a guide or annotation."
+        }
+      }
+    },
+    "configuration.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Configuration": {
+          "sha256": "7ace0524ed424c2b28e339a3f51e284fc975f065e7c6550dad4072f83f2e5529",
+          "targets": ["annotation:Types.hs:SyncInsertConfig"]
+        },
+        "h2 Configuration File": {
+          "sha256": "a8c11e7c03f494368c1f80af3dc3075e5101ffdeaf65e45ca727656ce20bfc3c",
+          "targets": ["annotation:Types.hs:SyncInsertConfig"]
+        },
+        "h2 Runtime option migration": {
+          "sha256": "12fe7b898c84b48c3fb4fa30c27da180031dfe4e2b5e279fbd9027816942b6a5",
+          "targets": [
+            "annotation:Types.hs:SyncInsertConfig",
+            "annotation:Types.hs:RemoveJsonbFromSchemaConfig",
+            "annotation:Types.hs:ShelleyInsertConfig",
+            "annotation:Types.hs:MultiAssetConfig",
+            "annotation:Types.hs:PlutusConfig",
+            "annotation:cardano-db-sync.hs:pRejectDisableInOut"
+          ]
+        },
+        "h2 Simple Example": {
+          "sha256": "310d1a3c132ddb199874df21e9d3eaed2e0333e8b36315137000d52fc2a950cf",
+          "targets": ["annotation:Types.hs:SyncInsertConfig"]
+        },
+        "h1 Properties": {
+          "sha256": "1f726528f88d054a7e2bdb6ae68b4bc046f53547813f5ab1779a8ab702be6dd6",
+          "targets": ["annotation:Types.hs:SyncInsertOptions"]
+        },
+        "h2 Preset": {
+          "sha256": "96f6b3c0d2c48f5376c1c06334f092922ce0d8a42015e99c2a21cef168d71de6",
+          "targets": ["annotation:Types.hs:SyncInsertPreset"]
+        },
+        "h3 Full": {
+          "sha256": "da8bf2102b543ab5c448339f5f9a31388fd0ee7debd0c0da570464e67ebffab5",
+          "targets": ["annotation:Types.hs:SyncInsertPreset"]
+        },
+        "h3 Only UTxO": {
+          "sha256": "e7c0bfaf243ff861aa570d6b37b50e8e956507eb16f94d40483ec2f6914425eb",
+          "targets": ["annotation:Types.hs:SyncInsertPreset"]
+        },
+        "h3 Only Governance": {
+          "sha256": "9c0ed297838c62c0e97a745cd03ac5e6731538f6ee5f1af011ff515a766bdf29",
+          "targets": ["annotation:Types.hs:SyncInsertPreset"]
+        },
+        "h3 Disable All": {
+          "sha256": "ea96ed7fe4be3a7902f55fec8e0ca67331e5d149dd850043d78896cf3dd5e123",
+          "targets": ["annotation:Types.hs:SyncInsertPreset"]
+        },
+        "h2 Tx CBOR": {
+          "sha256": "478a980c78b620da3f7d1fc2006ce76e451559f857dc811b38d09fc417cc05e2",
+          "targets": ["annotation:Types.hs:TxCBORConfig"]
+        },
+        "h2 Tx Out": {
+          "sha256": "eff21019df0e04bd6bac164cd21c1077fce773295bd4dc0bef8fb53167b2f208",
+          "targets": ["annotation:Types.hs:TxOutConfig", "guide:trimming.md#h2 Choose a mode"]
+        },
+        "h4 Value": {
+          "sha256": "c90e166e58875c04c28e3f727b042f26321f469360d64c1a55c2003629d663c4",
+          "targets": ["annotation:Types.hs:TxOutConfig", "guide:trimming.md#h2 Choose a mode"]
+        },
+        "h3 Force Tx In": {
+          "sha256": "9a00d8508b239f0763c5b60831ac1b8f007d0a768a1e6d6d4e395bf7ce4bc0b6",
+          "targets": ["annotation:Types.hs:ForceTxIn"]
+        },
+        "h3 Address Table": {
+          "sha256": "426dea17a75ba6bc4c87edfd9b72dbbd28e31dc9ac662a736ef1462024ca1e45",
+          "targets": ["annotation:Types.hs:UseTxOutAddress"]
+        },
+        "h2 Ledger": {
+          "sha256": "89747a3044f9383bc58a7623c63d0b92ef19bb6349471db15b7916d8a13abde0",
+          "targets": ["annotation:Types.hs:LedgerInsertConfig"]
+        },
+        "h2 Shelley": {
+          "sha256": "8232fab1af57301209797404349f33ad9e8fc2a256b93c3e95b57dc08b2ae549",
+          "targets": ["annotation:Types.hs:ShelleyInsertConfig"]
+        },
+        "h4 Enable": {
+          "sha256": "27d15e4da4a881d1b09fc1741a8d23b9f6804864569961fd35a4956d429b4971",
+          "targets": ["annotation:Types.hs:ShelleyInsertConfig"]
+        },
+        "h3 Stake Addresses": {
+          "sha256": "95df8aafb46f0b1d2ebbfd61c4df398d5d7b9d4661e611c1a4439aa469673b6e",
+          "targets": ["annotation:Types.hs:ShelleyInsertConfig"]
+        },
+        "h2 Multi Asset": {
+          "sha256": "8dd1bde3e41b56df1267ce9dc3a5a5c9284594943d2c555909965c9abaa8389b",
+          "targets": ["annotation:Types.hs:MultiAssetConfig"]
+        },
+        "h4 Enable [2]": {
+          "sha256": "66e14a5df87fa2f926a5e1574686ed5352799b5902e017ce237296b84aad4999",
+          "targets": ["annotation:Types.hs:MultiAssetConfig"]
+        },
+        "h3 Policies": {
+          "sha256": "73985780252fd29def97aa6b0a35143cb9e8019574823aa9c4e69664e1080420",
+          "targets": ["annotation:Types.hs:MultiAssetConfig"]
+        },
+        "h2 Metadata": {
+          "sha256": "013e7baf08dc83b2e6ec530f97bba9b68ddbb92368ba5c0df52521f6f8687bfe",
+          "targets": ["annotation:Types.hs:MetadataConfig"]
+        },
+        "h4 Enable [3]": {
+          "sha256": "642ff379675ec70bffca07e6066a19057dc9fe40ef3817a630907b5ef5201ab1",
+          "targets": ["annotation:Types.hs:MetadataConfig"]
+        },
+        "h4 Keys": {
+          "sha256": "b563122e7d15a6b5ba2583ef6097b27ef1ca476c834a97470babd58be44a7b6d",
+          "targets": ["annotation:Types.hs:MetadataConfig"]
+        },
+        "h2 Plutus": {
+          "sha256": "d47f37f80cec528ac8474982ab2bb440800e3c013887eeaa407dbbf3638253a5",
+          "targets": ["annotation:Types.hs:PlutusConfig"]
+        },
+        "h4 Enable [4]": {
+          "sha256": "16c68cfcddf2e1cd930bd87de1a220bd535499a5404fc73ea42eed2e304a1b59",
+          "targets": ["annotation:Types.hs:PlutusConfig"]
+        },
+        "h3 Script Hashes": {
+          "sha256": "aac34044006c7abc276198145b3ef0bb2ac8463cdb6b8902e4243b2f9c15ebf2",
+          "targets": ["annotation:Types.hs:PlutusConfig"]
+        },
+        "h2 Governance": {
+          "sha256": "8fef251de34c2ff3611fc638e0390eb611431453812e6adec6785f41008960e2",
+          "targets": ["annotation:Types.hs:GovernanceConfig"]
+        },
+        "h3 Example": {
+          "sha256": "0483253f7ba901a408c318c68e2866ecf2eda985fe0ffbe934f99c5c4c838702",
+          "targets": ["annotation:Types.hs:GovernanceConfig"]
+        },
+        "h3 Tables associated with governance": {
+          "sha256": "432531568581d91c9451cad6f14fa54c239f0bff4a9c45d37d0b3555975784f8",
+          "targets": [
+            "annotation:Types.hs:GovernanceConfig",
+            "annotation:GovernanceAndVoting.hs:CommitteeDeRegistration",
+            "annotation:GovernanceAndVoting.hs:CommitteeRegistration",
+            "annotation:GovernanceAndVoting.hs:Committee",
+            "annotation:GovernanceAndVoting.hs:CommitteeMember",
+            "annotation:GovernanceAndVoting.hs:Constitution",
+            "annotation:GovernanceAndVoting.hs:DelegationVote",
+            "annotation:GovernanceAndVoting.hs:DrepDistr",
+            "annotation:GovernanceAndVoting.hs:DrepHash",
+            "annotation:GovernanceAndVoting.hs:DrepRegistration",
+            "annotation:GovernanceAndVoting.hs:GovActionProposal",
+            "annotation:GovernanceAndVoting.hs:TreasuryWithdrawal",
+            "annotation:GovernanceAndVoting.hs:VotingAnchor",
+            "annotation:GovernanceAndVoting.hs:VotingProcedure"
+          ]
+        },
+        "h2 Offchain Pool Data": {
+          "sha256": "7ad6d2f324caa7a6201e66803616ea1dd60d60f855a3f032483944a8cc42587a",
+          "targets": ["annotation:Types.hs:OffchainPoolDataConfig"]
+        },
+        "h2 Offchain Vote Data": {
+          "sha256": "c3fcaf159cf7e1eede28c4e265892da9c600f0c08afb46a8743652e70f5de65f",
+          "targets": ["annotation:Types.hs:OffchainVoteDataConfig"]
+        },
+        "h3 Example [2]": {
+          "sha256": "cf7d971733990c4391f938fc190c7083157c00cac76747544286a501e400b617",
+          "targets": ["annotation:Types.hs:OffchainVoteDataConfig"]
+        },
+        "h3 Bypassing the URL restriction for local-cluster testing": {
+          "sha256": "d1c7a46c4a0d5cbfd53282269586d9f21921e34e994d5f5fc2a0c30104b026d7",
+          "targets": [
+            "annotation:Types.hs:OffchainPoolDataConfig",
+            "annotation:cardano-db-sync.hs:pAllowPrivateOffChainUrls"
+          ]
+        },
+        "h2 Pool Stat": {
+          "sha256": "2b740ce3058b94364fb8cc399b251988bd9da860301b4f35251fee0e0a63da48",
+          "targets": ["annotation:Types.hs:PoolStatsConfig"]
+        },
+        "h2 Remove Jsonb From Schema": {
+          "sha256": "24cc0808dcbe5c9112023ffd4769dfbb69937d6c6a3a213ce9a3ade392c8cf76",
+          "targets": ["annotation:Types.hs:RemoveJsonbFromSchemaConfig"]
+        },
+        "h3 Example [3]": {
+          "sha256": "a8c783b529d4cfd0269e5cb9ae0290c2212148529b691456e3a2aebf6b3fe4dc",
+          "targets": ["annotation:Types.hs:RemoveJsonbFromSchemaConfig"]
+        },
+        "h3 Data Types Effected": {
+          "sha256": "b127b4546ef990b4b3e63c9d6f7ead4566ac8bb7af2675bb1fdd365eb186340b",
+          "targets": ["annotation:Types.hs:RemoveJsonbFromSchemaConfig"]
+        },
+        "h2 Stop At Block": {
+          "sha256": "3e8a1467a0063c9292c60acc10c502b995b363b7d9364ef7c0f8e605476c7d7e",
+          "targets": ["annotation:Types.hs:SyncInsertOptions"]
+        },
+        "h3 Example [4]": {
+          "sha256": "92be3eaebacb1436a7eb6b68b0fcc4cc0749179b6363234e8619cbab02b18d6e",
+          "targets": ["annotation:Types.hs:SyncInsertOptions"]
+        },
+        "h2 Disable Epoch": {
+          "sha256": "ed5701e48041381a2c584ce48d396e495645831232c969b4162bc13e24f2abff",
+          "targets": ["annotation:Types.hs:EpochConfig"]
+        },
+        "h3 Example [5]": {
+          "sha256": "966dcca960c32dfaf4c11032c58d9de6dc910925160316f4a135229b132af42a",
+          "targets": ["annotation:Types.hs:EpochConfig"]
+        },
+        "h2 Snapshot Interval": {
+          "sha256": "23b9b6e435cf5a7d5e069b13ad09a441b712648a73b5224a7ec4bace41f7fef6",
+          "targets": ["annotation:Types.hs:SnapshotIntervalConfig"]
+        },
+        "h3 Near Tip Epoch": {
+          "sha256": "ea04e7cd4afca48fe365315a2d07208fbb17b3613cef49c2656afa816f2ad130",
+          "targets": ["annotation:Types.hs:SnapshotIntervalConfig"]
+        },
+        "h3 Example [6]": {
+          "sha256": "e94dee8bedca138087a78830150fc8f7a573f29539f99ab8887954051b01e5f8",
+          "targets": ["annotation:Types.hs:SnapshotIntervalConfig"]
+        },
+        "h3 Performance Considerations": {
+          "sha256": "63e918e558ac3c65fb783054ebf68d71591b063b02f792ddd6874122a54c3975",
+          "targets": ["annotation:Types.hs:SnapshotIntervalConfig"]
+        },
+        "h2 Ledger Backend": {
+          "sha256": "cfbd18e4b61bdbbbd07ea9475866379165157fec5c96bf7b26b6ab9b6ef4e88f",
+          "targets": ["annotation:Types.hs:LedgerBackend"]
+        },
+        "h3 Example [7]": {
+          "sha256": "cac3afdaea18029091d87d140f2c79b2e1096f4ed5dba79422dfe4cfe8581600",
+          "targets": ["annotation:Types.hs:LedgerBackend"]
+        },
+        "h3 InMemory (default)": {
+          "sha256": "f4621bbcb24376a369fb6cf1b76588c74730ec336a5e237d9766f12013a58315",
+          "targets": ["annotation:Types.hs:LedgerBackend"]
+        },
+        "h3 LSM": {
+          "sha256": "7348778fd60c1f70fb7668d12071c9f1269a13b9cadfddfa2704baadc6e5a4a6",
+          "targets": ["annotation:Types.hs:LedgerBackend"]
+        }
+      }
+    },
+    "database-encode-decode.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Creating Hasql Encoders, Decoders, and DbInfo Instances": {
+          "sha256": "733d4109181c45d49d1df75cbe56e6eb3f64dc1095f0fe4bda30941fc50229aa",
+          "targets": [
+            "guide:database-encode-decode.md#h1 Creating Hasql Encoders, Decoders, and DbInfo Instances"
+          ]
+        },
+        "h2 DbM Monad - The Foundation": {
+          "sha256": "fa4200f9fa86b7d06a9bb67a2996a489cb87194568c491c8ced2c17cbcc022ed",
+          "targets": ["guide:database-encode-decode.md#h2 DbM Monad - The Foundation"]
+        },
+        "h2 Database Execution Functions": {
+          "sha256": "8db8d3cc7502eee0a2c6b7dd532680169d612d6c5988cb53a43d8ff02d62e1dd",
+          "targets": ["guide:database-encode-decode.md#h2 Database Execution Functions"]
+        },
+        "h3 Transaction-Based Runners": {
+          "sha256": "b90cdb42040444ee80b71cd85d70b8637224b6b00ae3760576e43b5114574060",
+          "targets": ["guide:database-encode-decode.md#h3 Transaction-Based Runners"]
+        },
+        "h3 Direct Runners (No Transaction Management)": {
+          "sha256": "248c01e20eb837cab557e3f83a4972ad5ba9094af03ea3c3eb465b390dcc0578",
+          "targets": [
+            "guide:database-encode-decode.md#h3 Direct Runners (No Transaction Management)"
+          ]
+        },
+        "h3 Standalone Runners": {
+          "sha256": "463fec121ea183c6ec2699fb215f771a0c794da66c01480ed401cd1e5f1610bc",
+          "targets": ["guide:database-encode-decode.md#h3 Standalone Runners"]
+        },
+        "h3 Pool-Based Runners": {
+          "sha256": "f89689e2cfdb8c3ae9fae4d015f99aadc68342052a3f2f19319e5a140b57fdeb",
+          "targets": ["guide:database-encode-decode.md#h3 Pool-Based Runners"]
+        },
+        "h3 Basic Usage": {
+          "sha256": "93689491e972e46839c7e19693c6b504db0526791417df070beb201e1504c298",
+          "targets": ["guide:database-encode-decode.md#h3 Basic Usage"]
+        },
+        "h3 Error Handling Patterns": {
+          "sha256": "cfee54e9ee9677fe72c48e8b95b4a99e5a003dcc5e3ed0788c88fd04f02a6547",
+          "targets": ["guide:database-encode-decode.md#h3 Error Handling Patterns"]
+        },
+        "h2 Data Type Definition": {
+          "sha256": "b9c2d5c0a07bb29457e8254c33899047ec810055d296306ea57f489fd6dd77ae",
+          "targets": ["guide:database-encode-decode.md#h2 Data Type Definition"]
+        },
+        "h2 DbInfo Instance": {
+          "sha256": "c8bd08074659687fa9be415f6d3a01594bfe026e9e7a1df3edf1e678758f719c",
+          "targets": ["guide:database-encode-decode.md#h2 DbInfo Instance"]
+        },
+        "h3 DbInfo Configuration Options": {
+          "sha256": "f6f4ea9b091a19521fbfdd0d40917ce5acd0fda07f608b5f4973312b36d51ce3",
+          "targets": ["guide:database-encode-decode.md#h3 DbInfo Configuration Options"]
+        },
+        "h2 Entity Decoder": {
+          "sha256": "4a4a2712c811d7e5c05102b20a5d1b8f1877f1872fc93e43cd62181f466ce812",
+          "targets": ["guide:database-encode-decode.md#h2 Entity Decoder"]
+        },
+        "h2 Record Decoder": {
+          "sha256": "b16bb63fefe1a154e1cd752ec08969736774131011f0177abd63c835e2c4fd23",
+          "targets": ["guide:database-encode-decode.md#h2 Record Decoder"]
+        },
+        "h3 Decoder Patterns": {
+          "sha256": "6d62bcded095d8cd7722547cf7fcd8739c9a477b02f02ab67ac035eb0846f2d3",
+          "targets": ["guide:database-encode-decode.md#h3 Decoder Patterns"]
+        },
+        "h2 Entity Encoder": {
+          "sha256": "f2cee5ca8d929a2cba4928227c91ca229dcb4e607aacb9a218879267c5c47a88",
+          "targets": ["guide:database-encode-decode.md#h2 Entity Encoder"]
+        },
+        "h2 Record Encoder": {
+          "sha256": "996a50b109c875796fadd6845752fc64fbcba1539438077c140c46ff91b1cb99",
+          "targets": ["guide:database-encode-decode.md#h2 Record Encoder"]
+        },
+        "h3 Encoder Patterns": {
+          "sha256": "5e48b569e3b7cd245b21508a77812a1c0b1169bb21ea787ac89ff4a5282e607f",
+          "targets": ["guide:database-encode-decode.md#h3 Encoder Patterns"]
+        },
+        "h2 Bulk Encoder": {
+          "sha256": "b97a9ffa5f96e55e1e1cfe9fd0234d8ea0d889de388abaced5dd7e2602958715",
+          "targets": ["guide:database-encode-decode.md#h2 Bulk Encoder"]
+        },
+        "h3 Bulk Encoder Utilities": {
+          "sha256": "66160b8c1782f1a8f6274ffd3556cd2314ef47e368c811cc142b669cd7cb1685",
+          "targets": ["guide:database-encode-decode.md#h3 Bulk Encoder Utilities"]
+        },
+        "h2 Complete Example": {
+          "sha256": "bb900831299c755652a003c66bb0264cd03d6bf437e9f52ab14e4390f3c7c1e9",
+          "targets": ["guide:database-encode-decode.md#h2 Complete Example"]
+        },
+        "h2 Field Naming Convention": {
+          "sha256": "efb7e7dbbbb92cad42ce3d3994b39f915bfa67f335704e3b6b8073741995effd",
+          "targets": ["guide:database-encode-decode.md#h2 Field Naming Convention"]
+        },
+        "h2 Type Mapping Reference": {
+          "sha256": "f13603f7e9a5ff446ce27a63b4810566c25fda12773a9cc86388e5e631d657c2",
+          "targets": ["guide:database-encode-decode.md#h2 Type Mapping Reference"]
+        },
+        "h2 Common Patterns": {
+          "sha256": "8cf5ffc065781bd28fcc3d8b97ebb2e22e3e49d253ef2ab7dee430889b782676",
+          "targets": ["guide:database-encode-decode.md#h2 Common Patterns"]
+        },
+        "h3 JSON Fields": {
+          "sha256": "410b16288a586563f65e33e0cd687a6467c373d35da306a8700cfae6481f8150",
+          "targets": ["guide:database-encode-decode.md#h3 JSON Fields"]
+        },
+        "h3 Unique Constraints": {
+          "sha256": "76b3909575062ddb45462a14e0c71d9c3d68bca6eebe370f145b4328680df23f",
+          "targets": ["guide:database-encode-decode.md#h3 Unique Constraints"]
+        },
+        "h3 Generated Fields": {
+          "sha256": "e175ce7f8405399e7798222a32a913a8919a8b42dff9cd188716d31f90a2dd06",
+          "targets": ["guide:database-encode-decode.md#h3 Generated Fields"]
+        }
+      }
+    },
+    "docker.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Docker": {
+          "sha256": "b777f53739c6a7bc0c554cc5eb2fcf159e9c60892c822bfe097dbcced92462c5",
+          "targets": ["guide:docker.md#h1 Docker"]
+        },
+        "h2 Quickstart": {
+          "sha256": "951bb9f5c4ef63beefe6a05a34b27091d144578491fdb8e5b8370cc4980a25e0",
+          "targets": ["guide:docker.md#h2 Quickstart"]
+        },
+        "h3 Connecting to a Other Networks": {
+          "sha256": "edad0ff04829cd840e71286f8757c7fa33b1ef12a6267ac928a10ac1fc8b3dfa",
+          "targets": ["guide:docker.md#h3 Connecting to a Other Networks"]
+        },
+        "h2 Running cardano-db-sync": {
+          "sha256": "2cb7e8b5df6c4a28a70da22677675af8e24e2681ff7e1b9770652990ce27e025",
+          "targets": ["guide:docker.md#h2 Running cardano-db-sync"]
+        },
+        "h3 Environment Variables": {
+          "sha256": "cf47b598f19e2ab5c3a60c13e61a54b2a5a531397397306826f70b68854f94b2",
+          "targets": ["guide:docker.md#h3 Environment Variables"]
+        },
+        "h4 NETWORK": {
+          "sha256": "5526aa23aab7164267af2a3421a73230e8c99ffd924657da8b57d16acbb1d8c2",
+          "targets": ["guide:docker.md#h4 NETWORK"]
+        },
+        "h4 POSTGRES_HOST": {
+          "sha256": "abad5077c1fa76d412972c96a5d063dc85e718b164dcf345ac94d71ee9a24946",
+          "targets": ["guide:docker.md#h4 POSTGRES_HOST"]
+        },
+        "h4 POSTGRES_PORT": {
+          "sha256": "ee42a1417ff3662e88da4010615846b41a000800df6304ff5d734c6602210f0e",
+          "targets": ["guide:docker.md#h4 POSTGRES_PORT"]
+        },
+        "h4 POSTGRES_DB": {
+          "sha256": "db231c647eb6595d17d6d9eb328955fd2b2b779810770a468f3cae6de59eaa16",
+          "targets": ["guide:docker.md#h4 POSTGRES_DB"]
+        },
+        "h4 POSTGRES_USER": {
+          "sha256": "c985ec047af87f70f2f59f11bfb60de33d80166c20302788fe7e61cae0ff2dff",
+          "targets": ["guide:docker.md#h4 POSTGRES_USER"]
+        },
+        "h4 POSTGRES_PASSWORD": {
+          "sha256": "eac5da1ea7829e8cc830885fb325e6edec32d710e0839dd4b8297a43954c0d11",
+          "targets": ["guide:docker.md#h4 POSTGRES_PASSWORD"]
+        },
+        "h4 PGPASSFILE": {
+          "sha256": "091b7100ba608e096f0c33d6556bb921dd3847acf676dcd741f341fa39f50bb6",
+          "targets": ["guide:docker.md#h4 PGPASSFILE"]
+        },
+        "h4 RESTORE_SNAPSHOT (optional)": {
+          "sha256": "dbf55cad39f53b451ebbf3570275d7815c077e82d8f7cc9cbb78f157948ec993",
+          "targets": ["guide:docker.md#h4 RESTORE_SNAPSHOT (optional)"]
+        },
+        "h4 DB_SYNC_CONFIG (optional)": {
+          "sha256": "f01b205646f67936f895ba512e6e36784bec5fe22179e79cd5594210163020b1",
+          "targets": ["guide:docker.md#h4 DB_SYNC_CONFIG (optional)"]
+        },
+        "h4 EXTRA_DB_SYNC_ARGS (optional)": {
+          "sha256": "fb721da0d5ced5c10a400a2edb383b9ab9d563593f2a300ea9c1bae6bc604980",
+          "targets": ["guide:docker.md#h4 EXTRA_DB_SYNC_ARGS (optional)"]
+        },
+        "h3 Overriding Network Configuration": {
+          "sha256": "cb1409d56836e2e9c4527d89f60437e27a5cc305cf76affa356f1ce744554941",
+          "targets": ["guide:docker.md#h3 Overriding Network Configuration"]
+        },
+        "h3 Restoring From Snapshots": {
+          "sha256": "c818a2296fade4ec273a78a4f8a2f396f5d3449c370b8fc091c871331d15a471",
+          "targets": ["guide:docker.md#h3 Restoring From Snapshots"]
+        },
+        "h3 Advanced Usage": {
+          "sha256": "49ad6f96a9eb59300806a5312b1a3d6b5c21ce6ee2e91b7bdba4ae458cf897ce",
+          "targets": ["guide:docker.md#h3 Advanced Usage"]
+        },
+        "h2 Running cardano-smash-server": {
+          "sha256": "87bf150012b91b4c6599a1b1d2ef780c0f40b909fa2592f1785ca7912350e246",
+          "targets": ["guide:docker.md#h2 Running cardano-smash-server"]
+        },
+        "h3 Environment Variables [2]": {
+          "sha256": "cf47b598f19e2ab5c3a60c13e61a54b2a5a531397397306826f70b68854f94b2",
+          "targets": ["guide:docker.md#h3 Environment Variables [2]"]
+        },
+        "h4 NETWORK (optional)": {
+          "sha256": "7968e09b9dec71da9ee92411f1c5a488f353be497857a16d5090f992d71a299c",
+          "targets": ["guide:docker.md#h4 NETWORK (optional)"]
+        },
+        "h4 POSTGRES_HOST [2]": {
+          "sha256": "abad5077c1fa76d412972c96a5d063dc85e718b164dcf345ac94d71ee9a24946",
+          "targets": ["guide:docker.md#h4 POSTGRES_HOST [2]"]
+        },
+        "h4 POSTGRES_PORT [2]": {
+          "sha256": "ee42a1417ff3662e88da4010615846b41a000800df6304ff5d734c6602210f0e",
+          "targets": ["guide:docker.md#h4 POSTGRES_PORT [2]"]
+        },
+        "h4 POSTGRES_DB [2]": {
+          "sha256": "db231c647eb6595d17d6d9eb328955fd2b2b779810770a468f3cae6de59eaa16",
+          "targets": ["guide:docker.md#h4 POSTGRES_DB [2]"]
+        },
+        "h4 POSTGRES_USER [2]": {
+          "sha256": "c985ec047af87f70f2f59f11bfb60de33d80166c20302788fe7e61cae0ff2dff",
+          "targets": ["guide:docker.md#h4 POSTGRES_USER [2]"]
+        },
+        "h4 POSTGRES_PASSWORD [2]": {
+          "sha256": "eac5da1ea7829e8cc830885fb325e6edec32d710e0839dd4b8297a43954c0d11",
+          "targets": ["guide:docker.md#h4 POSTGRES_PASSWORD [2]"]
+        },
+        "h4 PGPASSFILE [2]": {
+          "sha256": "091b7100ba608e096f0c33d6556bb921dd3847acf676dcd741f341fa39f50bb6",
+          "targets": ["guide:docker.md#h4 PGPASSFILE [2]"]
+        },
+        "h4 SMASH_USER (optional)": {
+          "sha256": "3aa8028416d591b1c89a51107a48360a8e974f914c08d899336a1f663d3fe99f",
+          "targets": ["guide:docker.md#h4 SMASH_USER (optional)"]
+        },
+        "h4 SMASH_PASSWORD (optional)": {
+          "sha256": "f5e2f1c1528445536d6b1a8d1c27bb458c2df1946ed1b347477b36d3852469c4",
+          "targets": ["guide:docker.md#h4 SMASH_PASSWORD (optional)"]
+        },
+        "h3 Advanced Usage [2]": {
+          "sha256": "e940d18fa807cc4015505efe0bfe0e0d5170cb82419dc4069f7c51ec6979429e",
+          "targets": ["guide:docker.md#h3 Advanced Usage [2]"]
+        },
+        "h2 Building": {
+          "sha256": "f93f453499fc0c64b2d7d62a691fa9ed788c272231b04a8ac1a7f1d52a9f4036",
+          "targets": ["guide:docker.md#h2 Building"]
+        },
+        "h2 Running Tests with Docker PostgreSQL": {
+          "sha256": "d0a9276f4c968a17232c9ac13577b111ef886e2129a234b47ddade2a4915b0cc",
+          "targets": ["guide:docker.md#h2 Running Tests with Docker PostgreSQL"]
+        }
+      }
+    },
+    "hlint-stylish-haskell.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Auto-running hlint on Commit": {
+          "sha256": "f0395c7888aaad0ff7677ea28af1b0acdc517ddc32be180184fe040dcd704eea",
+          "omission": "Contributor lint and hook instructions belong in CONTRIBUTING, not the site migration."
+        },
+        "h1 Installing Them": {
+          "sha256": "fe93af0ae06e7cf025183e2e898cf09f121d62315b9a7b760c2550b18ac50253",
+          "omission": "Contributor lint and hook instructions belong in CONTRIBUTING, not the site migration."
+        },
+        "h1 Install the Git Pre-commit Hook": {
+          "sha256": "cc48a6b2ab9b10f45e01b30c8848ff4d7811010da4b8bfadf8d79ce040f5fedc",
+          "omission": "Contributor lint and hook instructions belong in CONTRIBUTING, not the site migration."
+        }
+      }
+    },
+    "installing-with-nix.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Installing with Nix": {
+          "sha256": "a8778ca4252163d116bbbc6106864ae28a7dcc57b24242225cc5e1b1c6c5640b",
+          "targets": ["guide:installing-with-nix.md#h1 Installing with Nix"]
+        },
+        "h2 Prerequisites": {
+          "sha256": "8f4b4cead490c1a726bd05ab3171af166dbc413889033504ff2975587470b023",
+          "targets": ["guide:installing-with-nix.md#h2 Prerequisites"]
+        },
+        "h2 Configure Nix": {
+          "sha256": "0e4cb4dc519927653ed52cbdb7c4d29510f07136435abe622a10d5c37f9aa67c",
+          "targets": ["guide:installing-with-nix.md#h2 Configure Nix"]
+        },
+        "h2 Add the Binary Cache": {
+          "sha256": "1b913ca83b95aef8027c44a8560c55d840a756d33332589ea41aa925f9ba7658",
+          "targets": ["guide:installing-with-nix.md#h2 Add the Binary Cache"]
+        },
+        "h2 Download the Source": {
+          "sha256": "bc97ae40037bb97b962cbb6b1c01f4ae0b2f84614bb8165cae7c521575aee3a8",
+          "targets": ["guide:installing-with-nix.md#h2 Download the Source"]
+        },
+        "h2 Build and Install": {
+          "sha256": "1829b38aaacc2e91e63a7252673387b4bade5d4d4f1a7170df354bae186a60fd",
+          "targets": ["guide:installing-with-nix.md#h2 Build and Install"]
+        }
+      }
+    },
+    "installing.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Installing from Source (without Nix)": {
+          "sha256": "e96fc43ce162486592da65fea28cfc5a6e407244d5661b60f21e4804612be122",
+          "targets": ["guide:installing.md#h1 Installing from Source (without Nix)"]
+        },
+        "h2 Prerequisites": {
+          "sha256": "c1ae22af6c5752c84d79768c68b463d476f3b17e9e4116b8799dbe7742b9c4ae",
+          "targets": ["guide:installing.md#h2 Prerequisites"]
+        },
+        "h2 Install Dependencies": {
+          "sha256": "2e78167cc374663773da49475d4e78e3dc80175148a3360d6078d27b279cfa6a",
+          "targets": ["guide:installing.md#h2 Install Dependencies"]
+        },
+        "h3 Install GHC and Cabal": {
+          "sha256": "e56c22824b246d7e36ef82bcbccbe6cf885380e6f1d7bd73612e9191b2a1de00",
+          "targets": ["guide:installing.md#h3 Install GHC and Cabal"]
+        },
+        "h3 Install Sodium": {
+          "sha256": "bf2ee3ba74ec23683fd4a98ac0e8027f4e05f4baacdb8d95c8a4e9b9decb9378",
+          "targets": ["guide:installing.md#h3 Install Sodium"]
+        },
+        "h3 Installing Secp256k1": {
+          "sha256": "f9c89cd6837e292384e8b0ccd7b66bc9a70ab4a6e97a027ddb6e58cac9246055",
+          "targets": ["guide:installing.md#h3 Installing Secp256k1"]
+        },
+        "h3 Installing blst": {
+          "sha256": "463d7a5b1a6f3d23ae9a9fe599bf67ac90cb8f78db73487dec864b89e04766eb",
+          "targets": ["guide:installing.md#h3 Installing blst"]
+        },
+        "h4 MACOS:": {
+          "sha256": "4c828dc9c6ab4e5738d285801d5b7d4ffc01f5ae73c13b282ebe8de6c6f70245",
+          "targets": ["guide:installing.md#h4 MACOS:"]
+        },
+        "h2 Install Cardano DB Sync": {
+          "sha256": "c2e87fa328929fdfd9cededb939c28b6adfa8d568eced138cebeae7d4efbe018",
+          "targets": ["guide:installing.md#h2 Install Cardano DB Sync"]
+        },
+        "h3 Download the Source": {
+          "sha256": "a4432bf27cd80c45cf5f387a3ee68eaaad4ae6eac7e185c7ab58105492503452",
+          "targets": ["guide:installing.md#h3 Download the Source"]
+        },
+        "h3 Configure Build Options": {
+          "sha256": "6ed54b9df2d081fe8c3da0def8c9bed535d9bb9e2986735f31886abe2543e23e",
+          "targets": ["guide:installing.md#h3 Configure Build Options"]
+        },
+        "h3 Build and Install": {
+          "sha256": "698eb9adabc44833de698873cfb405f87942cb5a52a16211331b8182f34c13e9",
+          "targets": ["guide:installing.md#h3 Build and Install"]
+        }
+      }
+    },
+    "interesting-queries.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Interesting SQL queries": {
+          "sha256": "8634627c4d0ee2df3c2e9ff4fc46ad7aaef32c44755e4fb51fd9afbd469ad2da",
+          "targets": ["guide:interesting-queries.md#h1 Interesting SQL queries"]
+        },
+        "h3 Chain meta data (queryMeta)": {
+          "sha256": "6fe099b987ad10f99a684e72f8138562dd28928d3ae375d16f1190520261d8f2",
+          "targets": ["guide:interesting-queries.md#h3 Chain meta data (queryMeta)"]
+        },
+        "h3 Current total on-chain supply of Ada (queryTotalSupply)": {
+          "sha256": "aa74d079535cebf6f88043d74024a2f3a737c2aabe2eea6d2beb133f1ccc4f8c",
+          "targets": [
+            "guide:interesting-queries.md#h3 Current total on-chain supply of Ada (queryTotalSupply)"
+          ]
+        },
+        "h3 Slot number of the most recent block (queryLatestSlotNo)": {
+          "sha256": "14bf343a0cb5d954cbee181909b43af7c16869f135b9a5483e2772c68856b297",
+          "targets": [
+            "guide:interesting-queries.md#h3 Slot number of the most recent block (queryLatestSlotNo)"
+          ]
+        },
+        "h3 Size of the cexplorer database": {
+          "sha256": "9fb5391fc8bd622aab9f74bc57b26582cf8793299d09d6a7f18235643e8725a9",
+          "targets": ["guide:interesting-queries.md#h3 Size of the cexplorer database"]
+        },
+        "h3 Size of the cexplorer database table": {
+          "sha256": "f02acb08b1de81c6c2eaa6f2544faa9fbee8dc5242efeca39ac9e6e9d4a8227f",
+          "targets": ["guide:interesting-queries.md#h3 Size of the cexplorer database table"]
+        },
+        "h3 Sync progress of db-sync": {
+          "sha256": "049446da615c8df935b4a447a4e957a5fe3f10799554f6f95f1612001ddd7b3d",
+          "targets": ["guide:interesting-queries.md#h3 Sync progress of db-sync"]
+        },
+        "h3 Current valid pools": {
+          "sha256": "1d2372eb3e9769d85af288b1c83cc787522bce7aae064d14bd212a2196fabcc1",
+          "targets": ["guide:interesting-queries.md#h3 Current valid pools"]
+        },
+        "h3 Get the stake address for a given Shelley address:": {
+          "sha256": "32e2911146b6ee1c1f58f72c94644dc558e119ebae9e58664a3412b5b121515a",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the stake address for a given Shelley address:"
+          ]
+        },
+        "h3 Transaction fee for specified transaction hash:": {
+          "sha256": "1a08050089deb995c045a0101857bf20cad3b38c6a4562d9a32a0b74e2a95add",
+          "targets": [
+            "guide:interesting-queries.md#h3 Transaction fee for specified transaction hash:"
+          ]
+        },
+        "h3 Transaction outputs for specified transaction hash:": {
+          "sha256": "b071d3207d0b65e5124a8c6762bcbef2a465fcaa7f7375344944baa06f119f44",
+          "targets": [
+            "guide:interesting-queries.md#h3 Transaction outputs for specified transaction hash:"
+          ]
+        },
+        "h3 Transaction inputs for specified transaction hash:": {
+          "sha256": "b64126e1ff461d49b3878606f36f28300f5d9b0081539c7d97d33527df38db11",
+          "targets": [
+            "guide:interesting-queries.md#h3 Transaction inputs for specified transaction hash:"
+          ]
+        },
+        "h3 Get per epoch performance statistics (sync time, tx count, etc):": {
+          "sha256": "07c0e546b3d5149c8ed9835ff82f7dbd88f8513035eff696c1b935aad034d2f1",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get per epoch performance statistics (sync time, tx count, etc):"
+          ]
+        },
+        "h3 Transaction withdrawals for specified transaction hash:": {
+          "sha256": "b4df83fcbfefc39a03a60297bb4850d1d753589030a6bb2366f9ad0000a9ec34",
+          "targets": [
+            "guide:interesting-queries.md#h3 Transaction withdrawals for specified transaction hash:"
+          ]
+        },
+        "h3 Get the stake distribution for each pool for a given epoch:": {
+          "sha256": "27ad564960ab0380b44795676e2b67045b736c50d96e67d7a86005b74c039313",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the stake distribution for each pool for a given epoch:"
+          ]
+        },
+        "h3 Get the delegation history for a specified stake address": {
+          "sha256": "dc4eaac36b4742fddd898d6b27bcb1e49725028b39f6a7fcdd01e208fa95ad2e",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the delegation history for a specified stake address"
+          ]
+        },
+        "h3 Get the reward history for a specified stake address": {
+          "sha256": "a00f4727d91f2da79e9e5dc91ad6211fa427e5e45b173287036468e192929f9d",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the reward history for a specified stake address"
+          ]
+        },
+        "h3 Get the block number of blocks created in an epoch by a specified pool": {
+          "sha256": "556faa8885a154b5ea0df03b27842202fdb38a44095e84691ded5f93eef82119",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the block number of blocks created in an epoch by a specified pool"
+          ]
+        },
+        "h3 Get the number of blocks created by a specified pool for each epoch": {
+          "sha256": "fa92b8db1bea0013f91d6163314ba4276921139e78caa13783c590dee78a7ca2",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the number of blocks created by a specified pool for each epoch"
+          ]
+        },
+        "h3 Get the tx_id, tx_block_id, tx_out_address of a voting registration.": {
+          "sha256": "3fc59ca9c2e19afdaec4d02318db78eca04bdcfe99ad00c3810cf69d5800d5fe",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the tx_id, tx_block_id, tx_out_address of a voting registration."
+          ]
+        },
+        "h3 Get the amount delegated by epoch for a specified address": {
+          "sha256": "be6f4651d1442c9e854f0bb77a1577e1360809c035e94d1dd752efb23a3f9655",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get the amount delegated by epoch for a specified address"
+          ]
+        },
+        "h3 Get all reward account deposits": {
+          "sha256": "dd19a40d170d9c3b07bab6e557ac73c6ba925a81a248604bf590afc721161ac6",
+          "targets": ["guide:interesting-queries.md#h3 Get all reward account deposits"]
+        },
+        "h3 Get historical UTxO set for a given timestamp": {
+          "sha256": "73150edb7d5a8678d3cce85aa0b8dfa5bad33c0a53280fab25dba74d2ade9701",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get historical UTxO set for a given timestamp"
+          ]
+        },
+        "h3 Get tagged Genesis addresses": {
+          "sha256": "44abd005618bf6463c1aa1017fb28e8bc7998d7f63fbe696674e16c47dccf835",
+          "targets": ["guide:interesting-queries.md#h3 Get tagged Genesis addresses"]
+        },
+        "h3 Get Ada in UTxO locked by scripts": {
+          "sha256": "23af693ebf9469d1eb1f58f2c07a686b68e1117812158339ab8752d70913dcfd",
+          "targets": ["guide:interesting-queries.md#h3 Get Ada in UTxO locked by scripts"]
+        },
+        "h3 Get information about script tx's": {
+          "sha256": "f12def13bc3a8acc53cfa16297e166a53e0a7cbfad40eac9d2d0668ebb21e45b",
+          "targets": ["guide:interesting-queries.md#h3 Get information about script tx's"]
+        },
+        "h3 Get the sum of collatereal input lost": {
+          "sha256": "521b72d00284c239da5b744b2947b8039cbd694e4d84e82c87de1a75f0676b66",
+          "targets": ["guide:interesting-queries.md#h3 Get the sum of collatereal input lost"]
+        },
+        "h3 Get all uses of a spend script and how much ada it unlocked from an output": {
+          "sha256": "704f4ac183320271baf38314d93966f88a0b35481add47a365cc4a9d22e36499",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get all uses of a spend script and how much ada it unlocked from an output"
+          ]
+        },
+        "h3 Get all mint scripts": {
+          "sha256": "33cd6869e0a7f7ab20ae2db79dae2932fdb2cc0dc7df4a17e6c1c42691956f6c",
+          "targets": ["guide:interesting-queries.md#h3 Get all mint scripts"]
+        },
+        "h3 Get all assets with quantities and count of mints": {
+          "sha256": "d40ee957e8df1d5c8e6b79683c34387d20ce803868562ee4424a731b4c1de906",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get all assets with quantities and count of mints"
+          ]
+        },
+        "h3 Get blocks with 0 transactions and the pools that forged it": {
+          "sha256": "ecddbfc2a4c9d71b6510181e86b16f4aa774670157bbe48c03c303c658204791",
+          "targets": [
+            "guide:interesting-queries.md#h3 Get blocks with 0 transactions and the pools that forged it"
+          ]
+        },
+        "h3 Query all delegators and some basic info": {
+          "sha256": "c6e520402803aba4e2094817b3a256569ae1a539a838f5662ee1b9a1c65bd102",
+          "targets": ["guide:interesting-queries.md#h3 Query all delegators and some basic info"]
+        },
+        "h3 Find all incorrect entries in epoch table": {
+          "sha256": "1b7538d3b44a872c029a2e465495e03c23b1e2cba64d7952ed1baf3952a5a3e9",
+          "targets": ["guide:interesting-queries.md#h3 Find all incorrect entries in epoch table"]
+        },
+        "h2 Community Queries": {
+          "sha256": "229727fe4350710ecf55ce9e53e07dae4870e4ad209a80ace1a8cb3b5a58b94c",
+          "targets": ["guide:interesting-queries.md#h2 Community Queries"]
+        },
+        "h3 Koios": {
+          "sha256": "25e1baa769293b496e2b701f9285f98bf6567eab86f446a0e63484db64c16d2f",
+          "targets": ["guide:interesting-queries.md#h3 Koios"]
+        },
+        "h3 Blockfrost": {
+          "sha256": "64349d9c3df63234680ad48562510f3c0352ab79116efe022f009871d6cefbf3",
+          "targets": ["guide:interesting-queries.md#h3 Blockfrost"]
+        },
+        "h3 Govtool": {
+          "sha256": "b327c4e917768c0fd87030f5e19d59cef0fdc99cf92255e8db923df8f46ee65f",
+          "targets": ["guide:interesting-queries.md#h3 Govtool"]
+        }
+      }
+    },
+    "manual-rollbacks.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Manual Rollbacks": {
+          "sha256": "130b8ac0dafa1cccfe4aa6748091b84f429b76b2cbf2d057d1d1829450ee104e",
+          "targets": ["guide:manual-rollbacks.md#h1 Manual Rollbacks"]
+        },
+        "h2 Overview": {
+          "sha256": "0b4e82ee001e9115942c49fee3abefed57a68ce0f0c45ac16990b77ea4a8a681",
+          "targets": ["guide:manual-rollbacks.md#h2 Overview"]
+        },
+        "h2 Methods": {
+          "sha256": "ce05622793336555d2cf1aeed4c53438c249327dae28bf2bff62303291f6a151",
+          "targets": ["guide:manual-rollbacks.md#h2 Methods"]
+        },
+        "h2 Using cardano-db-sync --rollback-to-slot": {
+          "sha256": "86c6d96fc640624455a7c21bce9cef160db6f50f9d78a30920a5f33f8586bc2b",
+          "targets": ["guide:manual-rollbacks.md#h2 Using cardano-db-sync --rollback-to-slot"]
+        },
+        "h2 Using cardano-db-tool rollback": {
+          "sha256": "141ea96df000dc0d1249d0236e314ddc38742234f1e99f6aede7a231e474cfca",
+          "targets": ["guide:manual-rollbacks.md#h2 Using cardano-db-tool rollback"]
+        },
+        "h2 What Gets Deleted": {
+          "sha256": "1ea5a7dbc72acb73633cac633245051a5d6ec35a27f66739481465e779ab5f95",
+          "targets": ["guide:manual-rollbacks.md#h2 What Gets Deleted"]
+        },
+        "h3 Epoch-Related Tables": {
+          "sha256": "00a4f5c1836430d9f26ee73e73d684228ff53aeb0fb8160f938d9797289a68e7",
+          "targets": ["guide:manual-rollbacks.md#h3 Epoch-Related Tables"]
+        },
+        "h3 Block and Transaction Tables": {
+          "sha256": "d14ce6797224a48865e376f3c3fffdd63b59fa1e2667340b923a5367b35ab477",
+          "targets": ["guide:manual-rollbacks.md#h3 Block and Transaction Tables"]
+        },
+        "h3 Stake and Delegation Tables": {
+          "sha256": "5b4dd44b63e7a3236b9e717d100c03e79a90cb0b2d30bb22c39b262606897031",
+          "targets": ["guide:manual-rollbacks.md#h3 Stake and Delegation Tables"]
+        },
+        "h3 Pool Tables": {
+          "sha256": "154e6bbea5e134d0b3a1daeef05c52c3a9008b3fd20036941c4dfe2f228bcc11",
+          "targets": ["guide:manual-rollbacks.md#h3 Pool Tables"]
+        },
+        "h3 Plutus Tables": {
+          "sha256": "8a5918598142fd2818c54f70497cabd68029a8fc061536132748028a5f9ffba3",
+          "targets": ["guide:manual-rollbacks.md#h3 Plutus Tables"]
+        },
+        "h3 Multi-Asset Tables": {
+          "sha256": "2c8244a0d2bd8a0e668d100ce5e7ed63ec03ea5567329470cd78cb33b5b1ef25",
+          "targets": ["guide:manual-rollbacks.md#h3 Multi-Asset Tables"]
+        },
+        "h3 Governance Tables (Conway era)": {
+          "sha256": "1a1ee58993b70630498e43e2c6495c0ad78d5ab35b9775ecf1f673caa84e4991",
+          "targets": ["guide:manual-rollbacks.md#h3 Governance Tables (Conway era)"]
+        },
+        "h3 Treasury Tables": {
+          "sha256": "b490035502f0e0b74f01bbd5584a66995baec0069085c97c74ddaf211b0fdeb1",
+          "targets": ["guide:manual-rollbacks.md#h3 Treasury Tables"]
+        },
+        "h3 Pool Metadata": {
+          "sha256": "63cb7a541e12b1f8ee18d619dcddf0eddce50e25b87a7f6ee87c7ab2f53ecbfb",
+          "targets": ["guide:manual-rollbacks.md#h3 Pool Metadata"]
+        },
+        "h3 Indexes": {
+          "sha256": "8489d696c750e65ed5c308f4378af6eab7bdd2ba270d2b95144263f4cdf28881",
+          "targets": ["guide:manual-rollbacks.md#h3 Indexes"]
+        },
+        "h2 Finding the Right Slot Number": {
+          "sha256": "f220458bd9cdb25b42cf187e1fd55011da38e6706100ab70365df70a0ee75cf4",
+          "targets": ["guide:manual-rollbacks.md#h2 Finding the Right Slot Number"]
+        },
+        "h2 What Happens After Rollback": {
+          "sha256": "a7dde526455a0ea0732bf65de567efabcab70e8ffb42a854681065f5ea9aaffd",
+          "targets": ["guide:manual-rollbacks.md#h2 What Happens After Rollback"]
+        },
+        "h2 Important Considerations": {
+          "sha256": "f3b943f58468534fe83c7ddb8d0e1f9dc3df26793a63a7435844f5b83c06e6f6",
+          "targets": ["guide:manual-rollbacks.md#h2 Important Considerations"]
+        },
+        "h3 Choosing the Rollback Point": {
+          "sha256": "7c2e8c4cc0f09c204ca084d4a347920dfa6c16bac8245e0657c0ea7635faf09e",
+          "targets": ["guide:manual-rollbacks.md#h3 Choosing the Rollback Point"]
+        },
+        "h3 Ledger State": {
+          "sha256": "386b00257a8fce4a93e3952d73229f7b680c01a8922c53cd69dbb16e5fa72e3e",
+          "targets": ["guide:manual-rollbacks.md#h3 Ledger State"]
+        },
+        "h3 Performance": {
+          "sha256": "482d72a09c340969cda8d6f8132740e063a3bf8b5bf439a5b3c49d72403ec270",
+          "targets": ["guide:manual-rollbacks.md#h3 Performance"]
+        },
+        "h2 Verifying Rollback Success": {
+          "sha256": "3e0185bfde0f5566f086b7f70e79fa5afe96f07fe9eb6626ee817d92a1c73198",
+          "targets": ["guide:manual-rollbacks.md#h2 Verifying Rollback Success"]
+        },
+        "h2 Common Issues": {
+          "sha256": "2fbb7c9e29d94dbf16b1d9f040b8c3357ebe5afb1bd1019238383e8e3b135960",
+          "targets": ["guide:manual-rollbacks.md#h2 Common Issues"]
+        },
+        "h3 \"No block found at or after slot\"": {
+          "sha256": "19b7e32304ae66e991d8c8a17a087bfa377768804aa90dcf456976a2e6acda73",
+          "targets": ["guide:manual-rollbacks.md#h3 \"No block found at or after slot\""]
+        },
+        "h3 Database Constraint Errors on Re-sync": {
+          "sha256": "37a58b69481a73438c20406ded6288f1b7297d595f619e390df02fc8124b037b",
+          "targets": ["guide:manual-rollbacks.md#h3 Database Constraint Errors on Re-sync"]
+        }
+      }
+    },
+    "migrations.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Migrations": {
+          "sha256": "cc92b6cf4984165950d89a7ca3c55764deab26dd7b652f484f354ccd24809fa8",
+          "targets": ["guide:migrations.md#h1 Migrations"]
+        },
+        "h2 Upgrading to 13.2.0.x": {
+          "sha256": "1fb3b0950271d55baea54354daebcd6acc3b0afd10e5bd935315f8f0bffb7f1e",
+          "targets": ["guide:migrations.md#h2 Upgrading to 13.2.0.x"]
+        },
+        "h3 Ledger replay": {
+          "sha256": "3e0351dd2a8dcb8ae4b035f216255c242354db60660264d2804b6ad23c166ad5",
+          "targets": ["guide:migrations.md#h3 Ledger replay"]
+        },
+        "h2 Upgrading to 13.1.1.x": {
+          "sha256": "921700ad8fdf0d6477ec16c800af3adbdd1403f228b9add613169f96f320e56e",
+          "targets": ["guide:migrations.md#h2 Upgrading to 13.1.1.x"]
+        },
+        "h3 Ledger replay [2]": {
+          "sha256": "8c1ae5e6414daac57cfa06273d501517ecedcf10f818084f4771f6cb41ebd197",
+          "targets": ["guide:migrations.md#h3 Ledger replay [2]"]
+        },
+        "h2 Upgrading to 13.1.0.x": {
+          "sha256": "84946f951ed48505f036f662454815978e4d0f44e88921b130ff02bdd61d3ef3",
+          "targets": ["guide:migrations.md#h2 Upgrading to 13.1.0.x"]
+        }
+      }
+    },
+    "pool-offchain-data.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Pool OffChain Data": {
+          "sha256": "7989021d9be1a8b5b9fb5cfc0f3f468c491e10959f8de312a55f8ceaea93d833",
+          "targets": [
+            "guide:pool-metadata.md#h1 Diagnose off-chain pool metadata",
+            "annotation:Http.hs:httpGetOffChainPoolData"
+          ]
+        },
+        "h3 http-get-json-metadata": {
+          "sha256": "f6bde58506c3beb6be6c36d5a37ce8769fb773fc9feb9eae322cbd7c77f0af84",
+          "targets": [
+            "guide:pool-metadata.md#h2 Check one URL and hash",
+            "annotation:http-get-json-metadata.hs:main"
+          ]
+        },
+        "h4 Pool metadata": {
+          "sha256": "fccffe08e0cedb95036220656c4eeded51b06f83ad4d1eb619f24bf30e9ba50e",
+          "targets": [
+            "guide:pool-metadata.md#h2 Check one URL and hash",
+            "annotation:Http.hs:httpGetOffChainPoolData"
+          ]
+        },
+        "h4 Governance (vote) metadata": {
+          "sha256": "b9953bf6f723ecf6d7bbf8c73c790b78a2866544c6d5fbe28ed1419ba97891ef",
+          "targets": [
+            "guide:pool-metadata.md#h2 Check one URL and hash",
+            "annotation:http-get-json-metadata.hs:main"
+          ]
+        },
+        "h4 ipfs:// URLs": {
+          "sha256": "4ecf50150e20dfa7c67f3a6716614b029d830e7004b31d9009641368fef09fe5",
+          "targets": [
+            "guide:pool-metadata.md#h2 Check one URL and hash",
+            "annotation:Http.hs:httpGetOffChainVoteData"
+          ]
+        },
+        "h4 Content-type handling": {
+          "sha256": "2a05d85bd3c09ff502e430633ff4911a32aa39c703f8f383e318a09c4277de45",
+          "targets": ["annotation:Http.hs:httpGetBytes"]
+        },
+        "h3 test-http-get-json-metadata": {
+          "sha256": "62851ebc59c3b5f56b84cbc59e081ab1b070f45c1ff34ab2fe6561eb039a3222",
+          "targets": [
+            "guide:pool-metadata.md#h2 Check all stored pool references",
+            "annotation:test-http-get-json-metadata.hs:main"
+          ]
+        }
+      }
+    },
+    "release-process.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Release Process": {
+          "sha256": "3e340676995b024ed03d49d3d7841d1b01142fc7c2701be28468247a06403878",
+          "omission": "Release procedures are contributor documentation and belong in CONTRIBUTING."
+        }
+      }
+    },
+    "running.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Running": {
+          "sha256": "f52391ae21afbe27d7077dfc7411686f4d88036b2b4b061dc3e50789d3bb4a72",
+          "targets": ["guide:running.md#h1 Running"]
+        },
+        "h2 Prerequisites": {
+          "sha256": "7f6112ca06b6d5d41eea2929868e4a8037375a5c620f380482a310a4028dae34",
+          "targets": ["guide:running.md#h2 Prerequisites"]
+        },
+        "h2 Download Configuration Files": {
+          "sha256": "c8358ff7cca591c70ab089a835f26b24516b9300233e6ba2dbeebb2b4bfe14c4",
+          "targets": ["guide:running.md#h2 Download Configuration Files"]
+        },
+        "h2 Start Cardano Node": {
+          "sha256": "961c6e25bbe5209e2c1916b5131931ebe05bde7e7ef4acdae4af82db17c85f0f",
+          "targets": ["guide:running.md#h2 Start Cardano Node"]
+        },
+        "h2 Start the DB Sync Node": {
+          "sha256": "ec9268247dad08714c70f357fff729d04595a61f747b22126081df3408401412",
+          "targets": ["guide:running.md#h2 Start the DB Sync Node"]
+        }
+      }
+    },
+    "schema-management.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Schema Management": {
+          "sha256": "d2aeb9ed6ad8a72bcdfa601d9c936f73703f7fcf2b6cddc82c774f2da5fd09b7",
+          "targets": ["guide:schema-management.md#h1 Schema Management"]
+        },
+        "h2 Creating a Migration": {
+          "sha256": "652d2099b227ecccc4f2cffb1cbc228ec9c7d7534f4d4e54f9abe67719e2ea34",
+          "targets": ["guide:schema-management.md#h2 Creating a Migration"]
+        }
+      }
+    },
+    "schema.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Schema Documentation for cardano-db-sync": {
+          "sha256": "7a75992a737c2f59ff872be1b5c70af1db3f54c020edac6d82150fd30df43145",
+          "targets": [
+            "annotation:Base.hs:SchemaVersion",
+            "annotation:Pool.hs:PoolHash",
+            "annotation:Base.hs:SlotLeader",
+            "annotation:Base.hs:Block",
+            "annotation:Base.hs:Tx",
+            "annotation:Base.hs:TxCbor",
+            "annotation:Base.hs:ReverseIndex",
+            "annotation:StakeDelegation.hs:StakeAddress",
+            "annotation:Base.hs:TxIn",
+            "annotation:Base.hs:CollateralTxIn",
+            "annotation:Base.hs:ReferenceTxIn",
+            "annotation:Base.hs:Meta",
+            "annotation:EpochAndProtocol.hs:Epoch",
+            "annotation:EpochAndProtocol.hs:queryEpochEntryStmt",
+            "annotation:EpochAndProtocol.hs:appendEpochFinalizedStmt",
+            "annotation:EpochAndProtocol.hs:setEpochSyncEnabledStmt",
+            "annotation:EpochAndProtocol.hs:AdaPots",
+            "annotation:Pool.hs:PoolMetadataRef",
+            "annotation:Pool.hs:PoolUpdate",
+            "annotation:Pool.hs:PoolOwner",
+            "annotation:Pool.hs:PoolRetire",
+            "annotation:Pool.hs:PoolRelay",
+            "annotation:StakeDelegation.hs:StakeRegistration",
+            "annotation:StakeDelegation.hs:StakeDeregistration",
+            "annotation:StakeDelegation.hs:Delegation",
+            "annotation:Base.hs:TxMetadata",
+            "annotation:StakeDelegation.hs:Reward",
+            "annotation:StakeDelegation.hs:RewardRest",
+            "annotation:Base.hs:Withdrawal",
+            "annotation:StakeDelegation.hs:EpochStake",
+            "annotation:StakeDelegation.hs:EpochStakeProgress",
+            "annotation:EpochAndProtocol.hs:Treasury",
+            "annotation:EpochAndProtocol.hs:Reserve",
+            "annotation:EpochAndProtocol.hs:PotTransfer",
+            "annotation:EpochAndProtocol.hs:EpochSyncTime",
+            "annotation:MultiAsset.hs:MultiAsset",
+            "annotation:MultiAsset.hs:MaTxMint",
+            "annotation:Base.hs:Redeemer",
+            "annotation:Base.hs:Script",
+            "annotation:Base.hs:Datum",
+            "annotation:Base.hs:RedeemerData",
+            "annotation:Base.hs:ExtraKeyWitness",
+            "annotation:GovernanceAndVoting.hs:ParamProposal",
+            "annotation:EpochAndProtocol.hs:EpochParam",
+            "annotation:EpochAndProtocol.hs:CostModel",
+            "annotation:Pool.hs:PoolStat",
+            "annotation:Base.hs:ExtraMigrations",
+            "annotation:GovernanceAndVoting.hs:DrepHash",
+            "annotation:GovernanceAndVoting.hs:CommitteeHash",
+            "annotation:GovernanceAndVoting.hs:DelegationVote",
+            "annotation:GovernanceAndVoting.hs:CommitteeRegistration",
+            "annotation:GovernanceAndVoting.hs:CommitteeDeRegistration",
+            "annotation:GovernanceAndVoting.hs:DrepRegistration",
+            "annotation:GovernanceAndVoting.hs:VotingAnchor",
+            "annotation:GovernanceAndVoting.hs:GovActionProposal",
+            "annotation:GovernanceAndVoting.hs:TreasuryWithdrawal",
+            "annotation:GovernanceAndVoting.hs:Committee",
+            "annotation:GovernanceAndVoting.hs:CommitteeMember",
+            "annotation:GovernanceAndVoting.hs:Constitution",
+            "annotation:GovernanceAndVoting.hs:VotingProcedure",
+            "annotation:GovernanceAndVoting.hs:DrepDistr",
+            "annotation:EpochAndProtocol.hs:EpochState",
+            "annotation:GovernanceAndVoting.hs:EventInfo",
+            "annotation:OffChain.hs:OffChainPoolData",
+            "annotation:OffChain.hs:OffChainPoolFetchError",
+            "annotation:OffChain.hs:OffChainVoteData",
+            "annotation:OffChain.hs:OffChainVoteGovActionData",
+            "annotation:OffChain.hs:OffChainVoteDrepData",
+            "annotation:OffChain.hs:OffChainVoteAuthor",
+            "annotation:OffChain.hs:OffChainVoteReference",
+            "annotation:OffChain.hs:OffChainVoteExternalUpdate",
+            "annotation:OffChain.hs:OffChainVoteFetchError",
+            "annotation:Pool.hs:ReservedPoolTicker",
+            "annotation:Pool.hs:DelistedPool",
+            "annotation:TxOutCore.hs:TxOutCore",
+            "annotation:TxOutCore.hs:CollateralTxOutCore",
+            "annotation:TxOutCore.hs:MaTxOutCore",
+            "annotation:TxOutAddress.hs:TxOutAddress",
+            "annotation:TxOutAddress.hs:CollateralTxOutAddress",
+            "annotation:TxOutAddress.hs:Address",
+            "annotation:TxOutAddress.hs:MaTxOutAddress"
+          ]
+        },
+        "h3 schema_version": {
+          "sha256": "66ad8d84a31e34b40dc26c2f3575dd86eb8636e09734571d22882fed24d79b87",
+          "targets": ["annotation:Base.hs:SchemaVersion"]
+        },
+        "h3 pool_hash": {
+          "sha256": "6f7ade41e779dd5b5fab9bbfbf41801a55286ef3682948da7b5b5fd513b1f9c7",
+          "targets": ["annotation:Pool.hs:PoolHash"]
+        },
+        "h3 slot_leader": {
+          "sha256": "bc6ed42b02328f690fba9921264bd6c31a0fb2d69e1360e9cc92557c39d89776",
+          "targets": ["annotation:Base.hs:SlotLeader"]
+        },
+        "h3 block": {
+          "sha256": "db78d2a25fc39b3365807d69fcf93c4d956375b32f8a60219bf90b7223ca8534",
+          "targets": ["annotation:Base.hs:Block"]
+        },
+        "h3 tx": {
+          "sha256": "7d51993bd6a96025a47fcb2ab6125ac48dffe110b78f59b22b2200684948438d",
+          "targets": ["annotation:Base.hs:Tx"]
+        },
+        "h3 tx_cbor": {
+          "sha256": "b4b20e1fb2cd1ac06403f3c1fd0c6b7bc594904a5f3c345593e3735264f4346b",
+          "targets": ["annotation:Base.hs:TxCbor"]
+        },
+        "h3 reverse_index": {
+          "sha256": "80e910b058eb53bf2280f1e55648625a7f54f5b952acb2487d82b10eebb2e9b1",
+          "targets": ["annotation:Base.hs:ReverseIndex"]
+        },
+        "h3 stake_address": {
+          "sha256": "2b0cf00b1c824fdec8c5b76a1dc630e4df225c20c884d5b6177c8f840317bac3",
+          "targets": ["annotation:StakeDelegation.hs:StakeAddress"]
+        },
+        "h3 tx_in": {
+          "sha256": "05078b1897b02673b6776f9b49ec541c6b27af1d434f777d4672daf7d0fd9614",
+          "targets": ["annotation:Base.hs:TxIn"]
+        },
+        "h3 collateral_tx_in": {
+          "sha256": "c42b40e384500cd203da15dbb9423163327da4b813d0609068eb1aacdd740b94",
+          "targets": ["annotation:Base.hs:CollateralTxIn"]
+        },
+        "h3 reference_tx_in": {
+          "sha256": "bfd809540ab092748432d78d495fe1721c396d662c9001056d72f3b1b32f481d",
+          "targets": ["annotation:Base.hs:ReferenceTxIn"]
+        },
+        "h3 meta": {
+          "sha256": "cdf609ebc20bb6ff6bd378d457b47f18ac14041711b8f44bc2120b51aa2138e2",
+          "targets": ["annotation:Base.hs:Meta"]
+        },
+        "h3 epoch": {
+          "sha256": "5baa3fb7d46fd8c885fa3791433f856defc43411bb8237a23c0d7a4cdb138dfc",
+          "targets": ["annotation:EpochAndProtocol.hs:Epoch"]
+        },
+        "h3 epoch_current": {
+          "sha256": "889d5061a9dce7de0a18231d2d43587416dce8a922a5b7aefda3542266c55ff2",
+          "targets": ["annotation:EpochAndProtocol.hs:queryEpochEntryStmt"]
+        },
+        "h3 epoch_finalized": {
+          "sha256": "418b9fb6760a578592985666d44c4c0e65103cef89d50145a975d7738f11173e",
+          "targets": ["annotation:EpochAndProtocol.hs:appendEpochFinalizedStmt"]
+        },
+        "h3 epoch_sync_enabled": {
+          "sha256": "cab9367e2406b65443471ae163d8881fdef5e88f9a5b26772129602fe5b3a961",
+          "targets": ["annotation:EpochAndProtocol.hs:setEpochSyncEnabledStmt"]
+        },
+        "h3 ada_pots": {
+          "sha256": "9e263b72b66bdcbdb215401c0123afe37ac4fd00e3f677cb1121c11c333e4be5",
+          "targets": ["annotation:EpochAndProtocol.hs:AdaPots"]
+        },
+        "h3 pool_metadata_ref": {
+          "sha256": "d1fbca96a05536dc91f4564c7d9733336b3e244d4d4b437e5bc98926c4afbae8",
+          "targets": ["annotation:Pool.hs:PoolMetadataRef"]
+        },
+        "h3 pool_update": {
+          "sha256": "0ce55971dabe865739c1cf4be472dc40fc26c27712738befe98fdcdb1ee91a96",
+          "targets": ["annotation:Pool.hs:PoolUpdate"]
+        },
+        "h3 pool_owner": {
+          "sha256": "9cb92b8e15b4d682133b4e9d2c5b3018462b6031ce56f1681f5347c8aa8414a2",
+          "targets": ["annotation:Pool.hs:PoolOwner"]
+        },
+        "h3 pool_retire": {
+          "sha256": "ab0d6d61fbcbcdfab2d9d4b1a4ddba1400b43396bcd4089b422d94452dc1c24a",
+          "targets": ["annotation:Pool.hs:PoolRetire"]
+        },
+        "h3 pool_relay": {
+          "sha256": "23fe7616750b22770e2622392b435321f687fe91230bd0ca8d80e825d9bea9b2",
+          "targets": ["annotation:Pool.hs:PoolRelay"]
+        },
+        "h3 stake_registration": {
+          "sha256": "56e96f6d086e7633716ba7c634a2793980545d77307367a2dea82cafb47339ed",
+          "targets": ["annotation:StakeDelegation.hs:StakeRegistration"]
+        },
+        "h3 stake_deregistration": {
+          "sha256": "8b1aaff01eedb61cb2a9f6406792379a771a2f5fedcf1a4be16ed8010c20e336",
+          "targets": ["annotation:StakeDelegation.hs:StakeDeregistration"]
+        },
+        "h3 delegation": {
+          "sha256": "5619a34b5101f54f2814301fba8f5b71c1d063bf1bd6a3f270d9bb3aea4bf42e",
+          "targets": ["annotation:StakeDelegation.hs:Delegation"]
+        },
+        "h3 tx_metadata": {
+          "sha256": "108cfd8fb5f0122fb283236e814ab47cc8287bab93f60e480380dd97618ead0f",
+          "targets": ["annotation:Base.hs:TxMetadata"]
+        },
+        "h3 reward": {
+          "sha256": "f91fe386f8c970126ca5e6e9fbbeaabda1c0738e8d6aa043c2be38307135e2d2",
+          "targets": ["annotation:StakeDelegation.hs:Reward"]
+        },
+        "h3 reward_rest": {
+          "sha256": "28fcb15bdc1e35c701e09ebdd9ab76d18e4d687ed1c8d4bf3441debe536d6ad2",
+          "targets": ["annotation:StakeDelegation.hs:RewardRest"]
+        },
+        "h3 withdrawal": {
+          "sha256": "b2013df64a724ce4af944a28602e4d415cb7e760b8d27e1f4d909b533cceaf25",
+          "targets": ["annotation:Base.hs:Withdrawal"]
+        },
+        "h3 epoch_stake": {
+          "sha256": "a5e649e12b84f06467b828d01e65aa66fb6327ccbaf7c2cdd34a7622631853ca",
+          "targets": ["annotation:StakeDelegation.hs:EpochStake"]
+        },
+        "h3 epoch_stake_progress": {
+          "sha256": "81fa72dcf220938d0745c193869e743cd816de4df9852be573da494f4e6ab32d",
+          "targets": ["annotation:StakeDelegation.hs:EpochStakeProgress"]
+        },
+        "h3 treasury": {
+          "sha256": "bffb810799c70bfd68ab44e4743c14da54e9a2779c352acabce3163b4bffc3ae",
+          "targets": ["annotation:EpochAndProtocol.hs:Treasury"]
+        },
+        "h3 reserve": {
+          "sha256": "cc9303ec9493865487df1a9ba73de5fed73da34bcce4aab7b1a7024b63dc5fa5",
+          "targets": ["annotation:EpochAndProtocol.hs:Reserve"]
+        },
+        "h3 pot_transfer": {
+          "sha256": "0ea7ed21e9e88587fdae0dcfc366a26eaef76b2533e4e96a3db95b4a2e322c56",
+          "targets": ["annotation:EpochAndProtocol.hs:PotTransfer"]
+        },
+        "h3 epoch_sync_time": {
+          "sha256": "93a14577dbaab7a36bdb8a2d246e6386278002c5101437386cf4694d8be737dd",
+          "targets": ["annotation:EpochAndProtocol.hs:EpochSyncTime"]
+        },
+        "h3 multi_asset": {
+          "sha256": "c1bca81403d2418ba2921c282ec900c1498df50b3d78afe368545004f38a6597",
+          "targets": ["annotation:MultiAsset.hs:MultiAsset"]
+        },
+        "h3 ma_tx_mint": {
+          "sha256": "6ed631ba4a4a2a72dd790f0a096d5b5a8c4a4a725a07244afebd31a46913be4c",
+          "targets": ["annotation:MultiAsset.hs:MaTxMint"]
+        },
+        "h3 redeemer": {
+          "sha256": "2e84e663fbb4669b68be7114c30647cd17cfc6789f28f3fcf8cc1995786e5745",
+          "targets": ["annotation:Base.hs:Redeemer"]
+        },
+        "h3 script": {
+          "sha256": "afbb07411aec8cb453dacda970f211d9e0f0cb5b9ebfe76e2dbe8437bfde1d97",
+          "targets": ["annotation:Base.hs:Script"]
+        },
+        "h3 datum": {
+          "sha256": "f37252e18f50fb2b25bdbc694646420baa5427100ab3eaca1230c1a686064be9",
+          "targets": ["annotation:Base.hs:Datum"]
+        },
+        "h3 redeemer_data": {
+          "sha256": "b485a2c1bcc503301c87d72bc89e77dd703b960771d76d2ff3c8aa0cf98110ef",
+          "targets": ["annotation:Base.hs:RedeemerData"]
+        },
+        "h3 extra_key_witness": {
+          "sha256": "b92985a9fa2ae57949e63b32df6d1efb4c0d9c0d09d08a8e141493ceb08ca956",
+          "targets": ["annotation:Base.hs:ExtraKeyWitness"]
+        },
+        "h3 param_proposal": {
+          "sha256": "fb55ea86c198cc94be0abc24974235df5b4278f2611fef56a735fbd756f70fac",
+          "targets": ["annotation:GovernanceAndVoting.hs:ParamProposal"]
+        },
+        "h3 epoch_param": {
+          "sha256": "0b7c1c49e55a1cdf9fe02656ee4e16e49201432abe82ab134a39354f346213c8",
+          "targets": ["annotation:EpochAndProtocol.hs:EpochParam"]
+        },
+        "h3 cost_model": {
+          "sha256": "637539aed61b9c63af69c983b5f478b99d0e1c116157b1213a62d43d07048ae0",
+          "targets": ["annotation:EpochAndProtocol.hs:CostModel"]
+        },
+        "h3 pool_stat": {
+          "sha256": "a700b86219fa75f6c2e4e6a2527720bf1652251f1cdf585e10ca0917f4039aa6",
+          "targets": ["annotation:Pool.hs:PoolStat"]
+        },
+        "h3 extra_migrations": {
+          "sha256": "0ba8f265223f4fe52ea8816e2b4006595b3d685befc86fcb5936c53bb17c0d8d",
+          "targets": ["annotation:Base.hs:ExtraMigrations"]
+        },
+        "h3 drep_hash": {
+          "sha256": "06ad187355d61b8d0305a1c9a2a44460750348d0a2707285424a346c6daa0af8",
+          "targets": ["annotation:GovernanceAndVoting.hs:DrepHash"]
+        },
+        "h3 committee_hash": {
+          "sha256": "44844b83b361ae5ca8e8a3f1bf5e45d34c3a0015339e80e388f09d5953db92e9",
+          "targets": ["annotation:GovernanceAndVoting.hs:CommitteeHash"]
+        },
+        "h3 delegation_vote": {
+          "sha256": "44af909c02b1741bb52d964d1236c9edfa8f0eaee03187c4368a1f118dbfed1d",
+          "targets": ["annotation:GovernanceAndVoting.hs:DelegationVote"]
+        },
+        "h3 committee_registration": {
+          "sha256": "0c1c3c4d5607eb8554662dda74dad041a5ec955c5acf9a3d86bc89113c1242a2",
+          "targets": ["annotation:GovernanceAndVoting.hs:CommitteeRegistration"]
+        },
+        "h3 committee_de_registration": {
+          "sha256": "db31fb0f1d43b875bb737d9584e6371dc78a7d4e4a92fb53e740d2e12f0f5943",
+          "targets": ["annotation:GovernanceAndVoting.hs:CommitteeDeRegistration"]
+        },
+        "h3 drep_registration": {
+          "sha256": "59d0d1a76990d91c67519a24f49f65054dd253c0ef4fd4b7589b1522ead6a119",
+          "targets": ["annotation:GovernanceAndVoting.hs:DrepRegistration"]
+        },
+        "h3 voting_anchor": {
+          "sha256": "41083f799f379787ce86652f7f317c217e6a2af0d3c787113b4435994b452f10",
+          "targets": ["annotation:GovernanceAndVoting.hs:VotingAnchor"]
+        },
+        "h3 gov_action_proposal": {
+          "sha256": "128abe53be9cd41fa1bf958fe4ba5fd446c97287ba057c38b2710afff0b33659",
+          "targets": ["annotation:GovernanceAndVoting.hs:GovActionProposal"]
+        },
+        "h3 treasury_withdrawal": {
+          "sha256": "9e3609fac188935d6aa13b14e96e7ddf31fa5b6c7759483ce998f6398ac07352",
+          "targets": ["annotation:GovernanceAndVoting.hs:TreasuryWithdrawal"]
+        },
+        "h3 committee": {
+          "sha256": "7a3ee61ac2070dae7326bd27564d7b1876f4a7557fa920141214895899fea94b",
+          "targets": ["annotation:GovernanceAndVoting.hs:Committee"]
+        },
+        "h3 committee_member": {
+          "sha256": "7a2d39512cfc9a461c20cdf271d510c3a4871eee92ebe57ba5aad06108d8a7b3",
+          "targets": ["annotation:GovernanceAndVoting.hs:CommitteeMember"]
+        },
+        "h3 constitution": {
+          "sha256": "ba981a5381e73733d2e68a1f5f828ee4f8f5f6bfbc35e323de4ac1942105e3e9",
+          "targets": ["annotation:GovernanceAndVoting.hs:Constitution"]
+        },
+        "h3 voting_procedure": {
+          "sha256": "07c17535dff82ccb5be7273b476f985b5bfdf1620884c4ccd425f9677c88fb7f",
+          "targets": ["annotation:GovernanceAndVoting.hs:VotingProcedure"]
+        },
+        "h3 drep_distr": {
+          "sha256": "fc631ae8d546beafdac45551582bad64de5b6eab1ccc8e5d0add24f759aeb49b",
+          "targets": ["annotation:GovernanceAndVoting.hs:DrepDistr"]
+        },
+        "h3 epoch_state": {
+          "sha256": "f24699bbda07dacbc8686d51315a1c7db9bb036f94257f8f27c5bfe2acc43082",
+          "targets": ["annotation:EpochAndProtocol.hs:EpochState"]
+        },
+        "h3 event_info": {
+          "sha256": "8c587969bd898b138c1551ef3ca7f02097515648b08d2aea3493e438a1bcc5df",
+          "targets": ["annotation:GovernanceAndVoting.hs:EventInfo"]
+        },
+        "h3 off_chain_pool_data": {
+          "sha256": "486d425cb9cc60bfa2b364b62929a596cb6025176a8242e85e425360410512de",
+          "targets": ["annotation:OffChain.hs:OffChainPoolData"]
+        },
+        "h3 off_chain_pool_fetch_error": {
+          "sha256": "16bdd32f56b246a558ecc3225cb6d83d5fee551db6c4e7b1ab5fa610a0b27770",
+          "targets": ["annotation:OffChain.hs:OffChainPoolFetchError"]
+        },
+        "h3 off_chain_vote_data": {
+          "sha256": "55ae25c773946448384c579b643738ca533ba68c251c846ff73b65260f646d14",
+          "targets": ["annotation:OffChain.hs:OffChainVoteData"]
+        },
+        "h3 off_chain_vote_gov_action_data": {
+          "sha256": "67fb15f872978c7ff724945bfc0ce345eaca1dc03b8baa82c2d92fabf7b84a4f",
+          "targets": ["annotation:OffChain.hs:OffChainVoteGovActionData"]
+        },
+        "h3 off_chain_vote_drep_data": {
+          "sha256": "d4c0bdb600c786e9584d6e5f9e40ec30cce6327366984956f233dcfd32f8c774",
+          "targets": ["annotation:OffChain.hs:OffChainVoteDrepData"]
+        },
+        "h3 off_chain_vote_author": {
+          "sha256": "7582378cb699862de0493d3f3b846567e3590a964e536a8536a5f5ab65c15bb7",
+          "targets": ["annotation:OffChain.hs:OffChainVoteAuthor"]
+        },
+        "h3 off_chain_vote_reference": {
+          "sha256": "74daeee9ce52342bd6a476230237c6f0f08e8b283dcbb94f4cd6ca8a5bc6d406",
+          "targets": ["annotation:OffChain.hs:OffChainVoteReference"]
+        },
+        "h3 off_chain_vote_external_update": {
+          "sha256": "cdbaad803d08f85bc20299c851d75e9ce6b77e5cd31e882f1239e76c20fbce44",
+          "targets": ["annotation:OffChain.hs:OffChainVoteExternalUpdate"]
+        },
+        "h3 off_chain_vote_fetch_error": {
+          "sha256": "9d69ed9009cfd45d58e537b5a2e57dfce94c2967fd75a0178066807793a35b84",
+          "targets": ["annotation:OffChain.hs:OffChainVoteFetchError"]
+        },
+        "h3 reserved_pool_ticker": {
+          "sha256": "03efc243457d8f3305992dd0d197554f87333528e52df3d2a2385a50f85f7dee",
+          "targets": ["annotation:Pool.hs:ReservedPoolTicker"]
+        },
+        "h3 delisted_pool": {
+          "sha256": "6e2d6609adf97dd8cfbf16229d12deb7a058db19a909232be576b95d56313984",
+          "targets": ["annotation:Pool.hs:DelistedPool"]
+        },
+        "h3 tx_out": {
+          "sha256": "eb23b16a2d2bb134faf1ffac32eb34cbd2ac3fb9c1bf76d8cd922323524970dc",
+          "targets": ["annotation:TxOutCore.hs:TxOutCore"]
+        },
+        "h3 collateral_tx_out": {
+          "sha256": "ae81cf80b5462e6521cbce74c586b3c49eb9de580ea98e86cb19ac708f93646c",
+          "targets": ["annotation:TxOutCore.hs:CollateralTxOutCore"]
+        },
+        "h3 ma_tx_out": {
+          "sha256": "27353d00015c9a5c081d75514f4b37de50514a51178ea612d2462b95f21d1d1e",
+          "targets": ["annotation:TxOutCore.hs:MaTxOutCore"]
+        },
+        "h1 Variant Schema": {
+          "sha256": "9a06a931f9dd5f1c0e14ef3d98816477287cd53392a503e032b16e36050feacf",
+          "targets": [
+            "annotation:TxOutAddress.hs:TxOutAddress",
+            "annotation:TxOutAddress.hs:CollateralTxOutAddress",
+            "annotation:TxOutAddress.hs:MaTxOutAddress",
+            "annotation:TxOutAddress.hs:Address"
+          ]
+        },
+        "h3 tx_out [2]": {
+          "sha256": "815467643e295ecdbf2f35323bc7fdfe98fc6fe8fb93aeb32a7c8ae91a883798",
+          "targets": ["annotation:TxOutAddress.hs:TxOutAddress"]
+        },
+        "h3 collateral_tx_out [2]": {
+          "sha256": "e48725d14a5d5d23595451adac28ea3defeceaed4cfdac96095bc843e721b691",
+          "targets": ["annotation:TxOutAddress.hs:CollateralTxOutAddress"]
+        },
+        "h3 address": {
+          "sha256": "777fc93fb3e3cbc46a565c7a78f226c43c59f296ce81ef367a927c76e4eeb8b8",
+          "targets": ["annotation:TxOutAddress.hs:Address"]
+        },
+        "h3 ma_tx_out [2]": {
+          "sha256": "27353d00015c9a5c081d75514f4b37de50514a51178ea612d2462b95f21d1d1e",
+          "targets": ["annotation:TxOutAddress.hs:MaTxOutAddress"]
+        }
+      }
+    },
+    "smash.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Stakepool Metadata Aggregation Server (SMASH)": {
+          "sha256": "67c4decd47fc132f20651c4d32998ebc6840b1679a6fba89ed6c963e9e2136fd",
+          "targets": [
+            "guide:smash-operations.md#h1 Operate SMASH",
+            "annotation:Api.hs:OffChainPoolMetadataAPI"
+          ]
+        },
+        "h2 Overview": {
+          "sha256": "21e47bdd3c8e53b8ba13ca0972e8a63c9a7339820f15e5feeafbbfa997070e0b",
+          "targets": ["guide:smash-operations.md#h1 Operate SMASH"]
+        },
+        "h2 Use cases": {
+          "sha256": "6be0d91914edaf2181d71a88d812e0534e213d9b0e70c74a55479639fba40902",
+          "targets": [
+            "guide:smash-operations.md#h1 Operate SMASH",
+            "annotation:Api.hs:OffChainPoolMetadataAPI"
+          ]
+        },
+        "h2 SMASH Characteristics**": {
+          "sha256": "093a130d6b9b9d39e1938aef788c76034ee4e7ea5d27cc264437b74fa63e2f51",
+          "targets": [
+            "annotation:Http.hs:httpGetOffChainPoolData",
+            "annotation:Api.hs:OffChainPoolMetadataAPI"
+          ]
+        },
+        "h3 SMASH": {
+          "sha256": "0de4cd257a8a274dd8b50c231a680962378157fb12e1eedf429e0e61a6629faa",
+          "targets": [
+            "annotation:Http.hs:httpGetOffChainPoolData",
+            "annotation:Api.hs:OffChainPoolMetadataAPI"
+          ]
+        },
+        "h3 SMASH-server": {
+          "sha256": "dd0314a0eced9975d7ef885cdd06fcc1085bc8a2b5afecda73e85d3f1f80ae77",
+          "targets": [
+            "guide:smash-operations.md#h1 Operate SMASH",
+            "annotation:Api.hs:OffChainPoolMetadataAPI",
+            "annotation:Api.hs:DelistPoolAPI",
+            "annotation:Api.hs:FetchPoliciesAPI"
+          ]
+        },
+        "h2 Prerequisites": {
+          "sha256": "d40be0b21b9f9f1a7abb02ffa39312581b7814680bf6b86f7b31e758e4fffe86",
+          "targets": ["guide:smash-operations.md#h2 Prerequisites"]
+        },
+        "h2 Metadata": {
+          "sha256": "daa8bb53c7ac953fdf6294b46f527af07a87234966233db3a3551b00959d2d66",
+          "targets": [
+            "annotation:Http.hs:httpGetOffChainPoolData",
+            "annotation:Api.hs:OffChainPoolMetadataAPI"
+          ]
+        },
+        "h2 Installation": {
+          "sha256": "a15d12503bf00f654df068bd9e5af6259db1703ac04a61365b991ce52557e5ea",
+          "targets": ["guide:smash-operations.md#h2 Build and start"]
+        },
+        "h3 Build SMASH": {
+          "sha256": "1912cdec573524d992017e017a9133000139f2203c45bd3c1707bcb3a5df8638",
+          "targets": ["guide:smash-operations.md#h2 Build and start"]
+        },
+        "h2 How to run SMASH with the Cardano node and db-sync": {
+          "sha256": "b57efc484cedb2caa4bce4ab0be458bd1eebd74d06c9b483f6409ca8dee7ac41",
+          "targets": ["guide:smash-operations.md#h2 Build and start", "guide:running.md#h1 Running"]
+        },
+        "h2 What does smash-server do?": {
+          "sha256": "bdeb4dbf462dc2d665eb963f98c48e5f086166d3e4990da091ebc0c0aee42dfe",
+          "targets": [
+            "annotation:Api.hs:OffChainPoolMetadataAPI",
+            "annotation:Api.hs:DelistPoolAPI",
+            "annotation:Api.hs:AddTickerAPI"
+          ]
+        },
+        "h2 How to test this?": {
+          "sha256": "4a46402e6c1dee34198948d72398b89eeb960c39951a9f0f64641a94d0c21cf8",
+          "targets": [
+            "guide:smash-operations.md#h2 Verify and troubleshoot",
+            "annotation:Api.hs:DelistPoolAPI"
+          ]
+        },
+        "h2 What else is important?": {
+          "sha256": "44a6224f62c3de8d49b2ef4665ab1aebf53561acd5cf3f6d48fa629f2e7969c7",
+          "targets": [
+            "guide:smash-operations.md#h2 Build and start",
+            "annotation:Api.hs:BasicAuthURL"
+          ]
+        },
+        "h2 How to get the Swagger/OpenAPI info?": {
+          "sha256": "c1b0836b1c75dd13bdde814849ed487dc0d1b244fd02f63ab05307a628e2a29a",
+          "targets": ["annotation:Api.hs:SwaggerAPI"]
+        },
+        "h2 Delisting feature": {
+          "sha256": "0989c524f430fb1a1c434c48bc2379a2f0a0a1256c355c45d9c94dcae79f9d46",
+          "targets": [
+            "annotation:Api.hs:DelistPoolAPI",
+            "annotation:Api.hs:EnlistPoolAPI",
+            "annotation:Api.hs:DelistedPoolsAPI"
+          ]
+        },
+        "h2 Basic Auth and DB": {
+          "sha256": "23c030d9db7e55022abd07cd9064a3f65a2c0f7529c080f394ce52d09129b97f",
+          "targets": ["annotation:Api.hs:BasicAuthURL"]
+        },
+        "h2 How to insert the reserved ticker name?": {
+          "sha256": "8bb341e4ddeb65c669ed8f3fed8739611bc67ba7f27e398d682957717da39940",
+          "targets": ["annotation:Api.hs:AddTickerAPI", "annotation:Api.hs:ReservedTickersAPI"]
+        },
+        "h2 Checking the pool rejection errors": {
+          "sha256": "43b690e11745a3dbe274decf731fce67ff022b5780d979cec617cbc1913ed728",
+          "targets": ["annotation:Api.hs:FetchPoolErrorAPI"]
+        },
+        "h2 Pool unregistrations": {
+          "sha256": "36de3dd28647ac47ff6e8a459929e493f272091dca67596babce3dd9df26ba48",
+          "targets": ["annotation:Api.hs:RetiredPoolsAPI"]
+        }
+      }
+    },
+    "state-snapshot.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 State Snapshot": {
+          "sha256": "6aba7793a764730c8ca5bc48b8146813cf62b1655595bac1532c3f5e2924d69c",
+          "targets": ["guide:state-snapshot.md#h1 State Snapshot"]
+        },
+        "h2 Prerequisites": {
+          "sha256": "7cd1a5d0a11f9c64aa310813f9e17ef6b106d62b358d1c7884ab500d6dc724a9",
+          "targets": ["guide:state-snapshot.md#h2 Prerequisites"]
+        },
+        "h2 Constraints": {
+          "sha256": "0553a3f9c4736474e7ee65ba93d47e520beec1c07ba3b8b520dde5af3c3d1150",
+          "targets": ["guide:state-snapshot.md#h2 Constraints"]
+        },
+        "h2 Backends": {
+          "sha256": "4f619b5b74f210cff18e5c6bd9caa6aadfca6c904667e0cfe70f00b22ce0096e",
+          "targets": ["guide:state-snapshot.md#h2 Backends"]
+        },
+        "h2 Creating": {
+          "sha256": "ab46cd82c4741fd82c8759b55031c9aa187c3f41bbc652482f485cbf6bb4ea46",
+          "targets": ["guide:state-snapshot.md#h2 Creating"]
+        },
+        "h2 Restoring": {
+          "sha256": "f07e1533a649463640e57d1f4734755278068735d3dc8163d845864c85d386c5",
+          "targets": ["guide:state-snapshot.md#h2 Restoring"]
+        },
+        "h2 Converting between backends": {
+          "sha256": "73291b1449561619c37d2152da8d597aafc5c26c37c6a7f21919f1c01dcd1573",
+          "targets": ["guide:state-snapshot.md#h2 Converting between backends"]
+        },
+        "h2 Mainnet Snapshots": {
+          "sha256": "5295eefc1f4b5fbe165e516bfeca1bf7cac76f986ebf40c6302bbc973587e9df",
+          "targets": ["guide:state-snapshot.md#h2 Mainnet Snapshots"]
+        }
+      }
+    },
+    "troubleshooting.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Testing": {
+          "sha256": "6ce86ca0dbf2175ac0b5273252d7a39918b4d4782ec96fb77bfa273b5327dd3f",
+          "targets": ["guide:troubleshooting.md#h1 Testing"]
+        },
+        "h2 Unable to connect to Unix domain socket /var/run/postgresql/.s.PGSQL.5432": {
+          "sha256": "fdb7ec75e134018cebf91ac30c37e66aa98f3c49ecef6b11525942a6a570bb39",
+          "targets": [
+            "guide:troubleshooting.md#h2 Unable to connect to Unix domain socket /var/run/postgresql/.s.PGSQL.5432"
+          ]
+        }
+      }
+    },
+    "upgrading-postgresql.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Upgrading PostgreSQL": {
+          "sha256": "00fdd4100e635a72a6263ad8845a63170a79f7764f3cb543ba56d19f83cf67e8",
+          "targets": ["guide:upgrading-postgresql.md#h1 Upgrading PostgreSQL"]
+        },
+        "h2 Requirements": {
+          "sha256": "98063cf0cf4b9715fb3ca68bb1ac2df39a047133028b671a9e9489844e5365a8",
+          "targets": ["guide:upgrading-postgresql.md#h2 Requirements"]
+        },
+        "h2 Install a New PostgreSQL Version": {
+          "sha256": "7722b55905d183689f240b4359d82d5f67e1965a52dc2991e4d9a382ec655867",
+          "targets": ["guide:upgrading-postgresql.md#h2 Install a New PostgreSQL Version"]
+        },
+        "h2 Upgrade the Schemas": {
+          "sha256": "8b27a0e53447e527abcc9cafb654dc30e3cb9b4f21e681aabe966460c065426d",
+          "targets": ["guide:upgrading-postgresql.md#h2 Upgrade the Schemas"]
+        },
+        "h2 Clean Up": {
+          "sha256": "7038eea96e9657915475be153cb2f4a5c4442cb9f4b9511cda3699a32d17fd5a",
+          "targets": ["guide:upgrading-postgresql.md#h2 Clean Up"]
+        }
+      }
+    },
+    "validation.md": {
+      "preambleSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "headings": {
+        "h1 Validation": {
+          "sha256": "745c87f0773c73cbbfa4966effb26d1afac0bb1d2c9a2f9de29713aba870d17e",
+          "targets": ["guide:validation.md#h1 Validation"]
+        },
+        "h2 Assumptions": {
+          "sha256": "7bd45e6fa1ad06b9e2476f9c32e0a43c6082aaa1b9de99f5372b1c3d8e6559cb",
+          "targets": ["guide:validation.md#h2 Assumptions"]
+        },
+        "h2 Genesis Validation": {
+          "sha256": "e57d8bfd73c585f4f040bd0af68ef446a344511f62a16b8d8e28e2d9fdbb5dc0",
+          "targets": ["guide:validation.md#h2 Genesis Validation"]
+        },
+        "h2 Block Validation": {
+          "sha256": "4da5725f91e333fd78ecd8107eaccfdf6982af7c8219f41445e4361240cbde10",
+          "targets": ["guide:validation.md#h2 Block Validation"]
+        },
+        "h2 Transaction Validation": {
+          "sha256": "3f3abec29bd7e2e4dc07407e8bb264bf766e4b55f3259daa0b96b76cca3b6cc4",
+          "targets": ["guide:validation.md#h2 Transaction Validation"]
+        },
+        "h2 Runtime Reward Validations": {
+          "sha256": "2a8d8b5fc28d3da129444dc734581c5e57169bb9c7778831fae6f18e66d71051",
+          "targets": ["guide:validation.md#h2 Runtime Reward Validations"]
+        }
+      }
+    }
+  },
+  "targets": {
+    "annotation:Base.hs:SchemaVersion": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "SchemaVersion",
+      "sha256": "61ba8833b64eed215992bf9e1a8ecac8dfa83ae4fb72482e2e0f8d8649c0de84"
+    },
+    "annotation:Pool.hs:PoolHash": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "PoolHash",
+      "sha256": "a5351d299a0af76fd87bca5942084e948ec00dd0a9d1467062e26eee66fde74c"
+    },
+    "annotation:Base.hs:SlotLeader": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "SlotLeader",
+      "sha256": "ef03206481aa85eeea698676f7661646a1806966f19cc1ecd5526e972ff6a56b"
+    },
+    "annotation:Base.hs:Block": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "Block",
+      "sha256": "eb6cfa7c31d2e892342bc1f76e5e0579d2c6b479a141f925ee5baefa6894e8dc"
+    },
+    "annotation:Base.hs:Tx": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "Tx",
+      "sha256": "12d65ec5f3697191328d98dcd45d9233dcd6bc6bac10294132edfe68d67a14ab"
+    },
+    "annotation:Base.hs:TxCbor": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "TxCbor",
+      "sha256": "a3e4bbd60b8ec03ea8a7178e17a7f6b1dec37137ccbb22c611b0f2cf65e5bd83"
+    },
+    "annotation:Base.hs:ReverseIndex": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "ReverseIndex",
+      "sha256": "818e82c84086ad8e0e5a5cb26519fa0eccd055fff916c3b04ffe5df61c16d750"
+    },
+    "annotation:StakeDelegation.hs:StakeAddress": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "StakeAddress",
+      "sha256": "0a7ba8132130a4d38d05379dc7940215324a3ad59b1a8bad8311be46ca49f603"
+    },
+    "annotation:Base.hs:TxIn": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "TxIn",
+      "sha256": "d27389f77e5b506eb67c2403547849333b753c6322ca66394686eed62959e9b0"
+    },
+    "annotation:Base.hs:CollateralTxIn": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "CollateralTxIn",
+      "sha256": "386c284882a2779308114055d2a9a4557f395635963a116d6ffb2376f0145d7c"
+    },
+    "annotation:Base.hs:ReferenceTxIn": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "ReferenceTxIn",
+      "sha256": "f0d728fa934e607562ca959d5fad3efe4c502b4297abcf527985449bbeb4f41e"
+    },
+    "annotation:Base.hs:Meta": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "Meta",
+      "sha256": "c921cbcbdcb674d4660bc94e44032e6b665a3e5b0ff898ae236955f02b76c9d7"
+    },
+    "annotation:EpochAndProtocol.hs:Epoch": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "Epoch",
+      "sha256": "180c04b011b4d02c7813add85fc918ec5cac3b666c323814ff4f011c329f047a"
+    },
+    "annotation:EpochAndProtocol.hs:queryEpochEntryStmt": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Statement/EpochAndProtocol.hs",
+      "name": "queryEpochEntryStmt",
+      "sha256": "76b6f4fcaea81d4c7ab6a1c79d5d62d2df1adb2a4f73332d495d2efd61e37261"
+    },
+    "annotation:EpochAndProtocol.hs:appendEpochFinalizedStmt": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Statement/EpochAndProtocol.hs",
+      "name": "appendEpochFinalizedStmt",
+      "sha256": "51c0e3563d10b3bfa9e1a5ae326b117b13153aa37c840524dfc5c789a18c73ca"
+    },
+    "annotation:EpochAndProtocol.hs:setEpochSyncEnabledStmt": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Statement/EpochAndProtocol.hs",
+      "name": "setEpochSyncEnabledStmt",
+      "sha256": "9fcae37931e6d51a76cba004b424b08cc320a296f9c9b39d09a2bcb20be4a49d"
+    },
+    "annotation:EpochAndProtocol.hs:AdaPots": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "AdaPots",
+      "sha256": "3f318b0c21f03e91f25666d2b4ef01a24d67e2021a89aa365250af6b7eec76bd"
+    },
+    "annotation:Pool.hs:PoolMetadataRef": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "PoolMetadataRef",
+      "sha256": "8679f181fe1bdd5de3cb1edf95f51b2d93ddad3255881a144bd4c1566b0dfa5f"
+    },
+    "annotation:Pool.hs:PoolUpdate": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "PoolUpdate",
+      "sha256": "4eb0855457a95d8037cbac85536d45c44bce70d56af5c3271f66f8cc7e595ac5"
+    },
+    "annotation:Pool.hs:PoolOwner": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "PoolOwner",
+      "sha256": "4e53d3e2433b9d53e28f9d0ca676648a40850172aca6c070ee0e8a9a71a0a5ce"
+    },
+    "annotation:Pool.hs:PoolRetire": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "PoolRetire",
+      "sha256": "78bb5efe8d12bb402f703656ac8c262af6baf936f425206b5583741ba37498c6"
+    },
+    "annotation:Pool.hs:PoolRelay": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "PoolRelay",
+      "sha256": "dd12de91c8bafef7eddb66177933efc6d7588dd4c38c93c6144969b5b6dbc788"
+    },
+    "annotation:StakeDelegation.hs:StakeRegistration": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "StakeRegistration",
+      "sha256": "28943d56dde6d08a7b12c85b71e0ef4d098472f543ff4550d587b9da3572e55b"
+    },
+    "annotation:StakeDelegation.hs:StakeDeregistration": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "StakeDeregistration",
+      "sha256": "28609fbd806a3475ef819541925e02903e1c74f51490c7fc88fe59f967d129eb"
+    },
+    "annotation:StakeDelegation.hs:Delegation": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "Delegation",
+      "sha256": "690ffc6cd09a580b74d0678b3a050d209731082837c82bb47f5a4752f788fbf8"
+    },
+    "annotation:Base.hs:TxMetadata": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "TxMetadata",
+      "sha256": "3dcedc6ffde001caa7ece6e4b7163916aad8ee76aa85f5532991d8fbb714587b"
+    },
+    "annotation:StakeDelegation.hs:Reward": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "Reward",
+      "sha256": "20d12fa092224af3f058bffcfdb64bf3e03d2bf554f40d024c6aa9a572e25030"
+    },
+    "annotation:StakeDelegation.hs:RewardRest": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "RewardRest",
+      "sha256": "ac02b455c17e86395f124917f80b78cfc84b2639d997489a5522015bcf15777e"
+    },
+    "annotation:Base.hs:Withdrawal": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "Withdrawal",
+      "sha256": "8ee8f6dcad5dd28b6772e9ccfe4f27282080fcf9fdeaae50e49a32b0c875fa1a"
+    },
+    "annotation:StakeDelegation.hs:EpochStake": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "EpochStake",
+      "sha256": "fbd2dedde5de5cd474bcd1bcb3f9ecb2e97c6a91ad891de318c9101d9f0f5969"
+    },
+    "annotation:StakeDelegation.hs:EpochStakeProgress": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/StakeDelegation.hs",
+      "name": "EpochStakeProgress",
+      "sha256": "bfb9c4de66746d5130be88edbbb69ee74fb576141dad1944af762ff7ce3d5c03"
+    },
+    "annotation:EpochAndProtocol.hs:Treasury": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "Treasury",
+      "sha256": "2acc7fd802a9f942c9e7adae35ba879cbd5588e4068a021499724a8fe0cdc3a1"
+    },
+    "annotation:EpochAndProtocol.hs:Reserve": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "Reserve",
+      "sha256": "f5971e1293acdcf54e9ede2a72bdea26ff5ac483c10442f027074fb8afe3cbed"
+    },
+    "annotation:EpochAndProtocol.hs:PotTransfer": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "PotTransfer",
+      "sha256": "6cf8862398923e05c0a27409059534c46d097e349dde5b9822f764b007310c50"
+    },
+    "annotation:EpochAndProtocol.hs:EpochSyncTime": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "EpochSyncTime",
+      "sha256": "2ed77eb3bf10c2e17121c9e6737e1037f912aed035554f212209c102f1cdf0de"
+    },
+    "annotation:MultiAsset.hs:MultiAsset": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/MultiAsset.hs",
+      "name": "MultiAsset",
+      "sha256": "b607da3091a41758d3334b7e2a609698ac37c35597e6b5abb534ce8b378bc41d"
+    },
+    "annotation:MultiAsset.hs:MaTxMint": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/MultiAsset.hs",
+      "name": "MaTxMint",
+      "sha256": "4b0e10126820578c87da4d4fbe48c357f099c81602a0083daea0aa168d25ffc0"
+    },
+    "annotation:Base.hs:Redeemer": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "Redeemer",
+      "sha256": "5fe1ecd64fe3bcc54337cecce6ff9467184717b2fe7b094fee76611c84d930ee"
+    },
+    "annotation:Base.hs:Script": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "Script",
+      "sha256": "cc2635be357b286306574b79efc1e806445cdf45c2660f716c1feb9b13136bbe"
+    },
+    "annotation:Base.hs:Datum": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "Datum",
+      "sha256": "b249befc11e6766fdd360b7297161678931ce0d1ed679425f0df0e3586477c0c"
+    },
+    "annotation:Base.hs:RedeemerData": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "RedeemerData",
+      "sha256": "d79d4902d29c027f9ae72d4cf1bf0c249c4f9ef8e984eecaedfe7311ed2276e6"
+    },
+    "annotation:Base.hs:ExtraKeyWitness": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "ExtraKeyWitness",
+      "sha256": "9e14b3891e976d980d86b9b1f7b3e28fb3e30014d9be2c8dba67db6e993f66e0"
+    },
+    "annotation:GovernanceAndVoting.hs:ParamProposal": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "ParamProposal",
+      "sha256": "efbdd5249c50962c6efa1f2058c4848833b9e6e12ac08622bc33789a1d872665"
+    },
+    "annotation:EpochAndProtocol.hs:EpochParam": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "EpochParam",
+      "sha256": "8198ad5f6af498c6781497c3263e00689827777b66950501eec095f6494202ac"
+    },
+    "annotation:EpochAndProtocol.hs:CostModel": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "CostModel",
+      "sha256": "2fc053d25afd4ab73f5b9e8a87519258ff21aaf3023e06ffe98284a9948cc68e"
+    },
+    "annotation:Pool.hs:PoolStat": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "PoolStat",
+      "sha256": "dd89ef74dff40f7c9d6b7e97399147541eb935411de8fcfaeac26fcd78cacc4b"
+    },
+    "annotation:Base.hs:ExtraMigrations": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Base.hs",
+      "name": "ExtraMigrations",
+      "sha256": "eaba647d29646f52af45d640bf0d8bdcc0cae44030074159f461c654c897ff3b"
+    },
+    "annotation:GovernanceAndVoting.hs:DrepHash": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "DrepHash",
+      "sha256": "8f0e59412cae89fea9571971bbb13050bbae5c80ac95d8a1d87d272109e193f5"
+    },
+    "annotation:GovernanceAndVoting.hs:CommitteeHash": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "CommitteeHash",
+      "sha256": "c6de21c1e8a7fc4ad8cb9e8dae9b6c3318a9e827e8f6fb13a610c4b40b1af08b"
+    },
+    "annotation:GovernanceAndVoting.hs:DelegationVote": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "DelegationVote",
+      "sha256": "87239cc853a33981bae7509cbb682c11750088f21751bb572f21704d6a09dd79"
+    },
+    "annotation:GovernanceAndVoting.hs:CommitteeRegistration": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "CommitteeRegistration",
+      "sha256": "96e399a970632439cf94cf225a59bf9e81ea2eaa54dfb6b92360b8f3df280df5"
+    },
+    "annotation:GovernanceAndVoting.hs:CommitteeDeRegistration": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "CommitteeDeRegistration",
+      "sha256": "e94a607daa1790532b8fc6ae71cc7024121f490caf53e65ddc6a1c7b52b91596"
+    },
+    "annotation:GovernanceAndVoting.hs:DrepRegistration": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "DrepRegistration",
+      "sha256": "8cf6173071f4be1362f2a7f087fa5397f69e136e48c2ff875a3b187ebaef0881"
+    },
+    "annotation:GovernanceAndVoting.hs:VotingAnchor": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "VotingAnchor",
+      "sha256": "63640a239bfcb950c9f56411af16ba6b182fd62cfb85298980c28e17522fe947"
+    },
+    "annotation:GovernanceAndVoting.hs:GovActionProposal": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "GovActionProposal",
+      "sha256": "91b825146bd900b7cf7369f5f89446b90e1395dc19fed48067f0c2ee6a861570"
+    },
+    "annotation:GovernanceAndVoting.hs:TreasuryWithdrawal": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "TreasuryWithdrawal",
+      "sha256": "4519ecd37af14277bad08248deff2ed476bc29b0472d00eeb4b88e5d5ab61496"
+    },
+    "annotation:GovernanceAndVoting.hs:Committee": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "Committee",
+      "sha256": "bacaa43b3b2d8e950224845e21cc3461e13786ff56542dab1f54cd328e423941"
+    },
+    "annotation:GovernanceAndVoting.hs:CommitteeMember": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "CommitteeMember",
+      "sha256": "ddfa9f50ec6fbe37639598ed578f44f37848da199229d951de145b673f811bc4"
+    },
+    "annotation:GovernanceAndVoting.hs:Constitution": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "Constitution",
+      "sha256": "efe66ba8f305c0febbb91baa4f34698ce5bb275e0fe52377ea70fe30bca1a934"
+    },
+    "annotation:GovernanceAndVoting.hs:VotingProcedure": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "VotingProcedure",
+      "sha256": "cbf4f404c2d35bd9a2c39a4be0148699ffc608203fa9e30f7f82cd259cc9d12a"
+    },
+    "annotation:GovernanceAndVoting.hs:DrepDistr": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "DrepDistr",
+      "sha256": "152c80b44d052dc6cbe3a4314b1ebdfc9ec48b72ca6868f34daac0a1b52c1e42"
+    },
+    "annotation:EpochAndProtocol.hs:EpochState": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/EpochAndProtocol.hs",
+      "name": "EpochState",
+      "sha256": "fbdd956914d6051a990ee9f454b1ecff8a63b9f311387b65d884bf173f76ab64"
+    },
+    "annotation:GovernanceAndVoting.hs:EventInfo": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/GovernanceAndVoting.hs",
+      "name": "EventInfo",
+      "sha256": "e3ef6d46c3026046556a21efbc562826c0f3635c72b26538b6ae636844bf7e55"
+    },
+    "annotation:OffChain.hs:OffChainPoolData": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainPoolData",
+      "sha256": "86bf25ac931b0ce4841c800c3788dae480967b34496ab57a91c3cd30634e9ac4"
+    },
+    "annotation:OffChain.hs:OffChainPoolFetchError": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainPoolFetchError",
+      "sha256": "3a29e640bdc3fbf5c2683fc675e5e84a6b5c71a45871ccfe89f80310960c1c10"
+    },
+    "annotation:OffChain.hs:OffChainVoteData": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainVoteData",
+      "sha256": "55df667d0d9809808518dbde327b26e91ba483f3012b6aea9c7f890802d26d99"
+    },
+    "annotation:OffChain.hs:OffChainVoteGovActionData": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainVoteGovActionData",
+      "sha256": "736a04b363d7b93614cabc406e2860982972174c9eace8ec9650ea66d07fe30e"
+    },
+    "annotation:OffChain.hs:OffChainVoteDrepData": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainVoteDrepData",
+      "sha256": "85cd326f420b5836f9ebb41688ff60180fc5feac3f1110fdfc874494d9bed80e"
+    },
+    "annotation:OffChain.hs:OffChainVoteAuthor": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainVoteAuthor",
+      "sha256": "e6a13f0f80286502a2b3892df29d0495b43a18a111c2fb3ce4bd8a5093a3c984"
+    },
+    "annotation:OffChain.hs:OffChainVoteReference": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainVoteReference",
+      "sha256": "b16738ea440125f280b7b5f7b6ce003cff6bec1cf9cc9f1478f5dbca8d08dd30"
+    },
+    "annotation:OffChain.hs:OffChainVoteExternalUpdate": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainVoteExternalUpdate",
+      "sha256": "0e061ab3b91481d30f9f481672ba526d5fff82f95b06581e305af0100531512f"
+    },
+    "annotation:OffChain.hs:OffChainVoteFetchError": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/OffChain.hs",
+      "name": "OffChainVoteFetchError",
+      "sha256": "4c24a63271d772c609f5461c9f62d57c5d9decb6094f582257607e99ea74d56a"
+    },
+    "annotation:Pool.hs:ReservedPoolTicker": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "ReservedPoolTicker",
+      "sha256": "f990fe177b3431d73bf136a61a459ab5797e71a7d5b6836c91c02158f5fb7f3d"
+    },
+    "annotation:Pool.hs:DelistedPool": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Core/Pool.hs",
+      "name": "DelistedPool",
+      "sha256": "a644ffbb42613a27cd668c86f3331608d04ce18fd383dece67d399b7280243fe"
+    },
+    "annotation:TxOutCore.hs:TxOutCore": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Variants/TxOutCore.hs",
+      "name": "TxOutCore",
+      "sha256": "056223789141428c3e9611039e279e3cb9838446bdd9344644b4411c532bdfd8"
+    },
+    "annotation:TxOutCore.hs:CollateralTxOutCore": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Variants/TxOutCore.hs",
+      "name": "CollateralTxOutCore",
+      "sha256": "f64ff1e575acaa882e472e4d8e1a08acc967e27589cfe72f2b2d87444ea46d16"
+    },
+    "annotation:TxOutCore.hs:MaTxOutCore": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Variants/TxOutCore.hs",
+      "name": "MaTxOutCore",
+      "sha256": "5531ea36b236b6f29c2799a0db45a18e099c8e6ef3309e68492600f8e4e6ea87"
+    },
+    "annotation:TxOutAddress.hs:TxOutAddress": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Variants/TxOutAddress.hs",
+      "name": "TxOutAddress",
+      "sha256": "ff2de22c92407626206bb5a3c96cb8eb56b3e008a2eb5d213e0ebb0fcd68fbbd"
+    },
+    "annotation:TxOutAddress.hs:CollateralTxOutAddress": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Variants/TxOutAddress.hs",
+      "name": "CollateralTxOutAddress",
+      "sha256": "f7f79fb4d059ccf5c10c2920c52c45e5036fcbcd6c6ab8f20d5bd39a447cbdeb"
+    },
+    "annotation:TxOutAddress.hs:Address": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Variants/TxOutAddress.hs",
+      "name": "Address",
+      "sha256": "261037e0edf1f96a5444bd167f45c542b0de32a8883ecd7f43564e7d50f05ac0"
+    },
+    "annotation:TxOutAddress.hs:MaTxOutAddress": {
+      "kind": "annotation",
+      "file": "cardano-db/src/Cardano/Db/Schema/Variants/TxOutAddress.hs",
+      "name": "MaTxOutAddress",
+      "sha256": "2bcb2123a8de8ee7595679ff8262fc42426e82774bfe6144ada1e159219504e3"
+    },
+    "guide:building-running.md#h1 Building and Running the Cardano DB Sync Node": {
+      "kind": "guide",
+      "file": "docs/docs/guides/building-running.md",
+      "heading": "h1 Building and Running the Cardano DB Sync Node",
+      "sha256": "6ec0c15e477d752a44cd879e8e73dba04ac955a7d9133cc6257caca8d61ca02f"
+    },
+    "guide:building-running.md#h3 Set up and run a local node": {
+      "kind": "guide",
+      "file": "docs/docs/guides/building-running.md",
+      "heading": "h3 Set up and run a local node",
+      "sha256": "588e66e4f06e76300204d00fdcb5afe2bf3995bbca53d97713fd2ab22bc38203"
+    },
+    "guide:building-running.md#h3 Set up and run the db-sync node": {
+      "kind": "guide",
+      "file": "docs/docs/guides/building-running.md",
+      "heading": "h3 Set up and run the db-sync node",
+      "sha256": "807d15ed05be82f4e83f1ebb3b159657731b480afce4de0be2884969da628413"
+    },
+    "guide:building-running.md#h3 Clone repository": {
+      "kind": "guide",
+      "file": "docs/docs/guides/building-running.md",
+      "heading": "h3 Clone repository",
+      "sha256": "057daf76c0e32c2c88853365cca3142cd4b899c81e59542cc8943e704cb7b9ce"
+    },
+    "guide:building-running.md#h2 Using Cabal": {
+      "kind": "guide",
+      "file": "docs/docs/guides/building-running.md",
+      "heading": "h2 Using Cabal",
+      "sha256": "202126932ab3f37fc3da1ebdd98af53f56f676eb4c47c2ffa205a7e219bd6c01"
+    },
+    "guide:building-running.md#h2 Using Nix:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/building-running.md",
+      "heading": "h2 Using Nix:",
+      "sha256": "cbe08d6ce74db9347875d9b92d8bb28ac72615e2d8846b3bc7d4bc2faca166d2"
+    },
+    "guide:building-running.md#h3 Network Configuration, Genesis and Topology Files": {
+      "kind": "guide",
+      "file": "docs/docs/guides/building-running.md",
+      "heading": "h3 Network Configuration, Genesis and Topology Files",
+      "sha256": "3b7fae4242dc1310f0b359b871eef451f02e9512da1f2d0db4b0662adb73cb43"
+    },
+    "annotation:cardano-db-sync.hs:pCommandLine": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pCommandLine",
+      "sha256": "ff5dc0a61112854626c37e0b791d0d095359e6f8229f18205d51655f2f727c8f"
+    },
+    "annotation:cardano-db-sync.hs:pConfigFile": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pConfigFile",
+      "sha256": "d3073ebcd875f4c54c27b582f1102a3f8460cd446361b6c6953845807acf5b9c"
+    },
+    "annotation:cardano-db-sync.hs:pLedgerStateDir": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pLedgerStateDir",
+      "sha256": "5fafb1ff0c2bbcd8aea5d78c1622a9d54783969e552b84785dc9b4556d0b4c54"
+    },
+    "annotation:cardano-db-sync.hs:pMigrationDir": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pMigrationDir",
+      "sha256": "c4a4e52b48d2df35b035288ad7f4e234a8b7ed659ee972ef261e6debb650db83"
+    },
+    "annotation:cardano-db-sync.hs:pPGPassSource": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pPGPassSource",
+      "sha256": "229ae64fc3b8f66356efb9b0e4df525efc183eaefb14ecd12e4cff64e4bf2e94"
+    },
+    "annotation:cardano-db-sync.hs:pForceIndexes": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pForceIndexes",
+      "sha256": "bbf44db17cb1e51027346819275bb3e8b2995b639ea7060987ae258e67425ace"
+    },
+    "annotation:cardano-db-sync.hs:pHasCache": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pHasCache",
+      "sha256": "f732d1e5cfee86ee8245d2b06a8964bf71fc66e70015417a26ec8a5daf18a9fc"
+    },
+    "annotation:cardano-db-sync.hs:pAllowPrivateOffChainUrls": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pAllowPrivateOffChainUrls",
+      "sha256": "af41571395d1d0de5bb0486fed5b8b27b5b4e928f25d65f5fdc3548498c3ad18"
+    },
+    "annotation:cardano-db-sync.hs:pSocketPath": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pSocketPath",
+      "sha256": "7c72248b06eef612e0edcc04168bcd9f37839a71760fbd28426d84c39be05611"
+    },
+    "annotation:cardano-db-sync.hs:pTracerSocketPath": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pTracerSocketPath",
+      "sha256": "c111e165946315327eb5ebc20106a069a2d7efe37691e4cb777760da412fee13"
+    },
+    "annotation:cardano-db-sync.hs:pRollbackSlotNo": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pRollbackSlotNo",
+      "sha256": "dae3bc4bcbc7da921a9b3903b1ba516e16cdbb7a8d060504b6d3ce3009cb8206"
+    },
+    "annotation:cardano-db-sync.hs:pRejectDisableInOut": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pRejectDisableInOut",
+      "sha256": "7eed9e11868bf2f20b0f46a7fd2fade8384fe76ef35221c806de63908ad96aa7"
+    },
+    "annotation:cardano-db-sync.hs:pVersionCommand": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/cardano-db-sync.hs",
+      "name": "pVersionCommand",
+      "sha256": "875f990f1ce0290e13268451d4b850bcbd0b3c92e6b115fee7ca1bdd6a4a575a"
+    },
+    "annotation:Types.hs:SyncInsertConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "SyncInsertConfig",
+      "sha256": "baab2b5e1bdcdcc9a030ce6c4ef9886f0f23b59d56fc4678ee421ed6d7f043ca"
+    },
+    "annotation:Types.hs:RemoveJsonbFromSchemaConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "RemoveJsonbFromSchemaConfig",
+      "sha256": "0dc86caccbeda9c1cef82a13bde0ccaf2e09583e51555988fcbbb5e5a185fc88"
+    },
+    "annotation:Types.hs:ShelleyInsertConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "ShelleyInsertConfig",
+      "sha256": "7521498ace4b2fb640baabe8e0cfa635af85730ca88107bfd44918ec8cb57cc7"
+    },
+    "annotation:Types.hs:MultiAssetConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "MultiAssetConfig",
+      "sha256": "6cd9f6d71d8d412fb9b35c1b543b081082458c56b3560cf6a20af1940a5a1260"
+    },
+    "annotation:Types.hs:PlutusConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "PlutusConfig",
+      "sha256": "99f348565ef5711aa85cc9235ed5ac17035555b9849d2f71bc86c7ebb1a0b57e"
+    },
+    "annotation:Types.hs:SyncInsertOptions": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "SyncInsertOptions",
+      "sha256": "07bce76f7ebc5e776f8fecd5fc44f7c34ae24b38071eeb2869ec3b3f2c7a36e1"
+    },
+    "annotation:Types.hs:SyncInsertPreset": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "SyncInsertPreset",
+      "sha256": "05faa5cc49b71bf12c687b0cb2fc2dd0b9826a404f6a3ecd5593915083afa431"
+    },
+    "annotation:Types.hs:TxCBORConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "TxCBORConfig",
+      "sha256": "17bd8a5006963685a66715fc4bc91564f06e0aae7266a7bb653dfbc5160651bb"
+    },
+    "annotation:Types.hs:TxOutConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "TxOutConfig",
+      "sha256": "24c807d0397ae33fe7472ad7f6c72af8163f60a415e81398ed13cb655503f405"
+    },
+    "guide:trimming.md#h2 Choose a mode": {
+      "kind": "guide",
+      "file": "docs/docs/guides/trimming.md",
+      "heading": "h2 Choose a mode",
+      "sha256": "5d6706b6b72279289cf97182570a43a641c6d8869baa919ee3d042718e42d17f"
+    },
+    "annotation:Types.hs:ForceTxIn": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "ForceTxIn",
+      "sha256": "fc325e0f6c1414c0201f938acce7da6786393d0c13a7fdf5a8af9b8344676ea0"
+    },
+    "annotation:Types.hs:UseTxOutAddress": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "UseTxOutAddress",
+      "sha256": "ab07a581f37e315958abce69501a2a258e756f0adb434592424c8d1c9f1de85f"
+    },
+    "annotation:Types.hs:LedgerInsertConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "LedgerInsertConfig",
+      "sha256": "21ab4d2a781bdb33cd9f2ef35552f8eb9db3774455bc260ffe6f8ffc24af94ea"
+    },
+    "annotation:Types.hs:MetadataConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "MetadataConfig",
+      "sha256": "1d4d383c4b23c2dbeb10b42d677ebfa2158d16fe2597500ac925fe3b612295ec"
+    },
+    "annotation:Types.hs:GovernanceConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "GovernanceConfig",
+      "sha256": "8fdbd30f5a2e85e537d27f5cf2ebd08a9f37beddda24f7a93ea03e383a8594e4"
+    },
+    "annotation:Types.hs:OffchainPoolDataConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "OffchainPoolDataConfig",
+      "sha256": "68c22b91d1a08c9faa1920dc1192b137f139e500d9ebfebc67dac087edb57fca"
+    },
+    "annotation:Types.hs:OffchainVoteDataConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "OffchainVoteDataConfig",
+      "sha256": "28625bd7c77477532a1a35a6cb5a54de32871b9d6b58e6672d08a8f45e4e9e50"
+    },
+    "annotation:Types.hs:PoolStatsConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "PoolStatsConfig",
+      "sha256": "0587d2f8281e58b0d223899f7a8dfe764b84fce52d15c51903d4c6a12b7c5acd"
+    },
+    "annotation:Types.hs:EpochConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "EpochConfig",
+      "sha256": "a17c377e260e7f56b900facb6dfdf2d2688d88f049c5bff974123b2a6bab638c"
+    },
+    "annotation:Types.hs:SnapshotIntervalConfig": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "SnapshotIntervalConfig",
+      "sha256": "867e0420a5b618f9df5f9c7b193fe0e26d6ddcf4739d19d2a7f5c067b9dd002c"
+    },
+    "annotation:Types.hs:LedgerBackend": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/Config/Types.hs",
+      "name": "LedgerBackend",
+      "sha256": "af5a0dd806a24db961afd26945fc06a0f6f7eb26a290b993cb04005229e9a3b5"
+    },
+    "guide:database-encode-decode.md#h1 Creating Hasql Encoders, Decoders, and DbInfo Instances": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h1 Creating Hasql Encoders, Decoders, and DbInfo Instances",
+      "sha256": "92c07f59f42d6d08c1c940be89f0698b838bd69bd371969d26f9fb3b9a147d8b"
+    },
+    "guide:database-encode-decode.md#h2 DbM Monad - The Foundation": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 DbM Monad - The Foundation",
+      "sha256": "fa4200f9fa86b7d06a9bb67a2996a489cb87194568c491c8ced2c17cbcc022ed"
+    },
+    "guide:database-encode-decode.md#h2 Database Execution Functions": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Database Execution Functions",
+      "sha256": "fe0c6fca5342446bafc3d4111904d940792914bad4631c8e0ec18eceafb0970d"
+    },
+    "guide:database-encode-decode.md#h3 Transaction-Based Runners": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Transaction-Based Runners",
+      "sha256": "1a2be9bf12ad13d497ab78f9345cf5e138c40209bf681d92b9526f5f1991f134"
+    },
+    "guide:database-encode-decode.md#h3 Direct Runners (No Transaction Management)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Direct Runners (No Transaction Management)",
+      "sha256": "816e71909bae3ddfbac4d35f21cdf5b072c0470a718c93e093c30d267fa760f9"
+    },
+    "guide:database-encode-decode.md#h3 Standalone Runners": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Standalone Runners",
+      "sha256": "8d36f98b7c52fa6295332b174df93fd4da81fff94bffcb1d9d04483be060214b"
+    },
+    "guide:database-encode-decode.md#h3 Pool-Based Runners": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Pool-Based Runners",
+      "sha256": "a26d1f865cfc30fa720d96c9d28bb7745276496c22469361327873fb7b8f26cd"
+    },
+    "guide:database-encode-decode.md#h3 Basic Usage": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Basic Usage",
+      "sha256": "70352fc169f14fe14e6279aa89b6056ea98a68e55d392bad581bac4c8dfbf31a"
+    },
+    "guide:database-encode-decode.md#h3 Error Handling Patterns": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Error Handling Patterns",
+      "sha256": "cfee54e9ee9677fe72c48e8b95b4a99e5a003dcc5e3ed0788c88fd04f02a6547"
+    },
+    "guide:database-encode-decode.md#h2 Data Type Definition": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Data Type Definition",
+      "sha256": "b9c2d5c0a07bb29457e8254c33899047ec810055d296306ea57f489fd6dd77ae"
+    },
+    "guide:database-encode-decode.md#h2 DbInfo Instance": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 DbInfo Instance",
+      "sha256": "8a9e998bdbe60bd239cc287d28db371896897e6ebf329aaeba4596f423852d8c"
+    },
+    "guide:database-encode-decode.md#h3 DbInfo Configuration Options": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 DbInfo Configuration Options",
+      "sha256": "03497988ab914daacfe0dd5ff6b993360e3941013915e9d8ea0075dc765a6177"
+    },
+    "guide:database-encode-decode.md#h2 Entity Decoder": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Entity Decoder",
+      "sha256": "4a4a2712c811d7e5c05102b20a5d1b8f1877f1872fc93e43cd62181f466ce812"
+    },
+    "guide:database-encode-decode.md#h2 Record Decoder": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Record Decoder",
+      "sha256": "b1ad68053893b89667adf54929c2f869e2763f02de897980273d733b16292b42"
+    },
+    "guide:database-encode-decode.md#h3 Decoder Patterns": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Decoder Patterns",
+      "sha256": "9d267a49c3d37f57bdfa9eede600c3581563b6eb9be6b002d6555ba276970d33"
+    },
+    "guide:database-encode-decode.md#h2 Entity Encoder": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Entity Encoder",
+      "sha256": "f2cee5ca8d929a2cba4928227c91ca229dcb4e607aacb9a218879267c5c47a88"
+    },
+    "guide:database-encode-decode.md#h2 Record Encoder": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Record Encoder",
+      "sha256": "62c0fc13c6269bbb20ee9a95e1a383814063a8ab8108c14049a763952bcada5a"
+    },
+    "guide:database-encode-decode.md#h3 Encoder Patterns": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Encoder Patterns",
+      "sha256": "0ea8e5489be5c5eedc7a53e31ab8aa8641b2fe0b29d1a1f1dea132b7ba5c2ba9"
+    },
+    "guide:database-encode-decode.md#h2 Bulk Encoder": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Bulk Encoder",
+      "sha256": "419bd83088028e445ff4c8cd2bbadc90274e024a213d770cda748e4fcecb8090"
+    },
+    "guide:database-encode-decode.md#h3 Bulk Encoder Utilities": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Bulk Encoder Utilities",
+      "sha256": "5c87d840c706a2244c0d9368323ed12aa96f9249376a0067fb5c74f3d9899414"
+    },
+    "guide:database-encode-decode.md#h2 Complete Example": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Complete Example",
+      "sha256": "ecf4ce165179bc8a9cf517188c7812b84cbf2a635ba0bf8138ee700bf74d1c1b"
+    },
+    "guide:database-encode-decode.md#h2 Field Naming Convention": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Field Naming Convention",
+      "sha256": "efb7e7dbbbb92cad42ce3d3994b39f915bfa67f335704e3b6b8073741995effd"
+    },
+    "guide:database-encode-decode.md#h2 Type Mapping Reference": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Type Mapping Reference",
+      "sha256": "c77c3a1a18a258eeb9a27142c04ea1b459c4cb48751af1df82b8b489549a1159"
+    },
+    "guide:database-encode-decode.md#h2 Common Patterns": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h2 Common Patterns",
+      "sha256": "8338c2ae9a38224360c45a7963c408fba46e4141065500b94a62b71e005fd521"
+    },
+    "guide:database-encode-decode.md#h3 JSON Fields": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 JSON Fields",
+      "sha256": "17525daf1f88816151e8044a755678622da69f7e359f25f31b4fe00cd034a4b1"
+    },
+    "guide:database-encode-decode.md#h3 Unique Constraints": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Unique Constraints",
+      "sha256": "d00fdef3dbb353606514315ab3a6af8086441a2740636097d9e111aad5d738e7"
+    },
+    "guide:database-encode-decode.md#h3 Generated Fields": {
+      "kind": "guide",
+      "file": "docs/docs/guides/database-encode-decode.md",
+      "heading": "h3 Generated Fields",
+      "sha256": "45bc0b8041e11f1b94d984e4f13dec62b6ef6243acb18e0c6e87b27fa80150ac"
+    },
+    "guide:docker.md#h1 Docker": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h1 Docker",
+      "sha256": "6962a80b551c90f840e6c427ec5ca3e33f1367d014961e1c8cdbf8cf3e0de992"
+    },
+    "guide:docker.md#h2 Quickstart": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h2 Quickstart",
+      "sha256": "3b74c318f7fdadda630020909f3f02db6cc1d2fd25d65a23211c8636bf4af09e"
+    },
+    "guide:docker.md#h3 Connecting to a Other Networks": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h3 Connecting to a Other Networks",
+      "sha256": "7b24bcfa46e69eb14a554cbf044c91ff374a260acbab1407bf54bbea84e1caee"
+    },
+    "guide:docker.md#h2 Running cardano-db-sync": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h2 Running cardano-db-sync",
+      "sha256": "a54ca1b9199c6bacae3b5c156f1961e7f8cebdcf8d66fd4f7494caf873ddb495"
+    },
+    "guide:docker.md#h3 Environment Variables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h3 Environment Variables",
+      "sha256": "358be649df88942e48785d45eeec6a4a6a8f30060ae39e3b72ca46e95dd1fc4b"
+    },
+    "guide:docker.md#h4 NETWORK": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 NETWORK",
+      "sha256": "659b201d8a9122c036f2e273019c31464c2eac75e4e08043d51e71016bbd5965"
+    },
+    "guide:docker.md#h4 POSTGRES_HOST": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_HOST",
+      "sha256": "abad5077c1fa76d412972c96a5d063dc85e718b164dcf345ac94d71ee9a24946"
+    },
+    "guide:docker.md#h4 POSTGRES_PORT": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_PORT",
+      "sha256": "ee42a1417ff3662e88da4010615846b41a000800df6304ff5d734c6602210f0e"
+    },
+    "guide:docker.md#h4 POSTGRES_DB": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_DB",
+      "sha256": "db231c647eb6595d17d6d9eb328955fd2b2b779810770a468f3cae6de59eaa16"
+    },
+    "guide:docker.md#h4 POSTGRES_USER": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_USER",
+      "sha256": "c985ec047af87f70f2f59f11bfb60de33d80166c20302788fe7e61cae0ff2dff"
+    },
+    "guide:docker.md#h4 POSTGRES_PASSWORD": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_PASSWORD",
+      "sha256": "eac5da1ea7829e8cc830885fb325e6edec32d710e0839dd4b8297a43954c0d11"
+    },
+    "guide:docker.md#h4 PGPASSFILE": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 PGPASSFILE",
+      "sha256": "091b7100ba608e096f0c33d6556bb921dd3847acf676dcd741f341fa39f50bb6"
+    },
+    "guide:docker.md#h4 RESTORE_SNAPSHOT (optional)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 RESTORE_SNAPSHOT (optional)",
+      "sha256": "dbf55cad39f53b451ebbf3570275d7815c077e82d8f7cc9cbb78f157948ec993"
+    },
+    "guide:docker.md#h4 DB_SYNC_CONFIG (optional)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 DB_SYNC_CONFIG (optional)",
+      "sha256": "f01b205646f67936f895ba512e6e36784bec5fe22179e79cd5594210163020b1"
+    },
+    "guide:docker.md#h4 EXTRA_DB_SYNC_ARGS (optional)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 EXTRA_DB_SYNC_ARGS (optional)",
+      "sha256": "9ca54c74ae36905556fac831c2dc35b6e37585fa66a732c1fe344d7c7d3ce5ed"
+    },
+    "guide:docker.md#h3 Overriding Network Configuration": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h3 Overriding Network Configuration",
+      "sha256": "66e36cd9226da4080f6b45b550adb48b7a0d9bda4bc393afecbc5eefbab1544b"
+    },
+    "guide:docker.md#h3 Restoring From Snapshots": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h3 Restoring From Snapshots",
+      "sha256": "dfe2cb95e52d07367349402e210e3b332ffa4ca82483e9fa4ef1b6317ca95622"
+    },
+    "guide:docker.md#h3 Advanced Usage": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h3 Advanced Usage",
+      "sha256": "701cc42c236354d2a7f4a1614e43cdc57602f76ac30518a38de6c4f370d17b52"
+    },
+    "guide:docker.md#h2 Running cardano-smash-server": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h2 Running cardano-smash-server",
+      "sha256": "6e30fefa8d0f9c1ee1596319876ff5aea410a6c6c145df770f852c0929fd5955"
+    },
+    "guide:docker.md#h3 Environment Variables [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h3 Environment Variables [2]",
+      "sha256": "5465c90e77d9b3b1a7fa5b01e346ae787b8c1a27408fa1b16bccdd1d344ef22f"
+    },
+    "guide:docker.md#h4 NETWORK (optional)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 NETWORK (optional)",
+      "sha256": "8204d95aaac683d420365205d0d240b5523e36b918717030f2f777ef1182237f"
+    },
+    "guide:docker.md#h4 POSTGRES_HOST [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_HOST [2]",
+      "sha256": "abad5077c1fa76d412972c96a5d063dc85e718b164dcf345ac94d71ee9a24946"
+    },
+    "guide:docker.md#h4 POSTGRES_PORT [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_PORT [2]",
+      "sha256": "ee42a1417ff3662e88da4010615846b41a000800df6304ff5d734c6602210f0e"
+    },
+    "guide:docker.md#h4 POSTGRES_DB [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_DB [2]",
+      "sha256": "db231c647eb6595d17d6d9eb328955fd2b2b779810770a468f3cae6de59eaa16"
+    },
+    "guide:docker.md#h4 POSTGRES_USER [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_USER [2]",
+      "sha256": "c985ec047af87f70f2f59f11bfb60de33d80166c20302788fe7e61cae0ff2dff"
+    },
+    "guide:docker.md#h4 POSTGRES_PASSWORD [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 POSTGRES_PASSWORD [2]",
+      "sha256": "eac5da1ea7829e8cc830885fb325e6edec32d710e0839dd4b8297a43954c0d11"
+    },
+    "guide:docker.md#h4 PGPASSFILE [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 PGPASSFILE [2]",
+      "sha256": "091b7100ba608e096f0c33d6556bb921dd3847acf676dcd741f341fa39f50bb6"
+    },
+    "guide:docker.md#h4 SMASH_USER (optional)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 SMASH_USER (optional)",
+      "sha256": "3aa8028416d591b1c89a51107a48360a8e974f914c08d899336a1f663d3fe99f"
+    },
+    "guide:docker.md#h4 SMASH_PASSWORD (optional)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h4 SMASH_PASSWORD (optional)",
+      "sha256": "f5e2f1c1528445536d6b1a8d1c27bb458c2df1946ed1b347477b36d3852469c4"
+    },
+    "guide:docker.md#h3 Advanced Usage [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h3 Advanced Usage [2]",
+      "sha256": "32879df1663360dedf56a89053824ee6adf3c2e4bfbc421302f2d18d88ec4b0d"
+    },
+    "guide:docker.md#h2 Building": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h2 Building",
+      "sha256": "f93f453499fc0c64b2d7d62a691fa9ed788c272231b04a8ac1a7f1d52a9f4036"
+    },
+    "guide:docker.md#h2 Running Tests with Docker PostgreSQL": {
+      "kind": "guide",
+      "file": "docs/docs/guides/docker.md",
+      "heading": "h2 Running Tests with Docker PostgreSQL",
+      "sha256": "3d0aa46ee8a8bc8db47708fe42b8df534b1e144de9ba5e6b443a36fd5310818a"
+    },
+    "guide:installing-with-nix.md#h1 Installing with Nix": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing-with-nix.md",
+      "heading": "h1 Installing with Nix",
+      "sha256": "3aef6b25773f58da1e665c638b0c55024397f57cee5ec85182bab6c1ec8fc5fe"
+    },
+    "guide:installing-with-nix.md#h2 Prerequisites": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing-with-nix.md",
+      "heading": "h2 Prerequisites",
+      "sha256": "dfad58284a75a264e282d223fe4f1c6f8cc72f7d865935f06a60ec68f0511e35"
+    },
+    "guide:installing-with-nix.md#h2 Configure Nix": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing-with-nix.md",
+      "heading": "h2 Configure Nix",
+      "sha256": "f1d4f993064635bf1e93aa15651047434245158e9b464d6837da6ffdac19719e"
+    },
+    "guide:installing-with-nix.md#h2 Add the Binary Cache": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing-with-nix.md",
+      "heading": "h2 Add the Binary Cache",
+      "sha256": "64885de40ad8e175379bbe1c09512c3a0005546e6b9b71c7c68eee3bd23526ee"
+    },
+    "guide:installing-with-nix.md#h2 Download the Source": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing-with-nix.md",
+      "heading": "h2 Download the Source",
+      "sha256": "bc97ae40037bb97b962cbb6b1c01f4ae0b2f84614bb8165cae7c521575aee3a8"
+    },
+    "guide:installing-with-nix.md#h2 Build and Install": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing-with-nix.md",
+      "heading": "h2 Build and Install",
+      "sha256": "1829b38aaacc2e91e63a7252673387b4bade5d4d4f1a7170df354bae186a60fd"
+    },
+    "guide:installing.md#h1 Installing from Source (without Nix)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h1 Installing from Source (without Nix)",
+      "sha256": "2a036c4f3f78738922ef66cb65772a58aeb75d9e61dcf5c83f951105b6b7ed56"
+    },
+    "guide:installing.md#h2 Prerequisites": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h2 Prerequisites",
+      "sha256": "e46f0102176e25ce7242ee6e10cbc5a7e383449c6404f3f583429a1a266fbac3"
+    },
+    "guide:installing.md#h2 Install Dependencies": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h2 Install Dependencies",
+      "sha256": "846e04c21b4b3392a0715dff498a2a117ac9f67513a89e6dbfba08474ca093d9"
+    },
+    "guide:installing.md#h3 Install GHC and Cabal": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h3 Install GHC and Cabal",
+      "sha256": "e56c22824b246d7e36ef82bcbccbe6cf885380e6f1d7bd73612e9191b2a1de00"
+    },
+    "guide:installing.md#h3 Install Sodium": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h3 Install Sodium",
+      "sha256": "941e142ded4c659519ee5a573b46b57710aa0b01a0ac2a1251a0b8441d582890"
+    },
+    "guide:installing.md#h3 Installing Secp256k1": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h3 Installing Secp256k1",
+      "sha256": "f9c89cd6837e292384e8b0ccd7b66bc9a70ab4a6e97a027ddb6e58cac9246055"
+    },
+    "guide:installing.md#h3 Installing blst": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h3 Installing blst",
+      "sha256": "ce9c01c0214650224f6adb89ee968565adb001aaa913701bbe56a026bbeb1efa"
+    },
+    "guide:installing.md#h4 MACOS:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h4 MACOS:",
+      "sha256": "fe9654ea6c3394446de0ca42212c1ec2a19d4306eec2ceb550ffb4cd2d2aeb26"
+    },
+    "guide:installing.md#h2 Install Cardano DB Sync": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h2 Install Cardano DB Sync",
+      "sha256": "913e833b58f7676e891cbcc8fc0361d4876a9e506cf572e0d07690ada9b6af79"
+    },
+    "guide:installing.md#h3 Download the Source": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h3 Download the Source",
+      "sha256": "a4432bf27cd80c45cf5f387a3ee68eaaad4ae6eac7e185c7ab58105492503452"
+    },
+    "guide:installing.md#h3 Configure Build Options": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h3 Configure Build Options",
+      "sha256": "6ed54b9df2d081fe8c3da0def8c9bed535d9bb9e2986735f31886abe2543e23e"
+    },
+    "guide:installing.md#h3 Build and Install": {
+      "kind": "guide",
+      "file": "docs/docs/guides/installing.md",
+      "heading": "h3 Build and Install",
+      "sha256": "698eb9adabc44833de698873cfb405f87942cb5a52a16211331b8182f34c13e9"
+    },
+    "guide:interesting-queries.md#h1 Interesting SQL queries": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h1 Interesting SQL queries",
+      "sha256": "a3e45163f105c7c857cf4de6e5f130b79ac21b1d514dbdb95db9f7beb36d6d93"
+    },
+    "guide:interesting-queries.md#h3 Chain meta data (queryMeta)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Chain meta data (queryMeta)",
+      "sha256": "da941ea3640c217fcafeaee2daec2cadc336db9266efe69cfc768fb85b8064e1"
+    },
+    "guide:interesting-queries.md#h3 Current total on-chain supply of Ada (queryTotalSupply)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Current total on-chain supply of Ada (queryTotalSupply)",
+      "sha256": "6df8ee51b0cb7a2e92e370bd9ea265a079f1b8efecbbfaea86d4a8f75004c97f"
+    },
+    "guide:interesting-queries.md#h3 Slot number of the most recent block (queryLatestSlotNo)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Slot number of the most recent block (queryLatestSlotNo)",
+      "sha256": "913f1d73600f1ac0f8a378e84efe1e66441088f79ee5efa33eeb41c649ccfa22"
+    },
+    "guide:interesting-queries.md#h3 Size of the cexplorer database": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Size of the cexplorer database",
+      "sha256": "b3f9b9d9dc7b6497a3230d72f61841b40f8e53a204ba8f10767a9b3bbb480d38"
+    },
+    "guide:interesting-queries.md#h3 Size of the cexplorer database table": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Size of the cexplorer database table",
+      "sha256": "0ef9d234e62f070cefc5af5a9f5aadf28d147db4db857d14ba2503e78060944d"
+    },
+    "guide:interesting-queries.md#h3 Sync progress of db-sync": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Sync progress of db-sync",
+      "sha256": "0ca2eae83deb733c306e8929514a8d4693b9cb0548bad6fd0796a7e1e32c2cf3"
+    },
+    "guide:interesting-queries.md#h3 Current valid pools": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Current valid pools",
+      "sha256": "d0a199ad724965fac4a0d0cf5b69770fa873500861ad9e9993c63061c314af1c"
+    },
+    "guide:interesting-queries.md#h3 Get the stake address for a given Shelley address:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the stake address for a given Shelley address:",
+      "sha256": "b07f3d577f4ff637aacaf8bbc1ec88bc194e7ae83aa54b9289a7f22ab0c48fcc"
+    },
+    "guide:interesting-queries.md#h3 Transaction fee for specified transaction hash:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Transaction fee for specified transaction hash:",
+      "sha256": "779b9c6e96ae0c4a737ff27d5343e362e7065753d32e70eac9384095f681e30e"
+    },
+    "guide:interesting-queries.md#h3 Transaction outputs for specified transaction hash:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Transaction outputs for specified transaction hash:",
+      "sha256": "b0a8d5b69bebafea73e45f33d9ebefa98d2e6004883997d4709deb6c37e77eab"
+    },
+    "guide:interesting-queries.md#h3 Transaction inputs for specified transaction hash:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Transaction inputs for specified transaction hash:",
+      "sha256": "ff415905e450d2695ffbf597230d538954e6d53a9d98714834fdd87774f8f8d1"
+    },
+    "guide:interesting-queries.md#h3 Get per epoch performance statistics (sync time, tx count, etc):": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get per epoch performance statistics (sync time, tx count, etc):",
+      "sha256": "f72e513170ee21afa92243fd586c396702a9023b7d139eaa530609c8ff44dd07"
+    },
+    "guide:interesting-queries.md#h3 Transaction withdrawals for specified transaction hash:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Transaction withdrawals for specified transaction hash:",
+      "sha256": "1693e05980179e7dc77bd4d4cdaa1fd7b932d9f14aa80516128d2376938893d9"
+    },
+    "guide:interesting-queries.md#h3 Get the stake distribution for each pool for a given epoch:": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the stake distribution for each pool for a given epoch:",
+      "sha256": "691b409718113805eca6025448d232c0b5f570ee100d3c0a49502eb2bb84768e"
+    },
+    "guide:interesting-queries.md#h3 Get the delegation history for a specified stake address": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the delegation history for a specified stake address",
+      "sha256": "b84d14dc8c1f6081e23062eca94eef00c7cfa73f99f5a77c225281f1cdc10a66"
+    },
+    "guide:interesting-queries.md#h3 Get the reward history for a specified stake address": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the reward history for a specified stake address",
+      "sha256": "e0406f78e778bfce0d0a77262aadc18bd2d3b62de5cc2829706141c73ac8e6ab"
+    },
+    "guide:interesting-queries.md#h3 Get the block number of blocks created in an epoch by a specified pool": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the block number of blocks created in an epoch by a specified pool",
+      "sha256": "5389321553cb8dd24b09c4a2d36e28b123ff24f741c29d50b236b71885a1b1da"
+    },
+    "guide:interesting-queries.md#h3 Get the number of blocks created by a specified pool for each epoch": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the number of blocks created by a specified pool for each epoch",
+      "sha256": "58f25391a3529a1a795fc9177b1a4946080e7c644ed6503f5d7f2efe3a2ced0d"
+    },
+    "guide:interesting-queries.md#h3 Get the tx_id, tx_block_id, tx_out_address of a voting registration.": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the tx_id, tx_block_id, tx_out_address of a voting registration.",
+      "sha256": "b643dfc37ba01f0a8c64206ecae894ce268a0527c9477e268fd3f11f1e38edad"
+    },
+    "guide:interesting-queries.md#h3 Get the amount delegated by epoch for a specified address": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the amount delegated by epoch for a specified address",
+      "sha256": "3874c3af39eac3dd98ebab7ef870d19b7f0512f761ca7fc9aa9b9a286fa4adc4"
+    },
+    "guide:interesting-queries.md#h3 Get all reward account deposits": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get all reward account deposits",
+      "sha256": "34302124e6897360211755d404f052cd0b9c6e5b5320a8782b3a95134bd5e819"
+    },
+    "guide:interesting-queries.md#h3 Get historical UTxO set for a given timestamp": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get historical UTxO set for a given timestamp",
+      "sha256": "671f0b763b457fb742ad9e76b477a03ea92f80a0aa60e7b76005001ce2c878be"
+    },
+    "guide:interesting-queries.md#h3 Get tagged Genesis addresses": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get tagged Genesis addresses",
+      "sha256": "4d8fa5e7d45f8a587e76fa7395d6ffa37b05a381dd8d1fa906278602ea21dd68"
+    },
+    "guide:interesting-queries.md#h3 Get Ada in UTxO locked by scripts": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get Ada in UTxO locked by scripts",
+      "sha256": "5fe15ac914a3d30a6e7a0a4e288044f59621ee7a00e8cf6f49a34583b949f99a"
+    },
+    "guide:interesting-queries.md#h3 Get information about script tx's": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get information about script tx's",
+      "sha256": "3ec8e25926f27a8b4e5e8b4c10e4b446971b329c0dce0b6b9a1aa80be1bfb76b"
+    },
+    "guide:interesting-queries.md#h3 Get the sum of collatereal input lost": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get the sum of collatereal input lost",
+      "sha256": "c7ec66aa0b220130dbe4399f115cd2279fc7f2b7489c0caa7937a19c48413316"
+    },
+    "guide:interesting-queries.md#h3 Get all uses of a spend script and how much ada it unlocked from an output": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get all uses of a spend script and how much ada it unlocked from an output",
+      "sha256": "e9bc7fa94f97590bc06ffa86f8ffe6434abf610fa70295a232765dfc35c49685"
+    },
+    "guide:interesting-queries.md#h3 Get all mint scripts": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get all mint scripts",
+      "sha256": "a63fd39366850311019b62bc24e9e3618ee97593f67b58cf37b00b229a26beae"
+    },
+    "guide:interesting-queries.md#h3 Get all assets with quantities and count of mints": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get all assets with quantities and count of mints",
+      "sha256": "45ad2e38e3813ba3a33fc1893bbf7063d8bc5c74b9f6ce2b0f500bee2c7a4eb9"
+    },
+    "guide:interesting-queries.md#h3 Get blocks with 0 transactions and the pools that forged it": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Get blocks with 0 transactions and the pools that forged it",
+      "sha256": "a0a3ed4aa4381e77f9a47bc045e3a4b5fc820ce54e35ed779efc129bd08bb49c"
+    },
+    "guide:interesting-queries.md#h3 Query all delegators and some basic info": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Query all delegators and some basic info",
+      "sha256": "b5e627abf0e858fb2c25ff40541b312c5387971ec32a724897a714efbca7fe53"
+    },
+    "guide:interesting-queries.md#h3 Find all incorrect entries in epoch table": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Find all incorrect entries in epoch table",
+      "sha256": "5cf55a83c0d48d8af8dc3ab755d91eeaf09d3eb8e60a2406245efc329e60102d"
+    },
+    "guide:interesting-queries.md#h2 Community Queries": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h2 Community Queries",
+      "sha256": "ed23a8b6db616c9e57f769f1e34f7fc1444e6df444c34d53759e1b07a25201b8"
+    },
+    "guide:interesting-queries.md#h3 Koios": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Koios",
+      "sha256": "23b6abc42d5535246cac3e8a71e982e883de1500c2b8f0592071ce47490c2f64"
+    },
+    "guide:interesting-queries.md#h3 Blockfrost": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Blockfrost",
+      "sha256": "47f0f66e18db4f564dde23ee34b9d466c0fb186e0ba8eee24782635eb85d0661"
+    },
+    "guide:interesting-queries.md#h3 Govtool": {
+      "kind": "guide",
+      "file": "docs/docs/guides/interesting-queries.md",
+      "heading": "h3 Govtool",
+      "sha256": "cf21ef594371b126ab7481847c94ad7b0cfec7aefe3af755f5ff2de9e22a460d"
+    },
+    "guide:manual-rollbacks.md#h1 Manual Rollbacks": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h1 Manual Rollbacks",
+      "sha256": "e5a758d7a6e4e290b78acfe67b7dbe298fe65a0f110fb0b16fb0f7d4add8c338"
+    },
+    "guide:manual-rollbacks.md#h2 Overview": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Overview",
+      "sha256": "34807257af20a8261ca3edd8a719392b548c6245e1998ba99757c6cb81cac2f8"
+    },
+    "guide:manual-rollbacks.md#h2 Methods": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Methods",
+      "sha256": "ce05622793336555d2cf1aeed4c53438c249327dae28bf2bff62303291f6a151"
+    },
+    "guide:manual-rollbacks.md#h2 Using cardano-db-sync --rollback-to-slot": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Using cardano-db-sync --rollback-to-slot",
+      "sha256": "86c6d96fc640624455a7c21bce9cef160db6f50f9d78a30920a5f33f8586bc2b"
+    },
+    "guide:manual-rollbacks.md#h2 Using cardano-db-tool rollback": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Using cardano-db-tool rollback",
+      "sha256": "141ea96df000dc0d1249d0236e314ddc38742234f1e99f6aede7a231e474cfca"
+    },
+    "guide:manual-rollbacks.md#h2 What Gets Deleted": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 What Gets Deleted",
+      "sha256": "675e01e2e330f3231bad1f65c9dc4a7e2261479ee23a8fc09fa6da26d07669ba"
+    },
+    "guide:manual-rollbacks.md#h3 Epoch-Related Tables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Epoch-Related Tables",
+      "sha256": "8c928afc120ed94fe2661da658747ee8453039866a80c405aa997469490264b1"
+    },
+    "guide:manual-rollbacks.md#h3 Block and Transaction Tables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Block and Transaction Tables",
+      "sha256": "786b75afad84b13d4afd532ab823d65eee41b66686fc9c49eb3b8e830692dfb9"
+    },
+    "guide:manual-rollbacks.md#h3 Stake and Delegation Tables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Stake and Delegation Tables",
+      "sha256": "5d96e0559fd8e01b1b486f28cc60a3c707531e56b27129ef7388e7704339c219"
+    },
+    "guide:manual-rollbacks.md#h3 Pool Tables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Pool Tables",
+      "sha256": "500221f341bb936e892ef86a7415db3fbaffbc8f3aba9aea20dbed4355f4591e"
+    },
+    "guide:manual-rollbacks.md#h3 Plutus Tables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Plutus Tables",
+      "sha256": "0a03c56dee4c8276a65515b878ee2aff49246035cb9203aceacfcae0fa6e05aa"
+    },
+    "guide:manual-rollbacks.md#h3 Multi-Asset Tables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Multi-Asset Tables",
+      "sha256": "bf0897fce3f0929b9dd7d2eff5f8ab9a20c9a378ad4820f6dcaccbf2c96fff8a"
+    },
+    "guide:manual-rollbacks.md#h3 Governance Tables (Conway era)": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Governance Tables (Conway era)",
+      "sha256": "db377a323997105741c85d03607612ddda53b42ee4690f11f34f24a630c191f3"
+    },
+    "guide:manual-rollbacks.md#h3 Treasury Tables": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Treasury Tables",
+      "sha256": "51e2d4978b5b8c736283b27b0650d9227b5c180ea85a388cba2b43c70b5e8e5d"
+    },
+    "guide:manual-rollbacks.md#h3 Pool Metadata": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Pool Metadata",
+      "sha256": "46651ecc5c7d224041255cb8b82532062cf1f9328aff043db756aeca94fa7788"
+    },
+    "guide:manual-rollbacks.md#h3 Indexes": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Indexes",
+      "sha256": "b488af0d8faf3b90b6d6e0396ac8955a78116151fa35d01f0158d995870812f0"
+    },
+    "guide:manual-rollbacks.md#h2 Finding the Right Slot Number": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Finding the Right Slot Number",
+      "sha256": "d32670c497d5933e0af8908830d1a0300cb6626a39a53688d629e0611b5f66c4"
+    },
+    "guide:manual-rollbacks.md#h2 What Happens After Rollback": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 What Happens After Rollback",
+      "sha256": "a7dde526455a0ea0732bf65de567efabcab70e8ffb42a854681065f5ea9aaffd"
+    },
+    "guide:manual-rollbacks.md#h2 Important Considerations": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Important Considerations",
+      "sha256": "800352541f0af0af5c4060e5132804769e51bfc93289038fa8326c82da4e78a1"
+    },
+    "guide:manual-rollbacks.md#h3 Choosing the Rollback Point": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Choosing the Rollback Point",
+      "sha256": "7c2e8c4cc0f09c204ca084d4a347920dfa6c16bac8245e0657c0ea7635faf09e"
+    },
+    "guide:manual-rollbacks.md#h3 Ledger State": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Ledger State",
+      "sha256": "58fbea3d8a5bd9d59ee4a2feab86be747e0f52dba09de7a3f449d23ea27b7063"
+    },
+    "guide:manual-rollbacks.md#h3 Performance": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Performance",
+      "sha256": "1f9c0b5957eeee06c559f07ecd68c485262adef207b3359d956f9711e49722ee"
+    },
+    "guide:manual-rollbacks.md#h2 Verifying Rollback Success": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Verifying Rollback Success",
+      "sha256": "23f141c7d125a79b8a6715e633059f533260ec918a27f8da7b6b76da1283b8fe"
+    },
+    "guide:manual-rollbacks.md#h2 Common Issues": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h2 Common Issues",
+      "sha256": "476e840cce32a68332c964c5075d78ded99d5b34d5079061dab0029b178a6b38"
+    },
+    "guide:manual-rollbacks.md#h3 \"No block found at or after slot\"": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 \"No block found at or after slot\"",
+      "sha256": "19b7e32304ae66e991d8c8a17a087bfa377768804aa90dcf456976a2e6acda73"
+    },
+    "guide:manual-rollbacks.md#h3 Database Constraint Errors on Re-sync": {
+      "kind": "guide",
+      "file": "docs/docs/guides/manual-rollbacks.md",
+      "heading": "h3 Database Constraint Errors on Re-sync",
+      "sha256": "75aacb2135d470b61cfda8f69f8923842ca3d4d8f19a98d1ec28876a3a38f7b4"
+    },
+    "guide:migrations.md#h1 Migrations": {
+      "kind": "guide",
+      "file": "docs/docs/guides/migrations.md",
+      "heading": "h1 Migrations",
+      "sha256": "778e2cb09b43a0118b611254cda6a7bf911ca888d157625a4d743cadf3683158"
+    },
+    "guide:migrations.md#h2 Upgrading to 13.2.0.x": {
+      "kind": "guide",
+      "file": "docs/docs/guides/migrations.md",
+      "heading": "h2 Upgrading to 13.2.0.x",
+      "sha256": "28491ee21810bde872b8a48d546f7297b697766cd190987ebe73eb79147fe05e"
+    },
+    "guide:migrations.md#h3 Ledger replay": {
+      "kind": "guide",
+      "file": "docs/docs/guides/migrations.md",
+      "heading": "h3 Ledger replay",
+      "sha256": "3e0351dd2a8dcb8ae4b035f216255c242354db60660264d2804b6ad23c166ad5"
+    },
+    "guide:migrations.md#h2 Upgrading to 13.1.1.x": {
+      "kind": "guide",
+      "file": "docs/docs/guides/migrations.md",
+      "heading": "h2 Upgrading to 13.1.1.x",
+      "sha256": "594af757167a26024aa5a7bb9e5fcbdcc515e6384a5b570df29c01036b784240"
+    },
+    "guide:migrations.md#h3 Ledger replay [2]": {
+      "kind": "guide",
+      "file": "docs/docs/guides/migrations.md",
+      "heading": "h3 Ledger replay [2]",
+      "sha256": "8c1ae5e6414daac57cfa06273d501517ecedcf10f818084f4771f6cb41ebd197"
+    },
+    "guide:migrations.md#h2 Upgrading to 13.1.0.x": {
+      "kind": "guide",
+      "file": "docs/docs/guides/migrations.md",
+      "heading": "h2 Upgrading to 13.1.0.x",
+      "sha256": "84946f951ed48505f036f662454815978e4d0f44e88921b130ff02bdd61d3ef3"
+    },
+    "guide:pool-metadata.md#h1 Diagnose off-chain pool metadata": {
+      "kind": "guide",
+      "file": "docs/docs/guides/pool-metadata.md",
+      "heading": "h1 Diagnose off-chain pool metadata",
+      "sha256": "4d18c994cf497c92e4fbcddee56f9ac3eb20f5cd6e68b1880c3201675e0bcfae"
+    },
+    "annotation:Http.hs:httpGetOffChainPoolData": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs",
+      "name": "httpGetOffChainPoolData",
+      "sha256": "79e2c6b44c83f00cbe3c80ebd73afb89cc4c10416675abe82c8af4ffabac74f4"
+    },
+    "guide:pool-metadata.md#h2 Check one URL and hash": {
+      "kind": "guide",
+      "file": "docs/docs/guides/pool-metadata.md",
+      "heading": "h2 Check one URL and hash",
+      "sha256": "e686c37eb513c4408944e94cc90719b21b91ab83bdae7e668d1bb165cec251b5"
+    },
+    "annotation:http-get-json-metadata.hs:main": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/http-get-json-metadata.hs",
+      "name": "main",
+      "sha256": "08c53981286f586b300e2f53300d4918cc639451ad0988a7a6def02fb534193f"
+    },
+    "annotation:Http.hs:httpGetOffChainVoteData": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs",
+      "name": "httpGetOffChainVoteData",
+      "sha256": "eb41a84d1238c47ae99379d444041b027f327328af3b939db0cec7140e079857"
+    },
+    "annotation:Http.hs:httpGetBytes": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/src/Cardano/DbSync/OffChain/Http.hs",
+      "name": "httpGetBytes",
+      "sha256": "8574f05fddc19c8be88837396a37c00f415240f37d0a78b326b6c48f57d1d9ea"
+    },
+    "guide:pool-metadata.md#h2 Check all stored pool references": {
+      "kind": "guide",
+      "file": "docs/docs/guides/pool-metadata.md",
+      "heading": "h2 Check all stored pool references",
+      "sha256": "7a07bc63e59b2e195df62d598e1aa1b71416e19fcaba919534e7ee9cc137411d"
+    },
+    "annotation:test-http-get-json-metadata.hs:main": {
+      "kind": "annotation",
+      "file": "cardano-db-sync/app/test-http-get-json-metadata.hs",
+      "name": "main",
+      "sha256": "bd7ccb67eeae3905396605b3d6e417d1be01fd7ab193480807374bab5b9edf99"
+    },
+    "guide:running.md#h1 Running": {
+      "kind": "guide",
+      "file": "docs/docs/guides/running.md",
+      "heading": "h1 Running",
+      "sha256": "b8a016c8744a381057215a698d4e6e653d7e98c3b45f2bf7ab95349e6643878f"
+    },
+    "guide:running.md#h2 Prerequisites": {
+      "kind": "guide",
+      "file": "docs/docs/guides/running.md",
+      "heading": "h2 Prerequisites",
+      "sha256": "dfc45c93ab76b5046b3dea1b0f455a9f3420701f3bd1a1f67f4b63afdbee8f7d"
+    },
+    "guide:running.md#h2 Download Configuration Files": {
+      "kind": "guide",
+      "file": "docs/docs/guides/running.md",
+      "heading": "h2 Download Configuration Files",
+      "sha256": "068b485671dccee8d835a3e8805858c3be87b6c45e36aa371230555058fcf078"
+    },
+    "guide:running.md#h2 Start Cardano Node": {
+      "kind": "guide",
+      "file": "docs/docs/guides/running.md",
+      "heading": "h2 Start Cardano Node",
+      "sha256": "0ea05628658ca5af169555a034ec9520b291d104bef9e9b99a42eac17c521f89"
+    },
+    "guide:running.md#h2 Start the DB Sync Node": {
+      "kind": "guide",
+      "file": "docs/docs/guides/running.md",
+      "heading": "h2 Start the DB Sync Node",
+      "sha256": "ebb1ce07cf221f0445cbec3dc04b82d78927b93aa767727db6d1240f2e192f50"
+    },
+    "guide:schema-management.md#h1 Schema Management": {
+      "kind": "guide",
+      "file": "docs/docs/guides/schema-management.md",
+      "heading": "h1 Schema Management",
+      "sha256": "28d1e9986c5b0a4c5829fe219074f495f9eb37dc8b534687f4dc64cb1d783976"
+    },
+    "guide:schema-management.md#h2 Creating a Migration": {
+      "kind": "guide",
+      "file": "docs/docs/guides/schema-management.md",
+      "heading": "h2 Creating a Migration",
+      "sha256": "37d6be198161f9e30a22a822b94c818c03b916e5cceb4e4d602c78d844bd4b12"
+    },
+    "guide:smash-operations.md#h1 Operate SMASH": {
+      "kind": "guide",
+      "file": "docs/docs/guides/smash-operations.md",
+      "heading": "h1 Operate SMASH",
+      "sha256": "0393a89e2b321b28bd4dbf391581b9aca16be817bf2b36991d62afdd3cf77b5a"
+    },
+    "annotation:Api.hs:OffChainPoolMetadataAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "OffChainPoolMetadataAPI",
+      "sha256": "6ee9e37dbf12bc97cebc9f2cb070aa6d782239894daacc10f880652301e84117"
+    },
+    "annotation:Api.hs:DelistPoolAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "DelistPoolAPI",
+      "sha256": "bcdd77ae03119fda95ba0148bf7f132caa99efeadc572207fca0a5f0e7560a65"
+    },
+    "annotation:Api.hs:FetchPoliciesAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "FetchPoliciesAPI",
+      "sha256": "80ebb76edee51ab25dfa6ae5395dbd52386c41ca71f9c601b52521751d3f0a2a"
+    },
+    "guide:smash-operations.md#h2 Prerequisites": {
+      "kind": "guide",
+      "file": "docs/docs/guides/smash-operations.md",
+      "heading": "h2 Prerequisites",
+      "sha256": "61228d48e44f5e8b25999a7cdfd2a6c6170492c494b625f6118c6449d91d54c8"
+    },
+    "guide:smash-operations.md#h2 Build and start": {
+      "kind": "guide",
+      "file": "docs/docs/guides/smash-operations.md",
+      "heading": "h2 Build and start",
+      "sha256": "dd9c6f649da8c7f77f859fb1ace398bc0dc111fa0c6335272b0023214d41b345"
+    },
+    "annotation:Api.hs:AddTickerAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "AddTickerAPI",
+      "sha256": "fdf6f0bf54340174f9ddd5d4c6a5b7f09d976c634f0a1b5f1760caa31a667848"
+    },
+    "guide:smash-operations.md#h2 Verify and troubleshoot": {
+      "kind": "guide",
+      "file": "docs/docs/guides/smash-operations.md",
+      "heading": "h2 Verify and troubleshoot",
+      "sha256": "8b79c7f5574ea70d2f84d1459b6a6a6c3b708b11e264eafab393076518e07955"
+    },
+    "annotation:Api.hs:BasicAuthURL": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "BasicAuthURL",
+      "sha256": "e9d9f8eca6537dd9fb5a462f1ccb8e118d476ba3d24fdd80281c3696787277d8"
+    },
+    "annotation:Api.hs:SwaggerAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "SwaggerAPI",
+      "sha256": "29c95e076ad9e80b4927458a4c154411cc3416f863b86202552a7de04112d279"
+    },
+    "annotation:Api.hs:EnlistPoolAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "EnlistPoolAPI",
+      "sha256": "aeff32407b3cfa7cde69a44a657a9d949ba131024aa26e0478817315d0f3379e"
+    },
+    "annotation:Api.hs:DelistedPoolsAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "DelistedPoolsAPI",
+      "sha256": "9267fe10df24e38ca1af88323dea5afaf719e134716b47bae3d34f41d3f86350"
+    },
+    "annotation:Api.hs:ReservedTickersAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "ReservedTickersAPI",
+      "sha256": "e49d1ade8c9497bccf911dc88a3c54f4b3d7cb43a1e8f6fa482ec7f2c3ac8300"
+    },
+    "annotation:Api.hs:FetchPoolErrorAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "FetchPoolErrorAPI",
+      "sha256": "9c37d00f21763994c008ce9bc49735333501bececc8969fc66122219c0953851"
+    },
+    "annotation:Api.hs:RetiredPoolsAPI": {
+      "kind": "annotation",
+      "file": "cardano-smash-server/src/Cardano/SMASH/Server/Api.hs",
+      "name": "RetiredPoolsAPI",
+      "sha256": "f068916cace13e0003439e2892737d26369f3022d2628af0b553ae1aab3d4f30"
+    },
+    "guide:state-snapshot.md#h1 State Snapshot": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h1 State Snapshot",
+      "sha256": "15bb207e307bd095ec56530a76c9cddbe33f3b450f78450adfc1a0283b7e6625"
+    },
+    "guide:state-snapshot.md#h2 Prerequisites": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h2 Prerequisites",
+      "sha256": "7cd1a5d0a11f9c64aa310813f9e17ef6b106d62b358d1c7884ab500d6dc724a9"
+    },
+    "guide:state-snapshot.md#h2 Constraints": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h2 Constraints",
+      "sha256": "0553a3f9c4736474e7ee65ba93d47e520beec1c07ba3b8b520dde5af3c3d1150"
+    },
+    "guide:state-snapshot.md#h2 Backends": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h2 Backends",
+      "sha256": "4f619b5b74f210cff18e5c6bd9caa6aadfca6c904667e0cfe70f00b22ce0096e"
+    },
+    "guide:state-snapshot.md#h2 Creating": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h2 Creating",
+      "sha256": "ab46cd82c4741fd82c8759b55031c9aa187c3f41bbc652482f485cbf6bb4ea46"
+    },
+    "guide:state-snapshot.md#h2 Restoring": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h2 Restoring",
+      "sha256": "eb04c4ac12a51c733ca69a07b901d2ecb9db4d23d3c94cb6a87c7228ee8b7e9a"
+    },
+    "guide:state-snapshot.md#h2 Converting between backends": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h2 Converting between backends",
+      "sha256": "73291b1449561619c37d2152da8d597aafc5c26c37c6a7f21919f1c01dcd1573"
+    },
+    "guide:state-snapshot.md#h2 Mainnet Snapshots": {
+      "kind": "guide",
+      "file": "docs/docs/guides/state-snapshot.md",
+      "heading": "h2 Mainnet Snapshots",
+      "sha256": "773a12145f40e48be7798b645c967f15ce6401a533ee919d966c06b0858ce81e"
+    },
+    "guide:troubleshooting.md#h1 Testing": {
+      "kind": "guide",
+      "file": "docs/docs/guides/troubleshooting.md",
+      "heading": "h1 Testing",
+      "sha256": "0b7e57f405fa9d966d519db630bd4319b1de4cd6492d13058d04bc0a9cbf63f9"
+    },
+    "guide:troubleshooting.md#h2 Unable to connect to Unix domain socket /var/run/postgresql/.s.PGSQL.5432": {
+      "kind": "guide",
+      "file": "docs/docs/guides/troubleshooting.md",
+      "heading": "h2 Unable to connect to Unix domain socket /var/run/postgresql/.s.PGSQL.5432",
+      "sha256": "f552fa1eab8c4e9fb0ca22e9c96c8cdbfbb35ea4514446ba45531509d21a739f"
+    },
+    "guide:upgrading-postgresql.md#h1 Upgrading PostgreSQL": {
+      "kind": "guide",
+      "file": "docs/docs/guides/upgrading-postgresql.md",
+      "heading": "h1 Upgrading PostgreSQL",
+      "sha256": "63c42cbbb3b09a3c88d663ff7120ee3c297558377d8bd451161431f7ba9f1d7a"
+    },
+    "guide:upgrading-postgresql.md#h2 Requirements": {
+      "kind": "guide",
+      "file": "docs/docs/guides/upgrading-postgresql.md",
+      "heading": "h2 Requirements",
+      "sha256": "93121c6ff11845d2b80ac7e5a040456378dae92d0c825304f7d7d806dd0934ff"
+    },
+    "guide:upgrading-postgresql.md#h2 Install a New PostgreSQL Version": {
+      "kind": "guide",
+      "file": "docs/docs/guides/upgrading-postgresql.md",
+      "heading": "h2 Install a New PostgreSQL Version",
+      "sha256": "7722b55905d183689f240b4359d82d5f67e1965a52dc2991e4d9a382ec655867"
+    },
+    "guide:upgrading-postgresql.md#h2 Upgrade the Schemas": {
+      "kind": "guide",
+      "file": "docs/docs/guides/upgrading-postgresql.md",
+      "heading": "h2 Upgrade the Schemas",
+      "sha256": "05a3eef236a884064bec671de8d78caf7c5ff10461dbc166f000c3f23bb8e015"
+    },
+    "guide:upgrading-postgresql.md#h2 Clean Up": {
+      "kind": "guide",
+      "file": "docs/docs/guides/upgrading-postgresql.md",
+      "heading": "h2 Clean Up",
+      "sha256": "da0605f036d2c5e1c1fa9a914326550df0870e459d3dfafa8de187c83270e7ef"
+    },
+    "guide:validation.md#h1 Validation": {
+      "kind": "guide",
+      "file": "docs/docs/guides/validation.md",
+      "heading": "h1 Validation",
+      "sha256": "a202707347b014c18b7d5692baedf0afdf28584fca5938df11cbf3992e0f50bb"
+    },
+    "guide:validation.md#h2 Assumptions": {
+      "kind": "guide",
+      "file": "docs/docs/guides/validation.md",
+      "heading": "h2 Assumptions",
+      "sha256": "7bd45e6fa1ad06b9e2476f9c32e0a43c6082aaa1b9de99f5372b1c3d8e6559cb"
+    },
+    "guide:validation.md#h2 Genesis Validation": {
+      "kind": "guide",
+      "file": "docs/docs/guides/validation.md",
+      "heading": "h2 Genesis Validation",
+      "sha256": "d4eaa105868d9716eff54264798fc4793435f0823d4e186b05d0ac9dbe8cee88"
+    },
+    "guide:validation.md#h2 Block Validation": {
+      "kind": "guide",
+      "file": "docs/docs/guides/validation.md",
+      "heading": "h2 Block Validation",
+      "sha256": "ee5013d3e3fb0f6f3548b6c18733fe9669c94ffb1509e76eff922356a59a47a0"
+    },
+    "guide:validation.md#h2 Transaction Validation": {
+      "kind": "guide",
+      "file": "docs/docs/guides/validation.md",
+      "heading": "h2 Transaction Validation",
+      "sha256": "3f3abec29bd7e2e4dc07407e8bb264bf766e4b55f3259daa0b96b76cca3b6cc4"
+    },
+    "guide:validation.md#h2 Runtime Reward Validations": {
+      "kind": "guide",
+      "file": "docs/docs/guides/validation.md",
+      "heading": "h2 Runtime Reward Validations",
+      "sha256": "2a8d8b5fc28d3da129444dc734581c5e57169bb9c7778831fae6f18e66d71051"
+    }
+  }
+}

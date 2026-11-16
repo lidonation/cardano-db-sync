@@ -6,13 +6,14 @@ import yaml from 'js-yaml';
 import {unified} from 'unified';
 import remarkParse from 'remark-parse';
 import remarkMdx from 'remark-mdx';
+import {FRONTMATTER} from './lib/frontmatter.mjs';
 
 /** Validate contributor-authored CommonMark and current known entity declarations. */
 export function validateGuide(name, source, schema, config) {
   const errors = [];
   if (!name.endsWith('.md')) return [`${name}: guide files must use .md`];
   const fail = (message) => errors.push(`${name}: ${message}`);
-  const match = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/.exec(source);
+  const match = FRONTMATTER.exec(source);
   if (!match) return [`${name}: missing YAML frontmatter`];
   let front;
   try {

@@ -1,7 +1,7 @@
 name: Documentation site
 
-# B02 — the CI spine for the docs site. Five stages (SPECIFICATION §12): formatting, static
-# analysis, unit tests, link checking and the asset budget. Later items add checks to these stages
+# B02 — the CI spine for the docs site. Six stages (SPECIFICATION §12 and CON-6): formatting,
+# static analysis, heading parity, unit tests, link checking and the asset budget. Later items add checks to these stages
 # rather than new workflows. `Docs CI gate` is the single check to require on protected branches.
 
 on:
@@ -9,6 +9,8 @@ on:
     branches: [master, release/community-site, docs-rebuild-spec]
     paths:
       - "docs/**"
+      # B16: edits to the migration source must also run the parity gate.
+      - "doc/**"
       - ".github/workflows/docs-site.yml"
       - ".github/scripts/blacksmith-*.py"
       - ".github/scripts/blacksmith-*.pem"
@@ -24,6 +26,8 @@ on:
   pull_request:
     paths:
       - "docs/**"
+      # B16: edits to the migration source must also run the parity gate.
+      - "doc/**"
       - ".github/workflows/docs-site.yml"
       - ".github/scripts/blacksmith-*.py"
       - ".github/scripts/blacksmith-*.pem"
@@ -122,6 +126,32 @@ jobs:
           npm run check:manifest
         env:
           MANIFEST_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+
+  doc-parity:
+    name: Legacy documentation parity (CON-6)
+    needs: site-runner
+    if: ${{ !cancelled() }}
+    runs-on: ${{ needs.site-runner.outputs.runner || 'ubuntu-24.04' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/docs-setup
+      - name: Audit every legacy heading against B13 migration destinations
+        run: npm run --silent check:doc-parity > doc-parity-report.md
+      - name: Publish parity report in the job summary
+        if: always()
+        run: |
+          if [ -f doc-parity-report.md ]; then
+            cat doc-parity-report.md >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "Parity report could not be produced; see the failed setup/check step." >> "$GITHUB_STEP_SUMMARY"
+          fi
+      - name: Retain parity report for B17, including failures
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: doc-parity-report
+          path: docs/doc-parity-report.md
+          retention-days: 14
 
   unit-tests:
     name: Unit tests
@@ -280,7 +310,7 @@ jobs:
   gate:
     name: Docs CI gate
     if: always()
-    needs: [format, static-analysis, unit-tests, build, links, asset-budget]
+    needs: [format, static-analysis, doc-parity, unit-tests, build, links, asset-budget]
     runs-on: ubuntu-latest
     steps:
       - name: Every stage passed
