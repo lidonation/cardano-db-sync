@@ -27,8 +27,8 @@ The **Legacy documentation parity (CON-6)** job is required by **Docs CI gate** 
 `doc/**` as well as docs edits. Run `npm run check:doc-parity` from `docs/` locally. Its report
 lists all legacy headings, their destination definitions and accepted omission reasons. The CI
 job writes it to the job summary and retains the `doc-parity-report` artifact for 14 days, even
-when drift makes the check fail. Before B17 retires `doc/`, archive the green report in that PR's
-description. The checker is read-only; review source and destination changes before updating the
+when drift makes the check fail. Before B17 retires `doc/`, archive the green report summary and
+links to the commit-pinned manifest and CI report in that PR's description. The checker is read-only; review source and destination changes before updating the
 [heading-level migration record](doc-parity.md). Existing annotation extraction checks remain
 responsible for proving the committed Haddock artifact matches the Haskell sources.
 

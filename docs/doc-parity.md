@@ -57,6 +57,8 @@ the reviewed entries. To compute a digest or inspect parsed heading IDs, import 
 `readHeadings` and `annotationText` from `scripts/check-doc-parity.mjs` in a Node ES module.
 The checker deliberately has no automatic update switch.
 
-Before B17 retires `doc/`, copy the green CI parity report into its PR description. Retain this
-manifest as the migration record. Removing the old tree without changing the migration policy
+Before B17 retires `doc/`, archive the green CI report summary in its PR description and link
+the commit-pinned manifest and CI run/artifact for the complete heading/destination tables. The
+full report can exceed GitHub's PR-description limit; do not truncate the mapping or pretend the
+summary alone is the detailed record. Retain this manifest as the migration record. Removing the old tree without changing the migration policy
 must fail this gate rather than turn it into a vacuous success.
