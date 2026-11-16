@@ -458,3 +458,33 @@ it('loads route-scoped recovery metadata and uses it when retiring a published v
     vi.unstubAllEnvs();
   }
 });
+
+it('refuses a stale version redirect in CI without silently rewriting history', async () => {
+  const route = '/docs/13.3.0.0/guides/running';
+  const before = {
+    routes: {
+      '/': {status: 'live'},
+      '/docs/guides/running': {status: 'live'},
+      [route]: {status: 'retired', redirect: '/'},
+    },
+  } as const;
+  await writeManifest(before);
+  const data = {
+    routes: ['/', '/docs/guides/running'],
+    lines: [{name: 'current', path: '/docs'}],
+    latest: {name: 'current', path: '/docs'},
+    tags: [],
+  };
+  await expect(
+    runManifest({
+      siteDir,
+      outDir,
+      routesPaths: routes('/', '/docs/guides/running'),
+      profile: dev,
+      mode: 'check',
+      data,
+    }),
+  ).rejects.toThrow(/redirect target no longer published/);
+  expect((await manifestOnDisk()).routes).toEqual(before.routes);
+  await expect(fs.stat(path.join(outDir, REDIRECT_SCRIPT_FILE))).rejects.toThrow(/ENOENT/);
+});

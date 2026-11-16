@@ -446,7 +446,11 @@ test('client navigation restores the first skip stop', async ({page}) => {
   await open(page);
   await page.locator('main a[href*="docs/intro"]').first().click();
   await expect(page).toHaveURL(/\/docs\/intro\/?$/);
+  // The location changes before the lazy docs route finishes mounting. Assert the real
+  // destination and automatic focus reset, rather than racing Tab against the old main.
+  await expect(page.locator('main article h1')).toHaveText('Cardano DB Sync');
   await expect(page.locator('main')).toHaveAttribute('id', 'dbs-main-content');
+  await expect(page.getByRole('region', {name: 'Skip to main content', exact: true})).toBeFocused();
   await page.keyboard.press('Tab');
   await expect(page.locator('a.dbs-skip-link')).toBeFocused();
   await page.keyboard.press('Enter');
