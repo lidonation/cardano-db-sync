@@ -86,7 +86,7 @@ export default function FaqPage(): React.JSX.Element {
                     <p className={styles.faqAnswer}>
                       <Link className={styles.more} to={guideUrl(item.guide)}>
                         {readGuide}
-                        <Icon name="external" size={12} />
+                        <Icon name="arrow-right" size={12} />
                       </Link>
                     </p>
                   )}

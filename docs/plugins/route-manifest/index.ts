@@ -438,3 +438,9 @@ export default function routeManifestPlugin(context: LoadContext): Plugin {
     },
   };
 }
+
+/** Disposable content builds still need 404 metadata, but may never retire production routes. */
+export function recoveryMetadataPlugin(context: LoadContext): Plugin {
+  const {name, allContentLoaded} = routeManifestPlugin(context);
+  return {name, allContentLoaded};
+}
