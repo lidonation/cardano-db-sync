@@ -1,3 +1,6 @@
+import {mkdtempSync, rmSync, writeFileSync} from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import {describe, expect, it} from 'vitest';
 
 import {
@@ -6,6 +9,7 @@ import {
   PROFILE_NAMES,
   isProfileName,
   resolveProfile,
+  readDocsEnv,
 } from '../../config/profiles';
 
 describe('build profiles (ENV-1, ENV-6)', () => {
@@ -105,5 +109,83 @@ describe('resolveProfile', () => {
 
   it('does not resolve an inherited Object.prototype key to a profile', () => {
     expect(() => resolveProfile({[PROFILE_ENV_VAR]: 'toString'})).toThrow(/not a known profile/);
+  });
+});
+
+describe('local dev origin', () => {
+  it('normalizes the trailing slash without changing the dev route prefix', () => {
+    const profile = resolveProfile({
+      DOCS_PROFILE: 'dev',
+      DOCS_DEV_URL: 'https://preview.example.test/',
+    });
+    expect(profile).toEqual({...PROFILES.dev, url: 'https://preview.example.test'});
+    expect(Object.isFrozen(profile)).toBe(true);
+    expect(PROFILES.dev.url).toBe('https://lidonation.github.io');
+  });
+
+  it('keeps production unchanged even with an invalid dev override', () => {
+    expect(resolveProfile({DOCS_PROFILE: 'prod', DOCS_DEV_URL: 'invalid'})).toBe(PROFILES.prod);
+  });
+
+  it('treats a blank override as the default dev profile', () => {
+    expect(resolveProfile({DOCS_PROFILE: 'dev', DOCS_DEV_URL: ' '})).toBe(PROFILES.dev);
+  });
+
+  it.each([
+    'invalid',
+    'ftp://preview.example.test',
+    'https://user:password@preview.example.test',
+    'https://preview.example.test/nested/',
+    'https://preview.example.test/?query=1',
+    'https://preview.example.test/#fragment',
+  ])('rejects non-origin overrides without echoing their contents', (value) => {
+    expect(() => resolveProfile({DOCS_PROFILE: 'dev', DOCS_DEV_URL: value})).toThrow(
+      /^DOCS_DEV_URL must be an HTTP\(S\) origin, without credentials, path, query or hash\.$/,
+    );
+  });
+
+  it('serves the dev server from a configured base path, keeping the origin override', () => {
+    const profile = resolveProfile({
+      DOCS_PROFILE: 'dev',
+      NODE_ENV: 'development',
+      DOCS_DEV_URL: 'https://preview.example.test/',
+      DOCS_DEV_BASE_URL: ' / ',
+    });
+    expect(profile).toEqual({...PROFILES.dev, url: 'https://preview.example.test', baseUrl: '/'});
+    expect(Object.isFrozen(profile)).toBe(true);
+    expect(PROFILES.dev.baseUrl).toBe('/cardano-db-sync/');
+  });
+
+  it('ignores the base path override outside the dev server and for production', () => {
+    expect(
+      resolveProfile({DOCS_PROFILE: 'dev', NODE_ENV: 'production', DOCS_DEV_BASE_URL: '/'}),
+    ).toBe(PROFILES.dev);
+    expect(
+      resolveProfile({DOCS_PROFILE: 'prod', NODE_ENV: 'development', DOCS_DEV_BASE_URL: 'bad'}),
+    ).toBe(PROFILES.prod);
+  });
+
+  it.each(['preview', '/preview', 'https://preview.example.test/', '/a//', '/a?b/'])(
+    'rejects a malformed dev base path %s',
+    (value) => {
+      expect(() =>
+        resolveProfile({DOCS_PROFILE: 'dev', NODE_ENV: 'development', DOCS_DEV_BASE_URL: value}),
+      ).toThrow(/^DOCS_DEV_BASE_URL must be a path that starts and ends with "\/", e\.g\. "\/"\.$/);
+    },
+  );
+
+  it('reads dotenv syntax, tolerates an absent file and leaves process.env alone', () => {
+    const dir = mkdtempSync(path.join(os.tmpdir(), 'docs-env-'));
+    const file = path.join(dir, '.env');
+    const before = {...process.env};
+    try {
+      expect(readDocsEnv(file)).toEqual({});
+      writeFileSync(file, '# Preview\nDOCS_DEV_URL="https://preview.example.test/"\n');
+      expect(readDocsEnv(file).DOCS_DEV_URL).toBe('https://preview.example.test/');
+      expect(process.env).toEqual(before);
+      expect(() => readDocsEnv(dir)).toThrow();
+    } finally {
+      rmSync(dir, {recursive: true, force: true});
+    }
   });
 });

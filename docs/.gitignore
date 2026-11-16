@@ -25,3 +25,6 @@
 
 # Deterministic browser builds, separate from uploaded profiles
 /.cache/browser-fixtures
+
+# Local preview configuration (may contain secrets)
+/.env

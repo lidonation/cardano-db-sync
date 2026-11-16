@@ -1,3 +1,7 @@
+import {readFileSync} from 'node:fs';
+import path from 'node:path';
+import {parseEnv} from 'node:util';
+
 /**
  * Build profiles — the single origin for every environment-dependent value.
  *
@@ -11,6 +15,16 @@
  * ENV-6: the GitHub Pages `CNAME` file is emitted from the build profile, for production only.
  * `cname: null` on the developer profile is what makes the developer output CNAME-free.
  */
+
+/** Read an optional docs-local dotenv without changing process.env or exposing it to pages. */
+export function readDocsEnv(file = path.resolve(__dirname, '../.env')): NodeJS.ProcessEnv {
+  try {
+    return parseEnv(readFileSync(file, 'utf8'));
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') return {};
+    throw error;
+  }
+}
 
 /** Name of the environment variable that selects the profile. */
 export const PROFILE_ENV_VAR = 'DOCS_PROFILE';
@@ -104,5 +118,54 @@ export function resolveProfile(env: NodeJS.ProcessEnv = process.env): BuildProfi
     );
   }
 
-  return PROFILES[name];
+  if (name !== 'dev') return PROFILES[name];
+
+  // Only the dev profile is overridable; production URL, CNAME and base path stay fixed.
+  // Explicit environments (tests/tools) are deterministic; the normal config reads docs/.env.
+  const fileEnv = env === process.env ? readDocsEnv() : {};
+  const devUrl = (env.DOCS_DEV_URL ?? fileEnv.DOCS_DEV_URL)?.trim();
+  // The base path override is for the dev server only (`docusaurus start` runs with
+  // NODE_ENV=development), so dev builds and their gates keep the published route prefix.
+  const devBase =
+    env.NODE_ENV === 'development'
+      ? (env.DOCS_DEV_BASE_URL ?? fileEnv.DOCS_DEV_BASE_URL)?.trim()
+      : undefined;
+  if (!devUrl && !devBase) return PROFILES.dev;
+
+  return Object.freeze({
+    ...PROFILES.dev,
+    ...(devUrl ? {url: parseDevOrigin(devUrl)} : {}),
+    ...(devBase ? {baseUrl: parseDevBase(devBase)} : {}),
+  });
+}
+
+const DEV_URL_ERROR =
+  'DOCS_DEV_URL must be an HTTP(S) origin, without credentials, path, query or hash.';
+
+function parseDevOrigin(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new Error(DEV_URL_ERROR);
+  }
+  if (
+    !['http:', 'https:'].includes(url.protocol) ||
+    url.username ||
+    url.password ||
+    url.pathname !== '/' ||
+    url.search ||
+    url.hash
+  ) {
+    throw new Error(DEV_URL_ERROR);
+  }
+  return url.origin;
+}
+
+/** A root-relative path that starts and ends with `/`, e.g. `/` or `/preview/`. */
+function parseDevBase(value: string): string {
+  if (!/^\/(?:[A-Za-z0-9._~-]+\/)*$/.test(value)) {
+    throw new Error('DOCS_DEV_BASE_URL must be a path that starts and ends with "/", e.g. "/".');
+  }
+  return value;
 }

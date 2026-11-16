@@ -1,13 +1,19 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
-import {afterEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {PROFILES} from '../../config/profiles';
 
 const CONFIG_PATH = path.resolve(import.meta.dirname, '../../docusaurus.config.ts');
 
 const originalProfile = process.env.DOCS_PROFILE;
+
+// Local preview configuration must not change the profile-default assertions.
+beforeEach(() => {
+  vi.stubEnv('DOCS_DEV_URL', '');
+  vi.stubEnv('DOCS_DEV_BASE_URL', '');
+});
 
 function restoreProfile() {
   if (originalProfile === undefined) {
@@ -19,6 +25,7 @@ function restoreProfile() {
 
 afterEach(() => {
   restoreProfile();
+  vi.unstubAllEnvs();
   vi.resetModules();
 });
 
@@ -39,6 +46,27 @@ describe('docusaurus.config (ENV-1)', () => {
     const config = await loadConfig('dev');
     expect(config.url).toBe(PROFILES.dev.url);
     expect(config.baseUrl).toBe(PROFILES.dev.baseUrl);
+  });
+
+  it('publishes a dev origin override with the existing route prefix', async () => {
+    vi.stubEnv('DOCS_DEV_URL', 'https://preview.example.test/');
+    const config = await loadConfig('dev');
+    expect(config.url).toBe('https://preview.example.test');
+    expect(config.baseUrl).toBe(PROFILES.dev.baseUrl);
+    expect(config.customFields?.profile).toMatchObject({url: config.url, baseUrl: config.baseUrl});
+    expect(config.customFields?.productionUrl).toBe(`${PROFILES.prod.url}${PROFILES.prod.baseUrl}`);
+  });
+
+  it('serves the dev server from a configured base path without touching production', async () => {
+    vi.stubEnv('NODE_ENV', 'development');
+    vi.stubEnv('DOCS_DEV_BASE_URL', '/');
+    const config = await loadConfig('dev');
+    expect(config.baseUrl).toBe('/');
+    expect(config.customFields?.profile).toMatchObject({baseUrl: '/'});
+    expect(config.customFields?.productionUrl).toBe(`${PROFILES.prod.url}${PROFILES.prod.baseUrl}`);
+    const prod = await loadConfig('prod');
+    expect(prod.baseUrl).toBe(PROFILES.prod.baseUrl);
+    expect(prod.url).toBe(PROFILES.prod.url);
   });
 
   it('takes url and baseUrl from the production profile', async () => {
