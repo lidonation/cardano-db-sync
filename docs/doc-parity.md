@@ -53,12 +53,14 @@ A green report proves coverage against an explicit reviewed mapping, not semanti
 prose. Read the legacy section and each destination before changing a mapping or digest. Keep
 accepted omissions explicit and reasoned; do not rebaseline merely to make CI green. For an
 upstream edit, migrate the changed content (or document an accepted omission), then update only
-the reviewed entries. To compute a digest or inspect parsed heading IDs, import `digest`,
-`readHeadings` and `annotationText` from `scripts/check-doc-parity.mjs` in a Node ES module.
-The checker deliberately has no automatic update switch.
+the reviewed entries. Every drift diagnostic names the pinned and current digests, so a
+reviewed entry can be re-pinned by copying the current value. To inspect parsed heading IDs,
+import `digest`, `readHeadings` and `annotationText` from `scripts/check-doc-parity.mjs` in a
+Node ES module. The checker deliberately has no automatic update switch.
 
 Before B17 retires `doc/`, archive the green CI report summary in its PR description and link
 the commit-pinned manifest and CI run/artifact for the complete heading/destination tables. The
 full report can exceed GitHub's PR-description limit; do not truncate the mapping or pretend the
-summary alone is the detailed record. Retain this manifest as the migration record. Removing the old tree without changing the migration policy
-must fail this gate rather than turn it into a vacuous success.
+summary alone is the detailed record. Retain this manifest as the migration record. Removing the
+old tree without changing the migration policy must fail this gate rather than turn it into a
+vacuous success.
