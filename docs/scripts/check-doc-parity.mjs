@@ -7,18 +7,21 @@ import process from 'node:process';
 import {unified} from 'unified';
 import remarkParse from 'remark-parse';
 import yaml from 'js-yaml';
+import {FRONTMATTER} from './lib/frontmatter.mjs';
 
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const text = (v) => typeof v === 'string' && v.trim() !== '';
 const hash = (v) => typeof v === 'string' && /^[a-f0-9]{64}$/.test(v);
 const normalize = (s) => s.replace(/\r\n?/g, '\n').trim();
+/** Reviewers re-pin by hand after reading the change, so every drift names both digests. */
+const drift = (pinned, now) => `(pinned ${pinned}, now ${now})`;
 export const digest = (s) => createHash('sha256').update(normalize(s)).digest('hex');
 const inlineText = (n) => n.value ?? n.alt ?? (n.children ?? []).map(inlineText).join('');
 
 /** Stable identity and direct/subtree content hashes; ignores code-fence pseudo-headings. */
 export function readHeadings(source, frontmatter = false) {
   let body = source.replace(/\r\n?/g, '\n');
-  if (frontmatter) body = body.replace(/^---\s*\n[\s\S]*?\n---\s*(?:\n|$)/, '');
+  if (frontmatter) body = body.replace(FRONTMATTER, '');
   const nodes = [];
   function visit(n) {
     if (n.type === 'heading') nodes.push(n);
@@ -188,7 +191,7 @@ export function audit(docsRoot) {
           !text(target.heading)
         )
           throw new Error('guide target must select a heading in published docs/docs/guides/*.md');
-        const front = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/.exec(contents.replace(/\r\n?/g, '\n'));
+        const front = FRONTMATTER.exec(contents.replace(/\r\n?/g, '\n'));
         const metadata = front ? yaml.load(front[1]) : null;
         if (
           !object(metadata) ||
@@ -201,7 +204,9 @@ export function audit(docsRoot) {
         const heading = guideHeadings.get(target.file).find((h) => h.id === target.heading);
         if (!heading) throw new Error(`migrated heading missing: ${target.heading}`);
         if (heading.subtreeSha256 !== target.sha256)
-          throw new Error(`migrated section changed: ${target.heading}`);
+          throw new Error(
+            `migrated section changed: ${target.heading} ${drift(target.sha256, heading.subtreeSha256)}`,
+          );
       } else {
         if (!target.file.endsWith('.hs') || !text(target.name))
           throw new Error('annotation target must select a Haskell declaration');
@@ -211,12 +216,13 @@ export function audit(docsRoot) {
           : [];
         if (!matches.length) throw new Error(`annotation missing: ${target.name}`);
         // CPP can yield identical declarations in separate branches. Check every copy.
-        if (
-          matches.some(
-            (entry) => !text(entry.doc) || digest(annotationText(entry)) !== target.sha256,
-          )
-        )
-          throw new Error(`annotation documentation changed: ${target.name}`);
+        const changed = matches.find(
+          (entry) => !text(entry.doc) || digest(annotationText(entry)) !== target.sha256,
+        );
+        if (changed)
+          throw new Error(
+            `annotation documentation changed: ${target.name} ${drift(target.sha256, digest(annotationText(changed)))}`,
+          );
       }
     } catch (failure) {
       error = failure.message;
@@ -240,7 +246,9 @@ export function audit(docsRoot) {
     if (!valid)
       problems.push(`${at}: missing/invalid source record (preambleSha256 and headings required)`);
     else if (old.preambleSha256 !== current.preambleSha256)
-      problems.push(`${at}: source preamble changed`);
+      problems.push(
+        `${at}: source preamble changed ${drift(old.preambleSha256, current.preambleSha256)}`,
+      );
     const previous = valid ? old.headings : {};
     const present = new Set(current.headings.map((h) => h.id));
     const kinds = new Set();
@@ -254,7 +262,9 @@ export function audit(docsRoot) {
         problems.push(`${label}: heading has no valid parity mapping`);
       else {
         if (entry.sha256 !== heading.sha256)
-          problems.push(`${label}: source section changed; review its migration`);
+          problems.push(
+            `${label}: source section changed; review its migration ${drift(entry.sha256, heading.sha256)}`,
+          );
         const omitted = Object.hasOwn(entry, 'omission');
         if (omitted === Object.hasOwn(entry, 'targets'))
           problems.push(`${label}: use exactly one of targets or omission`);

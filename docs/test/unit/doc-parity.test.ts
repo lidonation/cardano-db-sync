@@ -140,6 +140,29 @@ describe('CON-6 heading parity', () => {
     expect(main(docs, {log: () => {}})).toBe(1);
   });
 
+  it('names the pinned and current digests so a reviewed change can be re-pinned by hand', () => {
+    const edited = 'Unreviewed preamble.\n\n' + guide.replace('Keep this', 'Changed');
+    write('doc/install.md', edited);
+    const changedGuide = '---\ntitle: Install\n---\n\n' + guide.replace('smoke', 'final');
+    write('docs/docs/guides/install.md', changedGuide);
+    artifact.files[0].annotations[0].doc = 'Replaced reference.';
+    save();
+    const problems = audit(docs).problems.join('\n');
+    const parsed = readHeadings(edited);
+    expect(problems).toContain(
+      `pinned ${manifest.sources['install.md'].preambleSha256}, now ${parsed.preambleSha256}`,
+    );
+    expect(problems).toContain(
+      `pinned ${manifest.sources['install.md'].headings['h1 Install'].sha256}, now ${parsed.headings[0].sha256}`,
+    );
+    expect(problems).toContain(
+      `pinned ${manifest.targets.install.sha256}, now ${readHeadings(changedGuide, true).headings[0].subtreeSha256}`,
+    );
+    expect(problems).toContain(
+      `pinned ${manifest.targets.reference.sha256}, now ${digest(annotationText(artifact.files[0].annotations[0]))}`,
+    );
+  });
+
   it('detects preamble edits, untriaged new files and missing legacy files', () => {
     write('doc/install.md', 'Unreviewed preamble.\n\n' + guide);
     write('doc/extra.md', '# Extra\n');
