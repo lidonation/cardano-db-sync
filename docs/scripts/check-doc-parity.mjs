@@ -155,6 +155,10 @@ export function audit(docsRoot) {
   for (const file of dispositions.keys())
     if (!files.includes(file)) problems.push(`doc/${file}: B13 source file is missing`);
   const markdown = files.filter((file) => /\.md$/i.test(file));
+  if (!markdown.length || !triage.length || !Object.keys(manifest.sources).length)
+    problems.push(
+      'Legacy migration inventory must not be empty; B17 needs an explicit retirement policy',
+    );
   for (const [file, source] of Object.entries(manifest.sources)) {
     if (markdown.includes(file)) continue;
     problems.push(`doc/${file}: stale source mapping (not a current Markdown file)`);

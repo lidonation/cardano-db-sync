@@ -156,6 +156,17 @@ describe('CON-6 heading parity', () => {
     expect(audit(docs).problems.length).toBeGreaterThan(0);
   });
 
+  it('rejects an empty legacy tree and baseline instead of a vacuous 0/0 success', () => {
+    rmSync(path.join(repo, 'doc'), {recursive: true});
+    mkdirSync(path.join(repo, 'doc'));
+    manifest.sources = {};
+    manifest.targets = {};
+    json('docs/data/doc-triage.json', []);
+    save();
+    expect(audit(docs).problems.join('\n')).toContain('empty');
+    expect(main(docs, {log: () => {}})).toBe(1);
+  });
+
   it('rejects a missing annotation or changed field documentation, but ignores line movement', () => {
     artifact.files[0].annotations[0].line = 100;
     save();
