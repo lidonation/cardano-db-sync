@@ -8,5 +8,5 @@ export default {
   ...config,
   // This disposable content set must not retire routes in the published manifest.
   plugins: config.plugins?.map((plugin) => plugin === routeManifestPlugin ? recoveryMetadataPlugin : plugin),
-  presets: [[preset, {...options, docs: {...(options.docs || {}), path: 'test/fixtures/prism/docs'}}]],
+  presets: [[preset, {...options, docs: {...(options.docs || {}), path: process.env.DBS_PRISM_DOCS ?? 'test/fixtures/prism/docs'}}]],
 };

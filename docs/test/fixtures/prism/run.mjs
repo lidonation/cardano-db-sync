@@ -1,13 +1,18 @@
 import {spawnSync} from 'node:child_process';
-import {rm} from 'node:fs/promises';
+import {cp, rm} from 'node:fs/promises';
 import path from 'node:path';
 import process from 'node:process';
 
 // Build a fenced-code fixture into a disposable directory, never into a published profile.
 const output = path.resolve('build/prism-fixture');
-const env = {...process.env, DOCS_PROFILE: 'dev'};
+const sources = path.join(output, 'sources');
+const env = {...process.env, DOCS_PROFILE: 'dev', DBS_PRISM_DOCS: sources};
 let status = 1;
 try {
+  // Keep the site's real guide destinations: FAQ links are internal after B17.
+  // Overlay only the fenced-code probe in this disposable source tree.
+  await cp(path.resolve('docs'), sources, {recursive: true});
+  await cp(path.resolve('test/fixtures/prism/docs'), sources, {recursive: true});
   const build = spawnSync(
     'npx',
     ['docusaurus', 'build', '--config', 'test/fixtures/prism/config.ts', '--locale', 'en', '--out-dir', `${output}/dev`],
