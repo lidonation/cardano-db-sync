@@ -10,7 +10,7 @@ import {
 } from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
   annotationText,
   audit,
@@ -18,6 +18,8 @@ import {
   main,
   readHeadings,
 } from '../../scripts/check-doc-parity.mjs';
+
+import {runAsScript} from './run-as-script';
 
 type Target = {kind: string; file: string; heading?: string; name?: string; sha256: string};
 type Entry = {sha256: string; targets?: string[]; omission?: string};
@@ -426,4 +428,26 @@ it('rejects non-regular files in the frozen git tree instead of following source
   json('docs/data/doc-retirement.json', pinLegacy());
   rmSync(path.join(repo, 'doc'), {recursive: true});
   expect(audit(docs).problems.join('\n')).toContain('regular flat source files');
+});
+
+it('runs the real frozen-source CLI and reports its complete non-Markdown omissions', async () => {
+  const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+  try {
+    expect(await runAsScript('../../scripts/check-doc-parity.mjs', [])).toBe(0);
+    const report = log.mock.calls.map(([message]) => String(message)).join('\n');
+    expect(report).toContain('352/352 headings accounted for (100%)');
+    expect(report).toContain('Non-Markdown omissions');
+    expect(report).toContain('ERD.png');
+  } finally {
+    log.mockRestore();
+  }
+});
+
+it('retains a safe CI failure report when a destination selector is missing', () => {
+  delete manifest.targets.reference.name;
+  save();
+  const logs: string[] = [];
+  expect(main(docs, {log: (message: string) => logs.push(message)})).toBe(1);
+  expect(logs.join('\n')).toContain('annotation target must select a Haskell declaration');
+  expect(logs.join('\n')).toContain('&lt;missing&gt;');
 });

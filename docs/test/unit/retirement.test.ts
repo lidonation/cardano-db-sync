@@ -89,6 +89,10 @@ it('recovers localized unknown paths from the single root 404 in both profiles',
       baseUrl: base,
       route: '/v1/unknown',
     });
+    expect(recoveryContext('/outside-the-site', base, ['ja'])).toEqual({
+      baseUrl: base,
+      route: '/outside-the-site',
+    });
     expect(recoveryContext(`${base}404.html`, base, ['ja'])).toEqual({
       baseUrl: base,
       route: '/404.html',
