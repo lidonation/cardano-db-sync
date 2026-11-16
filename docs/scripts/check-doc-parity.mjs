@@ -155,9 +155,16 @@ export function audit(docsRoot) {
   for (const file of dispositions.keys())
     if (!files.includes(file)) problems.push(`doc/${file}: B13 source file is missing`);
   const markdown = files.filter((file) => /\.md$/i.test(file));
-  for (const file of Object.keys(manifest.sources))
-    if (!markdown.includes(file))
-      problems.push(`doc/${file}: stale source mapping (not a current Markdown file)`);
+  for (const [file, source] of Object.entries(manifest.sources)) {
+    if (markdown.includes(file)) continue;
+    problems.push(`doc/${file}: stale source mapping (not a current Markdown file)`);
+    if (object(source) && object(source.headings)) {
+      for (const heading of Object.keys(source.headings)) {
+        problems.push(`doc/${file} — ${heading}: legacy source missing`);
+        rows.push({file, heading, status: 'FAIL', detail: 'Legacy source missing'});
+      }
+    }
+  }
 
   const guideHeadings = new Map();
   const targetResults = new Map();

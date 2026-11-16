@@ -148,6 +148,7 @@ describe('CON-6 heading parity', () => {
     expect(problems).toContain('preamble');
     expect(problems).toContain('extra.md');
     expect(problems).toContain('reference.md');
+    expect(problems).toContain('h1 Reference');
   });
 
   it('does not go green when the legacy tree is removed', () => {
