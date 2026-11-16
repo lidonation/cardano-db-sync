@@ -1,5 +1,13 @@
 import {execFileSync} from 'node:child_process';
-import {mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync} from 'node:fs';
+import {
+  mkdtempSync,
+  mkdirSync,
+  lstatSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import {afterEach, beforeEach, describe, expect, it} from 'vitest';
@@ -38,6 +46,23 @@ function json(file: string, value: unknown) {
 function save() {
   json('docs/data/doc-parity.json', manifest);
   json('docs/generated/haddock-annotations.json', artifact);
+}
+function git(...args: string[]): string {
+  return execFileSync('git', args, {cwd: repo, encoding: 'utf8'}).trim();
+}
+function pinLegacy() {
+  git('init', '-q');
+  git('add', 'doc');
+  git(
+    '-c',
+    'user.name=Test',
+    '-c',
+    'user.email=test@example.invalid',
+    'commit',
+    '-qm',
+    'original source',
+  );
+  return {sourceCommit: git('rev-parse', 'HEAD'), sourceTree: git('rev-parse', 'HEAD:doc')};
 }
 function source(text: string, target: string | null): Source {
   const parsed = readHeadings(text);
@@ -371,35 +396,34 @@ it('validates the real migration record without changing any inputs', () => {
     }),
   ];
   const before = readInputs();
+  expect(() => lstatSync(path.resolve(root, '../doc'))).toThrow(/ENOENT/);
   expect(audit(root).problems).toEqual([]);
   expect(readInputs()).toEqual(before);
 });
 
 it('audits the original git snapshot after explicit retirement, rejecting a mismatched tree', async () => {
-  const git = (...args: string[]) =>
-    execFileSync('git', args, {cwd: repo, encoding: 'utf8'}).trim();
-  git('init', '-q');
-  git('add', 'doc');
-  git(
-    '-c',
-    'user.name=Test',
-    '-c',
-    'user.email=test@example.invalid',
-    'commit',
-    '-qm',
-    'original source',
-  );
-  const sourceCommit = git('rev-parse', 'HEAD');
-  const sourceTree = git('rev-parse', 'HEAD:doc');
+  const {sourceCommit, sourceTree} = pinLegacy();
   json('docs/data/doc-retirement.json', {sourceCommit, sourceTree});
   const before = audit(docs);
   expect(before.problems).toEqual([]);
+  write('doc/install.md', guide.replace('smoke check', 'unreviewed command'));
+  expect(audit(docs).problems.join('\n')).toContain('source section changed');
+  write('doc/install.md', guide);
   rmSync(path.join(repo, 'doc'), {recursive: true});
   expect(audit(docs)).toEqual(before);
   write('docs/docs/guides/install.md', '---\ntitle: Install\n---\n\n# Install\n\n## Verify\n');
   expect(audit(docs).problems.join('\n')).toContain('migrated section changed');
   json('docs/data/doc-retirement.json', {sourceCommit, sourceTree: '0'.repeat(40)});
   expect(audit(docs).problems.join('\n')).toContain('source tree does not match');
+  json('docs/data/doc-retirement.json', {sourceCommit: '0'.repeat(40), sourceTree});
+  expect(audit(docs).problems.join('\n')).toContain('Cannot audit migration');
   json('docs/data/doc-retirement.json', {sourceCommit: '../other', sourceTree});
   expect(audit(docs).problems.join('\n')).toContain('full source commit');
+});
+
+it('rejects non-regular files in the frozen git tree instead of following source symlinks', () => {
+  symlinkSync('/outside/not-read', path.join(repo, 'doc/unsafe.md'));
+  json('docs/data/doc-retirement.json', pinLegacy());
+  rmSync(path.join(repo, 'doc'), {recursive: true});
+  expect(audit(docs).problems.join('\n')).toContain('regular flat source files');
 });
