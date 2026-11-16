@@ -3,7 +3,7 @@ import path from 'node:path';
 
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
-import {PROFILES} from '../../config/profiles';
+import {PROFILES, clientProfile} from '../../config/profiles';
 
 const CONFIG_PATH = path.resolve(import.meta.dirname, '../../docusaurus.config.ts');
 
@@ -86,7 +86,7 @@ describe('docusaurus.config (ENV-1)', () => {
 
   it('publishes the resolved profile to pages through customFields', async () => {
     const config = await loadConfig('dev');
-    expect(config.customFields?.profile).toEqual(PROFILES.dev);
+    expect(config.customFields?.profile).toEqual(clientProfile(PROFILES.dev));
   });
 
   it('counts the landing page facts at build time (B44-a)', async () => {

@@ -1,11 +1,11 @@
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 
-import type {BuildProfile} from '../../config/profiles';
+import type {ClientBuildProfile} from '../../config/profiles';
 
 /** The build values `docusaurus.config.ts` exposes through `customFields` (ENV-1, ENV-4). */
 export interface BuildEnvironment {
   /** The active build profile. */
-  readonly profile: BuildProfile;
+  readonly profile: ClientBuildProfile;
   /** Production origin plus base path, for the environment banner's way out. */
   readonly productionUrl: string;
 }
@@ -17,7 +17,7 @@ export interface BuildEnvironment {
  */
 export default function useBuildEnvironment(): BuildEnvironment {
   const {siteConfig} = useDocusaurusContext();
-  const profile = siteConfig.customFields?.profile as BuildProfile | undefined;
+  const profile = siteConfig.customFields?.profile as ClientBuildProfile | undefined;
   const productionUrl = siteConfig.customFields?.productionUrl;
 
   if (profile === undefined || typeof productionUrl !== 'string') {

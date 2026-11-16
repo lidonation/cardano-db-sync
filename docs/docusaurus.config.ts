@@ -8,7 +8,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 import {I18N} from './config/i18n';
-import {PROFILES, resolveProfile} from './config/profiles';
+import {PROFILES, resolveProfile, clientProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
 import sharedCodePlugin from './plugins/shared-code';
 import cssPrunePlugin from './plugins/css-prune';
@@ -66,7 +66,7 @@ const config: Config = {
 
   // Exposed to pages and components so no surface re-derives the environment (ENV-1, ENV-2).
   customFields: {
-    profile,
+    profile: clientProfile(profile),
     // ENV-4: the environment banner's way out to the real site.
     productionUrl: `${PROFILES.prod.url}${PROFILES.prod.baseUrl}`,
     // B44-a: the landing page's "in this build" figures, counted here at build time so the
