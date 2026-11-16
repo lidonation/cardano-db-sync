@@ -6,6 +6,7 @@ import path from 'node:path';
 import process from 'node:process';
 import {unified} from 'unified';
 import remarkParse from 'remark-parse';
+import yaml from 'js-yaml';
 
 const object = (v) => v !== null && typeof v === 'object' && !Array.isArray(v);
 const text = (v) => typeof v === 'string' && v.trim() !== '';
@@ -176,6 +177,14 @@ export function audit(docsRoot) {
           !text(target.heading)
         )
           throw new Error('guide target must select a heading in published docs/docs/guides/*.md');
+        const front = /^---\s*\n([\s\S]*?)\n---\s*(?:\n|$)/.exec(contents.replace(/\r\n?/g, '\n'));
+        const metadata = front ? yaml.load(front[1]) : null;
+        if (
+          !object(metadata) ||
+          metadata.draft === true ||
+          target.file.split('/').some((part) => part.startsWith('_') || part.startsWith('.'))
+        )
+          throw new Error('guide target must be published, not draft or excluded');
         if (!guideHeadings.has(target.file))
           guideHeadings.set(target.file, readHeadings(contents, true).headings);
         const heading = guideHeadings.get(target.file).find((h) => h.id === target.heading);

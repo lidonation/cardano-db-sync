@@ -134,6 +134,12 @@ describe('CON-6 heading parity', () => {
     expect(audit(docs).problems.join('\n')).toContain(heading);
   });
 
+  it('rejects a migrated guide hidden from production by draft frontmatter', () => {
+    write('docs/docs/guides/install.md', '---\ntitle: Install\ndraft: true\n---\n\n' + guide);
+    expect(audit(docs).problems.join('\n')).toContain('draft');
+    expect(main(docs, {log: () => {}})).toBe(1);
+  });
+
   it('detects preamble edits, untriaged new files and missing legacy files', () => {
     write('doc/install.md', 'Unreviewed preamble.\n\n' + guide);
     write('doc/extra.md', '# Extra\n');
@@ -223,7 +229,7 @@ describe('CON-6 heading parity', () => {
     }
   });
 
-  it('keeps malformed nested values and Markdown control characters in a failed report', () => {
+  it('keeps malformed nested values in a failed report', () => {
     json('docs/data/doc-parity.json', {
       ...manifest,
       sources: {

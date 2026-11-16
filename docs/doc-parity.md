@@ -21,6 +21,7 @@ etc., in document order (for example `h3 Ledger replay [2]`). Each entry has a `
 A target has `kind`, `file`, `sha256` and a selector:
 
 - `guide`: `file` must be a published `docs/docs/guides/*.md` file and `heading` selects one heading;
+  draft or underscore/dot-prefixed excluded guides do not count as published counterparts;
 - `annotation`: `file` must be a repository Haskell source and `name` selects a declaration in
   `generated/haddock-annotations.json`. Constructor and field documentation is included.
 
