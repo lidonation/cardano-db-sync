@@ -303,10 +303,7 @@
         },
         "h3 Performance Considerations": {
           "sha256": "63e918e558ac3c65fb783054ebf68d71591b063b02f792ddd6874122a54c3975",
-          "targets": [
-            "annotation:Types.hs:SnapshotIntervalConfig",
-            "guide:trimming.md#h2 Choose a mode"
-          ]
+          "targets": ["annotation:Types.hs:SnapshotIntervalConfig"]
         },
         "h2 Ledger Backend": {
           "sha256": "cfbd18e4b61bdbbbd07ea9475866379165157fec5c96bf7b26b6ab9b6ef4e88f",
