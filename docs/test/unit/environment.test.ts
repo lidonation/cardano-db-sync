@@ -7,12 +7,14 @@ import {afterEach, beforeEach, describe, expect, it} from 'vitest';
 import {isRootBuild, localesDefaultFirst} from '../../config/i18n';
 import {PROFILES} from '../../config/profiles';
 import environmentPlugin, {
+  ALL_LOCALES_ENV_VAR,
   NOINDEX_HTML,
   NOINDEX_META,
   ROBOTS_FILE,
   cacheByProfile,
   emitRobots,
   environmentHeadTags,
+  localeDevSocket,
   robotsTxt,
 } from '../../plugins/environment';
 import type {LoadContext} from '@docusaurus/types';
@@ -86,6 +88,27 @@ describe('cacheByProfile (ENV-1)', () => {
   });
 });
 
+describe('start:all-locales support', () => {
+  const runner = {[ALL_LOCALES_ENV_VAR]: '1'};
+
+  it('moves the hot-reload socket under the locale base URL only for the runner', () => {
+    expect(localeDevSocket('/ja/', {})).toEqual({});
+    expect(localeDevSocket('/ja/', {[ALL_LOCALES_ENV_VAR]: '0'})).toEqual({});
+    expect(localeDevSocket('/ja/', runner)).toEqual({
+      devServer: {
+        client: {webSocketURL: {pathname: '/ja/ws'}},
+        webSocketServer: {type: 'ws', options: {path: '/ja/ws'}},
+      },
+    });
+  });
+
+  it("keeps the runner's webpack cache apart from a plain npm start", () => {
+    const config = {cache: {type: 'filesystem' as const, name: 'client-development-ja'}};
+    cacheByProfile(config, PROFILES.dev, runner);
+    expect(config.cache.name).toBe('client-development-ja-dev-all-locales');
+  });
+});
+
 describe('locale builds', () => {
   const i18n = {currentLocale: 'ja', defaultLocale: 'en', locales: ['ja', 'en', 'de']};
 
@@ -131,7 +154,9 @@ describe('environmentPlugin', () => {
     expect(plugin.name).toBe('dbsync-environment');
     expect(plugin.injectHtmlTags?.({content: undefined})).toEqual({headTags: [NOINDEX_META]});
     const config = {cache: {type: 'filesystem' as const, name: 'server-production-en'}};
-    expect((plugin.configureWebpack as unknown as (c: object) => object)(config)).toEqual({});
+    const configure = plugin.configureWebpack as unknown as (c: object, s: boolean) => object;
+    expect(configure(config, false)).toEqual({});
+    expect(configure({}, true)).toEqual({});
     expect(config.cache.name).toBe('server-production-en-dev');
     await plugin.postBuild?.({outDir} as Parameters<NonNullable<typeof plugin.postBuild>>[0]);
     expect(await readRobots()).toBe(robotsTxt(PROFILES.dev));

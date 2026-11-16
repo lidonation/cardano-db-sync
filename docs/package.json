@@ -9,6 +9,7 @@
   "scripts": {
     "docusaurus": "docusaurus",
     "start": "cross-env DOCS_PROFILE=dev docusaurus start --host 0.0.0.0 --port 3003 --no-open",
+    "start:all-locales": "cross-env DOCS_PROFILE=dev node scripts/start-all-locales.mjs --host 0.0.0.0 --port 3003",
     "build:dev": "cross-env DOCS_PROFILE=dev docusaurus build --out-dir build/dev",
     "build:prod": "cross-env DOCS_PROFILE=prod docusaurus build --out-dir build/prod",
     "build": "npm run build:dev && npm run build:prod",

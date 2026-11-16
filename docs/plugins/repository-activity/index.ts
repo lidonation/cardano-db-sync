@@ -64,8 +64,8 @@ export default function repositoryActivity(context: LoadContext): Plugin {
             const validated = parseCache(JSON.stringify(data));
             try {
               await mkdir(cacheDir, {recursive: true});
-              await writeFile(`${cacheFile}.tmp`, JSON.stringify(validated));
-              await rename(`${cacheFile}.tmp`, cacheFile);
+              await writeFile(`${cacheFile}.${process.pid}.tmp`, JSON.stringify(validated));
+              await rename(`${cacheFile}.${process.pid}.tmp`, cacheFile);
               await pruneAvatars(
                 avatarsDir,
                 [...validated.contributors, ...validated.coreTeam].flatMap((person) =>

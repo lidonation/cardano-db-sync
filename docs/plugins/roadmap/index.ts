@@ -23,8 +23,8 @@ export default function roadmap(context: LoadContext): Plugin {
             const data = parseCache(JSON.stringify(await readRoadmap()));
             try {
               await mkdir(cacheDir, {recursive: true});
-              await writeFile(`${cacheFile}.tmp`, JSON.stringify(data));
-              await rename(`${cacheFile}.tmp`, cacheFile);
+              await writeFile(`${cacheFile}.${process.pid}.tmp`, JSON.stringify(data));
+              await rename(`${cacheFile}.${process.pid}.tmp`, cacheFile);
             } catch {
               console.warn('roadmap: could not save cache');
             }

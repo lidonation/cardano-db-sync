@@ -67,16 +67,48 @@ export async function emitRobots(
   await fs.writeFile(path.join(outDir, ROBOTS_FILE), robotsTxt(profile, locales), 'utf8');
 }
 
+/** Set by `npm run start:all-locales` on every per-locale `docusaurus start` it runs. */
+export const ALL_LOCALES_ENV_VAR = 'DOCS_DEV_ALL_LOCALES';
+
 /**
  * ENV-1: Docusaurus names webpack's filesystem cache by bundle, mode and locale only, and the
  * profile comes from the environment rather than the config file, so a dev build followed by a
  * prod build reused dev's compiled CSS, its subpath asset URLs included. Each profile gets
  * a cache of its own.
  */
-export function cacheByProfile(config: Configuration, profile: BuildProfile): void {
+export function cacheByProfile(
+  config: Configuration,
+  profile: BuildProfile,
+  env: NodeJS.ProcessEnv = process.env,
+): void {
   if (config.cache && typeof config.cache === 'object' && config.cache.type === 'filesystem') {
-    config.cache.name = `${config.cache.name ?? 'default'}-${profile.name}`;
+    // The all-locales runner's servers read their own generated files, and may run beside a
+    // plain `npm start`; they must not share (or race on) its cache.
+    const runner = env[ALL_LOCALES_ENV_VAR] === '1' ? '-all-locales' : '';
+    config.cache.name = `${config.cache.name ?? 'default'}-${profile.name}${runner}`;
   }
+}
+
+/**
+ * `npm run start:all-locales` serves one dev server per locale behind a single origin. Each
+ * server's hot-reload socket defaults to `/ws`, which the shared origin cannot tell apart, so
+ * under that runner the socket moves under the locale's own base URL (`/ja/ws`), where the proxy
+ * routes it like any other page of that locale. A plain `npm start` keeps the stock socket.
+ */
+export function localeDevSocket(
+  baseUrl: string,
+  env: NodeJS.ProcessEnv = process.env,
+): Configuration {
+  if (env[ALL_LOCALES_ENV_VAR] !== '1') return {};
+  const socketPath = `${baseUrl}ws`;
+  // Docusaurus merges a plugin's `devServer` into the dev server config; webpack's own
+  // Configuration type does not declare the key.
+  return {
+    devServer: {
+      client: {webSocketURL: {pathname: socketPath}},
+      webSocketServer: {type: 'ws', options: {path: socketPath}},
+    },
+  } as Configuration;
 }
 
 export default function environmentPlugin(context: LoadContext): Plugin {
@@ -84,9 +116,9 @@ export default function environmentPlugin(context: LoadContext): Plugin {
 
   return {
     name: 'dbsync-environment',
-    configureWebpack(config) {
+    configureWebpack(config, isServer) {
       cacheByProfile(config, profile);
-      return {};
+      return isServer ? {} : localeDevSocket(context.baseUrl);
     },
     injectHtmlTags() {
       return {headTags: environmentHeadTags(profile)};
