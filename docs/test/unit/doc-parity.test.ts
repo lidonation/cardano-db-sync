@@ -257,6 +257,51 @@ describe('CON-6 heading parity', () => {
     expect(logs.join('\n')).toContain('accepted omission needs a reason');
   });
 
+  it.each([
+    {kind: 'unknown'},
+    {sha256: 'not-a-digest'},
+    {file: 'src/Reference.hs'},
+    {heading: 'h2 Missing destination'},
+  ])('rejects invalid or vanished target selectors (%j)', (change) => {
+    Object.assign(manifest.targets.install, change);
+    save();
+    expect(audit(docs).problems.some((problem: string) => problem.includes('doc/install.md'))).toBe(
+      true,
+    );
+    expect(main(docs, {log: () => {}})).toBe(1);
+  });
+
+  it('rejects stale target definitions and ambiguous/empty omission records', () => {
+    manifest.targets.unused = {...manifest.targets.install};
+    manifest.sources['Readme.md'].headings['h1 Old navigation'].targets = ['install'];
+    manifest.sources['reference.md'].headings['h1 Reference'] = {
+      sha256: digest(reference),
+      omission: '',
+    };
+    save();
+    const problems = audit(docs).problems.join('\n');
+    expect(problems).toContain('Unused/stale target unused');
+    expect(problems).toContain('exactly one');
+    expect(problems).toContain('needs a reason');
+  });
+
+  it('fails malformed triage/artifact inputs and duplicate file dispositions', () => {
+    json('docs/generated/haddock-annotations.json', null);
+    expect(main(docs, {log: () => {}})).toBe(1);
+    save();
+    json('docs/data/doc-triage.json', {});
+    expect(main(docs, {log: () => {}})).toBe(1);
+    json('docs/data/doc-triage.json', [
+      null,
+      {file: 'install.md', disposition: 'unknown', reason: ''},
+      {file: 'install.md', disposition: 'guide', reason: 'Procedure.'},
+      {file: 'install.md', disposition: 'guide', reason: 'Duplicate.'},
+    ]);
+    const problems = audit(docs).problems.join('\n');
+    expect(problems).toContain('valid disposition and reason');
+    expect(problems).toContain('B13 duplicate file');
+  });
+
   it('reports unreadable/invalid JSON as a failed check', () => {
     write('docs/data/doc-parity.json', '{invalid');
     expect(main(docs, {log: () => {}})).toBe(1);
