@@ -1,3 +1,4 @@
+import {execFileSync} from 'node:child_process';
 import {mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
@@ -356,16 +357,25 @@ it('validates the real migration record without changing any inputs', () => {
     'data/doc-triage.json',
     'data/doc-parity.json',
     'generated/haddock-annotations.json',
-    '../doc/installing.md',
+    'data/doc-retirement.json',
     'docs/guides/installing.md',
   ];
-  const before = inputs.map((file) => readFileSync(path.join(root, file), 'utf8'));
+  const {sourceCommit} = JSON.parse(
+    readFileSync(path.join(root, 'data/doc-retirement.json'), 'utf8'),
+  );
+  const readInputs = () => [
+    ...inputs.map((file) => readFileSync(path.join(root, file), 'utf8')),
+    execFileSync('git', ['show', `${sourceCommit}:doc/installing.md`], {
+      cwd: root,
+      encoding: 'utf8',
+    }),
+  ];
+  const before = readInputs();
   expect(audit(root).problems).toEqual([]);
-  expect(inputs.map((file) => readFileSync(path.join(root, file), 'utf8'))).toEqual(before);
+  expect(readInputs()).toEqual(before);
 });
 
 it('audits the original git snapshot after explicit retirement, rejecting a mismatched tree', async () => {
-  const {execFileSync} = await import('node:child_process');
   const git = (...args: string[]) =>
     execFileSync('git', args, {cwd: repo, encoding: 'utf8'}).trim();
   git('init', '-q');
@@ -383,9 +393,10 @@ it('audits the original git snapshot after explicit retirement, rejecting a mism
   const sourceTree = git('rev-parse', 'HEAD:doc');
   json('docs/data/doc-retirement.json', {sourceCommit, sourceTree});
   const before = audit(docs);
+  expect(before.problems).toEqual([]);
   rmSync(path.join(repo, 'doc'), {recursive: true});
   expect(audit(docs)).toEqual(before);
-  write('docs/docs/guides/install.md', '# Install\n\n## Verify\n');
+  write('docs/docs/guides/install.md', '---\ntitle: Install\n---\n\n# Install\n\n## Verify\n');
   expect(audit(docs).problems.join('\n')).toContain('migrated section changed');
   json('docs/data/doc-retirement.json', {sourceCommit, sourceTree: '0'.repeat(40)});
   expect(audit(docs).problems.join('\n')).toContain('source tree does not match');
