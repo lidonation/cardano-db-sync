@@ -10,6 +10,7 @@ import {
   isProfileName,
   resolveProfile,
   readDocsEnv,
+  clientProfile,
 } from '../../config/profiles';
 
 describe('build profiles (ENV-1, ENV-6)', () => {
@@ -188,4 +189,25 @@ describe('local dev origin', () => {
       rmSync(dir, {recursive: true, force: true});
     }
   });
+});
+
+it('serializes only the environment fields consumed by browser components', () => {
+  for (const profile of Object.values(PROFILES)) {
+    const client = clientProfile(profile);
+    expect(Object.keys(client).sort()).toEqual([
+      'baseUrl',
+      'indexable',
+      'network',
+      'repoUrl',
+      'url',
+    ]);
+    for (const key of Object.keys(client) as (keyof typeof client)[])
+      expect(client[key]).toBe(profile[key]);
+  }
+  const override = resolveProfile({
+    DOCS_PROFILE: 'dev',
+    NODE_ENV: 'development',
+    DOCS_DEV_BASE_URL: '/preview/',
+  });
+  expect(clientProfile(override).baseUrl).toBe('/preview/');
 });
