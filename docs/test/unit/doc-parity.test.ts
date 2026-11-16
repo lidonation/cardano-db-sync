@@ -451,3 +451,26 @@ it('retains a safe CI failure report when a destination selector is missing', ()
   expect(logs.join('\n')).toContain('annotation target must select a Haskell declaration');
   expect(logs.join('\n')).toContain('&lt;missing&gt;');
 });
+
+it('does not silently turn a B13 accepted omission into a migrated destination', () => {
+  const heading = manifest.sources['Readme.md'].headings['h1 Old navigation'];
+  delete heading.omission;
+  heading.targets = ['install'];
+  save();
+  const result = audit(docs);
+  expect(result.problems.join('\n')).toContain('B13 accepts omission, not a migrated target');
+  expect(result.rows.find((row: {file: string}) => row.file === 'Readme.md')?.status).toBe('FAIL');
+});
+
+it('finds newly introduced nested legacy files instead of hiding them in the frozen policy', () => {
+  json('docs/data/doc-retirement.json', pinLegacy());
+  write('doc/nested/unreviewed.md', '# Unreviewed\n\nNew upstream content.');
+  expect(audit(docs).problems.join('\n')).toContain('doc/nested/unreviewed.md: unaccounted file');
+});
+
+it('rejects a dangling working-tree doc symlink rather than falling back to the frozen source', () => {
+  json('docs/data/doc-retirement.json', pinLegacy());
+  rmSync(path.join(repo, 'doc'), {recursive: true});
+  symlinkSync('/outside/not-read', path.join(repo, 'doc'), 'dir');
+  expect(audit(docs).problems.join('\n')).toContain('legacy doc directory must not be a symlink');
+});
