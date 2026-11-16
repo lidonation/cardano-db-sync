@@ -2,7 +2,7 @@
 /** Build the real site with a second docs release in a disposable directory.
  * No version, route-manifest or generated cache can leak into the normal build. */
 import {spawn} from 'node:child_process';
-import {cp, mkdtemp, rm, symlink} from 'node:fs/promises';
+import {cp, mkdtemp, rm, symlink, readFile, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 
@@ -66,7 +66,16 @@ try {
     path.join(temporary, 'cardano-db-sync/CHANGELOG.md'),
     {recursive: true},
   );
+  // Publish, then retire an actual version in the disposable fixture. Its paths come from
+  // B04's first build, not invented manifest entries; the second build must emit real stubs.
+  await run(['docs:version', '13.3.0.0']);
   await run(['docs:version', '13.6.0.5']);
+  await run(['build', '--locale', 'en', '--out-dir', 'build/dev']);
+  const versionsFile = path.join(site, 'versions.json');
+  const versions = JSON.parse(await readFile(versionsFile, 'utf8'));
+  await writeFile(versionsFile, JSON.stringify(versions.filter((name) => name !== '13.3.0.0')));
+  await rm(path.join(site, 'versioned_docs/version-13.3.0.0'), {recursive: true});
+  await rm(path.join(site, 'versioned_sidebars/version-13.3.0.0-sidebars.json'));
   await run(['build', '--locale', 'en', '--out-dir', 'build/dev']);
   await run(['serve', '--dir', 'build/dev', '--host', '127.0.0.1', '--port', port, '--no-open']);
 } catch (error) {

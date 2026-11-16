@@ -1,5 +1,10 @@
 import {describe, expect, it} from 'vitest';
-import {archiveUrl, retiredVersion, retirementTarget} from '../../src/retirement/routes';
+import {
+  archiveUrl,
+  retiredVersion,
+  retirementTarget,
+  recoveryContext,
+} from '../../src/retirement/routes';
 
 const data = {
   lines: [
@@ -22,7 +27,12 @@ describe('VER-5/6 retirement policy', () => {
     expect(retirementTarget('/unknown', live, data)).toBe('/');
   });
   it('does not call a live version, current-line typo or ordinary route retired', () => {
-    for (const route of ['/docs/next/nope', '/docs/guides/nope', '/ecosystem/nope']) {
+    for (const route of [
+      '/docs/next/nope',
+      '/docs/13.7.0.0/nope',
+      '/docs/guides/nope',
+      '/ecosystem/nope',
+    ]) {
       expect(retiredVersion(route, data.lines)).toBeNull();
     }
     const lines = [...data.lines, {name: '13.6.0.5', path: '/docs/13.6.0.5'}];
@@ -37,4 +47,51 @@ describe('VER-5/6 retirement policy', () => {
     expect(archiveUrl(repo, undefined, [])).toBe(`${repo}/tags`);
     expect(archiveUrl(repo, '../../secret', [])).toBe(`${repo}/tags`);
   });
+});
+
+it('derives version metadata and live routes under the locale base', async () => {
+  const {retirementData} = await import('../../plugins/route-manifest/metadata');
+  const versions = [
+    {
+      versionName: 'current',
+      path: '/site/ja/docs/next',
+      isLast: false,
+      docs: [{permalink: '/site/ja/docs/next/intro'}],
+    },
+    {
+      versionName: '13.7.0.0',
+      path: '/site/ja/docs',
+      isLast: true,
+      docs: [{permalink: '/site/ja/docs/intro'}],
+    },
+  ];
+  const result = retirementData(
+    versions,
+    [{type: 'jsx', source: '@site/src/pages/index.tsx', permalink: '/site/ja/'}],
+    '/site/ja/',
+    ['13.3.0.0'],
+  );
+  expect(result.latest).toEqual({name: '13.7.0.0', path: '/docs'});
+  expect(result.routes).toEqual(['/', '/docs/intro', '/docs/next/intro']);
+  expect(retirementData([], [], '/', []).latest).toEqual({name: 'current', path: '/docs'});
+  expect(retirementData([{...versions[0], isLast: false}], [], '/site/ja/', []).latest.name).toBe(
+    'current',
+  );
+});
+
+it('recovers localized unknown paths from the single root 404 in both profiles', () => {
+  for (const base of ['/', '/site/']) {
+    expect(recoveryContext(`${base}ja/v1/guides/running/`, base, ['ja', 'de'])).toEqual({
+      baseUrl: `${base}ja/`,
+      route: '/v1/guides/running',
+    });
+    expect(recoveryContext(`${base}v1/unknown`, base, ['ja'])).toEqual({
+      baseUrl: base,
+      route: '/v1/unknown',
+    });
+    expect(recoveryContext(`${base}404.html`, base, ['ja'])).toEqual({
+      baseUrl: base,
+      route: '/404.html',
+    });
+  }
 });

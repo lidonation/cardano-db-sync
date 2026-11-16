@@ -9,6 +9,11 @@ requires:
 
 # Operate SMASH
 
+SMASH aggregates off-chain stake pool metadata for wallets, exchanges, delegators and pool
+operators. It reduces repeated requests to pool-hosted URLs and lets an operator curate metadata
+through delisting and reserved tickers. Pool registrations supply a metadata URL and hash on-chain;
+SMASH serves stored metadata, while db-sync performs collection and validation.
+
 SMASH serves pool metadata from a db-sync database. db-sync must be running or have populated the
 database; results from an instance that has not caught up can be stale. Enable off-chain pool
 metadata in the db-sync configuration when it is required, and confirm the release-specific

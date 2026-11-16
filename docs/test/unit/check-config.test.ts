@@ -561,7 +561,10 @@ describe('check:config gate (CON-4)', () => {
 
 describe('runtime option migration guidance', () => {
   it('keeps the recommended and full configuration examples accepted by the runtime schema', async () => {
-    const guide = await fs.readFile(path.resolve(DOCS_ROOT, '../doc/configuration.md'), 'utf8');
+    const guide = await fs.readFile(
+      path.resolve(DOCS_ROOT, 'docs/guides/runtime-option-migration.md'),
+      'utf8',
+    );
     const blocks = [...guide.matchAll(/```[^\n]*\n([\s\S]*?)```/g)].map((match) =>
       match[1].replace(/^\s*\/\/.*$/gm, ''),
     );
@@ -575,10 +578,10 @@ describe('runtime option migration guidance', () => {
 
   it('describes the old CLI switch as rejected, not as an effective option', async () => {
     const guide = await fs.readFile(
-      path.resolve(DOCS_ROOT, '../doc/command-line-options.md'),
+      path.resolve(DOCS_ROOT, 'docs/guides/runtime-option-migration.md'),
       'utf8',
     );
-    const line = guide.split('\n').find((text) => text.includes('`--disable-in-out`'));
+    const line = guide.split(/\n\n+/).find((text) => text.includes('`--disable-in-out`'));
     expect(line).toContain('retired');
     expect(line).toContain('tx_out.value');
     expect(line).not.toContain('Disables');

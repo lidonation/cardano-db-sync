@@ -185,7 +185,9 @@ export function faqSections(translate: Translate): readonly FaqSection[] {
   ];
 }
 
-/** Where a guide is read in full: the repository's `doc/` directory on its default branch. */
-export function guideUrl(repoUrl: string, guide: Guide): string {
-  return `${repoUrl.replace(/\/+$/, '')}/blob/master/doc/${guide}`;
+/** Current site guides, not repository URLs that disappeared with doc/. */
+export function guideUrl(guide: Guide): string {
+  const slug =
+    guide === 'configuration.md' ? 'runtime-option-migration' : guide.replace(/\.md$/, '');
+  return `/docs/guides/${slug}`;
 }

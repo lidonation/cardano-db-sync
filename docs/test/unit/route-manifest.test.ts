@@ -366,3 +366,32 @@ describe('routeManifestPlugin', () => {
     }
   });
 });
+
+it('retargets retired versions to the same latest page, even when an old ancestor still exists', () => {
+  const before = {
+    routes: {
+      '/': {status: 'live'},
+      '/docs/13.3.0.0/guides/docker': {status: 'retired', redirect: '/'},
+    },
+  } as const;
+  const policy = {
+    lines: [{name: 'current', path: '/docs'}],
+    latest: {name: 'current', path: '/docs'},
+  };
+  const live = ['/', '/docs/guides/docker'];
+  const result = reconcile(before, live, policy);
+  expect(result.retargeted).toEqual(['/docs/13.3.0.0/guides/docker']);
+  expect(result.manifest.routes['/docs/13.3.0.0/guides/docker']).toEqual({
+    status: 'retired',
+    redirect: '/docs/guides/docker',
+  });
+  expect(reconcile(result.manifest, live, policy).retargeted).toEqual([]);
+  const newer = {
+    lines: [{name: 'current', path: '/docs/next'}],
+    latest: {name: 'current', path: '/docs/next'},
+  };
+  expect(
+    reconcile(result.manifest, ['/', '/docs/guides/docker', '/docs/next/guides/docker'], newer)
+      .manifest.routes['/docs/13.3.0.0/guides/docker'],
+  ).toEqual({status: 'retired', redirect: '/docs/next/guides/docker'});
+});

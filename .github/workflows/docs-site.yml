@@ -135,6 +135,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/docs-setup
+      - name: Fetch the immutable pre-retirement source for shallow checkouts
+        run: |
+          source=$(node -e "const s=require('./data/doc-retirement.json').sourceCommit; if(!/^[a-f0-9]{40}$/.test(s)) process.exit(1); console.log(s)")
+          git fetch --no-tags --depth=1 origin "$source"
       - name: Audit every legacy heading against B13 migration destinations
         run: npm run --silent check:doc-parity > doc-parity-report.md
       - name: Publish parity report in the job summary
@@ -246,6 +250,10 @@ jobs:
           npm run build:prod -- --out-dir .cache/browser-fixtures/prod
         env:
           REPOSITORY_ACTIVITY_CACHE: test/fixtures/repository-activity
+      - name: Manifest crawl and path-aware 404 on both profiles (CON-7, VER-4, VER-6/7)
+        run: |
+          DBS_BUILT_SKIP_BUILD=1 DBS_BUILT_PROFILE=dev npx playwright test --config playwright.built.config.ts test/built-browser/retirement.spec.ts
+          DBS_BUILT_SKIP_BUILD=1 DBS_BUILT_PROFILE=prod npx playwright test --config playwright.built.config.ts test/built-browser/retirement.spec.ts
       - name: Pagefind on both shipped profiles and all locales (SRCH-10, SEC-2)
         run: npm run test:pagefind:profiles
       - name: Landing on shipped assets (B44-a, PERF-1, A11Y-18)
@@ -310,7 +318,16 @@ jobs:
   gate:
     name: Docs CI gate
     if: always()
-    needs: [format, static-analysis, doc-parity, unit-tests, build, links, asset-budget]
+    needs:
+      [
+        format,
+        static-analysis,
+        doc-parity,
+        unit-tests,
+        build,
+        links,
+        asset-budget,
+      ]
     runs-on: ubuntu-latest
     steps:
       - name: Every stage passed

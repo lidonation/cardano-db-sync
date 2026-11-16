@@ -363,3 +363,32 @@ it('validates the real migration record without changing any inputs', () => {
   expect(audit(root).problems).toEqual([]);
   expect(inputs.map((file) => readFileSync(path.join(root, file), 'utf8'))).toEqual(before);
 });
+
+it('audits the original git snapshot after explicit retirement, rejecting a mismatched tree', async () => {
+  const {execFileSync} = await import('node:child_process');
+  const git = (...args: string[]) =>
+    execFileSync('git', args, {cwd: repo, encoding: 'utf8'}).trim();
+  git('init', '-q');
+  git('add', 'doc');
+  git(
+    '-c',
+    'user.name=Test',
+    '-c',
+    'user.email=test@example.invalid',
+    'commit',
+    '-qm',
+    'original source',
+  );
+  const sourceCommit = git('rev-parse', 'HEAD');
+  const sourceTree = git('rev-parse', 'HEAD:doc');
+  json('docs/data/doc-retirement.json', {sourceCommit, sourceTree});
+  const before = audit(docs);
+  rmSync(path.join(repo, 'doc'), {recursive: true});
+  expect(audit(docs)).toEqual(before);
+  write('docs/docs/guides/install.md', '# Install\n\n## Verify\n');
+  expect(audit(docs).problems.join('\n')).toContain('migrated section changed');
+  json('docs/data/doc-retirement.json', {sourceCommit, sourceTree: '0'.repeat(40)});
+  expect(audit(docs).problems.join('\n')).toContain('source tree does not match');
+  json('docs/data/doc-retirement.json', {sourceCommit: '../other', sourceTree});
+  expect(audit(docs).problems.join('\n')).toContain('full source commit');
+});

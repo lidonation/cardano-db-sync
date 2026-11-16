@@ -108,7 +108,8 @@
             "annotation:Types.hs:ShelleyInsertConfig",
             "annotation:Types.hs:MultiAssetConfig",
             "annotation:Types.hs:PlutusConfig",
-            "annotation:cardano-db-sync.hs:pRejectDisableInOut"
+            "annotation:cardano-db-sync.hs:pRejectDisableInOut",
+            "guide:runtime-option-migration.md#h1 Runtime option migration"
           ]
         },
         "h2 Simple Example": {
@@ -3452,7 +3453,7 @@
       "kind": "guide",
       "file": "docs/docs/guides/smash-operations.md",
       "heading": "h1 Operate SMASH",
-      "sha256": "0393a89e2b321b28bd4dbf391581b9aca16be817bf2b36991d62afdd3cf77b5a"
+      "sha256": "84cff43f61875488d9f49b136c4bce1ebe9cb395674a8b1fb21c675191354e80"
     },
     "annotation:Api.hs:OffChainPoolMetadataAPI": {
       "kind": "annotation",
@@ -3663,6 +3664,12 @@
       "file": "docs/docs/guides/validation.md",
       "heading": "h2 Runtime Reward Validations",
       "sha256": "2a8d8b5fc28d3da129444dc734581c5e57169bb9c7778831fae6f18e66d71051"
+    },
+    "guide:runtime-option-migration.md#h1 Runtime option migration": {
+      "kind": "guide",
+      "file": "docs/docs/guides/runtime-option-migration.md",
+      "heading": "h1 Runtime option migration",
+      "sha256": "1e7ac2582ee887d08eda26cc81b785175705812c0426b227d8d7a4c0aed81e7c"
     }
   }
 }

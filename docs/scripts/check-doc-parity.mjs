@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 /** B16 / CON-6: read-only, heading-level migration audit. See ../doc-parity.md. */
+import {execFileSync} from 'node:child_process';
 import {createHash} from 'node:crypto';
 import {lstatSync, readdirSync, readFileSync, realpathSync} from 'node:fs';
 import path from 'node:path';
@@ -79,6 +80,37 @@ function readRepoFile(root, file) {
     throw new Error('path must be a regular file inside the repository');
   return readFileSync(absolute, 'utf8');
 }
+/** B17's explicit retirement policy. A pinned git tree replaces the removed working copy,
+ * never the mapped destination or a second prose copy. Active doc/ edits still audit live. */
+function frozenSource(root) {
+  const policy = JSON.parse(readRepoFile(root, 'docs/data/doc-retirement.json'));
+  if (!/^[a-f0-9]{40}$/.test(policy.sourceCommit) || !/^[a-f0-9]{40}$/.test(policy.sourceTree))
+    throw new Error('retirement policy must pin a full source commit and doc tree');
+  const git = (args) =>
+    execFileSync('git', args, {
+      cwd: root,
+      encoding: 'utf8',
+      maxBuffer: 10 * 1024 * 1024,
+      stdio: ['ignore', 'pipe', 'pipe'],
+    });
+  if (git(['rev-parse', `${policy.sourceCommit}:doc`]).trim() !== policy.sourceTree)
+    throw new Error('retirement source tree does not match its pinned commit');
+  const files = git(['ls-tree', '-r', policy.sourceTree])
+    .trim()
+    .split('\n')
+    .map((line) => {
+      const match = /^100644 blob [a-f0-9]{40}\t([a-zA-Z0-9._-]+)$/.exec(line);
+      if (!match) throw new Error('retirement snapshot must contain regular flat source files');
+      return match[1];
+    });
+  return {
+    files,
+    read: (file) => {
+      if (!files.includes(file)) throw new Error('unknown frozen legacy source');
+      return git(['show', `${policy.sourceCommit}:doc/${file}`]);
+    },
+  };
+}
 function inventory(root) {
   const files = [];
   function walk(directory) {
@@ -116,12 +148,21 @@ export function audit(docsRoot) {
         )
       : [],
   });
-  let manifest, triage, artifact, files;
+  let manifest, triage, artifact, files, snapshot;
   try {
     manifest = JSON.parse(readRepoFile(root, 'docs/data/doc-parity.json'));
     triage = JSON.parse(readRepoFile(root, 'docs/data/doc-triage.json'));
     artifact = JSON.parse(readRepoFile(root, 'docs/generated/haddock-annotations.json'));
-    files = inventory(root);
+    // Resolve and validate the immutable tree once per audit, not once per heading/file.
+    let legacyPresent = false;
+    try {
+      lstatSync(path.join(root, 'doc'));
+      legacyPresent = true;
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+    }
+    snapshot = legacyPresent ? null : frozenSource(root);
+    files = snapshot ? snapshot.files.sort() : inventory(root);
   } catch (error) {
     problems.push(`Cannot audit migration: ${error.message}`);
     return result();
@@ -237,7 +278,7 @@ export function audit(docsRoot) {
     const old = manifest.sources[file];
     let current;
     try {
-      current = readHeadings(readRepoFile(root, at));
+      current = readHeadings(snapshot ? snapshot.read(file) : readRepoFile(root, at));
     } catch (error) {
       problems.push(`${at}: ${error.message}`);
       continue;

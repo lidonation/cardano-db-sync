@@ -40,7 +40,9 @@ export function retiredVersion(
   )
     return null;
   const match = /^\/(?:docs\/)?(v?\d+(?:\.\d+)*)(?:\/(.*))?$/.exec(route);
-  return match ? {name: match[1], page: match[2] ?? ''} : null;
+  if (!match || lines.some((line) => line.name.replace(/^v/, '') === match[1].replace(/^v/, '')))
+    return null;
+  return {name: match[1], page: match[2] ?? ''};
 }
 
 /** VER-5: prefer the same page in the latest line, otherwise the original nearest live ancestor. */
@@ -50,8 +52,8 @@ export function retirementTarget(
   data?: Pick<RetirementData, 'lines' | 'latest'>,
 ): string {
   const version = data && retiredVersion(route, data.lines);
-  if (version) {
-    const equivalent = `${data!.latest.path}/${version.page}`.replace(/\/$/, '');
+  if (version && data) {
+    const equivalent = `${data.latest.path}/${version.page}`.replace(/\/$/, '');
     if (live.has(equivalent)) return equivalent;
   }
   return nearestLiveAncestor(route, live);
@@ -68,4 +70,22 @@ export function archiveUrl(
     (candidate) => candidate === version || candidate.replace(/^v/, '') === name,
   );
   return tag ? `${repoUrl}/tree/${encodeURIComponent(tag)}/doc` : `${repoUrl}/tags`;
+}
+
+/** Pages serves the root 404 even for a localized URL. Recover the requested locale prefix,
+ * rather than assuming the language of that static fallback is the requested language. */
+export function recoveryContext(
+  pathname: string,
+  baseUrl: string,
+  locales: readonly string[],
+): {baseUrl: string; route: string} {
+  const relative = pathname.startsWith(baseUrl)
+    ? pathname.slice(baseUrl.length)
+    : pathname.replace(/^\/+/, '');
+  const [first, ...rest] = relative.split('/');
+  const localized = locales.includes(first);
+  return {
+    baseUrl: localized ? `${baseUrl}${first}/` : baseUrl,
+    route: `/${(localized ? rest.join('/') : relative).replace(/\/+$/, '')}`,
+  };
 }

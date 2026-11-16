@@ -22,7 +22,11 @@ instance fully synced to a specific network is:
 
 ## Documentation
 
-The [doc/](https://github.com/IntersectMBO/cardano-db-sync/blob/master/doc/Readme.md) directory,  offers essential resources for users, including guides for installation with and without Nix, configuration. Key files cover, Docker usage, PostgreSQL example queries, command-line options and database migrations. There's also a troubleshooting guide for common issues. These documents provide users with the necessary steps to effectively set up and maintain the Cardano DB Sync.
+The [documentation site](https://lidonation.github.io/cardano-db-sync/) is the current entry
+point for installation, operation and migration guides. The [guide sources](docs/docs/guides/index.md)
+live in `docs/`; reference descriptions come from Haskell annotations. Historical `doc/`
+content remains available at its original git tags, not as a stale second copy on this branch.
+
 
 ## Architecture
 
@@ -177,7 +181,7 @@ possible solutions.
 
 * [BuildingRunning][BuildingRunning]: Building and running the db-sync node.
 * [Docker][Docker]: Instruction for docker-compose, and building the images using nix.
-* [ERD][ERD]: The entity relationship diagram.
+* [ERD][ERD]: The historical entity relationship diagram. Use the generated schema data for current definitions.
 * [Example SQL queries][ExampleQueries]: Some example SQL and Haskell/Esqueleto queries.
 * [OffChainPoolData][OffChainPoolData]: Explanation of how stake pool offchain data is retried.
 * [Schema Documentation][Schema Documentation]: The database schema documentation.
@@ -186,18 +190,18 @@ possible solutions.
 * [Upgrading PostgreSQL][UpgradingPostgres]
 * [Validation][Validation]: Explanation of validation done by the db-sync node and assumptions made.
 
-[InstallingNix]: doc/installing-with-nix.md
-[Installing]: doc/installing.md
-[BuildingRunning]: doc/building-running.md
-[Docker]: doc/docker.md
-[Running]: doc/running.md
-[ERD]: doc/ERD.png
-[ExampleQueries]: doc/interesting-queries.md
+[InstallingNix]: docs/docs/guides/installing-with-nix.md
+[Installing]: docs/docs/guides/installing.md
+[BuildingRunning]: docs/docs/guides/building-running.md
+[Docker]: docs/docs/guides/docker.md
+[Running]: docs/docs/guides/running.md
+[ERD]: https://github.com/lidonation/cardano-db-sync/blob/55f86a483dd69a168474f8dfbb2130293ed6498b/doc/ERD.png
+[ExampleQueries]: docs/docs/guides/interesting-queries.md
 [PostgresView]: https://www.postgresql.org/docs/current/sql-createview.html
-[OffChainPoolData]: doc/pool-offchain-data.md
-[Schema Documentation]: doc/schema.md
-[Schema Management]: doc/schema-management.md
-[StateSnapshot]: doc/state-snapshot.md
-[Troubleshooting]: doc/troubleshooting.md
-[UpgradingPostgres]: doc/upgrading-postgresql.md
-[Validation]: doc/validation.md
+[OffChainPoolData]: docs/docs/guides/pool-metadata.md
+[Schema Documentation]: docs/generated/schema.json
+[Schema Management]: docs/docs/guides/schema-management.md
+[StateSnapshot]: docs/docs/guides/state-snapshot.md
+[Troubleshooting]: docs/docs/guides/troubleshooting.md
+[UpgradingPostgres]: docs/docs/guides/upgrading-postgresql.md
+[Validation]: docs/docs/guides/validation.md

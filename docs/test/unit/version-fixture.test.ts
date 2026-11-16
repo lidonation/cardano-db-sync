@@ -30,7 +30,16 @@ test('the disposable version build cannot write the normal persistent cache', as
   );
   await writeFile(
     cli,
-    `import {appendFileSync} from 'node:fs';
+    `import {appendFileSync,readFileSync,writeFileSync,mkdirSync,existsSync} from 'node:fs';
+const args = process.argv.slice(2);
+if (args[0] === 'docs:version') {
+  const versions = existsSync('versions.json') ? JSON.parse(readFileSync('versions.json','utf8')) : [];
+  writeFileSync('versions.json', JSON.stringify([args[1], ...versions]));
+  mkdirSync('versioned_docs/version-' + args[1], {recursive: true});
+  mkdirSync('versioned_sidebars', {recursive: true});
+  writeFileSync('versioned_sidebars/version-' + args[1] + '-sidebars.json', '{}');
+}
+
 appendFileSync(${JSON.stringify(log)}, JSON.stringify({
   args: process.argv.slice(2),
   cwd: process.cwd(),
@@ -46,7 +55,13 @@ appendFileSync(${JSON.stringify(log)}, JSON.stringify({
     .trim()
     .split('\n')
     .map((line) => JSON.parse(line));
-  expect(calls.map(({args}) => args[0])).toEqual(['docs:version', 'build', 'serve']);
+  expect(calls.map(({args}) => args[0])).toEqual([
+    'docs:version',
+    'docs:version',
+    'build',
+    'build',
+    'serve',
+  ]);
   for (const call of calls) {
     expect(call.profile).toBe('dev');
     expect(call.manifest).toBe('write');
