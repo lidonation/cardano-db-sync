@@ -33,7 +33,7 @@ export function remarkMetadata(options = {}) {
       const paragraphs = tree.children
         .slice(i + 1, end)
         .filter((item) => item.type === 'paragraph');
-      const body = normalize(paragraphs.map(text).join(' '));
+      const body = normalize(paragraphs.length ? text(paragraphs[0]) : '');
       if (body) steps.push({name: normalize(text(node)), text: body});
     }
     file.data.metadata = {title, description, steps};
@@ -50,9 +50,17 @@ export function deriveMetadata(content, title) {
 /** Supported Docusaurus hook: no source mutation or authored metadata boilerplate. */
 export async function parseMetadataFrontMatter(params) {
   const result = await params.defaultParseFrontMatter(params);
-  const {title, description} = deriveMetadata(
+  const {title, description, steps} = deriveMetadata(
     result.content,
     result.frontMatter.sidebar_label ?? result.frontMatter.title,
   );
-  return {...result, frontMatter: {...result.frontMatter, title, description}};
+  return {
+    ...result,
+    frontMatter: {
+      ...result.frontMatter,
+      title,
+      description,
+      metadata_steps: steps.map((step) => ({...step, text: step.text.slice(0, 240)})),
+    },
+  };
 }

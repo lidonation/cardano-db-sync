@@ -1,3 +1,4 @@
+import metadataPlugin from './plugins/metadata';
 import {parseMetadataFrontMatter} from './plugins/metadata/markdown.mjs';
 import pagefindProse from './plugins/pagefind-prose';
 import roadmapPlugin from './plugins/roadmap';
@@ -114,6 +115,7 @@ const config: Config = {
   // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
+    metadataPlugin,
     pagefindProse,
     staticGuidePlugin,
     roadmapPlugin,
