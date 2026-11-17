@@ -14,6 +14,9 @@ import type {ClientBuildProfile} from '../../config/profiles';
 import {breadcrumbJsonLd, contentJsonLd, socialImage} from './model';
 import {METADATA_PLUGIN, type MetadataData, type ContentMetadata} from './types';
 
+/** Static route tree: walk it once per bundle, like Navbar and Footer, not on every render. */
+const PATHS = routePaths(routes);
+
 export default function Metadata({
   title,
   description,
@@ -31,14 +34,13 @@ export default function Metadata({
   const data = usePluginData(METADATA_PLUGIN) as MetadataData;
   const i18n = usePluginData(PLUGIN_NAME) as I18nGlobalData;
   const route = localePath(pathname, baseUrl);
-  const paths = routePaths(routes);
-  if (!doc && !routeExists(paths, baseUrl, route)) return null;
+  if (!doc && !routeExists(PATHS, baseUrl, route)) return null;
   const segments = route.split('/').filter(Boolean);
   const breadcrumbsFromRoutes = [
     {name: siteTitle, path: baseUrl},
     ...segments
       .map((_, i) => `/${segments.slice(0, i + 1).join('/')}`)
-      .filter((path) => routeExists(paths, baseUrl, path))
+      .filter((path) => routeExists(PATHS, baseUrl, path))
       .map((path) => ({name: path.split('/')[1], path: baseUrl + path.slice(1)})),
   ];
   const record = doc
