@@ -39,6 +39,7 @@ export default defineConfig({
         'src/faq/questions.ts',
         'src/faq/jsonld.ts',
         'src/metadata/model.ts',
+        'src/metadata/identity.ts',
         // B44-b: the Ecosystem page's entries and the changelog it counts.
         'src/data/release-history.ts',
         'src/ecosystem/entries.ts',

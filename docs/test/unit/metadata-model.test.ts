@@ -15,6 +15,8 @@ describe('content metadata templates (META-1..3, META-5)', () => {
   it('selects from actual route/doc identity, not a newest-version rewrite', () => {
     expect(contentType('/docs/13.5/guides/install', true, 'guides/install')).toBe('HowTo');
     expect(contentType('/docs/13.5/reference', true, 'reference')).toBe('TechArticle');
+    expect(contentType('/docs/guides', true, 'guides/index')).toBe('WebPage');
+    expect(contentType('/docs/guides', true, 'guides')).toBe('HowTo');
     for (const [route, type] of [
       ['/', 'SoftwareSourceCode'],
       ['/faq', 'FAQPage'],
