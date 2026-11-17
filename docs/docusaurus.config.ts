@@ -1,3 +1,4 @@
+import {parseMetadataFrontMatter} from './plugins/metadata/markdown.mjs';
 import pagefindProse from './plugins/pagefind-prose';
 import roadmapPlugin from './plugins/roadmap';
 import staticGuidePlugin from './plugins/static-guide-content';
@@ -59,6 +60,7 @@ const config: Config = {
   onBrokenAnchors: 'throw',
 
   markdown: {
+    parseFrontMatter: parseMetadataFrontMatter,
     hooks: {
       onBrokenMarkdownLinks: 'throw',
     },

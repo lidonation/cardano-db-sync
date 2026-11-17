@@ -8,7 +8,7 @@ const schema = {tables: [{name: 'tx_out', columns: [{name: 'value'}]}]};
 const config = {config: {keys: [{name: 'insert_options', shape: {keys: [{name: 'tx_out'}]}}]}};
 const guide = (
   requires = '  tables: [tx_out]\n  columns: [tx_out.value]\n  config: [insert_options.tx_out]',
-  body = '# Guide\n',
+  body = '# Guide\n\nA complete lead paragraph.',
 ) => `---\ntitle: Guide\ndescription: Description\nrequires:\n${requires}\n---\n\n${body}`;
 describe('CommonMark and dependency gate', () => {
   it('accepts valid plain Markdown with known dependencies', () => {
@@ -33,7 +33,12 @@ describe('CommonMark and dependency gate', () => {
       validateGuide('example.md', guide(undefined, '<Widget />'), schema, config).join(),
     ).toMatch(/JSX|HTML|MDX/);
     expect(
-      validateGuide('example.md', guide(undefined, '```html\n<Widget />\n```'), schema, config),
+      validateGuide(
+        'example.md',
+        guide(undefined, 'A complete lead.\n\n```html\n<Widget />\n```'),
+        schema,
+        config,
+      ),
     ).toEqual([]);
   });
   it('rejects missing or malformed frontmatter and handwritten ranges', () => {

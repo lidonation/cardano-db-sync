@@ -1,3 +1,4 @@
+import {deriveMetadata} from '../../plugins/metadata/markdown.mjs';
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
@@ -15,8 +16,12 @@ describe('contributor guide template (CON-8, CON-12, GDE-1)', () => {
       description: string;
       requires: Record<string, unknown>;
     };
-    expect(frontmatter.title).toBeTruthy();
-    expect(frontmatter.description).toBeTruthy();
+    expect(frontmatter.title).toBeUndefined();
+    expect(frontmatter.description).toBeUndefined();
+    expect(deriveMetadata(text.replace(/^---[\s\S]*?---/, ''))).toMatchObject({
+      title: 'Replace with a task-oriented title',
+      description: expect.stringContaining('outcome'),
+    });
     expect(Object.keys(frontmatter.requires).sort()).toEqual(['columns', 'config', 'tables']);
     for (const list of Object.values(frontmatter.requires)) expect(Array.isArray(list)).toBe(true);
     expect(frontmatter).not.toHaveProperty('version');
