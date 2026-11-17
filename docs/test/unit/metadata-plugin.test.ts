@@ -192,3 +192,50 @@ it('lastmod follows the schema artifact and translated app copy, not only its ro
       .lastmod,
   ).toBe('2020-01-04T00:00:00+00:00');
 });
+
+it('lastmod tracks page content, not site-wide build code shared by every route', () => {
+  const dir = temp();
+  for (const area of ['docs', 'plugins/metadata', 'src/pages', 'src/faq'])
+    mkdirSync(path.join(dir, area), {recursive: true});
+  const git = (args: string[], day: string) =>
+    execFileSync('git', args, {
+      cwd: dir,
+      env: {
+        ...process.env,
+        GIT_AUTHOR_DATE: `2020-01-${day}T00:00:00Z`,
+        GIT_COMMITTER_DATE: `2020-01-${day}T00:00:00Z`,
+      },
+    });
+  git(['init', '-q'], '02');
+  git(['config', 'user.name', 'Fixture'], '02');
+  git(['config', 'user.email', 'fixture@example.test'], '02');
+  writeFileSync(path.join(dir, 'docs/intro.md'), '# Intro\n\nLead.');
+  writeFileSync(path.join(dir, 'src/pages/faq.tsx'), '// page');
+  git(['add', '.'], '02');
+  git(['commit', '-qm', 'content'], '02');
+  for (const file of ['docusaurus.config.ts', 'sidebars.ts', 'plugins/metadata/index.ts'])
+    writeFileSync(path.join(dir, file), '// build code');
+  git(['add', '.'], '09');
+  git(['commit', '-qm', 'build code'], '09');
+  const docs = {
+    loadedVersions: [
+      {
+        versionName: 'current',
+        docs: [
+          {
+            id: 'intro',
+            title: 'Intro',
+            description: 'Lead.',
+            permalink: '/docs/intro',
+            source: '@site/docs/intro.md',
+            frontMatter: {},
+          },
+        ],
+      },
+    ],
+  } as unknown as LoadedContent;
+  const pages = [{type: 'jsx' as const, source: '@site/src/pages/faq.tsx', permalink: '/faq'}];
+  const data = buildMetadata(context(dir), docs, pages);
+  expect(data.pages['/docs/intro'].lastmod).toBe('2020-01-02T00:00:00+00:00');
+  expect(data.pages['/faq'].lastmod).toBe('2020-01-02T00:00:00+00:00');
+});

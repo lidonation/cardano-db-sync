@@ -55,13 +55,9 @@ export function buildMetadata(
 ): MetadataData {
   const records: Record<string, RouteMetadata> = {};
   const sources: Record<string, string[]> = {};
-  const dependencies = [
-    'plugins/metadata',
-    'src/metadata',
-    'src/theme/SiteMetadata',
-    'docusaurus.config.ts',
-    `i18n/${context.i18n.currentLocale}/code.json`,
-  ];
+  // Content sources only. Build code shared by every route (config, sidebars, this plugin)
+  // would stamp one identical lastmod on the whole sitemap, which search engines then ignore.
+  const appCopy = `i18n/${context.i18n.currentLocale}/code.json`;
   for (const version of docs?.loadedVersions ?? []) {
     for (const doc of version.docs) {
       const route = localePath(doc.permalink, context.baseUrl);
@@ -80,7 +76,7 @@ export function buildMetadata(
         ...(doc.id.startsWith('guides/') && steps ? {steps} : {}),
         breadcrumbs: [],
       };
-      sources[route] = [path.relative(context.siteDir, file), 'sidebars.ts', ...dependencies];
+      sources[route] = [path.relative(context.siteDir, file)];
     }
   }
   for (const page of pages) {
@@ -101,7 +97,7 @@ export function buildMetadata(
       source,
       ...(contentType(route, false) === 'Dataset' ? ['generated/schema.json'] : []),
       ...(area ? [`src/${area}`, `src/${route.slice(1).replaceAll('/', '-')}`] : ['src/landing']),
-      ...dependencies,
+      appCopy,
     ];
   }
   for (const [route, record] of Object.entries(records)) {

@@ -21,7 +21,9 @@ Unavailable Updates data produces no invented entries. FAQ retains its visible-c
 
 Production sitemaps are built from public route paths and real translations; untranslated fallback
 copies canonicalize to English and are excluded. Redirects and 404s are never sitemap entries.
-Lastmod uses committed source/dependency history, never build time. CI must fetch full history.
+Lastmod uses the committed history of each page's own content sources (doc file, page source,
+schema artifact, translated app copy), never build time or site-wide build code. CI must fetch
+full history.
 
 Social images use design tokens, have no baked-in text, and are generated per emitted content type
 as 1200x630 WebP. No unreferenced types are shipped. `check:metadata` validates built structured data;
