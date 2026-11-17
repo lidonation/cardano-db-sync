@@ -9,9 +9,9 @@ async function expectContent(page: Page, type: string): Promise<void> {
     })
     .toEqual(['BreadcrumbList', type].sort());
   const title = await page.locator('meta[property="og:title"]').getAttribute('content');
-  await expect(page.locator('meta[name="twitter:title"]')).not.toHaveAttribute('content', '');
+  await expect(page.locator('meta[name="twitter:title"]')).toHaveAttribute('content', /.+/);
   expect(title).toBeTruthy();
-  await expect(page.locator('meta[name="twitter:description"]')).not.toHaveAttribute('content', '');
+  await expect(page.locator('meta[name="twitter:description"]')).toHaveAttribute('content', /.+/);
   await expect(page.locator('meta[property="og:image"]')).toHaveAttribute(
     'content',
     new RegExp(`/social/${type}\\.webp$`),
@@ -30,6 +30,11 @@ for (const locale of ['', 'ja/'])
       .getByRole('navigation', {name: 'Sections'})
       .first()
       .getByRole('link', {name: 'Docs', exact: true})
+      .click();
+    await expectContent(page, 'WebPage');
+    await page
+      .getByRole('contentinfo')
+      .getByRole('link', {name: 'Introduction', exact: true})
       .click();
     await expectContent(page, 'TechArticle');
     const entities = await page.locator('script[type="application/ld+json"]').allTextContents();
