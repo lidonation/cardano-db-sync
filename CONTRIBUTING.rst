@@ -271,7 +271,7 @@ afterwards. The documentation site consumes regenerated schema and annotation ar
 ``docs/generated/``; do not recreate the retired ``doc/`` tree.
 
 Local HLint Hook
-===============
+================
 
 Install ``hlint`` with ``cabal install hlint`` and put ``$HOME/.cabal/bin`` on ``PATH``.
 Install the staged-file hook from the repository root::

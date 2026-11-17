@@ -27,7 +27,6 @@ point for installation, operation and migration guides. The [guide sources](docs
 live in `docs/`; reference descriptions come from Haskell annotations. Historical `doc/`
 content remains available at its original git tags, not as a stale second copy on this branch.
 
-
 ## Architecture
 
 The cardano-db-sync component consists of a set of components:
