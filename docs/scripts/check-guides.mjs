@@ -6,6 +6,7 @@ import yaml from 'js-yaml';
 import {unified} from 'unified';
 import remarkParse from 'remark-parse';
 import remarkMdx from 'remark-mdx';
+import {deriveMetadata} from '../plugins/metadata/markdown.mjs';
 import {FRONTMATTER} from './lib/frontmatter.mjs';
 
 /** Validate contributor-authored CommonMark and current known entity declarations. */
@@ -23,9 +24,11 @@ export function validateGuide(name, source, schema, config) {
   }
   if (!front || typeof front !== 'object' || Array.isArray(front))
     return [`${name}: frontmatter must be a mapping`];
-  if (typeof front.title !== 'string' || !front.title.trim()) fail('title is required');
-  if (typeof front.description !== 'string' || !front.description.trim())
-    fail('description is required');
+  try {
+    deriveMetadata(source.slice(match[0].length), front.sidebar_label ?? front.title);
+  } catch (error) {
+    fail(error.message);
+  }
   for (const key of ['schema_range', 'schema_version', 'version_range', 'supported_versions']) {
     if (Object.hasOwn(front, key)) fail(`${key}: version range is derived, not handwritten`);
   }

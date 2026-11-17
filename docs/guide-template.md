@@ -1,6 +1,4 @@
 ---
-title: Replace with a task-oriented title
-description: Replace with a short summary of the outcome.
 requires:
   tables: []
   columns: []
@@ -30,6 +28,7 @@ Describe likely failures and safe recovery steps.
 ## Contributor checklist
 
 - Copy this file to `docs/docs/guides/` with a descriptive `.md` filename and remove this checklist.
+- Title and description are derived from the h1 and full lead paragraph; do not duplicate them in frontmatter.
 - Write plain CommonMark, with no JSX, so the guide remains readable on GitHub. Use GitHub-style
   alerts rather than Docusaurus-only directive syntax. For alternative procedures, use two or more
   consecutive fenced blocks labelled with `tab="Label"` after the language; on GitHub they remain

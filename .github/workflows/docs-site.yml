@@ -201,7 +201,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # B22: release tags and first-parent Updates history
+          fetch-depth: 0 # B22 tags and Updates history; META-6: committed source lastmod, never checkout/build time
       - uses: ./.github/actions/docs-setup
       # A failed upstream checkout must not prevent a cached or unavailable build.
       - name: Check out upstream full history
@@ -241,6 +241,8 @@ jobs:
         env:
           REPOSITORY_CHECKOUT: ${{ github.workspace }}/upstream-cardano-db-sync
           GITHUB_TOKEN: ${{ github.token }}
+      - name: Validate all built JSON-LD (META-10)
+        run: npm run check:metadata
       # B43: run against both profiles' actual static CSP-protected HTML, not the dev server.
       - name: Install Chromium for built landing and chrome
         run: npx playwright install --with-deps chromium
@@ -372,7 +374,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # B22: release tags and first-parent Updates history
+          fetch-depth: 0 # B22 tags and Updates history; META-6: full committed source history
       # A failed upstream checkout must not prevent a cached or unavailable build.
       - name: Check out upstream full history
         uses: actions/checkout@v4
@@ -432,7 +434,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # B22: release tags and first-parent Updates history
+          fetch-depth: 0 # B22 tags and Updates history; META-6: full committed source history
       # A failed upstream checkout must not prevent a cached or unavailable build.
       - name: Check out upstream full history
         uses: actions/checkout@v4

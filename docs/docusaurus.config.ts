@@ -1,3 +1,5 @@
+import metadataPlugin from './plugins/metadata';
+import {parseMetadataFrontMatter} from './plugins/metadata/markdown.mjs';
 import pagefindProse from './plugins/pagefind-prose';
 import roadmapPlugin from './plugins/roadmap';
 import staticGuidePlugin from './plugins/static-guide-content';
@@ -60,6 +62,7 @@ const config: Config = {
   onBrokenAnchors: 'throw',
 
   markdown: {
+    parseFrontMatter: parseMetadataFrontMatter,
     hooks: {
       onBrokenMarkdownLinks: 'throw',
     },
@@ -90,6 +93,8 @@ const config: Config = {
           editUrl: `${profile.repoUrl}/tree/master/docs/`,
         },
         blog: false,
+        // B21 owns both sitemap profiles; the stock plugin indexes untranslated fallbacks.
+        sitemap: false,
         theme: {
           // TOK-1: the generated tokens are imported once, here, ahead of everything that uses them.
           // B30: the switcher discipline rides last so it wins over Infima on equal specificity.
@@ -113,6 +118,7 @@ const config: Config = {
   // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
+    metadataPlugin,
     pagefindProse,
     staticGuidePlugin,
     roadmapPlugin,

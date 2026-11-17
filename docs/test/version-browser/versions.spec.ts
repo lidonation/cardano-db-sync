@@ -126,3 +126,23 @@ for (const colorScheme of ['light', 'dark'] as const) {
     expect(colors.caret).not.toBe(colors.plate);
   });
 }
+
+test('retained release and unreleased docs remain self-canonical during navigation (META-5)', async ({
+  page,
+}) => {
+  await open(page, INTRO, 1440);
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
+    'href',
+    /\/docs\/next\/intro$/,
+  );
+  const current = await page.locator('link[rel="canonical"]').getAttribute('href');
+  await page.getByRole('button', {name: 'Unreleased', exact: true}).click();
+  await page.getByRole('link', {name: '13.6.0.5', exact: true}).click();
+  await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', /\/docs\/intro$/);
+  const released = await page.locator('link[rel="canonical"]').getAttribute('href');
+  expect(released).not.toBe(current);
+  const entity = await page.locator('script[type="application/ld+json"]').allTextContents();
+  expect(
+    entity.map((text) => JSON.parse(text)).find((value) => value['@type'] === 'TechArticle')?.url,
+  ).toBe(released);
+});

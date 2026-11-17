@@ -21,7 +21,14 @@ export function faqPageProblems(html) {
   const $ = load(html);
   const blocks = $('script[type="application/ld+json"]')
     .map((_, node) => $(node).text())
-    .get();
+    .get()
+    .filter((text) => {
+      try {
+        return JSON.parse(text)?.['@type'] !== 'BreadcrumbList';
+      } catch {
+        return true;
+      }
+    });
   if (blocks.length !== 1) {
     return [`expected exactly one JSON-LD block, found ${blocks.length} (META-2)`];
   }

@@ -6,6 +6,7 @@ import useBuildEnvironment from '../lib/useBuildEnvironment';
 
 import useFallbackLang from '../i18n/useFallbackLang';
 import {MAIN_CONTENT_ID} from '../lib/accessibility';
+import {MetadataFeed} from '../metadata/MetadataFeed';
 import {updatesFeed} from '../updates/feed';
 import useUpdatesMessages, {UPDATES_IDS} from '../updates/messages';
 import Updates from '../updates/Updates';
@@ -16,25 +17,28 @@ export default function UpdatesPage(): React.JSX.Element {
   const {profile} = useBuildEnvironment();
   const lang = useFallbackLang(UPDATES_IDS);
   return (
-    <Layout title={messages.title} description={messages.description}>
-      <Head>
-        <link
-          rel="alternate"
-          type="application/rss+xml"
-          title="Cardano DB Sync updates (RSS)"
-          href={`${profile.baseUrl}updates/rss.xml`}
-        />
-        <link
-          rel="alternate"
-          type="application/atom+xml"
-          title="Cardano DB Sync updates (Atom)"
-          href={`${profile.baseUrl}updates/atom.xml`}
-        />
-      </Head>
-      <main id={MAIN_CONTENT_ID} tabIndex={-1} lang={lang} className={styles.page}>
-        <h1 className={styles.heading}>{messages.title}</h1>
-        <Updates feed={updatesFeed} />
-      </main>
-    </Layout>
+    // The DataFeed JSON-LD uses this page's snapshot, the same data as the list and both feeds.
+    <MetadataFeed.Provider value={updatesFeed}>
+      <Layout title={messages.title} description={messages.description}>
+        <Head>
+          <link
+            rel="alternate"
+            type="application/rss+xml"
+            title="Cardano DB Sync updates (RSS)"
+            href={`${profile.baseUrl}updates/rss.xml`}
+          />
+          <link
+            rel="alternate"
+            type="application/atom+xml"
+            title="Cardano DB Sync updates (Atom)"
+            href={`${profile.baseUrl}updates/atom.xml`}
+          />
+        </Head>
+        <main id={MAIN_CONTENT_ID} tabIndex={-1} lang={lang} className={styles.page}>
+          <h1 className={styles.heading}>{messages.title}</h1>
+          <Updates feed={updatesFeed} />
+        </main>
+      </Layout>
+    </MetadataFeed.Provider>
   );
 }

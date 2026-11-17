@@ -382,6 +382,12 @@ describe('Updates page and fixture isolation (B44-d, VER-5, A11Y-18)', () => {
           .map((_, node) => rss(node).text())
           .get();
         visible.forEach((url) => expect(links).toContain(url));
+        // B21 DataFeed JSON-LD carries the same page snapshot, without site-wide global data.
+        const dataFeed = page('script[type="application/ld+json"]')
+          .toArray()
+          .map((node) => JSON.parse(page(node).text()))
+          .find((json) => json['@type'] === 'DataFeed');
+        expect(dataFeed?.dataFeedElement).toHaveLength(rss('item').length);
         expect(html).toMatch(
           locale === DEFAULT_LOCALE ? /<html[^>]*lang="en"/ : /<main[^>]*lang="en"/,
         );
@@ -486,4 +492,88 @@ describe('homepage Prism payload (B51)', () => {
       }
     });
   }
+});
+
+describe('generated metadata on every shipped page (B21)', () => {
+  it('validates every content entity and breadcrumb on both profiles, including all locales', async () => {
+    const {checkMetadata} = await import('../../scripts/check-metadata.mjs');
+    for (const profile of ['dev', 'prod'] as const) {
+      const result = await checkMetadata(OUT[profile]);
+      expect(result.count).toBeGreaterThan(100);
+      expect(result.errors, profile).toEqual([]);
+    }
+  });
+  it('production sitemaps contain exactly the manifest live canonical routes, with git dates and reciprocal alternates', async () => {
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(DOCS_ROOT, 'config/route-manifest.json'), 'utf8'),
+    );
+    const live = Object.entries(manifest.routes)
+      .filter(([, entry]) => (entry as {status: string}).status === 'live')
+      .map(([route]) => route)
+      .sort();
+    const seen = new Set<string>();
+    for (const locale of LOCALES) {
+      const prefix = locale === DEFAULT_LOCALE ? '' : `${locale}/`;
+      expect(await exists(path.join(OUT.dev, prefix, 'sitemap.xml'))).toBe(false);
+      const xml = load(await fs.readFile(path.join(OUT.prod, prefix, 'sitemap.xml'), 'utf8'), {
+        xmlMode: true,
+      });
+      expect(xml('url').length).toBeGreaterThan(0);
+      for (const node of xml('url').toArray()) {
+        const loc = xml(node).find('loc').text();
+        const route = new URL(loc).pathname.replace(new RegExp(`^/${prefix}`), '/') || '/';
+        expect(live).toContain(route);
+        seen.add(route);
+        expect(xml(node).find('lastmod').text()).toMatch(/^\d{4}-\d\d-\d\dT/);
+        const html = load(
+          await fs.readFile(path.join(OUT.prod, prefix, route.slice(1), 'index.html'), 'utf8'),
+        );
+        expect(html('link[rel="canonical"]').attr('href')).toBe(loc);
+        const advertised = html('link[hreflang]')
+          .map((_, n) => `${html(n).attr('hreflang')} ${html(n).attr('href')}`)
+          .get()
+          .sort();
+        const mapped = xml(node)
+          .find('xhtml\\:link')
+          .map((_, n) => `${xml(n).attr('hreflang')} ${xml(n).attr('href')}`)
+          .get()
+          .sort();
+        expect(mapped).toEqual(advertised);
+      }
+    }
+    expect([...seen].sort()).toEqual(live);
+  });
+  it('every public page has same-origin OG/Twitter cards and generated, dimensioned social art', async () => {
+    const {walk} = await import('../../scripts/lib/build-output.mjs');
+    for (const profile of ['dev', 'prod'] as const) {
+      for await (const file of walk(OUT[profile])) {
+        if (!file.endsWith('.html') || path.basename(file) === '404.html') continue;
+        const html = load(await fs.readFile(file, 'utf8'));
+        if (html('meta[http-equiv="refresh"]').length) continue;
+        const entity = html('script[type="application/ld+json"]')
+          .map((_, node) => JSON.parse(html(node).text()))
+          .get()
+          .find((item) => item['@type'] !== 'BreadcrumbList');
+        expect(html('main h1'), file).toHaveLength(1);
+        expect(html('meta[property="og:title"]').attr('content'), file).toBeTruthy();
+        expect(html('meta[name="twitter:title"]').attr('content'), file).toBeTruthy();
+        expect(html('meta[property="og:description"]').attr('content'), file).toBe(
+          html('meta[name="description"]').attr('content'),
+        );
+        expect(html('meta[name="twitter:card"]').attr('content'), file).toBe('summary_large_image');
+        expect(html('meta[property="og:image:width"]').attr('content'), file).toBe('1200');
+        expect(html('meta[property="og:image:height"]').attr('content'), file).toBe('630');
+        const image = new URL(html('meta[property="og:image"]').attr('content')!);
+        expect(image.origin, file).toBe(PROFILES[profile].url);
+        expect(image.pathname, file).toMatch(new RegExp(`/social/${entity['@type']}\\.webp$`));
+        expect(html('meta[name="twitter:image"]').attr('content'), file).toBe(image.href);
+        expect(
+          await exists(
+            path.join(OUT[profile], image.pathname.slice(PROFILES[profile].baseUrl.length)),
+          ),
+          file,
+        ).toBe(true);
+      }
+    }
+  });
 });

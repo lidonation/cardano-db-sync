@@ -175,7 +175,9 @@ describe('build hygiene', () => {
     const {default: repositoryActivity} = await import('../../plugins/repository-activity');
     const {default: updatesPlugin} = await import('../../plugins/updates');
     const {default: sharedCodePlugin} = await import('../../plugins/shared-code');
+    const {default: metadataPlugin} = await import('../../plugins/metadata');
     expect(config.plugins).toEqual([
+      metadataPlugin,
       pagefindProse,
       staticGuidePlugin,
       roadmapPlugin,

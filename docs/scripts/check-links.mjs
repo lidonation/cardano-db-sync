@@ -9,7 +9,8 @@
  * External links are not fetched: a network-dependent gate would fail on someone else's outage.
  *
  * The site's origin and base path are read from the build's own `sitemap.xml` (its shortest
- * `<loc>` is the home page), so the gate names no environment value (ENV-1).
+ * `<loc>` is the home page), or the home canonical for sitemap-free previews (META-8).
+ * The gate names no environment value (ENV-1).
  *
  * Run by `npm run check:links` after a build, and by CI. With no arguments it checks every profile
  * output under `build/`; pass build directories to check only those.
@@ -37,7 +38,7 @@ const ANCHOR_NAME = /<a\b[^>]*?\sname\s*=\s*(?:"([^"]*)"|'([^']*)')/gi;
 const IGNORED_SCHEME = /^(?:mailto|tel|javascript|data|blob):/i;
 
 /**
- * Read the site's origin and base path from `sitemap.xml`.
+ * Read the site's origin and base from its sitemap, or its home canonical when no sitemap exists.
  *
  * @param {string} dir Build output directory.
  * @returns {Promise<{origin: string, base: string}>}
@@ -46,8 +47,33 @@ export async function siteRoot(dir) {
   let xml;
   try {
     xml = await readFile(path.join(dir, 'sitemap.xml'), 'utf8');
-  } catch {
-    throw new Error(`${dir} has no sitemap.xml, so its origin and base path are unknown`);
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+    const html = await readFile(path.join(dir, 'index.html'), 'utf8').catch(() => '');
+    const head = /<head\b[^>]*>([\s\S]*?)<\/head>/i.exec(html)?.[1] ?? '';
+    const attribute = (tag, name) => {
+      const match = new RegExp(`\\s${name}\\s*=\\s*(?:"([^"]*)"|'([^']*)')`, 'i').exec(tag);
+      return decodeEntities(match?.[1] ?? match?.[2] ?? '');
+    };
+    const canonicals = [...head.matchAll(/<link\b[^>]*>/gi)]
+      .map(([tag]) => tag)
+      .filter((tag) => attribute(tag, 'rel').toLowerCase().split(/\s+/).includes('canonical'));
+    if (canonicals.length === 1) {
+      try {
+        const home = new URL(attribute(canonicals[0], 'href'));
+        if (['https:', 'http:'].includes(home.protocol) && !home.search && !home.hash) {
+          return {
+            origin: home.origin,
+            base: home.pathname.endsWith('/') ? home.pathname : `${home.pathname}/`,
+          };
+        }
+      } catch {
+        /* An invalid canonical must fail closed, not skip the preview. */
+      }
+    }
+    throw new Error(
+      `${dir} has no sitemap.xml or single valid absolute home canonical, so its origin and base path are unknown`,
+    );
   }
   const locs = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => new URL(m[1]));
   if (locs.length === 0) {
@@ -190,7 +216,7 @@ export async function findBrokenLinks(dir) {
 
 /**
  * Run the gate and report. Returns the process exit code: 0 clean, 1 on any broken link, when
- * there is no build to check, or when a profile output cannot be read (for example no sitemap).
+ * there is no build to check, or when a profile output cannot be read (for example neither sitemap nor home canonical).
  *
  * @param {string[]} [dirs] Build output directories. Defaults to every profile under `build/`.
  * @param {Reporter} [out] Where the report goes.
