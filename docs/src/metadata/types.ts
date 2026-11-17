@@ -1,3 +1,5 @@
+import type {UpdatesFeed} from '../updates/types';
+
 /** B21: shared build/SSR contract. Artifacts stay on the build side of this boundary. */
 export const METADATA_PLUGIN = 'dbsync-metadata';
 export const CONTENT_TYPES = [
@@ -15,8 +17,6 @@ export interface Breadcrumb {
   readonly name: string;
   readonly path: string;
 }
-import type {UpdatesFeed} from '../updates/types';
-
 export interface ContentMetadata {
   readonly type: ContentType;
   readonly title: string;

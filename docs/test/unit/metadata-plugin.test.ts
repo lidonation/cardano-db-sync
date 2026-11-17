@@ -154,3 +154,45 @@ describe('metadata producer and CI gate', () => {
     expect(result.stderr).toContain('unsupported @type');
   });
 });
+
+it('lastmod follows the schema artifact and translated app copy, not only its route wrapper', () => {
+  const dir = temp();
+  for (const area of ['src/pages/schema', 'generated', 'i18n/ja'])
+    mkdirSync(path.join(dir, area), {recursive: true});
+  const git = (args: string[], day: string) =>
+    execFileSync('git', args, {
+      cwd: dir,
+      env: {
+        ...process.env,
+        GIT_AUTHOR_DATE: `2020-01-${day}T00:00:00Z`,
+        GIT_COMMITTER_DATE: `2020-01-${day}T00:00:00Z`,
+      },
+    });
+  git(['init', '-q'], '02');
+  git(['config', 'user.name', 'Fixture'], '02');
+  git(['config', 'user.email', 'fixture@example.test'], '02');
+  writeFileSync(path.join(dir, 'src/pages/schema/block.tsx'), '// route wrapper');
+  git(['add', '.'], '02');
+  git(['commit', '-qm', 'route'], '02');
+  writeFileSync(path.join(dir, 'generated/schema.json'), '{}');
+  git(['add', '.'], '03');
+  git(['commit', '-qm', 'artifact'], '03');
+  const page = {
+    type: 'jsx' as const,
+    source: '@site/src/pages/schema/block.tsx',
+    permalink: '/schema/block',
+  };
+  expect(buildMetadata(context(dir), undefined, [page]).pages['/schema/block'].lastmod).toBe(
+    '2020-01-03T00:00:00+00:00',
+  );
+  writeFileSync(path.join(dir, 'i18n/ja/code.json'), '{}');
+  git(['add', '.'], '04');
+  git(['commit', '-qm', 'translated copy'], '04');
+  const ctx = context(dir);
+  ctx.baseUrl = '/ja/';
+  ctx.i18n.currentLocale = 'ja';
+  expect(
+    buildMetadata(ctx, undefined, [{...page, permalink: '/ja/schema/block'}]).pages['/schema/block']
+      .lastmod,
+  ).toBe('2020-01-04T00:00:00+00:00');
+});

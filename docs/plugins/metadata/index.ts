@@ -34,7 +34,7 @@ export function gitLastmod(siteDir: string, sources: readonly string[]): string 
 }
 
 export function buildMetadata(
-  context: Pick<LoadContext, 'siteDir' | 'baseUrl' | 'siteConfig'>,
+  context: Pick<LoadContext, 'siteDir' | 'baseUrl' | 'siteConfig' | 'i18n'>,
   docs: DocsContent | undefined,
   pages: PagesContent = [],
 ): MetadataData {
@@ -45,6 +45,7 @@ export function buildMetadata(
     'src/metadata',
     'src/theme/SiteMetadata',
     'docusaurus.config.ts',
+    `i18n/${context.i18n.currentLocale}/code.json`,
   ];
   for (const version of docs?.loadedVersions ?? []) {
     for (const doc of version.docs) {
@@ -83,6 +84,7 @@ export function buildMetadata(
     };
     sources[route] = [
       source,
+      ...(contentType(route, false) === 'Dataset' ? ['generated/schema.json'] : []),
       ...(area ? [`src/${area}`, `src/${route.slice(1).replaceAll('/', '-')}`] : ['src/landing']),
       ...dependencies,
     ];

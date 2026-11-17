@@ -84,7 +84,11 @@ try {
   await run(['build', '--out-dir', 'build/prod'], 'prod');
   // META-4/5: test actual static output, not synthetic URL helpers. This also checks
   // both release versions before the older release is retired by the next build.
-  const origin = 'https://dbsync.cardano.intersectmbo.org';
+  const origin = load(await readFile(path.join(site, 'build/prod/index.html'), 'utf8'))(
+    'link[rel="canonical"]',
+  )
+    .attr('href')
+    .replace(/\/$/, '');
   const languages = ['en', 'ja', 'es', 'de', 'vi'];
   const alternates = languages
     .map((locale) => origin + (locale === 'en' ? '/' : `/${locale}/`) + 'docs/next/intro')
