@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {committedNumbersState, formatNumber, formatUtc, numbersState} from '../../src/numbers/data';
+import {formatNumber, formatUtc, numbersState} from '../../src/numbers/data';
 import type {NumbersSnapshot} from '../../src/numbers/types';
 
 const snapshot: NumbersSnapshot = {
@@ -26,9 +26,7 @@ const asOf = '2026-10-12T12:00:00.000Z';
 const state = (raw: unknown) => numbersState(raw, 'preview', asOf);
 
 describe('Numbers snapshot boundary (NUM-1…NUM-5)', () => {
-  it('keeps both production profiles unavailable until B23 publishes data', () => {
-    for (const network of ['preview', 'mainnet'] as const)
-      expect(committedNumbersState(network)).toEqual({status: 'unavailable', reason: 'missing'});
+  it('keeps absent snapshots explicitly unavailable', () => {
     expect(state(null)).toEqual({status: 'unavailable', reason: 'missing'});
     expect(state(undefined)).toEqual({status: 'unavailable', reason: 'missing'});
   });

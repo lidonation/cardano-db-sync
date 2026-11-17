@@ -59,8 +59,8 @@ responsible for proving the committed Haddock artifact matches the Haskell sourc
 
 ## Scheduled-job alerts
 
-Every scheduled docs workflow (today the daily Crowdin download in `docs-i18n.yml`; later
-`chain-refresh` and the survey tally) ends with the shared **Docs ops alert** job
+Every scheduled docs workflow (the daily Crowdin download in `docs-i18n.yml`, chain snapshots in
+`docs-chain-refresh.yml`, and later the survey tally) ends with the shared **Docs ops alert** job
 (`.github/workflows/docs-ops-alert.yml`, NUM-4):
 
 - When the watched job fails or is cancelled, it opens an issue titled
@@ -76,6 +76,46 @@ the site are stale.
 
 Schedules run only from the repository's default branch, and fork pull requests cannot read
 Actions secrets, so nothing scheduled depends on a pull request (NUM-4).
+
+## Chain snapshots (B23)
+
+`docs-chain-refresh.yml` runs hourly at minute 17 on the **default branch only**. It makes
+provider calls only when the configured network's snapshot has expired at an epoch boundary.
+It has no PR trigger and manual recovery is also restricted to the default branch. The workflow
+is dormant on `release/community-site` until promoted to the default branch; do not change the
+repository default or branch protections to activate this feature.
+
+An administrator may configure separate Blockfrost project IDs as Actions secrets:
+`BLOCKFROST_PREVIEW_PROJECT_ID` and `BLOCKFROST_MAINNET_PROJECT_ID`. Each key must belong to its
+named network. Never put keys in snapshots, `.env` committed to git, build customFields or the
+browser. Missing keys are a successful, explicit `unconfigured` no-op. Last-good snapshots are
+retained and become visibly stale; a fresh clone starts with named unavailable states.
+
+For local acquisition, supply keys through the environment and run `cd docs && npm run chain:refresh`.
+This writes only configured networks under `docs/generated/chain-*.json`; review the resulting
+public data before committing it. Check provider height, current epoch/block/transaction counts
+and epoch history against that network's provider dashboard/API. Storage/cost are **uncalibrated
+estimates**, not comparable provider measurements; see [model assumptions](src/storage/README.md).
+No live acquisition or secret setup is performed by the implementation PR.
+
+A failed network never overwrites its old snapshot. Successful networks can still be committed
+and rebuilt during a partially failing refresh; the run remains failed so B41's ops alert is
+raised. A later successful run clears it. The job stages only the two snapshot files and pushes
+without force. Branch-protection or push-race failures are reported rather than bypassed. If
+protected branches disallow these commits, maintainers must choose an approved publication
+route; no permission or protection settings are changed here.
+
+After a snapshot commit, the workflow dispatches Docs CI on the same default branch so the site
+consumes the new data: `GITHUB_TOKEN` pushes alone do not trigger push workflows.
+Production accepts this dispatch only after the same successful CI gate, in the upstream
+repository on `master`, and still waits for the existing `production` environment approval.
+The fork publishes only `release/community-site`; an administrator would need an approved
+default-branch/Pages policy alignment before its default-branch cron can publish there. This
+PR does not change either repository setting. The refresh job
+therefore needs `contents: write` and `actions: write`; its existing alert job needs `issues: write`.
+No deployment or manual Actions job is executed by the implementation task. To recover after
+merging to the default branch, use **Actions → Chain refresh → Run workflow**, selecting that
+branch, then inspect the existing ops alert and generated snapshot diff.
 
 ## Running the alert drill
 

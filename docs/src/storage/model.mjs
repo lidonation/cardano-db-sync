@@ -1,21 +1,13 @@
 import schema from '../../generated/config-schema.json' with {type: 'json'};
-import {presetValues, validateConfig, type ConfigSchema} from '../data/config-schema.mjs';
-import {numbersState} from '../numbers/data.ts';
-import type {ChainFacts, StorageEstimate, WizardConfiguration} from './types';
-
-export const MODEL_LABEL = 'MODELLED ESTIMATES' as const;
-export const FULL_CONFIGURATION = {insert_options: {preset: 'full'}} as const;
-const configSchema = schema as ConfigSchema;
-const object = (value: unknown): Record<string, unknown> =>
-  value && typeof value === 'object' && !Array.isArray(value)
-    ? (value as Record<string, unknown>)
-    : {};
-
+import {presetValues, validateConfig} from '../data/config-schema.mjs';
+import {numbersState} from '../numbers/snapshot.mjs';
+export const MODEL_LABEL = 'MODELLED ESTIMATES';
+export const FULL_CONFIGURATION = {insert_options: {preset: 'full'}};
+const configSchema = schema;
+const object = (value) =>
+  value && typeof value === 'object' && !Array.isArray(value) ? value : {};
 /** Illustrative planning coefficients, not fitted measurements. All consumers use this function. */
-export function modelStorage(
-  facts: ChainFacts,
-  configuration: WizardConfiguration = FULL_CONFIGURATION,
-): StorageEstimate {
+export function modelStorage(facts, configuration = FULL_CONFIGURATION) {
   if (
     numbersState({...facts, storage: null}, facts.network, facts.updatedAt).status === 'unavailable'
   )
@@ -42,12 +34,12 @@ export function modelStorage(
   )
     throw new Error('No usable completed-epoch sample');
   const rate = sampleTransactions / sampleBlocks;
-  const enabled = (name: string) => object(effective[name]).enable === true;
+  const enabled = (name) => object(effective[name]).enable === true;
   const hasOutputs = output.value !== 'disable';
   const retention = output.value === 'prune' || output.value === 'bootstrap' ? 0.1 : 1;
   // Representative relations, not a claim to cover every SQL table. Bytes include 2× index/headroom.
-  function tables(blocks: number, transactions: number, epochs: number) {
-    const allocations: [string, number][] = [
+  function tables(blocks, transactions, epochs) {
+    const allocations = [
       ['block', blocks * 512],
       ['tx', transactions * 512],
       ['tx_out', hasOutputs ? transactions * 2 * 256 * retention : 0],
@@ -66,7 +58,7 @@ export function modelStorage(
   const allocation = tables(facts.blockHeight, facts.blockHeight * rate, facts.epoch + 1);
   const databaseGB = allocation.reduce((sum, row) => sum + row.gigabytes, 0);
   const storage = {
-    methodology: `Model v1, uncalibrated: height × ${rate.toFixed(2)} sampled tx/block; assumed row bytes in storage/model.ts, 2 outputs/tx, 2× index/headroom, 10% output retention if pruned/bootstrap. Decimal GB; 0.10 USD/GB/month storage only, not hosting. Representative tables; ignores row filters; excludes WAL, backups and ledger state. Not measured DB sizes or a provider quote.`,
+    methodology: `Model v1, uncalibrated: height × ${rate.toFixed(2)} sampled tx/block; assumed row bytes in storage/model.mjs, 2 outputs/tx, 2× index/headroom, 10% output retention if pruned/bootstrap. Decimal GB; 0.10 USD/GB/month storage only, not hosting. Representative tables; ignores row filters; excludes WAL, backups and ledger state. Not measured DB sizes or a provider quote.`,
     configuration: `${preset}; tx_out=${String(output.value)}; metadata=${enabled('metadata')}; multi_asset=${enabled('multi_asset')}; plutus=${enabled('plutus')}; shelley=${enabled('shelley')}; governance=${String(effective.governance)}`,
     databaseGB,
     monthlyCostUSD: databaseGB * 0.1,
@@ -82,4 +74,15 @@ export function modelStorage(
   if (numbersState({...facts, storage}, facts.network, facts.updatedAt).status === 'unavailable')
     throw new Error('Storage estimate exceeds snapshot bounds');
   return storage;
+}
+
+/** Keep a saved model and a newly configured wizard from silently using different bases. */
+export function storageModelMatches(snapshot) {
+  try {
+    if (snapshot.storage === null && !snapshot.recentEpochs.some((row) => row.blocks > 0))
+      return true;
+    return JSON.stringify(modelStorage(snapshot)) === JSON.stringify(snapshot.storage);
+  } catch {
+    return false;
+  }
 }

@@ -8,6 +8,7 @@ export interface NumbersSnapshot {
   readonly source: string;
   readonly blockHeight: number;
   readonly epoch: number;
+  /** Provider transaction count for the current epoch, not a lifetime total. */
   readonly transactions: number;
   readonly blocksThisEpoch: number;
   readonly recentEpochs: readonly {

@@ -8,8 +8,7 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noImplicitOverride": true,
-    "noFallthroughCasesInSwitch": true,
-    "allowImportingTsExtensions": true
+    "noFallthroughCasesInSwitch": true
   },
   "exclude": ["build", ".docusaurus", "node_modules"]
 }

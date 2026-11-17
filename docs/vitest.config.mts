@@ -49,6 +49,8 @@ export default defineConfig({
         'src/survey-results/resolve.ts',
         'src/survey-results/ids.ts',
         'src/numbers/data.ts',
+        'src/numbers/snapshot.mjs',
+        'src/storage/**/*.mjs',
         'src/storage/**/*.ts',
         'src/numbers/plot.ts',
         'docusaurus.config.ts',

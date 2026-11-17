@@ -1,11 +1,11 @@
 import {describe, expect, it} from 'vitest';
-import {modelStorage} from '../../src/storage/model';
+import {modelStorage} from '../../src/storage/model.mjs';
 import {wizardStorageState} from '../../src/storage/wizard';
 import {numbersState} from '../../src/numbers/data';
 import type {ChainFacts} from '../../src/storage/types';
 import wallet from '../../src/data/config-wizard/design-wallet-utxo.json';
 
-export const facts: ChainFacts = {
+const facts: ChainFacts = {
   network: 'preview',
   updatedAt: '2026-11-17T00:05:00.000Z',
   nextBoundary: '2026-11-18T00:00:00.000Z',
@@ -74,13 +74,35 @@ describe('one config-aware capacity model (NUM-1/NUM-2)', () => {
       }),
     ).toMatchObject({status: 'unavailable'});
   });
+  it('does not show a differently versioned model in the wizard while Numbers retains the old one', () => {
+    const storage = {...modelStorage(facts, full), methodology: 'Older model basis'};
+    expect(
+      wizardStorageState(numbersState({...facts, storage}, 'preview', facts.updatedAt), full),
+    ).toMatchObject({status: 'unavailable'});
+  });
   it('does not invent lifetime transaction volume without a usable history sample', () => {
     expect(() => modelStorage({...facts, recentEpochs: []}, full)).toThrow(/sample/i);
     expect(() =>
       modelStorage({...facts, recentEpochs: [{...facts.recentEpochs[0], blocks: 0}]}, full),
     ).toThrow(/sample/i);
   });
-  it('has deterministic, finite, nonnegative, linear outputs for bounded volume mutations', () => {
+  it('rejects invalid facts and estimates beyond numeric snapshot bounds', () => {
+    expect(() => modelStorage({...facts, blockHeight: -1}, full)).toThrow(/chain facts/i);
+    expect(() =>
+      modelStorage(
+        {
+          ...facts,
+          blockHeight: Number.MAX_SAFE_INTEGER,
+          recentEpochs: [
+            {...facts.recentEpochs[0], blocks: 1, transactions: Number.MAX_SAFE_INTEGER},
+          ],
+        },
+        full,
+      ),
+    ).toThrow(/bounds/i);
+    expect(modelStorage(facts, {}).databaseGB).toBeGreaterThan(0);
+  });
+  it('has deterministic, finite, nonnegative outputs for bounded volume mutations', () => {
     for (let scale = 0; scale < 50; scale++) {
       const data = {...facts, blockHeight: scale * 10_000};
       const a = modelStorage(data, full);

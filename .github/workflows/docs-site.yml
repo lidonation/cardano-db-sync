@@ -12,6 +12,7 @@ on:
       # B16: edits to the migration source must also run the parity gate.
       - "doc/**"
       - ".github/workflows/docs-site.yml"
+      - ".github/workflows/docs-chain-refresh.yml"
       - ".github/scripts/blacksmith-*.py"
       - ".github/scripts/blacksmith-*.pem"
       - ".github/tests/test_blacksmith_*.py"
@@ -29,6 +30,7 @@ on:
       # B16: edits to the migration source must also run the parity gate.
       - "doc/**"
       - ".github/workflows/docs-site.yml"
+      - ".github/workflows/docs-chain-refresh.yml"
       - ".github/scripts/blacksmith-*.py"
       - ".github/scripts/blacksmith-*.pem"
       - ".github/tests/test_blacksmith_*.py"
@@ -417,7 +419,7 @@ jobs:
     needs: gate
     if: >-
       ${{ !cancelled() && needs.gate.result == 'success' &&
-      github.event_name == 'push' &&
+      (github.event_name == 'push' || github.event_name == 'workflow_dispatch') &&
       github.repository == 'IntersectMBO/cardano-db-sync' &&
       github.ref == 'refs/heads/master' }}
     runs-on: ubuntu-latest
