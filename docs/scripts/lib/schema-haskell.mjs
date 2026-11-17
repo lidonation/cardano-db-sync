@@ -196,8 +196,9 @@ export function readRecords(source, file) {
 /**
  * The source with comments (`--`, nested `{- -}`) and string and character literals blanked out,
  * offsets and newlines preserved, so declaration text inside them is never mistaken for code.
+ * preserveComments masks only literals, for consumers that compare documentation comments.
  */
-export function maskHaskell(source) {
+export function maskHaskell(source, {preserveComments = false} = {}) {
   const out = source.split('');
   const blank = (from, to) => {
     for (let k = from; k < to; k++) if (out[k] !== '\n') out[k] = ' ';
@@ -219,12 +220,12 @@ export function maskHaskell(source) {
           j++;
         }
       }
-      blank(i, j);
+      if (!preserveComments) blank(i, j);
       i = j;
     } else if (/^-{2,}(?![-!#$%&*+./<=>?@\\^|~:])/.test(source.slice(i, i + 80))) {
       const end = source.indexOf('\n', i);
       const j = end < 0 ? source.length : end;
-      blank(i, j);
+      if (!preserveComments) blank(i, j);
       i = j;
     } else if (source[i] === '"') {
       const literal = /^"(?:[^"\\\n]|\\.)*"?/.exec(source.slice(i));
