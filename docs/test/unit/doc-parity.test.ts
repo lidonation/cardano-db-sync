@@ -19,6 +19,7 @@ import {
   readHeadings,
 } from '../../scripts/check-doc-parity.mjs';
 
+import {readLegacy} from './legacy-source';
 import {runAsScript} from './run-as-script';
 
 type Target = {kind: string; file: string; heading?: string; name?: string; sha256: string};
@@ -387,15 +388,9 @@ it('validates the real migration record without changing any inputs', () => {
     'data/doc-retirement.json',
     'docs/guides/installing.md',
   ];
-  const {sourceCommit} = JSON.parse(
-    readFileSync(path.join(root, 'data/doc-retirement.json'), 'utf8'),
-  );
   const readInputs = () => [
     ...inputs.map((file) => readFileSync(path.join(root, file), 'utf8')),
-    execFileSync('git', ['show', `${sourceCommit}:doc/installing.md`], {
-      cwd: root,
-      encoding: 'utf8',
-    }),
+    readLegacy('installing.md'),
   ];
   const before = readInputs();
   expect(() => lstatSync(path.resolve(root, '../doc'))).toThrow(/ENOENT/);

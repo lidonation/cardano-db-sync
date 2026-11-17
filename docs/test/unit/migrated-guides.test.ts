@@ -1,10 +1,11 @@
-import {execFileSync} from 'node:child_process';
 import {existsSync, readFileSync, readdirSync} from 'node:fs';
 import path from 'node:path';
 import yaml from 'js-yaml';
 import {unified} from 'unified';
 import remarkParse from 'remark-parse';
 import {describe, expect, it} from 'vitest';
+
+import {readLegacy} from './legacy-source';
 
 const root = path.resolve(import.meta.dirname, '../../..');
 const sourceNames = [
@@ -60,14 +61,7 @@ it('does not mistake a hash inside a code fence for a heading to preserve', () =
 
 describe('legacy procedural migration (CON-8, GDE-1)', () => {
   it.each(sourceNames)('preserves the headings of %s and declares known dependencies', (name) => {
-    const source = execFileSync(
-      'git',
-      [
-        'show',
-        `${JSON.parse(readFileSync(path.join(root, 'docs/data/doc-retirement.json'), 'utf8')).sourceCommit}:doc/${name}.md`,
-      ],
-      {cwd: root, encoding: 'utf8'},
-    );
+    const source = readLegacy(`${name}.md`);
     const guide = readFileSync(migratedPath(name), 'utf8');
     const front = /^---\n([\s\S]*?)\n---\n/.exec(guide);
     expect(front).not.toBeNull();
