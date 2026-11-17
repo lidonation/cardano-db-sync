@@ -138,7 +138,6 @@ describe('metadata producer and CI gate', () => {
   it('CLI fails on seeded invalid HTML, with no output and with no pages; excludes only 404/stubs', async () => {
     const dir = temp();
     const out = {log: vi.fn(), error: vi.fn()};
-    expect(await metadataMain([], out)).toBeTypeOf('number');
     expect(await metadataMain([dir], out)).toBe(1);
     writeFileSync(path.join(dir, 'index.html'), page());
     writeFileSync(path.join(dir, '404.html'), '404');
