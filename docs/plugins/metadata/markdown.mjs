@@ -59,6 +59,8 @@ export async function parseMetadataFrontMatter(params) {
     ...result,
     frontMatter: {
       ...result.frontMatter,
+      // Preserve existing navigation wording; it is not the page metadata source.
+      sidebar_label: result.frontMatter.sidebar_label ?? result.frontMatter.title,
       title,
       description,
       metadata_steps: steps.map((step) => ({...step, text: step.text.slice(0, 240)})),

@@ -53,3 +53,16 @@ describe('remark metadata (CON-3, CONTENT-4)', () => {
     ]);
   });
 });
+
+it('preserves existing navigation labels while deriving the page title from its h1', async () => {
+  const content = '# Cardano DB Sync\n\nA complete lead.';
+  const result = await parseMetadataFrontMatter({
+    fileContent: content,
+    filePath: 'intro.md',
+    defaultParseFrontMatter: async () => ({content, frontMatter: {title: 'Introduction'}}),
+  });
+  expect(result.frontMatter).toMatchObject({
+    title: 'Cardano DB Sync',
+    sidebar_label: 'Introduction',
+  });
+});

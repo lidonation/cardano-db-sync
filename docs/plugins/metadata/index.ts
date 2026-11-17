@@ -81,7 +81,11 @@ export function buildMetadata(
       description: '',
       breadcrumbs: [],
     };
-    sources[route] = [source, ...(area ? [`src/${area}`] : ['src/landing']), ...dependencies];
+    sources[route] = [
+      source,
+      ...(area ? [`src/${area}`, `src/${route.slice(1).replaceAll('/', '-')}`] : ['src/landing']),
+      ...dependencies,
+    ];
   }
   for (const [route, record] of Object.entries(records)) {
     const segments = route.split('/').filter(Boolean);
