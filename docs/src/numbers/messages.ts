@@ -41,7 +41,7 @@ export function numbersMessages<T>(translate: (message: PageMessage) => T) {
     source: translate({id: 'numbers.source', message: 'Provider source'}),
     block: translate({id: 'numbers.block', message: 'Block height'}),
     epoch: translate({id: 'numbers.epoch', message: 'Epoch'}),
-    transactions: translate({id: 'numbers.transactions', message: 'Transactions'}),
+    transactions: translate({id: 'numbers.transactions', message: 'Transactions this epoch'}),
     blocks: translate({id: 'numbers.blocks', message: 'Blocks this epoch'}),
     boundary: translate({id: 'numbers.boundary', message: 'Next epoch boundary (UTC)'}),
     facts: translate({id: 'numbers.facts', message: 'Provider facts'}),

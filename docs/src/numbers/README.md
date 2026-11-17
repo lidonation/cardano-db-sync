@@ -1,37 +1,31 @@
 # Numbers snapshot integration
 
-The Numbers route reads committed data, never a browser request to a provider. The default
-adapter in `data.ts` returns `unavailable` until the chain refresh and storage model publish a
-snapshot. No sample figures from the design enter the production route.
+Numbers reads the committed `generated/chain-{preview,mainnet}.json` artifact through the
+`chain-data` build plugin. Builds and browsers never query the provider or need provider keys.
+Initial `null` files deliberately render the named unavailable state; malformed, future-dated
+and wrong-network snapshots fail closed. The public snapshot validator is `snapshot.mjs`,
+re-exported by `data.ts` for typed consumers and reused by the Node refresh command.
 
-`NumbersSnapshot` in `types.ts` separates provider facts from storage model output. The model
-owns `databaseGB`, `monthlyCostUSD`, `tables` and `growth`; Numbers only formats those values.
-The Config wizard must consume that same output when its result panel is implemented. This
-route does not calculate a second model or introduce storage coefficients.
+`NumbersSnapshot` separates provider facts from model output. `transactions` is the **current
+epoch's** transaction count. The model owns `databaseGB`, `monthlyCostUSD`, `tables` and
+`growth`; Numbers only formats those values. The [shared storage model](../storage/README.md)
+documents its assumptions and the B33 wizard adapter. Both consumers must show the
+`MODELLED ESTIMATES` label, methodology, selected configuration and original update timestamp.
+Neither presents modelled data as instance measurements.
 
-To connect the chain refresh:
+`useCommittedNumbersState` hydrates the exact build state, then checks expiry after hydration,
+at the next boundary and when visibility changes. Stale data retains its timestamp, values and
+warning even when a cron failure prevents a new build. No provider request occurs in the hook.
+The wizard panel should use this same hook, then pass its state and config fragment to
+`wizardStorageState`. No independent clock or storage formula belongs in that panel.
 
-- Publish separate snapshots for preview and mainnet. Use canonical UTC ISO timestamps,
-  including milliseconds, for `updatedAt`, `nextBoundary` and completed epoch boundaries.
-- Supply the provider name in `source`. Supply the model basis and selected configuration in
-  `storage.methodology` and `storage.configuration`. Use `storage: null` if model outputs are
-  unavailable. Storage sizes are decimal GB; `growth` is the modelled increase during each epoch, not total
-  database size. Monthly costs are USD.
-- Validate the committed artifact with `numbersState(snapshot, buildNetwork, asOf)`. Pass a
-  deterministic build timestamp for `asOf`, not a separate server and browser clock. Data is
-  stale when `asOf` reaches `nextBoundary`; a future-dated snapshot is invalid. A wrong-network
-  snapshot is never displayed.
-- Keep each displayed collection to at most 12 entries. Epochs and table names are unique;
-  sizes/counts cannot be negative or non-finite, table identifiers use lowercase SQL names,
-  and listed table sizes cannot exceed the modelled database size.
-- Replace `committedNumbersState` with the validated build input. Add a real equality test
-  against the Config wizard's model consumer before considering the shared-model requirement
-  complete.
+Each collection contains at most twelve entries. Epochs and table names are unique; counts and
+sizes are finite and nonnegative. SQL identifiers are bounded lowercase names, and listed table
+sizes cannot exceed total modelled GB. Timestamps are canonical UTC ISO with milliseconds;
+freshness expires at the snapshot's network-derived `nextBoundary`.
 
-The refresh workflow and provider credentials belong to the chain-data task, not this route.
-The page does not claim database measurements, sync progress, rollback counts or instance
-health from a public provider. Stale values retain their timestamp and warning.
-
-Synthetic fixtures are development-only behind `DBS_INVENTORY`. They demonstrate ready,
-stale, unavailable, invalid and network-mismatch states and must not appear in built routes,
-route manifests, assets or bundles. Browser tests assert this separation.
+Synthetic fixtures remain development-only behind `DBS_INVENTORY`. They must never appear in
+built routes, route manifests, assets or bundles. The real-snapshot build test temporarily
+installs a generated test artifact, verifies SSR/hydration/expiry, then restores the committed
+empty artifact and removes its output. Restart the development server after changing a committed
+snapshot; each build deliberately holds one immutable state across locales.

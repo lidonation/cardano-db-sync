@@ -159,6 +159,7 @@ describe('build hygiene', () => {
 
   it('registers the CNAME, route-manifest, environment, security, i18n, inventory, CSS-prune, lazy-Prism and shared-code plugins', async () => {
     const config = await loadConfig('prod');
+    const {default: chainData} = await import('../../plugins/chain-data');
     const {default: pagefindProse} = await import('../../plugins/pagefind-prose');
     const {default: staticGuidePlugin} = await import('../../plugins/static-guide-content');
     const {default: cnamePlugin} = await import('../../plugins/cname');
@@ -177,6 +178,7 @@ describe('build hygiene', () => {
     const {default: sharedCodePlugin} = await import('../../plugins/shared-code');
     const {default: metadataPlugin} = await import('../../plugins/metadata');
     expect(config.plugins).toEqual([
+      chainData,
       metadataPlugin,
       pagefindProse,
       staticGuidePlugin,

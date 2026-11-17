@@ -6,10 +6,11 @@ import Layout from '@theme/Layout';
 import {MAIN_CONTENT_ID} from '../lib/accessibility';
 import useBuildEnvironment from '../lib/useBuildEnvironment';
 import useFallbackLang from '../i18n/useFallbackLang';
-import {committedNumbersState, formatNumber, formatUtc, numbersForNetwork} from './data';
+import {formatNumber, formatUtc, numbersForNetwork} from './data';
 import type {CardanoNetwork, NumbersState} from './types';
 import {NUMBERS_IDS} from './ids';
 import {messages} from './messages';
+import useCommittedNumbersState from './useCommittedNumbersState';
 import useNumbersTranslate from './useNumbersTranslate';
 import styles from './styles.module.css';
 import {growthPoints} from './plot';
@@ -21,9 +22,10 @@ export default function NumbersPage({
   state?: NumbersState;
   network?: CardanoNetwork;
 }): React.JSX.Element {
+  const committed = useCommittedNumbersState();
   const build = useBuildEnvironment();
   const activeNetwork = network ?? build.profile.network;
-  const current = numbersForNetwork(state ?? committedNumbersState(activeNetwork), activeNetwork);
+  const current = numbersForNetwork(state ?? committed, activeNetwork);
   const t = useNumbersTranslate();
   const lang = useFallbackLang(NUMBERS_IDS);
   const title = `${t(messages.title)} · ${t(messages[activeNetwork])}`;

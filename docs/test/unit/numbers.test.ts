@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {committedNumbersState, formatNumber, formatUtc, numbersState} from '../../src/numbers/data';
+import {ageCommittedState, formatNumber, formatUtc, numbersState} from '../../src/numbers/data';
 import type {NumbersSnapshot} from '../../src/numbers/types';
 
 const snapshot: NumbersSnapshot = {
@@ -26,9 +26,7 @@ const asOf = '2026-10-12T12:00:00.000Z';
 const state = (raw: unknown) => numbersState(raw, 'preview', asOf);
 
 describe('Numbers snapshot boundary (NUM-1…NUM-5)', () => {
-  it('keeps both production profiles unavailable until B23 publishes data', () => {
-    for (const network of ['preview', 'mainnet'] as const)
-      expect(committedNumbersState(network)).toEqual({status: 'unavailable', reason: 'missing'});
+  it('keeps absent snapshots explicitly unavailable', () => {
     expect(state(null)).toEqual({status: 'unavailable', reason: 'missing'});
     expect(state(undefined)).toEqual({status: 'unavailable', reason: 'missing'});
   });
@@ -227,6 +225,28 @@ describe('Numbers snapshot boundary (NUM-1…NUM-5)', () => {
 
 import {growthPoints} from '../../src/numbers/plot';
 import {numbersForNetwork} from '../../src/numbers/data';
+
+describe('Client ageing of the committed build state', () => {
+  const built = numbersState(snapshot, 'preview', asOf);
+
+  it('keeps validated build data when the browser clock is behind the snapshot', () => {
+    expect(ageCommittedState(built, '2026-10-11T23:59:00.000Z')).toEqual(built);
+  });
+
+  it('marks the snapshot stale once the browser passes the next boundary', () => {
+    expect(ageCommittedState(built, snapshot.nextBoundary)).toEqual({status: 'stale', snapshot});
+  });
+
+  it('never makes a stale build snapshot ready when the browser clock lags', () => {
+    const stale = numbersState(snapshot, 'preview', snapshot.nextBoundary);
+    expect(ageCommittedState(stale, snapshot.updatedAt)).toBe(stale);
+  });
+
+  it('passes unavailable states through untouched', () => {
+    const missing = {status: 'unavailable', reason: 'missing'} as const;
+    expect(ageCommittedState(missing, asOf)).toBe(missing);
+  });
+});
 
 describe('Numbers view boundaries', () => {
   it('rejects mismatched ready and stale props without leaking figures', () => {
