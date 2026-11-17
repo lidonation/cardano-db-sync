@@ -234,3 +234,38 @@ Already queued Blacksmith jobs cannot automatically move to GitHub if capacity i
 unavailable. Configure provider alerts and treat all routing as **best effort,
 not a hard spend cap**. When the live service is unavailable, disable the flag
 and investigate; do not weaken the usage or identity checks to force use.
+
+### Updates subscriptions (B22 / META-7)
+
+Every build derives one Updates dataset from this checkout's git history. The existing Updates
+page consumes that JSON; RSS 2.0 and Atom 1.0 are emitted at `updates/rss.xml` and
+`updates/atom.xml` under the active profile's base path. The Updates page advertises both with `rel=alternate`; unrelated pages do not carry subscription metadata.
+Git subjects remain English source text in every locale, so all locales subscribe to the same
+root feed, not translated copies.
+
+Builds require a GitHub `origin` remote and **full history plus tags** (`fetch-depth: 0` in
+Actions; `git fetch --unshallow --tags` for an existing shallow clone). A missing history fails
+loudly instead of publishing a misleading empty feed. No API token or Haskell toolchain is needed.
+Detached documentation fixtures may set `UPDATES_CHECKOUT` to the original full-history checkout;
+normal builds use the parent of the site directory. The page and both feeds always share that source.
+A development server pins the snapshot at startup; restart after committing or fetching tags.
+
+- Stable three- or four-part numeric tags produce release events, including tags on release
+  branches not merged into the site branch. Pre-release and experiment tags are excluded. Dates
+  are tagger dates for annotated tags and commit dates for lightweight tags. Links target tag
+  trees, which exist even when no GitHub Release was authored.
+- First-parent migration-file changes under `schema/` produce schema events, dated by the commit,
+  never by the filename's date. SQL test changes do not count.
+- First-parent edits to `doc/*.md` (historical), `docs/docs/**/*.md[x]` or `Readme.md`, and changes
+  to Haddock comment blocks in the extractor's Haskell source roots, produce documentation events.
+  Continuation lines count; code-only edits do not. Each merge is one event per affected kind,
+  not an event for every side-branch commit. Source links use the actual origin repository, even
+  when a production-profile build is being rehearsed on the fork.
+- Retention is bounded independently: the 50 newest dated numeric tags, and the last 50
+  first-parent schema and documentation changes. The combined list sorts by UTC date and source
+  ID. This keeps the subscription dataset within the existing per-locale asset budget. IDs come from the tag or commit, never position. XML IDs also include the kind so a commit
+  changing schema and docs remains two distinct events. Only public subjects, dates, IDs and
+  links are serialized; no author emails or repository paths.
+
+The snapshot date is the latest source date (HEAD or a retained event), not the wall clock.
+Repeating a build against unchanged history/tags/origin produces byte-identical feed data and XML.

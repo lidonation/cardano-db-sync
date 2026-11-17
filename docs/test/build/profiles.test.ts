@@ -35,6 +35,11 @@ async function exists(target: string): Promise<boolean> {
  * the same checkout, which is the case that catches a profile value leaking through a cache.
  */
 beforeAll(async () => {
+  // Same explicit reuse flag as the built-browser suites. CI still builds both profiles here.
+  const skipBuild = process.env.DBS_BUILT_SKIP_BUILD;
+  if (skipBuild !== undefined && skipBuild !== '1')
+    throw new Error('DBS_BUILT_SKIP_BUILD must be 1.');
+  if (skipBuild === '1') return;
   await fs.rm(path.join(DOCS_ROOT, 'build'), {recursive: true, force: true});
   await run('npm', ['run', 'build:dev'], {cwd: DOCS_ROOT, maxBuffer: 64 * 1024 * 1024});
   await run('npm', ['run', 'build:prod'], {cwd: DOCS_ROOT, maxBuffer: 64 * 1024 * 1024});
@@ -58,12 +63,18 @@ describe('headless prose indexes (SRCH-10)', () => {
       it(`emits the current version index for ${profile} ${locale}`, async () => {
         const prefix = locale === DEFAULT_LOCALE ? '' : locale;
         const bundle = path.join(OUT[profile], prefix, 'pagefind', 'current');
-        const entry = JSON.parse(await fs.readFile(path.join(bundle, 'pagefind-entry.json'), 'utf8'));
+        const entry = JSON.parse(
+          await fs.readFile(path.join(bundle, 'pagefind-entry.json'), 'utf8'),
+        );
         expect(entry.languages[locale].page_count).toBeGreaterThan(0);
-        expect(await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/pagefind.js'))).toBe(true);
+        expect(await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/pagefind.js'))).toBe(
+          true,
+        );
         expect(await exists(path.join(bundle, 'pagefind.js'))).toBe(false);
         expect(await exists(path.join(bundle, 'pagefind-worker.js'))).toBe(false);
-        expect(await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/prose-worker.js'))).toBe(true);
+        expect(
+          await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/prose-worker.js')),
+        ).toBe(true);
         expect(await exists(path.join(bundle, 'pagefind-ui.js'))).toBe(false);
       });
     }
@@ -122,16 +133,27 @@ describe('baseUrl reaches the emitted HTML (ENV-1)', () => {
 
 describe('the build carries no secrets and needs none (ENV-5)', () => {
   it('builds with an environment that has only the profile variable set', async () => {
-    const {stdout} = await run('npm', ['run', 'build:dev'], {
-      cwd: DOCS_ROOT,
-      maxBuffer: 64 * 1024 * 1024,
-      env: {
-        PATH: process.env.PATH ?? '',
-        HOME: process.env.HOME ?? '',
-        DOCS_PROFILE: 'dev',
-      },
-    });
-    expect(stdout).toContain('Generated static files');
+    // Full locale builds are covered above. Isolate this environment-only contract so it
+    // cannot replace the verified profiles with a different live-data snapshot.
+    const output = path.join(DOCS_ROOT, 'build/no-secrets');
+    try {
+      const {stdout} = await run(
+        'npm',
+        ['run', 'build:dev', '--', '--locale', 'en', '--out-dir', output],
+        {
+          cwd: DOCS_ROOT,
+          maxBuffer: 64 * 1024 * 1024,
+          env: {
+            PATH: process.env.PATH ?? '',
+            HOME: process.env.HOME ?? '',
+            DOCS_PROFILE: 'dev',
+          },
+        },
+      );
+      expect(stdout).toContain('Generated static files');
+    } finally {
+      await fs.rm(output, {recursive: true, force: true});
+    }
   }, 900_000);
 });
 
@@ -327,16 +349,49 @@ describe('the FAQ page carries FAQPage JSON-LD that matches it (META-2, B44-c)',
 describe('Updates page and fixture isolation (B44-d, VER-5, A11Y-18)', () => {
   for (const profile of ['dev', 'prod'] as const) {
     for (const locale of LOCALES) {
-      it(`emits an honest Updates fallback in ${profile} ${locale}`, async () => {
+      it(`emits the shared git Updates dataset and feed discovery in ${profile} ${locale}`, async () => {
         const prefix = locale === DEFAULT_LOCALE ? '' : locale;
-        const html = await fs.readFile(path.join(OUT[profile], prefix, 'updates', 'index.html'), 'utf8');
-        expect(html).toContain('The Updates feed is not available yet.');
-        expect(html).toMatch(locale === DEFAULT_LOCALE ? /<html[^>]*lang="en"/ : /<main[^>]*lang="en"/);
+        const html = await fs.readFile(
+          path.join(OUT[profile], prefix, 'updates', 'index.html'),
+          'utf8',
+        );
+        expect(html).not.toContain('The Updates feed is not available yet.');
+        const page = load(html);
+        for (const [name, type] of [
+          ['rss', 'application/rss+xml'],
+          ['atom', 'application/atom+xml'],
+        ]) {
+          expect(page(`link[rel="alternate"][type="${type}"]`).attr('href')).toBe(
+            `${PROFILES[profile].baseUrl}updates/${name}.xml`,
+          );
+        }
+        const rss = load(await fs.readFile(path.join(OUT[profile], 'updates/rss.xml'), 'utf8'), {
+          xmlMode: true,
+        });
+        const atom = load(await fs.readFile(path.join(OUT[profile], 'updates/atom.xml'), 'utf8'), {
+          xmlMode: true,
+        });
+        expect(rss('item').length).toBeGreaterThan(0);
+        expect(atom('entry').length).toBe(rss('item').length);
+        // The default visible calendar window and the downloadable feeds share source entries.
+        const visible = page('main ul li a')
+          .map((_, node) => page(node).attr('href'))
+          .get();
+        expect(visible.length).toBeGreaterThan(0);
+        const links = rss('item > link')
+          .map((_, node) => rss(node).text())
+          .get();
+        visible.forEach((url) => expect(links).toContain(url));
+        expect(html).toMatch(
+          locale === DEFAULT_LOCALE ? /<html[^>]*lang="en"/ : /<main[^>]*lang="en"/,
+        );
         expect(html).toMatch(/<main[^>]*id="dbs-main-content"[^>]*tabindex="-1"/);
         expect(html).toContain('role="tablist"');
         expect(html).toContain('role="status"');
         expect(html).not.toContain('example.com/current');
-        expect(await exists(path.join(OUT[profile], prefix, '__updates', 'index.html'))).toBe(false);
+        expect(await exists(path.join(OUT[profile], prefix, '__updates', 'index.html'))).toBe(
+          false,
+        );
       });
     }
   }
@@ -411,6 +466,12 @@ describe('homepage Prism payload (B51)', () => {
       const html = await fs.readFile(path.join(root, 'index.html'), 'utf8');
       const $ = load(html);
       const scripts = $('script[src]').toArray();
+      // Subscription discovery belongs to Updates, not every page's initial HTML budget.
+      expect(
+        $(
+          'link[rel=alternate][type="application/rss+xml"], link[rel=alternate][type="application/atom+xml"]',
+        ),
+      ).toHaveLength(0);
       expect(scripts.length).toBeGreaterThan(0);
       // Use the shipping gate's locale isolation, URL resolution and gzip accounting.
       const {pages} = await measure(root, await localeSites(root));

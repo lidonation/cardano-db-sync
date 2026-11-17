@@ -43,6 +43,7 @@ async function run(args) {
         env: {
           ...process.env,
           DOCS_PROFILE: 'dev',
+          UPDATES_CHECKOUT: path.resolve(root, '..'),
           ROUTE_MANIFEST: 'write',
           DOCUSAURUS_NO_PERSISTENT_CACHE: '1',
         },

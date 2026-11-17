@@ -1,8 +1,11 @@
+import {readFile} from 'node:fs/promises';
+import path from 'node:path';
 import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
 import {SITE_URL} from '../../playwright.config';
 import {UPDATES_FIXTURE_PATH} from '../../plugins/inventory';
+import {validateFeed} from '../../src/updates/model';
 
 const HOSTILE_TITLE = '<img src=x onerror="window.__updatesInjected=true">';
 
@@ -182,15 +185,25 @@ for (const palette of ['light', 'dark', 'cream', 'navy']) {
   }
 }
 
-/** B22 is absent: the public route must not substitute fixture or zero-count data. */
-test('real Updates route reports unavailable source without invented entries', async ({page}) => {
+/** B22: the real route must render the build snapshot, never a development fixture. */
+test('real Updates route renders the same git entries as its build dataset', async ({page}) => {
+  const feed = validateFeed(
+    JSON.parse(await readFile(path.resolve('.docusaurus/updates/default/feed.json'), 'utf8')),
+  );
+  expect(feed.entries.length).toBeGreaterThan(0);
   await page.goto(`${SITE_URL}updates`);
   const main = page.getByRole('main');
   await expect(main.getByRole('heading', {name: 'Updates', exact: true})).toBeVisible();
-  await expect(main.getByRole('status')).toContainText('Unavailable');
-  await expect(main).toContainText(/not available yet/i);
-  await expect(main.getByRole('link')).toHaveCount(0);
-  await expect(main).not.toContainText(/first release|0\s*updates/i);
+  await expect(main.getByRole('status')).not.toContainText('Unavailable');
+  await main.getByRole('tab', {name: 'Total', exact: true}).click();
+  const links = main.getByRole('tabpanel').getByRole('link');
+  await expect(links).toHaveCount(feed.entries.length);
+  expect(
+    await links.evaluateAll((nodes) =>
+      nodes.map((node) => ({url: node.getAttribute('href'), title: node.textContent?.trim()})),
+    ),
+  ).toEqual(feed.entries.map(({url, title}) => ({url, title})));
+  await expect(main.locator('a[href^="https://example.com/"]')).toHaveCount(0);
 });
 
 test('the first skip link focuses the Updates main landmark', async ({page}) => {

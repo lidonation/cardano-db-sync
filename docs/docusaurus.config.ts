@@ -4,6 +4,7 @@ import staticGuidePlugin from './plugins/static-guide-content';
 import guideMarkdown from './plugins/guide-markdown/index.mjs';
 import surveyResultsPlugin from './plugins/survey-results';
 import repositoryActivityPlugin from './plugins/repository-activity';
+import updatesPlugin from './plugins/updates';
 import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
@@ -117,6 +118,7 @@ const config: Config = {
     roadmapPlugin,
     surveyResultsPlugin,
     repositoryActivityPlugin,
+    updatesPlugin,
     cnamePlugin,
     routeManifestPlugin,
     environmentPlugin,

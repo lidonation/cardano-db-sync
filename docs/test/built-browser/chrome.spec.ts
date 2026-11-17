@@ -349,23 +349,26 @@ for (const route of ROUTES) {
       await open(page, route);
       const original = await noContentLoss(page);
       await overrideStyles(page, SPACING);
-      const spacing = await page
-        .locator('main p')
-        .first()
-        .evaluate((node) => {
-          const style = getComputedStyle(node);
-          const size = parseFloat(style.fontSize);
-          return {
-            line: parseFloat(style.lineHeight) / size,
-            letter: parseFloat(style.letterSpacing) / size,
-            word: parseFloat(style.wordSpacing) / size,
-            paragraph: parseFloat(style.marginBlockEnd) / size,
-          };
-        });
+      // A populated Updates list has no paragraph; probe its row text rather than waiting
+      // for the retired fallback. Paragraph spacing remains mandatory wherever paragraphs exist.
+      const paragraphs = page.locator('main p');
+      const probe = (await paragraphs.count())
+        ? paragraphs.first()
+        : page.locator('main li a').first();
+      const spacing = await probe.evaluate((node) => {
+        const style = getComputedStyle(node);
+        const size = parseFloat(style.fontSize);
+        return {
+          line: parseFloat(style.lineHeight) / size,
+          letter: parseFloat(style.letterSpacing) / size,
+          word: parseFloat(style.wordSpacing) / size,
+          paragraph: node.tagName === 'P' ? parseFloat(style.marginBlockEnd) / size : null,
+        };
+      });
       expect(spacing.line).toBeCloseTo(1.5, 2);
       expect(spacing.letter).toBeCloseTo(0.12, 2);
       expect(spacing.word).toBeCloseTo(0.16, 2);
-      expect(spacing.paragraph).toBeCloseTo(2, 2);
+      if (spacing.paragraph !== null) expect(spacing.paragraph).toBeCloseTo(2, 2);
       expect(await noContentLoss(page)).toEqual(original);
       const header = await page.evaluate(() => ({
         padding: parseFloat(getComputedStyle(document.documentElement).scrollPaddingBlockStart),

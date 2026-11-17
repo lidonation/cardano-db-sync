@@ -3,10 +3,16 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import {promisify} from 'node:util';
 
-import {afterEach, describe, expect, it} from 'vitest';
+import {afterAll, afterEach, describe, expect, it} from 'vitest';
 
 const run = promisify(execFile);
 const DOCS_ROOT = path.resolve(import.meta.dirname, '../..');
+const OUTPUT = path.join(DOCS_ROOT, 'build/parser-gate');
+// All locales are already built by profiles.test; this gate exercises the one shared parser.
+const BUILD_ARGS = ['run', 'build:dev', '--', '--locale', 'en', '--out-dir', OUTPUT];
+afterAll(async () => {
+  await fs.rm(OUTPUT, {recursive: true, force: true});
+});
 /**
  * The filename must not start with an underscore. Docusaurus treats `_*.md` as a partial and
  * excludes it from the build, so an underscored fixture silently proves nothing.
@@ -41,7 +47,7 @@ describe('the Markdown parser gate is live', () => {
     let output = '';
 
     try {
-      await run('npm', ['run', 'build:dev'], {cwd: DOCS_ROOT, maxBuffer: 64 * 1024 * 1024});
+      await run('npm', BUILD_ARGS, {cwd: DOCS_ROOT, maxBuffer: 64 * 1024 * 1024});
     } catch (error) {
       failed = true;
       const e = error as {stdout?: string; stderr?: string};
@@ -54,7 +60,7 @@ describe('the Markdown parser gate is live', () => {
 
   it('builds clean again once the broken file is gone', async () => {
     await fs.rm(BROKEN_PAGE, {force: true});
-    const {stdout} = await run('npm', ['run', 'build:dev'], {
+    const {stdout} = await run('npm', BUILD_ARGS, {
       cwd: DOCS_ROOT,
       maxBuffer: 64 * 1024 * 1024,
     });
