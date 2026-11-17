@@ -7,7 +7,7 @@ export {numbersState};
  * turn good build data into `invalid`; it can only move the snapshot forward to `stale`.
  */
 export function ageCommittedState(state: NumbersState, now: string): NumbersState {
-  if (state.status === 'unavailable') return state;
+  if (state.status !== 'ready') return state;
   const {snapshot} = state;
   return numbersState(
     snapshot,

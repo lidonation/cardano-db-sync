@@ -237,6 +237,11 @@ describe('Client ageing of the committed build state', () => {
     expect(ageCommittedState(built, snapshot.nextBoundary)).toEqual({status: 'stale', snapshot});
   });
 
+  it('never makes a stale build snapshot ready when the browser clock lags', () => {
+    const stale = numbersState(snapshot, 'preview', snapshot.nextBoundary);
+    expect(ageCommittedState(stale, snapshot.updatedAt)).toBe(stale);
+  });
+
   it('passes unavailable states through untouched', () => {
     const missing = {status: 'unavailable', reason: 'missing'} as const;
     expect(ageCommittedState(missing, asOf)).toBe(missing);
