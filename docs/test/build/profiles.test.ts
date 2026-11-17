@@ -490,20 +490,36 @@ describe('generated metadata on every shipped page (B21)', () => {
     expect([...seen].sort()).toEqual(live);
   });
   it('every public page has same-origin OG/Twitter cards and generated, dimensioned social art', async () => {
+    const {walk} = await import('../../scripts/lib/build-output.mjs');
     for (const profile of ['dev', 'prod'] as const) {
-      const html = load(
-        await fs.readFile(path.join(OUT[profile], 'docs/guides/installation/index.html'), 'utf8'),
-      );
-      expect(html('main h1')).toHaveLength(1);
-      expect(html('meta[property="og:title"]').attr('content')).toContain('Install');
-      expect(html('meta[name="twitter:title"]').attr('content')).toContain('Install');
-      expect(html('meta[name="twitter:card"]').attr('content')).toBe('summary_large_image');
-      expect(html('meta[property="og:image:width"]').attr('content')).toBe('1200');
-      expect(html('meta[property="og:image:height"]').attr('content')).toBe('630');
-      const image = new URL(html('meta[property="og:image"]').attr('content')!);
-      expect(image.origin).toBe(PROFILES[profile].url);
-      expect(image.pathname).toBe(`${PROFILES[profile].baseUrl}social/HowTo.webp`);
-      expect(await exists(path.join(OUT[profile], 'social/HowTo.webp'))).toBe(true);
+      for await (const file of walk(OUT[profile])) {
+        if (!file.endsWith('.html') || path.basename(file) === '404.html') continue;
+        const html = load(await fs.readFile(file, 'utf8'));
+        if (html('meta[http-equiv="refresh"]').length) continue;
+        const entity = html('script[type="application/ld+json"]')
+          .map((_, node) => JSON.parse(html(node).text()))
+          .get()
+          .find((item) => item['@type'] !== 'BreadcrumbList');
+        expect(html('main h1'), file).toHaveLength(1);
+        expect(html('meta[property="og:title"]').attr('content'), file).toBeTruthy();
+        expect(html('meta[name="twitter:title"]').attr('content'), file).toBeTruthy();
+        expect(html('meta[property="og:description"]').attr('content'), file).toBe(
+          html('meta[name="description"]').attr('content'),
+        );
+        expect(html('meta[name="twitter:card"]').attr('content'), file).toBe('summary_large_image');
+        expect(html('meta[property="og:image:width"]').attr('content'), file).toBe('1200');
+        expect(html('meta[property="og:image:height"]').attr('content'), file).toBe('630');
+        const image = new URL(html('meta[property="og:image"]').attr('content')!);
+        expect(image.origin, file).toBe(PROFILES[profile].url);
+        expect(image.pathname, file).toMatch(new RegExp(`/social/${entity['@type']}\\.webp$`));
+        expect(html('meta[name="twitter:image"]').attr('content'), file).toBe(image.href);
+        expect(
+          await exists(
+            path.join(OUT[profile], image.pathname.slice(PROFILES[profile].baseUrl.length)),
+          ),
+          file,
+        ).toBe(true);
+      }
     }
   });
 });
