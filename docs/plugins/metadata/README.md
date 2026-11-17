@@ -5,6 +5,9 @@ AST (h1 and complete lead paragraph), via the supported `markdown.parseFrontMatt
 Docusaurus builds doc/sidebar metadata. Existing frontmatter is not the metadata source. Legacy titles remain sidebar labels so migrating
 metadata does not rename navigation items. New guides need neither duplicated field.
 
+The parser source hash participates in webpack cache identity, so changing the remark transformer
+also invalidates cached compiled frontmatter without requiring cache deletion.
+
 The metadata plugin consumes loaded routes and content. The theme emits the same metadata on SSR
 and client navigation. Schema/config routes are not created here: a schema producer supplies
 `Dataset` columns from its extraction artifact, and the config producer uses `WebApplication`.

@@ -1,3 +1,4 @@
+import {createHash} from 'node:crypto';
 import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
 import {writeFile, readFile, rm} from 'node:fs/promises';
@@ -18,6 +19,17 @@ import {METADATA_PLUGIN, type MetadataData, type RouteMetadata} from '../../src/
 import {FRONTMATTER} from '../../scripts/lib/frontmatter.mjs';
 import {deriveMetadata} from './markdown.mjs';
 import {emitSocialImages} from './images';
+
+type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
+
+/** Custom parseFrontMatter code is loaded by Docusaurus, outside webpack's module graph.
+ * Its source must invalidate compiled MDX frontmatter, including when profiles reuse caches. */
+export function cacheByMetadata(config: Configuration, parserSource: string): void {
+  if (config.cache && typeof config.cache === 'object' && config.cache.type === 'filesystem') {
+    const digest = createHash('sha256').update(parserSource).digest('hex');
+    config.cache.version = `${config.cache.version ?? ''}-metadata-${digest}`;
+  }
+}
 
 /** Committed dependency time, not build time. Fixtures without a git checkout omit it. */
 export function gitLastmod(siteDir: string, sources: readonly string[]): string | undefined {
@@ -112,6 +124,10 @@ export default function metadataPlugin(context: LoadContext): Plugin {
   const profile = resolveProfile();
   return {
     name: METADATA_PLUGIN,
+    configureWebpack(config) {
+      cacheByMetadata(config, readFileSync(path.join(__dirname, 'markdown.mjs'), 'utf8'));
+      return {};
+    },
     allContentLoaded({allContent, actions}) {
       const docs = allContent['docusaurus-plugin-content-docs']?.default as DocsContent | undefined;
       translations = docs ? docLocales(docs, context) : {};
