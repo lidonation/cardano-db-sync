@@ -1,4 +1,5 @@
 import React from 'react';
+import {applyTrailingSlash} from '@docusaurus/utils-common';
 import Head from '@docusaurus/Head';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import {usePluginData} from '@docusaurus/useGlobalData';
@@ -20,8 +21,8 @@ export default function Metadata({
   doc?: ContentMetadata;
 }): React.JSX.Element | null {
   const {
-    siteConfig: {url, baseUrl, customFields},
-    i18n: {locales, currentLocale, defaultLocale},
+    siteConfig: {url, baseUrl, customFields, trailingSlash},
+    i18n: {locales, currentLocale},
   } = useDocusaurusContext();
   const {pathname} = useLocation();
   const data = usePluginData(METADATA_PLUGIN) as MetadataData;
@@ -36,10 +37,11 @@ export default function Metadata({
   };
   const profile = customFields!.profile as ClientBuildProfile;
   const existing = pageLocales(route, i18n, locales);
-  const canonicalBase = existing.includes(currentLocale)
-    ? baseUrl
-    : `${profile.baseUrl}${defaultLocale === 'en' ? '' : `${defaultLocale}/`}`;
-  const canonical = url + canonicalBase + route.slice(1);
+  const canonicalPath = existing.includes(currentLocale)
+    ? pathname
+    : profile.baseUrl + route.slice(1);
+  const canonical =
+    url + applyTrailingSlash(canonicalPath, {baseUrl: profile.baseUrl, trailingSlash});
   const image = socialImage(content.type, baseUrl);
   const breadcrumbs = record.breadcrumbs.map((item, index) =>
     index === record.breadcrumbs.length - 1 && route !== '/'

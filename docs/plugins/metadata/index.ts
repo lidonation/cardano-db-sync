@@ -1,10 +1,18 @@
 import {execFileSync} from 'node:child_process';
 import {readFileSync} from 'node:fs';
+import {writeFile, readFile, rm} from 'node:fs/promises';
+import {routeFile} from '../security';
+import {metadataProblems} from '../../scripts/lib/metadata-validation.mjs';
+import {resolveProfile} from '../../config/profiles';
+import {docLocales} from '../i18n';
+import {sitemapEntries, sitemapXml} from './sitemap';
 import path from 'node:path';
 import type {LoadedContent as DocsContent} from '@docusaurus/plugin-content-docs';
 import type {LoadedContent as PagesContent} from '@docusaurus/plugin-content-pages';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 import {localePath} from '../../src/i18n/pages';
+import {updatesFeed} from '../../src/updates/feed';
+import {findTable} from '../../src/data/schema';
 import {contentType} from '../../src/metadata/model';
 import {METADATA_PLUGIN, type MetadataData, type RouteMetadata} from '../../src/metadata/types';
 import {FRONTMATTER} from '../../scripts/lib/frontmatter.mjs';
@@ -65,6 +73,10 @@ export function buildMetadata(
     const area = route.split('/').filter(Boolean)[0];
     records[route] = {
       type: contentType(route, false),
+      ...(route === '/updates' && updatesFeed ? {feed: updatesFeed} : {}),
+      ...(contentType(route, false) === 'Dataset'
+        ? {variables: findTable(route.split('/').at(-1)!)?.columns.map((column) => column.name)}
+        : {}),
       title: route === '/' ? context.siteConfig.title : (area ?? ''),
       description: '',
       breadcrumbs: [],
@@ -90,9 +102,13 @@ export function buildMetadata(
 
 export default function metadataPlugin(context: LoadContext): Plugin {
   let data: MetadataData = {pages: {}};
+  let translations: Record<string, string[]> = {};
+  const profile = resolveProfile();
   return {
     name: METADATA_PLUGIN,
     allContentLoaded({allContent, actions}) {
+      const docs = allContent['docusaurus-plugin-content-docs']?.default as DocsContent | undefined;
+      translations = docs ? docLocales(docs, context) : {};
       data = buildMetadata(
         context,
         allContent['docusaurus-plugin-content-docs']?.default as DocsContent | undefined,
@@ -106,7 +122,33 @@ export default function metadataPlugin(context: LoadContext): Plugin {
         ),
       });
     },
-    async postBuild({outDir}) {
+    async postBuild({outDir, routesPaths}) {
+      const errors: string[] = [];
+      for (const route of routesPaths) {
+        const relative = localePath(route, context.baseUrl);
+        const record = data.pages[relative];
+        const page = routeFile(route, context.baseUrl);
+        if (!record || !page) continue;
+        const html = await readFile(path.join(outDir, page.file), 'utf8');
+        errors.push(
+          ...metadataProblems(html, record.type).map((error: string) => `${relative}: ${error}`),
+        );
+      }
+      if (errors.length) throw new Error(`META-10: invalid metadata:\n${errors.join('\n')}`);
+      const file = path.join(outDir, 'sitemap.xml');
+      if (profile.indexable) {
+        const entries = sitemapEntries({
+          profile,
+          baseUrl: context.baseUrl,
+          currentLocale: context.i18n.currentLocale,
+          defaultLocale: context.i18n.defaultLocale,
+          locales: context.i18n.locales,
+          pages: data.pages,
+          translations,
+          routesPaths,
+        });
+        await writeFile(file, sitemapXml(entries));
+      } else await rm(file, {force: true});
       await emitSocialImages(
         outDir,
         Object.values(data.pages).map((page) => page.type),

@@ -2,6 +2,7 @@ import {SURFACES} from '../data/surfaces';
 import type {Breadcrumb, ContentMetadata, ContentType} from './types';
 
 export function contentType(route: string, doc: boolean, id = ''): ContentType {
+  if (doc && id === 'guides/index') return 'WebPage';
   if (doc) return id === 'guides' || id.startsWith('guides/') ? 'HowTo' : 'TechArticle';
   if (route === '/') return 'SoftwareSourceCode';
   if (route === SURFACES.faq) return 'FAQPage';
@@ -31,6 +32,16 @@ export function contentJsonLd(
     ...(data.type === 'TechArticle' ? {headline: data.title} : {}),
     ...(data.type === 'HowTo'
       ? {step: data.steps?.map((step) => ({'@type': 'HowToStep', ...step})) ?? []}
+      : {}),
+    ...(data.type === 'DataFeed' && data.feed
+      ? {
+          dateModified: data.feed.asOf,
+          dataFeedElement: data.feed.entries.map((entry) => ({
+            '@type': 'DataFeedItem',
+            dateCreated: entry.date,
+            item: {'@type': 'CreativeWork', name: entry.title, url: entry.url},
+          })),
+        }
       : {}),
     ...(data.type === 'Dataset'
       ? {variableMeasured: data.variables?.map((name) => ({'@type': 'PropertyValue', name})) ?? []}

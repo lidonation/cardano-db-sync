@@ -92,6 +92,8 @@ const config: Config = {
           editUrl: `${profile.repoUrl}/tree/master/docs/`,
         },
         blog: false,
+        // B21 owns both sitemap profiles; the stock plugin indexes untranslated fallbacks.
+        sitemap: false,
         theme: {
           // TOK-1: the generated tokens are imported once, here, ahead of everything that uses them.
           // B30: the switcher discipline rides last so it wins over Infima on equal specificity.

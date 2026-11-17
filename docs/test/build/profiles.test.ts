@@ -58,12 +58,18 @@ describe('headless prose indexes (SRCH-10)', () => {
       it(`emits the current version index for ${profile} ${locale}`, async () => {
         const prefix = locale === DEFAULT_LOCALE ? '' : locale;
         const bundle = path.join(OUT[profile], prefix, 'pagefind', 'current');
-        const entry = JSON.parse(await fs.readFile(path.join(bundle, 'pagefind-entry.json'), 'utf8'));
+        const entry = JSON.parse(
+          await fs.readFile(path.join(bundle, 'pagefind-entry.json'), 'utf8'),
+        );
         expect(entry.languages[locale].page_count).toBeGreaterThan(0);
-        expect(await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/pagefind.js'))).toBe(true);
+        expect(await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/pagefind.js'))).toBe(
+          true,
+        );
         expect(await exists(path.join(bundle, 'pagefind.js'))).toBe(false);
         expect(await exists(path.join(bundle, 'pagefind-worker.js'))).toBe(false);
-        expect(await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/prose-worker.js'))).toBe(true);
+        expect(
+          await exists(path.join(OUT[profile], prefix, 'pagefind/_runtime/prose-worker.js')),
+        ).toBe(true);
         expect(await exists(path.join(bundle, 'pagefind-ui.js'))).toBe(false);
       });
     }
@@ -329,14 +335,21 @@ describe('Updates page and fixture isolation (B44-d, VER-5, A11Y-18)', () => {
     for (const locale of LOCALES) {
       it(`emits an honest Updates fallback in ${profile} ${locale}`, async () => {
         const prefix = locale === DEFAULT_LOCALE ? '' : locale;
-        const html = await fs.readFile(path.join(OUT[profile], prefix, 'updates', 'index.html'), 'utf8');
+        const html = await fs.readFile(
+          path.join(OUT[profile], prefix, 'updates', 'index.html'),
+          'utf8',
+        );
         expect(html).toContain('The Updates feed is not available yet.');
-        expect(html).toMatch(locale === DEFAULT_LOCALE ? /<html[^>]*lang="en"/ : /<main[^>]*lang="en"/);
+        expect(html).toMatch(
+          locale === DEFAULT_LOCALE ? /<html[^>]*lang="en"/ : /<main[^>]*lang="en"/,
+        );
         expect(html).toMatch(/<main[^>]*id="dbs-main-content"[^>]*tabindex="-1"/);
         expect(html).toContain('role="tablist"');
         expect(html).toContain('role="status"');
         expect(html).not.toContain('example.com/current');
-        expect(await exists(path.join(OUT[profile], prefix, '__updates', 'index.html'))).toBe(false);
+        expect(await exists(path.join(OUT[profile], prefix, '__updates', 'index.html'))).toBe(
+          false,
+        );
       });
     }
   }
@@ -425,4 +438,72 @@ describe('homepage Prism payload (B51)', () => {
       }
     });
   }
+});
+
+describe('generated metadata on every shipped page (B21)', () => {
+  it('validates every content entity and breadcrumb on both profiles, including all locales', async () => {
+    const {checkMetadata} = await import('../../scripts/check-metadata.mjs');
+    for (const profile of ['dev', 'prod'] as const) {
+      const result = await checkMetadata(OUT[profile]);
+      expect(result.count).toBeGreaterThan(100);
+      expect(result.errors, profile).toEqual([]);
+    }
+  });
+  it('production sitemaps contain exactly the manifest live canonical routes, with git dates and reciprocal alternates', async () => {
+    const manifest = JSON.parse(
+      await fs.readFile(path.join(DOCS_ROOT, 'config/route-manifest.json'), 'utf8'),
+    );
+    const live = Object.entries(manifest.routes)
+      .filter(([, entry]) => (entry as {status: string}).status === 'live')
+      .map(([route]) => route)
+      .sort();
+    const seen = new Set<string>();
+    for (const locale of LOCALES) {
+      const prefix = locale === DEFAULT_LOCALE ? '' : `${locale}/`;
+      expect(await exists(path.join(OUT.dev, prefix, 'sitemap.xml'))).toBe(false);
+      const xml = load(await fs.readFile(path.join(OUT.prod, prefix, 'sitemap.xml'), 'utf8'), {
+        xmlMode: true,
+      });
+      expect(xml('url').length).toBeGreaterThan(0);
+      for (const node of xml('url').toArray()) {
+        const loc = xml(node).find('loc').text();
+        const route = new URL(loc).pathname.replace(new RegExp(`^/${prefix}`), '/') || '/';
+        expect(live).toContain(route);
+        seen.add(route);
+        expect(xml(node).find('lastmod').text()).toMatch(/^\d{4}-\d\d-\d\dT/);
+        const html = load(
+          await fs.readFile(path.join(OUT.prod, prefix, route.slice(1), 'index.html'), 'utf8'),
+        );
+        expect(html('link[rel="canonical"]').attr('href')).toBe(loc);
+        const advertised = html('link[hreflang]')
+          .map((_, n) => `${html(n).attr('hreflang')} ${html(n).attr('href')}`)
+          .get()
+          .sort();
+        const mapped = xml(node)
+          .find('xhtml\\:link')
+          .map((_, n) => `${xml(n).attr('hreflang')} ${xml(n).attr('href')}`)
+          .get()
+          .sort();
+        expect(mapped).toEqual(advertised);
+      }
+    }
+    expect([...seen].sort()).toEqual(live);
+  });
+  it('every public page has same-origin OG/Twitter cards and generated, dimensioned social art', async () => {
+    for (const profile of ['dev', 'prod'] as const) {
+      const html = load(
+        await fs.readFile(path.join(OUT[profile], 'docs/guides/installation/index.html'), 'utf8'),
+      );
+      expect(html('main h1')).toHaveLength(1);
+      expect(html('meta[property="og:title"]').attr('content')).toContain('Install');
+      expect(html('meta[name="twitter:title"]').attr('content')).toContain('Install');
+      expect(html('meta[name="twitter:card"]').attr('content')).toBe('summary_large_image');
+      expect(html('meta[property="og:image:width"]').attr('content')).toBe('1200');
+      expect(html('meta[property="og:image:height"]').attr('content')).toBe('630');
+      const image = new URL(html('meta[property="og:image"]').attr('content')!);
+      expect(image.origin).toBe(PROFILES[profile].url);
+      expect(image.pathname).toBe(`${PROFILES[profile].baseUrl}social/HowTo.webp`);
+      expect(await exists(path.join(OUT[profile], 'social/HowTo.webp'))).toBe(true);
+    }
+  });
 });

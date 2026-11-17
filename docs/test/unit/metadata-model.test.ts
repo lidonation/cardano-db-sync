@@ -106,3 +106,29 @@ it('generates deterministic 1200x630 modern social images per content type with 
   }
   expect(new Set(outputs).size).toBe(CONTENT_TYPES.length);
 });
+
+it('derives DataFeed items from the same available feed snapshot, preserving missing-vs-empty', () => {
+  const feed = {
+    asOf: '2026-10-01',
+    entries: [
+      {
+        id: 'one',
+        date: '2026-09-30',
+        kind: 'release' as const,
+        title: 'Release',
+        url: 'https://repo.test/release',
+      },
+    ],
+  };
+  expect(contentJsonLd({...base, type: 'DataFeed', feed}, url, 'https://repo.test')).toMatchObject({
+    dateModified: feed.asOf,
+    dataFeedElement: [
+      {
+        '@type': 'DataFeedItem',
+        dateCreated: '2026-09-30',
+        item: {'@type': 'CreativeWork', name: 'Release', url: 'https://repo.test/release'},
+      },
+    ],
+  });
+  expect(contentType('/docs/guides', true, 'guides/index')).toBe('WebPage');
+});

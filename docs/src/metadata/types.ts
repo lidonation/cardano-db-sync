@@ -15,6 +15,8 @@ export interface Breadcrumb {
   readonly name: string;
   readonly path: string;
 }
+import type {UpdatesFeed} from '../updates/types';
+
 export interface ContentMetadata {
   readonly type: ContentType;
   readonly title: string;
@@ -22,6 +24,7 @@ export interface ContentMetadata {
   readonly steps?: readonly {readonly name: string; readonly text: string}[];
   readonly variables?: readonly string[];
   readonly version?: string;
+  readonly feed?: UpdatesFeed | null;
 }
 export interface RouteMetadata extends ContentMetadata {
   readonly breadcrumbs: readonly Breadcrumb[];

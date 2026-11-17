@@ -34,7 +34,8 @@ export function remarkMetadata(options = {}) {
         .slice(i + 1, end)
         .filter((item) => item.type === 'paragraph');
       const body = normalize(paragraphs.length ? text(paragraphs[0]) : '');
-      if (body) steps.push({name: normalize(text(node)), text: body});
+      const name = normalize(text(node));
+      if (name) steps.push({name, text: body || name});
     }
     file.data.metadata = {title, description, steps};
   };
