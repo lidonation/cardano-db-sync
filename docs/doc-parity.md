@@ -64,3 +64,44 @@ full report can exceed GitHub's PR-description limit; do not truncate the mappin
 summary alone is the detailed record. Retain this manifest as the migration record. Removing the
 old tree without changing the migration policy must fail this gate rather than turn it into a
 vacuous success.
+
+## B17 retirement policy
+
+`doc/` is now removed, not replaced with pointer stubs or a second prose copy. The reviewed
+source remains available as the immutable git commit and `doc` tree pinned by
+`data/doc-retirement.json`. The checker verifies that the tree belongs to that commit, then
+reads its original files with Git and applies the **same** source and destination content hashes.
+An absent tree without this explicit policy, an unavailable object, a mismatched tree, a changed
+guide body or a changed annotation is still a failure. If a working `doc/` directory is present,
+it is audited directly; the frozen source cannot hide upstream edits.
+
+In a shallow checkout, fetch the pinned source object before auditing:
+
+```sh
+source=$(node -p "require('./data/doc-retirement.json').sourceCommit")
+git fetch --no-tags --depth=1 origin "$source"
+npm run --silent check:doc-parity
+```
+
+The required CI parity job does this fetch and retains its full report. The retirement PR
+archives the measured heading totals and dispositions, not an assertion of semantic equivalence.
+The new runtime-option migration guide keeps the old configuration examples executable in tests;
+its reviewed subtree and the expanded SMASH introduction are pinned as additional/updated evidence.
+
+Site URLs are a separate inventory: `config/route-manifest.json` remains append-only and is written
+by the build. Retired version URLs prefer the same page in the latest docs line; other removed
+pages fall back to their nearest live ancestor. No fictitious legacy Astro routes are added:
+the Astro site was never published. GitHub `blob/.../doc/*.md` URLs cannot be intercepted by this
+site and remain accessible only at the corresponding historical commit or release tag.
+
+Unknown paths receive the real static-host 404, with `noindex` and ordinary recovery links.
+With JavaScript the message and current/archive links reflect the requested numeric version and
+locale, even though Pages serves one root fallback file. Without JavaScript that same file still
+has useful current-docs, archive-index and guide links; it never performs a soft redirect. Only
+known manifest paths get HTTP-200 redirect stubs, whose zero-delay meta refresh works without
+JavaScript. The external same-origin script preserves query strings and fragments when available.
+
+`test/built-browser/retirement.spec.ts` crawls every committed manifest route in all five locales
+and tests unknown paths on both profiles. The disposable version browser fixture first builds
+and records a published version, removes it, then rebuilds and tests its generated stubs. This
+proves real retirement rather than hand-seeding production history. Neither test deploys anything.

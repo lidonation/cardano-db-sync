@@ -111,3 +111,15 @@ test('word wrap toggles without an inline style under the site CSP', async ({pag
   await button.click();
   await expect(block.locator('code')).not.toHaveCSS('white-space', 'pre-wrap');
 });
+
+test('the isolated code fixture keeps real migrated FAQ guide destinations', async ({
+  page,
+  request,
+}) => {
+  await page.goto(new URL('faq', BUILT_HOME).href);
+  const hrefs = await page
+    .locator('main a[href*="/docs/guides/"]')
+    .evaluateAll((links) => links.map((link) => (link as HTMLAnchorElement).href));
+  expect(hrefs.some((href) => href.endsWith('/runtime-option-migration'))).toBe(true);
+  for (const href of new Set(hrefs)) expect((await request.get(href)).status(), href).toBe(200);
+});

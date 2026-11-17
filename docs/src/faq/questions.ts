@@ -4,12 +4,12 @@ import {faqItems, type FaqItem} from '../landing/faq';
 /**
  * The FAQ page (B44-c): the landing page's questions plus the ones operators raise about
  * snapshots, upgrades, rollbacks and setup, grouped by task. Every answer is grounded in the
- * repository's own documentation (`doc/`, the README), and links the guide it comes from where
+ * project's guides and README, and links the guide it comes from where
  * one exists. The same items feed the visible page and its FAQPage JSON-LD (META-2), so the
  * structured data cannot say anything the page does not.
  */
 
-/** A guide in the repository's `doc/` directory, by file name. */
+/** The migrated guide identity used to choose its current site URL. */
 export type Guide =
   | 'building-running.md'
   | 'configuration.md'
@@ -185,7 +185,9 @@ export function faqSections(translate: Translate): readonly FaqSection[] {
   ];
 }
 
-/** Where a guide is read in full: the repository's `doc/` directory on its default branch. */
-export function guideUrl(repoUrl: string, guide: Guide): string {
-  return `${repoUrl.replace(/\/+$/, '')}/blob/master/doc/${guide}`;
+/** Current site guides, not repository URLs that disappeared with doc/. */
+export function guideUrl(guide: Guide): string {
+  const slug =
+    guide === 'configuration.md' ? 'runtime-option-migration' : guide.replace(/\.md$/, '');
+  return `/docs/guides/${slug}`;
 }

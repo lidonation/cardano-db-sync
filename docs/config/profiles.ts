@@ -60,6 +60,21 @@ export interface BuildProfile {
   readonly indexable: boolean;
 }
 
+/** Browser consumers need environment values, not duplicate deployment/repository metadata. */
+export type ClientBuildProfile = Pick<
+  BuildProfile,
+  'url' | 'baseUrl' | 'network' | 'repoUrl' | 'indexable'
+>;
+export function clientProfile({
+  url,
+  baseUrl,
+  network,
+  repoUrl,
+  indexable,
+}: BuildProfile): ClientBuildProfile {
+  return {url, baseUrl, network, repoUrl, indexable};
+}
+
 export const PROFILES: Readonly<Record<ProfileName, BuildProfile>> = Object.freeze({
   dev: Object.freeze({
     name: 'dev',

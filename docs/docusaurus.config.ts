@@ -8,7 +8,7 @@ import type {Config} from '@docusaurus/types';
 import type * as Preset from '@docusaurus/preset-classic';
 
 import {I18N} from './config/i18n';
-import {PROFILES, resolveProfile} from './config/profiles';
+import {PROFILES, resolveProfile, clientProfile} from './config/profiles';
 import cnamePlugin from './plugins/cname';
 import sharedCodePlugin from './plugins/shared-code';
 import cssPrunePlugin from './plugins/css-prune';
@@ -21,7 +21,6 @@ import routeManifestPlugin from './plugins/route-manifest';
 import securityPlugin from './plugins/security';
 import {NAVBAR_MENU, FOOTER_MENU, SURFACES} from './src/data/surfaces';
 import {releaseFacts} from './src/data/release-facts';
-import {loadReleaseHistory} from './src/data/release-history';
 
 const profile = resolveProfile();
 
@@ -67,14 +66,12 @@ const config: Config = {
 
   // Exposed to pages and components so no surface re-derives the environment (ENV-1, ENV-2).
   customFields: {
-    profile,
+    profile: clientProfile(profile),
     // ENV-4: the environment banner's way out to the real site.
     productionUrl: `${PROFILES.prod.url}${PROFILES.prod.baseUrl}`,
     // B44-a: the landing page's "in this build" figures, counted here at build time so the
     // schema artifact they come from never ships to the browser.
     releaseFacts: releaseFacts(),
-    // B44-b: the Ecosystem page's release history, counted from the committed changelog.
-    releaseHistory: loadReleaseHistory(),
   },
 
   // A11Y-18: `lang` and `dir` on <html> come from each locale's config (B40).

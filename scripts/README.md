@@ -33,6 +33,6 @@ for manual verification.
 ## Development helpers
 
 - **fourmolize.sh** formats all Haskell sources in place with fourmolu, then fails if that produced any changes. Run it before pushing to reproduce the formatting check CI enforces (CI runs the `haskell-actions/run-fourmolu` action pinned to fourmolu 0.17.0.0, so use that same version locally).
-- **git-pre-commit-hook** git pre-commit hook that runs hlint on staged Haskell files and aborts the commit on warnings, mirroring the CI hlint check (Hydra `checks.hlint`, hlint 3.8, `.hlint.yaml`). Install by symlinking it to `.git/hooks/pre-commit` (see `doc/hlint-stylish-haskell.md`). Formatting is a separate CI gate handled by `fourmolize.sh`.
+- **git-pre-commit-hook** git pre-commit hook that runs hlint on staged Haskell files and aborts the commit on warnings, mirroring the CI hlint check (Hydra `checks.hlint`, hlint 3.8, `.hlint.yaml`). Install by symlinking it to `.git/hooks/pre-commit` (see [Local HLint Hook](../CONTRIBUTING.rst#local-hlint-hook)). Formatting is a separate CI gate handled by `fourmolize.sh`.
 - **secp256k1-setup.sh** `<git-sha>` installs a specific secp256k1 version on Linux and macOS.
 - **run-everything-tmux.sh** dev helper that starts cardano-node and db-sync together in a tmux session.

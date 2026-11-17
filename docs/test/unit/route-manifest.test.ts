@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import vm from 'node:vm';
 
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 import {PROFILES} from '../../config/profiles';
 import {STRICT_DIRECTIVES, cspMetaTag} from '../../plugins/security';
@@ -365,4 +365,126 @@ describe('routeManifestPlugin', () => {
       }
     }
   });
+});
+
+it('retargets retired versions to the same latest page, even when an old ancestor still exists', () => {
+  const before = {
+    routes: {
+      '/': {status: 'live'},
+      '/docs/13.3.0.0/guides/docker': {status: 'retired', redirect: '/'},
+    },
+  } as const;
+  const policy = {
+    lines: [{name: 'current', path: '/docs'}],
+    latest: {name: 'current', path: '/docs'},
+  };
+  const live = ['/', '/docs/guides/docker'];
+  const result = reconcile(before, live, policy);
+  expect(result.retargeted).toEqual(['/docs/13.3.0.0/guides/docker']);
+  expect(result.manifest.routes['/docs/13.3.0.0/guides/docker']).toEqual({
+    status: 'retired',
+    redirect: '/docs/guides/docker',
+  });
+  expect(reconcile(result.manifest, live, policy).retargeted).toEqual([]);
+  const newer = {
+    lines: [{name: 'current', path: '/docs/next'}],
+    latest: {name: 'current', path: '/docs/next'},
+  };
+  expect(
+    reconcile(result.manifest, ['/', '/docs/guides/docker', '/docs/next/guides/docker'], newer)
+      .manifest.routes['/docs/13.3.0.0/guides/docker'],
+  ).toEqual({status: 'retired', redirect: '/docs/next/guides/docker'});
+});
+
+it('loads route-scoped recovery metadata and uses it when retiring a published version', async () => {
+  vi.stubEnv('DOCS_PROFILE', 'dev');
+  vi.stubEnv('ROUTE_MANIFEST', 'write');
+  try {
+    const plugin = routeManifestPlugin({siteDir, baseUrl: dev.baseUrl} as LoadContext);
+    const actions = {
+      createData: vi.fn(async (name: string, _contents: string | object) => name),
+      setGlobalData: vi.fn(),
+      addRoute: vi.fn(),
+    };
+    await plugin.allContentLoaded!({
+      allContent: {
+        'docusaurus-plugin-content-docs': {
+          default: {
+            loadedVersions: [
+              {
+                versionName: 'current',
+                path: `${dev.baseUrl}docs`,
+                isLast: true,
+                docs: [{permalink: `${dev.baseUrl}docs/guides/running`}],
+              },
+            ],
+          },
+        },
+        'docusaurus-plugin-content-pages': {
+          default: [{type: 'jsx', source: '@site/src/pages/index.tsx', permalink: dev.baseUrl}],
+        },
+      },
+      actions,
+    });
+    expect(actions.createData.mock.calls[0][0]).toBe('recovery.json');
+    const data = JSON.parse(String(actions.createData.mock.calls[0][1]));
+    expect(data.routes).toEqual(['/', '/docs/guides/running']);
+    expect(data.latest).toEqual({name: 'current', path: '/docs'});
+    expect(data.tags).toContain('13.3.0.0');
+    expect(actions.setGlobalData).not.toHaveBeenCalled();
+    await writeManifest({
+      routes: {'/': {status: 'live'}, '/docs/13.3.0.0/guides/running': {status: 'live'}},
+    });
+    const postBuild = plugin.postBuild as (props: {
+      outDir: string;
+      routesPaths: string[];
+    }) => Promise<void>;
+    await postBuild({outDir, routesPaths: routes('/', '/docs/guides/running')});
+    expect((await manifestOnDisk()).routes['/docs/13.3.0.0/guides/running']).toEqual({
+      status: 'retired',
+      redirect: '/docs/guides/running',
+    });
+
+    actions.createData.mockClear();
+    await routeManifestPlugin({siteDir, baseUrl: dev.baseUrl} as LoadContext).allContentLoaded!({
+      allContent: {},
+      actions,
+    });
+    const empty = JSON.parse(String(actions.createData.mock.calls[0][1]));
+    expect(empty.routes).toEqual([]);
+    expect(empty.lines).toEqual([]);
+    expect(empty.latest).toEqual({name: 'current', path: '/docs'});
+  } finally {
+    vi.unstubAllEnvs();
+  }
+});
+
+it('refuses a stale version redirect in CI without silently rewriting history', async () => {
+  const route = '/docs/13.3.0.0/guides/running';
+  const before = {
+    routes: {
+      '/': {status: 'live'},
+      '/docs/guides/running': {status: 'live'},
+      [route]: {status: 'retired', redirect: '/'},
+    },
+  } as const;
+  await writeManifest(before);
+  const data = {
+    routes: ['/', '/docs/guides/running'],
+    lines: [{name: 'current', path: '/docs'}],
+    latest: {name: 'current', path: '/docs'},
+    tags: [],
+  };
+  await expect(
+    runManifest({
+      siteDir,
+      outDir,
+      routesPaths: routes('/', '/docs/guides/running'),
+      profile: dev,
+      mode: 'check',
+      data,
+    }),
+  ).rejects.toThrow(/redirect target no longer published/);
+  expect((await manifestOnDisk()).routes).toEqual(before.routes);
+  await expect(fs.stat(path.join(outDir, REDIRECT_SCRIPT_FILE))).rejects.toThrow(/ENOENT/);
 });

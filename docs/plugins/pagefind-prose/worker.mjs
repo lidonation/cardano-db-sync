@@ -31,7 +31,14 @@ self.addEventListener('message', async ({data: {id, method, options, query}}) =>
       if (question) {
         const action = await hydrate(question[1]);
         const object = new Set((await hydrate(question[2])).map((result) => result.url));
-        results = action.filter((result) => object.has(result.url));
+        // Additional reference pages can change Pagefind's corpus-frequency scores. Prefer
+        // an object-specific task title, keeping the original order for equally specific hits.
+        const namesObject = (result) =>
+          typeof result.meta?.title === 'string' &&
+          result.meta.title.toLowerCase().includes(question[2].toLowerCase());
+        results = action
+          .filter((result) => object.has(result.url))
+          .sort((a, b) => Number(namesObject(b)) - Number(namesObject(a)));
       }
       if (!results?.length) results = await hydrate(query);
       self.postMessage({id, results});

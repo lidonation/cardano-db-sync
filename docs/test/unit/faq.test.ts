@@ -43,16 +43,18 @@ describe('FAQ questions (B44-c)', () => {
   });
 
   it('links only guides the repository has', () => {
-    const doc = path.resolve(import.meta.dirname, '../../../doc');
+    const doc = path.resolve(import.meta.dirname, '../../docs/guides');
     const guides = entries.flatMap((item) => (item.guide ? [item.guide] : []));
     expect(guides.length).toBeGreaterThan(0);
-    for (const guide of guides) expect(existsSync(path.join(doc, guide)), guide).toBe(true);
+    for (const guide of guides)
+      expect(existsSync(path.join(doc, guideUrl(guide).split('/').pop()! + '.md')), guide).toBe(
+        true,
+      );
   });
 
-  it('reads a guide on the repository default branch', () => {
-    expect(guideUrl('https://github.com/o/r/', 'docker.md')).toBe(
-      'https://github.com/o/r/blob/master/doc/docker.md',
-    );
+  it('reads a current site guide, including the migrated configuration guidance', () => {
+    expect(guideUrl('docker.md')).toBe('/docs/guides/docker');
+    expect(guideUrl('configuration.md')).toBe('/docs/guides/runtime-option-migration');
   });
 
   it('lists exactly the string ids the page renders (A11Y-18)', () => {

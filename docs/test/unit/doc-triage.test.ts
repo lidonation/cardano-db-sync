@@ -1,6 +1,8 @@
-import {readFileSync, readdirSync} from 'node:fs';
+import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {describe, expect, it} from 'vitest';
+
+import {listLegacy} from './legacy-source';
 
 const root = path.resolve(import.meta.dirname, '../../..');
 const entries: {file: string; disposition: string; reason: string}[] = JSON.parse(
@@ -37,12 +39,7 @@ const expected: Record<string, string[]> = {
 
 describe('CON-13 legacy documentation triage', () => {
   it('records every file exactly once with a disposition and reason', () => {
-    const files = readdirSync(path.join(root, 'doc'), {recursive: true, withFileTypes: true})
-      .filter((entry) => entry.isFile())
-      .map((entry) =>
-        path.relative(path.join(root, 'doc'), path.join(entry.parentPath, entry.name)),
-      )
-      .sort();
+    const files = listLegacy();
     expect(entries).toHaveLength(24);
     expect(entries.map((entry) => entry.file).sort()).toEqual(files);
     expect(new Set(entries.map((entry) => entry.file)).size).toBe(entries.length);

@@ -22,7 +22,7 @@ for (const width of [375, 768, 1024, 1280, 1440]) {
     );
     await guides.click();
     await expect(page.getByRole('heading', {name: 'Guides', level: 1})).toBeVisible();
-    await expect(page.locator('main article .markdown a[href*="/docs/guides/"]')).toHaveCount(23);
+    await expect(page.locator('main article .markdown a[href*="/docs/guides/"]')).toHaveCount(24);
     expect(
       await page.evaluate(
         () => document.documentElement.scrollWidth - document.documentElement.clientWidth,

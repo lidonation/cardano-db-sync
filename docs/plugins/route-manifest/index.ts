@@ -1,6 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
+import type {LoadedVersion} from '@docusaurus/plugin-content-docs';
+import type {LoadedContent as PagesContent} from '@docusaurus/plugin-content-pages';
+import releases from '../../generated/versions.json';
+import {retirementData} from './metadata';
+import {retiredVersion, retirementTarget, type RetirementData} from '../../src/retirement/routes';
+export {nearestLiveAncestor} from '../../src/retirement/routes';
+
 import type {LoadContext, Plugin} from '@docusaurus/types';
 
 import {resolveProfile, type BuildProfile} from '../../config/profiles';
@@ -84,20 +91,11 @@ export function toManifestPath(route: string, baseUrl: string): string | null {
   return `/${rest}`;
 }
 
-/** The closest ancestor of `route` that is published, falling back to the site root. */
-export function nearestLiveAncestor(route: string, live: ReadonlySet<string>): string {
-  const segments = route.split('/').filter(Boolean);
-  while (segments.length > 0) {
-    segments.pop();
-    const candidate = `/${segments.join('/')}`;
-    if (live.has(candidate)) {
-      return candidate;
-    }
-  }
-  return '/';
-}
-
-export function reconcile(manifest: RouteManifest, published: Iterable<string>): Reconciliation {
+export function reconcile(
+  manifest: RouteManifest,
+  published: Iterable<string>,
+  data?: Pick<RetirementData, 'lines' | 'latest'>,
+): Reconciliation {
   const live = new Set(published);
   const routes: Record<string, RouteEntry> = {};
   const added: string[] = [];
@@ -115,12 +113,16 @@ export function reconcile(manifest: RouteManifest, published: Iterable<string>):
     }
     if (entry.status === 'live') {
       retired.push(route);
-      routes[route] = {status: 'retired', redirect: nearestLiveAncestor(route, live)};
+      routes[route] = {status: 'retired', redirect: retirementTarget(route, live, data)};
       continue;
     }
-    if (!live.has(entry.redirect)) {
+    const best = retirementTarget(route, live, data);
+    if (
+      !live.has(entry.redirect) ||
+      (data && retiredVersion(route, data.lines) && best !== entry.redirect)
+    ) {
       retargeted.push(route);
-      routes[route] = {status: 'retired', redirect: nearestLiveAncestor(route, live)};
+      routes[route] = {status: 'retired', redirect: best};
       continue;
     }
     routes[route] = entry;
@@ -372,6 +374,7 @@ export interface ManifestRunOptions {
    * locale but the default. Manifest paths are relative to it, so every locale shares one manifest.
    */
   readonly baseUrl?: string;
+  readonly data?: RetirementData;
 }
 
 /** Reconcile, then write (local) or verify (CI) the manifest, then emit redirects. */
@@ -382,7 +385,7 @@ export async function runManifest(options: ManifestRunOptions): Promise<Reconcil
   const published = options.routesPaths
     .map((route) => toManifestPath(route, options.baseUrl ?? options.profile.baseUrl))
     .filter((route): route is string => route !== null);
-  const result = reconcile(current, published);
+  const result = reconcile(current, published, options.data);
 
   if (options.mode === 'check') {
     const drift = describeDrift(result);
@@ -404,9 +407,24 @@ export async function runManifest(options: ManifestRunOptions): Promise<Reconcil
 export default function routeManifestPlugin(context: LoadContext): Plugin {
   const profile = resolveProfile();
   const mode = resolveMode();
+  let data: RetirementData | undefined;
 
   return {
     name: 'dbsync-route-manifest',
+    async allContentLoaded({allContent, actions}) {
+      const docs = allContent['docusaurus-plugin-content-docs']?.default as
+        {loadedVersions: LoadedVersion[]} | undefined;
+      const pages = allContent['docusaurus-plugin-content-pages']?.default as
+        PagesContent | undefined;
+      data = retirementData(
+        docs?.loadedVersions ?? [],
+        pages ?? [],
+        context.baseUrl,
+        releases.versions.map((release) => release.tag),
+      );
+      // Route-scoped: global data would add all routes/tags to every homepage payload.
+      await actions.createData('recovery.json', JSON.stringify(data));
+    },
     async postBuild({outDir, routesPaths}) {
       await runManifest({
         siteDir: context.siteDir,
@@ -414,8 +432,15 @@ export default function routeManifestPlugin(context: LoadContext): Plugin {
         routesPaths,
         profile,
         mode,
+        data,
         baseUrl: context.baseUrl,
       });
     },
   };
+}
+
+/** Disposable content builds still need 404 metadata, but may never retire production routes. */
+export function recoveryMetadataPlugin(context: LoadContext): Plugin {
+  const {name, allContentLoaded} = routeManifestPlugin(context);
+  return {name, allContentLoaded};
 }

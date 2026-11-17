@@ -262,10 +262,26 @@ release a patched version to the `Cardano Haskell Package repository
 Releasing a New Version
 =======================
 
-See `<doc/release-process.md>`__
+Release from a release branch, not ``master``. Land general changes on ``master`` first and
+cherry-pick them to the release branch. Update cabal versions, changelogs and the Compose image
+versions together, then perform a mainnet sync and QA the pre-release tag. Fixes go below those
+release metadata commits and receive a new pre-release tag. Once QA approves, the Release Manager
+tags that same commit for the formal release. Cherry-pick release metadata back to ``master``
+afterwards. The documentation site consumes regenerated schema and annotation artifacts under
+``docs/generated/``; do not recreate the retired ``doc/`` tree.
 
-.. _installing-with-nix: doc/installing-with-nix.md
-.. _installing: doc/installing.md#install-dependencies
+Local HLint Hook
+================
+
+Install ``hlint`` with ``cabal install hlint`` and put ``$HOME/.cabal/bin`` on ``PATH``.
+Install the staged-file hook from the repository root::
+
+    (cd .git/hooks/ && ln -s ../../scripts/git-pre-commit-hook pre-commit)
+
+The hook runs HLint; formatting remains a separate check. See ``scripts/README.md``.
+
+.. _installing-with-nix: docs/docs/guides/installing-with-nix.md
+.. _installing: docs/docs/guides/installing.md#install-dependencies
 .. _direnv: https://direnv.net/
 .. _direnv-mode: https://github.com/wbolster/emacs-direnv
 .. _direnv.vim: https://github.com/direnv/direnv.vim

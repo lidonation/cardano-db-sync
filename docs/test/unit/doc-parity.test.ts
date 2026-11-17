@@ -1,7 +1,16 @@
-import {mkdtempSync, mkdirSync, readFileSync, rmSync, symlinkSync, writeFileSync} from 'node:fs';
+import {execFileSync} from 'node:child_process';
+import {
+  mkdtempSync,
+  mkdirSync,
+  lstatSync,
+  readFileSync,
+  rmSync,
+  symlinkSync,
+  writeFileSync,
+} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
-import {afterEach, beforeEach, describe, expect, it} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {
   annotationText,
   audit,
@@ -9,6 +18,9 @@ import {
   main,
   readHeadings,
 } from '../../scripts/check-doc-parity.mjs';
+
+import {readLegacy} from './legacy-source';
+import {runAsScript} from './run-as-script';
 
 type Target = {kind: string; file: string; heading?: string; name?: string; sha256: string};
 type Entry = {sha256: string; targets?: string[]; omission?: string};
@@ -37,6 +49,23 @@ function json(file: string, value: unknown) {
 function save() {
   json('docs/data/doc-parity.json', manifest);
   json('docs/generated/haddock-annotations.json', artifact);
+}
+function git(...args: string[]): string {
+  return execFileSync('git', args, {cwd: repo, encoding: 'utf8'}).trim();
+}
+function pinLegacy() {
+  git('init', '-q');
+  git('add', 'doc');
+  git(
+    '-c',
+    'user.name=Test',
+    '-c',
+    'user.email=test@example.invalid',
+    'commit',
+    '-qm',
+    'original source',
+  );
+  return {sourceCommit: git('rev-parse', 'HEAD'), sourceTree: git('rev-parse', 'HEAD:doc')};
 }
 function source(text: string, target: string | null): Source {
   const parsed = readHeadings(text);
@@ -356,10 +385,87 @@ it('validates the real migration record without changing any inputs', () => {
     'data/doc-triage.json',
     'data/doc-parity.json',
     'generated/haddock-annotations.json',
-    '../doc/installing.md',
+    'data/doc-retirement.json',
     'docs/guides/installing.md',
   ];
-  const before = inputs.map((file) => readFileSync(path.join(root, file), 'utf8'));
+  const readInputs = () => [
+    ...inputs.map((file) => readFileSync(path.join(root, file), 'utf8')),
+    readLegacy('installing.md'),
+  ];
+  const before = readInputs();
+  expect(() => lstatSync(path.resolve(root, '../doc'))).toThrow(/ENOENT/);
   expect(audit(root).problems).toEqual([]);
-  expect(inputs.map((file) => readFileSync(path.join(root, file), 'utf8'))).toEqual(before);
+  expect(readInputs()).toEqual(before);
+});
+
+it('audits the original git snapshot after explicit retirement, rejecting a mismatched tree', async () => {
+  const {sourceCommit, sourceTree} = pinLegacy();
+  json('docs/data/doc-retirement.json', {sourceCommit, sourceTree});
+  const before = audit(docs);
+  expect(before.problems).toEqual([]);
+  write('doc/install.md', guide.replace('smoke check', 'unreviewed command'));
+  expect(audit(docs).problems.join('\n')).toContain('source section changed');
+  write('doc/install.md', guide);
+  rmSync(path.join(repo, 'doc'), {recursive: true});
+  expect(audit(docs)).toEqual(before);
+  write('docs/docs/guides/install.md', '---\ntitle: Install\n---\n\n# Install\n\n## Verify\n');
+  expect(audit(docs).problems.join('\n')).toContain('migrated section changed');
+  json('docs/data/doc-retirement.json', {sourceCommit, sourceTree: '0'.repeat(40)});
+  expect(audit(docs).problems.join('\n')).toContain('source tree does not match');
+  json('docs/data/doc-retirement.json', {sourceCommit: '0'.repeat(40), sourceTree});
+  expect(audit(docs).problems.join('\n')).toContain('Cannot audit migration');
+  json('docs/data/doc-retirement.json', {sourceCommit: '../other', sourceTree});
+  expect(audit(docs).problems.join('\n')).toContain('full source commit');
+});
+
+it('rejects non-regular files in the frozen git tree instead of following source symlinks', () => {
+  symlinkSync('/outside/not-read', path.join(repo, 'doc/unsafe.md'));
+  json('docs/data/doc-retirement.json', pinLegacy());
+  rmSync(path.join(repo, 'doc'), {recursive: true});
+  expect(audit(docs).problems.join('\n')).toContain('regular flat source files');
+});
+
+it('runs the real frozen-source CLI and reports its complete non-Markdown omissions', async () => {
+  const log = vi.spyOn(console, 'log').mockImplementation(() => {});
+  try {
+    expect(await runAsScript('../../scripts/check-doc-parity.mjs', [])).toBe(0);
+    const report = log.mock.calls.map(([message]) => String(message)).join('\n');
+    expect(report).toContain('352/352 headings accounted for (100%)');
+    expect(report).toContain('Non-Markdown omissions');
+    expect(report).toContain('ERD.png');
+  } finally {
+    log.mockRestore();
+  }
+});
+
+it('retains a safe CI failure report when a destination selector is missing', () => {
+  delete manifest.targets.reference.name;
+  save();
+  const logs: string[] = [];
+  expect(main(docs, {log: (message: string) => logs.push(message)})).toBe(1);
+  expect(logs.join('\n')).toContain('annotation target must select a Haskell declaration');
+  expect(logs.join('\n')).toContain('&lt;missing&gt;');
+});
+
+it('does not silently turn a B13 accepted omission into a migrated destination', () => {
+  const heading = manifest.sources['Readme.md'].headings['h1 Old navigation'];
+  delete heading.omission;
+  heading.targets = ['install'];
+  save();
+  const result = audit(docs);
+  expect(result.problems.join('\n')).toContain('B13 accepts omission, not a migrated target');
+  expect(result.rows.find((row: {file: string}) => row.file === 'Readme.md')?.status).toBe('FAIL');
+});
+
+it('finds newly introduced nested legacy files instead of hiding them in the frozen policy', () => {
+  json('docs/data/doc-retirement.json', pinLegacy());
+  write('doc/nested/unreviewed.md', '# Unreviewed\n\nNew upstream content.');
+  expect(audit(docs).problems.join('\n')).toContain('doc/nested/unreviewed.md: unaccounted file');
+});
+
+it('rejects a dangling working-tree doc symlink rather than falling back to the frozen source', () => {
+  json('docs/data/doc-retirement.json', pinLegacy());
+  rmSync(path.join(repo, 'doc'), {recursive: true});
+  symlinkSync('/outside/not-read', path.join(repo, 'doc'), 'dir');
+  expect(audit(docs).problems.join('\n')).toContain('legacy doc directory must not be a symlink');
 });

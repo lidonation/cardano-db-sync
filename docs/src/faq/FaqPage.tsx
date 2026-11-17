@@ -5,7 +5,6 @@ import Link from '@docusaurus/Link';
 import {useLocation} from '@docusaurus/router';
 
 import Icon from '../components/shared/Icon';
-import useBuildEnvironment from '../lib/useBuildEnvironment';
 import styles from '../landing/styles.module.css';
 
 import useFaqTranslate from './useFaqTranslate';
@@ -21,7 +20,6 @@ export default function FaqPage(): React.JSX.Element {
   const t = useFaqTranslate();
   const root = useRef<HTMLDivElement>(null);
   const {hash} = useLocation();
-  const {profile} = useBuildEnvironment();
   const sections = faqSections(t);
   const readGuide = t({
     id: 'faq.guide',
@@ -86,9 +84,9 @@ export default function FaqPage(): React.JSX.Element {
                   <p className={styles.faqAnswer}>{item.answer}</p>
                   {item.guide && (
                     <p className={styles.faqAnswer}>
-                      <Link className={styles.more} to={guideUrl(profile.repoUrl, item.guide)}>
+                      <Link className={styles.more} to={guideUrl(item.guide)}>
                         {readGuide}
-                        <Icon name="external" size={12} />
+                        <Icon name="arrow-right" size={12} />
                       </Link>
                     </p>
                   )}

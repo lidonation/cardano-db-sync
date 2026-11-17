@@ -82,3 +82,17 @@ it('retains the action excerpt when the next lookup mutates a cached fragment', 
     results: [{url: '/trim', excerpt: 'prune outputs'}],
   });
 });
+
+it('prefers a task page explicitly naming the object over general reference matches', async () => {
+  const docs = [
+    {url: '/queries', excerpt: 'prune SQL examples', meta: {title: 'Interesting queries'}},
+    {url: '/trim', excerpt: 'prune outputs safely', meta: {title: 'Trimming with TX_OUT modes'}},
+    {url: '/other', excerpt: 'prune other data'},
+  ];
+  const worker = makeWorker(async () => ({results: docs.map((doc) => ({data: async () => doc}))}));
+  await worker.call({id: 1, method: 'init', options: {}});
+  await worker.call({id: 2, method: 'search', query: 'how do I prune tx_out?'});
+  expect(worker.send).toHaveBeenLastCalledWith({id: 2, results: [docs[1], docs[0], docs[2]]});
+  await worker.call({id: 3, method: 'search', query: 'prune'});
+  expect(worker.send).toHaveBeenLastCalledWith({id: 3, results: docs});
+});

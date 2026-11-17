@@ -35,6 +35,7 @@ changing a deployment.
 - [Upgrade PostgreSQL](./upgrading-postgresql.md)
 - [Migrations](./migrations.md)
 - [Validation](./validation.md)
+- [Runtime option migration](./runtime-option-migration.md)
 - [Trimming with tx_out modes](./trimming.md)
 
 ## Query and develop

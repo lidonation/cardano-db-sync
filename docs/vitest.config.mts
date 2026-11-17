@@ -14,6 +14,7 @@ export default defineConfig({
         'src/lib/palette.ts',
         'src/wallet/**/*.ts',
         'src/search/**/*.ts',
+        'src/retirement/**/*.ts',
         // The browser-free i18n helpers. The hooks and theme components that use them need a
         // Docusaurus build and are covered by test:build.
         'src/i18n/pages.ts',

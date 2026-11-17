@@ -5,6 +5,8 @@ import {unified} from 'unified';
 import remarkParse from 'remark-parse';
 import {describe, expect, it} from 'vitest';
 
+import {readLegacy} from './legacy-source';
+
 const root = path.resolve(import.meta.dirname, '../../..');
 const sourceNames = [
   'building-running',
@@ -59,7 +61,7 @@ it('does not mistake a hash inside a code fence for a heading to preserve', () =
 
 describe('legacy procedural migration (CON-8, GDE-1)', () => {
   it.each(sourceNames)('preserves the headings of %s and declares known dependencies', (name) => {
-    const source = readFileSync(path.join(root, 'doc', `${name}.md`), 'utf8');
+    const source = readLegacy(`${name}.md`);
     const guide = readFileSync(migratedPath(name), 'utf8');
     const front = /^---\n([\s\S]*?)\n---\n/.exec(guide);
     expect(front).not.toBeNull();

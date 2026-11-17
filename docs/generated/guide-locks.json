@@ -1490,6 +1490,926 @@
     },
     "docs/guides/restore-from-snapshot.md": {},
     "docs/guides/running.md": {},
+    "docs/guides/runtime-option-migration.md": {
+      "tables:address": "sha256:a59aa3d6126eee9977b8434e150df6f755c65f06c91c7f127545ba9e1c5799e6",
+      "tables:script": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_cbor": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:tx_out": "sha256:a59aa3d6126eee9977b8434e150df6f755c65f06c91c7f127545ba9e1c5799e6",
+      "tables:multi_asset": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "tables:pool_stat": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
+      "config:insert_options.tx_out.value": {
+        "fingerprint": "sha256:67e68063c98516f9df3d10e4e622723ec1669c632fb959402fdad4e11687983c",
+        "contract": {
+          "path": "insert_options.tx_out.value",
+          "key": {
+            "name": "value",
+            "required": true,
+            "shape": {
+              "type": "enum",
+              "values": ["enable", "disable", "consumed", "prune", "bootstrap"]
+            }
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "enable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "enable",
+                    "only_governance": "disable",
+                    "only_utxo": "bootstrap"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            },
+            {
+              "path": "insert_options.tx_out",
+              "required": false,
+              "nullable": true,
+              "default": "enable"
+            }
+          ]
+        }
+      },
+      "config:insert_options.remove_jsonb_from_schema": {
+        "fingerprint": "sha256:0db6f62f6c0b0c78df83fd06cb290182ec65e91f66ac02e8c0c2476a5873ee05",
+        "contract": {
+          "path": "insert_options.remove_jsonb_from_schema",
+          "key": {
+            "default": "disable",
+            "name": "remove_jsonb_from_schema",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "disable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "disable",
+                    "only_governance": "disable",
+                    "only_utxo": "disable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options": {
+        "fingerprint": "sha256:510dc7ffaf0928c69c12a3a292c63655dad61951837b18b450d0deece7bcdde3",
+        "contract": {
+          "path": "insert_options",
+          "key": {
+            "default": {
+              "disable_epoch": false,
+              "governance": "enable",
+              "ledger": "enable",
+              "metadata": {"enable": true},
+              "multi_asset": {"enable": true},
+              "offchain_pool_data": "disable",
+              "offchain_vote_data": "disable",
+              "plutus": {"enable": true},
+              "pool_stat": "disable",
+              "preset": null,
+              "remove_jsonb_from_schema": "disable",
+              "shelley": {"enable": true},
+              "stop_at_block": null,
+              "tx_cbor": "disable",
+              "tx_out": {"use_address_table": false, "value": "enable"}
+            },
+            "name": "insert_options",
+            "required": false,
+            "shape": {
+              "haskell": "SyncInsertConfig",
+              "keys": [
+                {
+                  "name": "preset",
+                  "required": false,
+                  "shape": {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": ["full", "only_utxo", "only_governance", "disable_all"]
+                  }
+                },
+                {
+                  "default": "disable",
+                  "name": "tx_cbor",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+                },
+                {
+                  "default": {"use_address_table": false, "value": "enable"},
+                  "name": "tx_out",
+                  "required": false,
+                  "shape": {
+                    "haskell": "TxOutConfig",
+                    "keys": [
+                      {
+                        "name": "value",
+                        "required": true,
+                        "shape": {
+                          "type": "enum",
+                          "values": ["enable", "disable", "consumed", "prune", "bootstrap"]
+                        }
+                      },
+                      {
+                        "default": false,
+                        "name": "force_tx_in",
+                        "required": false,
+                        "shape": {"nullable": true, "type": "boolean"}
+                      },
+                      {
+                        "default": false,
+                        "name": "use_address_table",
+                        "required": false,
+                        "shape": {"nullable": true, "type": "boolean"}
+                      }
+                    ],
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                {
+                  "default": "enable",
+                  "name": "ledger",
+                  "required": false,
+                  "shape": {
+                    "nullable": true,
+                    "type": "enum",
+                    "values": ["enable", "disable", "ignore"]
+                  }
+                },
+                {
+                  "default": {"enable": true},
+                  "name": "shelley",
+                  "required": false,
+                  "shape": {
+                    "haskell": "ShelleyInsertConfig",
+                    "keys": [
+                      {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                      {
+                        "name": "stake_addresses",
+                        "required": false,
+                        "shape": {
+                          "items": {"type": "string"},
+                          "minItems": 1,
+                          "nullable": true,
+                          "type": "array"
+                        }
+                      }
+                    ],
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                {
+                  "default": {"enable": true},
+                  "name": "multi_asset",
+                  "required": false,
+                  "shape": {
+                    "haskell": "MultiAssetConfig",
+                    "keys": [
+                      {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                      {
+                        "name": "policies",
+                        "required": false,
+                        "shape": {
+                          "items": {"type": "string"},
+                          "minItems": 1,
+                          "nullable": true,
+                          "type": "array"
+                        }
+                      }
+                    ],
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                {
+                  "default": {"enable": true},
+                  "name": "metadata",
+                  "required": false,
+                  "shape": {
+                    "haskell": "MetadataConfig",
+                    "keys": [
+                      {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                      {
+                        "name": "keys",
+                        "required": false,
+                        "shape": {
+                          "items": {
+                            "haskell": "Word",
+                            "maximum": "18446744073709551615",
+                            "minimum": "0",
+                            "type": "integer"
+                          },
+                          "minItems": 1,
+                          "nullable": true,
+                          "type": "array"
+                        }
+                      }
+                    ],
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                {
+                  "default": {"enable": true},
+                  "name": "plutus",
+                  "required": false,
+                  "shape": {
+                    "haskell": "PlutusConfig",
+                    "keys": [
+                      {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                      {
+                        "name": "script_hashes",
+                        "required": false,
+                        "shape": {
+                          "items": {"type": "string"},
+                          "minItems": 1,
+                          "nullable": true,
+                          "type": "array"
+                        }
+                      }
+                    ],
+                    "nullable": true,
+                    "type": "object"
+                  }
+                },
+                {
+                  "default": "enable",
+                  "name": "governance",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+                },
+                {
+                  "default": "disable",
+                  "name": "offchain_pool_data",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+                },
+                {
+                  "default": "disable",
+                  "name": "offchain_vote_data",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+                },
+                {
+                  "default": "disable",
+                  "name": "pool_stat",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+                },
+                {
+                  "default": "disable",
+                  "name": "remove_jsonb_from_schema",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+                },
+                {
+                  "default": false,
+                  "name": "disable_epoch",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "boolean"}
+                },
+                {
+                  "default": null,
+                  "name": "stop_at_block",
+                  "required": false,
+                  "shape": {
+                    "haskell": "Word64",
+                    "maximum": "18446744073709551615",
+                    "minimum": "0",
+                    "nullable": true,
+                    "type": "integer"
+                  }
+                }
+              ],
+              "nullable": true,
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": {
+                      "disable_epoch": true,
+                      "governance": "disable",
+                      "ledger": "disable",
+                      "metadata": {"enable": false},
+                      "multi_asset": {"enable": false},
+                      "offchain_pool_data": "disable",
+                      "offchain_vote_data": "disable",
+                      "plutus": {"enable": false},
+                      "pool_stat": "disable",
+                      "remove_jsonb_from_schema": "disable",
+                      "shelley": {"enable": false},
+                      "stop_at_block": null,
+                      "tx_cbor": "disable",
+                      "tx_out": {"value": "disable"}
+                    },
+                    "full": {
+                      "disable_epoch": false,
+                      "governance": "enable",
+                      "ledger": "enable",
+                      "metadata": {"enable": true},
+                      "multi_asset": {"enable": true},
+                      "offchain_pool_data": "disable",
+                      "offchain_vote_data": "disable",
+                      "plutus": {"enable": true},
+                      "pool_stat": "enable",
+                      "remove_jsonb_from_schema": "disable",
+                      "shelley": {"enable": true},
+                      "stop_at_block": null,
+                      "tx_cbor": "disable",
+                      "tx_out": {"use_address_table": false, "value": "enable"}
+                    },
+                    "only_governance": {
+                      "disable_epoch": true,
+                      "governance": "enable",
+                      "ledger": "enable",
+                      "metadata": {"enable": false},
+                      "multi_asset": {"enable": false},
+                      "offchain_pool_data": "disable",
+                      "offchain_vote_data": "disable",
+                      "plutus": {"enable": false},
+                      "pool_stat": "enable",
+                      "remove_jsonb_from_schema": "disable",
+                      "shelley": {"enable": false},
+                      "stop_at_block": null,
+                      "tx_cbor": "disable",
+                      "tx_out": {"value": "disable"}
+                    },
+                    "only_utxo": {
+                      "disable_epoch": true,
+                      "governance": "enable",
+                      "ledger": "ignore",
+                      "metadata": {"enable": false},
+                      "multi_asset": {"enable": true},
+                      "offchain_pool_data": "disable",
+                      "offchain_vote_data": "disable",
+                      "plutus": {"enable": false},
+                      "pool_stat": "disable",
+                      "remove_jsonb_from_schema": "disable",
+                      "shelley": {"enable": false},
+                      "stop_at_block": null,
+                      "tx_cbor": "disable",
+                      "tx_out": {
+                        "force_tx_in": false,
+                        "use_address_table": false,
+                        "value": "bootstrap"
+                      }
+                    }
+                  }
+                }
+              ],
+              "type": "object"
+            }
+          },
+          "context": []
+        }
+      },
+      "config:insert_options.tx_cbor": {
+        "fingerprint": "sha256:6225223b257f4d464b6b6299b4415654c387ef9c4d2f19f756e27c2f1955b943",
+        "contract": {
+          "path": "insert_options.tx_cbor",
+          "key": {
+            "default": "disable",
+            "name": "tx_cbor",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "disable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "disable",
+                    "only_governance": "disable",
+                    "only_utxo": "disable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.tx_out": {
+        "fingerprint": "sha256:717776ee9d82a383d90567c9d1bc35deee26ca0e8d5a7f91165d2a7e97b02b19",
+        "contract": {
+          "path": "insert_options.tx_out",
+          "key": {
+            "default": {"use_address_table": false, "value": "enable"},
+            "name": "tx_out",
+            "required": false,
+            "shape": {
+              "haskell": "TxOutConfig",
+              "keys": [
+                {
+                  "name": "value",
+                  "required": true,
+                  "shape": {
+                    "type": "enum",
+                    "values": ["enable", "disable", "consumed", "prune", "bootstrap"]
+                  }
+                },
+                {
+                  "default": false,
+                  "name": "force_tx_in",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "boolean"}
+                },
+                {
+                  "default": false,
+                  "name": "use_address_table",
+                  "required": false,
+                  "shape": {"nullable": true, "type": "boolean"}
+                }
+              ],
+              "nullable": true,
+              "type": "object"
+            }
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": {"use_address_table": false, "value": "enable"},
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": {"value": "disable"},
+                    "full": {"use_address_table": false, "value": "enable"},
+                    "only_governance": {"value": "disable"},
+                    "only_utxo": {
+                      "force_tx_in": false,
+                      "use_address_table": false,
+                      "value": "bootstrap"
+                    }
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.ledger": {
+        "fingerprint": "sha256:e5c68b6d661b57de07eaa42fd22b62c1dfe9d435b92cefd6cc98b3c8a98e5ce1",
+        "contract": {
+          "path": "insert_options.ledger",
+          "key": {
+            "default": "enable",
+            "name": "ledger",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable", "ignore"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "enable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "enable",
+                    "only_governance": "enable",
+                    "only_utxo": "ignore"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.shelley": {
+        "fingerprint": "sha256:75a7570bd5f0de55a18dbe31216d4af4d8363be24a88fb3bf789e0a6ba5163be",
+        "contract": {
+          "path": "insert_options.shelley",
+          "key": {
+            "default": {"enable": true},
+            "name": "shelley",
+            "required": false,
+            "shape": {
+              "haskell": "ShelleyInsertConfig",
+              "keys": [
+                {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                {
+                  "name": "stake_addresses",
+                  "required": false,
+                  "shape": {
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "nullable": true,
+                    "type": "array"
+                  }
+                }
+              ],
+              "nullable": true,
+              "type": "object"
+            }
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": {"enable": true},
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": {"enable": false},
+                    "full": {"enable": true},
+                    "only_governance": {"enable": false},
+                    "only_utxo": {"enable": false}
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.multi_asset": {
+        "fingerprint": "sha256:00d200beed9f0f4d9d3e744918aac6d9aff8b495e555e2a9d203c7a3e34c2845",
+        "contract": {
+          "path": "insert_options.multi_asset",
+          "key": {
+            "default": {"enable": true},
+            "name": "multi_asset",
+            "required": false,
+            "shape": {
+              "haskell": "MultiAssetConfig",
+              "keys": [
+                {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                {
+                  "name": "policies",
+                  "required": false,
+                  "shape": {
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "nullable": true,
+                    "type": "array"
+                  }
+                }
+              ],
+              "nullable": true,
+              "type": "object"
+            }
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": {"enable": true},
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": {"enable": false},
+                    "full": {"enable": true},
+                    "only_governance": {"enable": false},
+                    "only_utxo": {"enable": true}
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.metadata": {
+        "fingerprint": "sha256:25438382fdb133b0aa512aae5bf467d82c4fb3e6eca2aec1052e31475f2ef2e7",
+        "contract": {
+          "path": "insert_options.metadata",
+          "key": {
+            "default": {"enable": true},
+            "name": "metadata",
+            "required": false,
+            "shape": {
+              "haskell": "MetadataConfig",
+              "keys": [
+                {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                {
+                  "name": "keys",
+                  "required": false,
+                  "shape": {
+                    "items": {
+                      "haskell": "Word",
+                      "maximum": "18446744073709551615",
+                      "minimum": "0",
+                      "type": "integer"
+                    },
+                    "minItems": 1,
+                    "nullable": true,
+                    "type": "array"
+                  }
+                }
+              ],
+              "nullable": true,
+              "type": "object"
+            }
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": {"enable": true},
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": {"enable": false},
+                    "full": {"enable": true},
+                    "only_governance": {"enable": false},
+                    "only_utxo": {"enable": false}
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.plutus": {
+        "fingerprint": "sha256:8f1d7b670d64bae892fe0b2f3887680d8913991c48cd7af9f22cd007a35ca913",
+        "contract": {
+          "path": "insert_options.plutus",
+          "key": {
+            "default": {"enable": true},
+            "name": "plutus",
+            "required": false,
+            "shape": {
+              "haskell": "PlutusConfig",
+              "keys": [
+                {"name": "enable", "required": true, "shape": {"type": "boolean"}},
+                {
+                  "name": "script_hashes",
+                  "required": false,
+                  "shape": {
+                    "items": {"type": "string"},
+                    "minItems": 1,
+                    "nullable": true,
+                    "type": "array"
+                  }
+                }
+              ],
+              "nullable": true,
+              "type": "object"
+            }
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": {"enable": true},
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": {"enable": false},
+                    "full": {"enable": true},
+                    "only_governance": {"enable": false},
+                    "only_utxo": {"enable": false}
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.governance": {
+        "fingerprint": "sha256:8371eb8f3c7f902aae47c88938f6621604c03de159519b6c4acce316feb107d2",
+        "contract": {
+          "path": "insert_options.governance",
+          "key": {
+            "default": "enable",
+            "name": "governance",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "enable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "enable",
+                    "only_governance": "enable",
+                    "only_utxo": "enable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.offchain_pool_data": {
+        "fingerprint": "sha256:d70e05b64c500bc2c764aa0d72b54e237de6e2b428a8ca31f37e5149e1e55fba",
+        "contract": {
+          "path": "insert_options.offchain_pool_data",
+          "key": {
+            "default": "disable",
+            "name": "offchain_pool_data",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "disable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "disable",
+                    "only_governance": "disable",
+                    "only_utxo": "disable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.offchain_vote_data": {
+        "fingerprint": "sha256:f1344ed3e7b41a3607d37d9a0f56462cdb3b3075f3700eeb21f2cbbd1356c6f9",
+        "contract": {
+          "path": "insert_options.offchain_vote_data",
+          "key": {
+            "default": "disable",
+            "name": "offchain_vote_data",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "disable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "disable",
+                    "only_governance": "disable",
+                    "only_utxo": "disable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.disable_epoch": {
+        "fingerprint": "sha256:40682d7070193c4f62b89a6b65ac92cf30241ca5af46fb2a7cee081d61f8f4aa",
+        "contract": {
+          "path": "insert_options.disable_epoch",
+          "key": {
+            "default": false,
+            "name": "disable_epoch",
+            "required": false,
+            "shape": {"nullable": true, "type": "boolean"}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": false,
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": true,
+                    "full": false,
+                    "only_governance": true,
+                    "only_utxo": true
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      },
+      "config:insert_options.preset": {
+        "fingerprint": "sha256:123fe1764503dc91444f06106b0ee024ec4dc8b45feb99f426793936d7113b88",
+        "contract": {
+          "path": "insert_options.preset",
+          "key": {
+            "name": "preset",
+            "required": false,
+            "shape": {
+              "nullable": true,
+              "type": "enum",
+              "values": ["full", "only_utxo", "only_governance", "disable_all"]
+            }
+          },
+          "context": [
+            {"path": "insert_options", "required": false, "nullable": true, "default": null}
+          ]
+        }
+      },
+      "config:insert_options.tx_out.use_address_table": {
+        "fingerprint": "sha256:c211a34306b3087bec4876a19836d7e09add7f650041116dd52a8a790ab9d356",
+        "contract": {
+          "path": "insert_options.tx_out.use_address_table",
+          "key": {
+            "default": false,
+            "name": "use_address_table",
+            "required": false,
+            "shape": {"nullable": true, "type": "boolean"}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": false,
+              "presets": [{"key": "preset", "values": {"full": false, "only_utxo": false}}],
+              "selections": {"insert_options.preset": null}
+            },
+            {"path": "insert_options.tx_out", "required": false, "nullable": true, "default": false}
+          ]
+        }
+      },
+      "config:insert_options.pool_stat": {
+        "fingerprint": "sha256:cbda4eefca361917a4009247123457cb429d53c964de313bf7065e705070b3ff",
+        "contract": {
+          "path": "insert_options.pool_stat",
+          "key": {
+            "default": "disable",
+            "name": "pool_stat",
+            "required": false,
+            "shape": {"nullable": true, "type": "enum", "values": ["enable", "disable"]}
+          },
+          "context": [
+            {
+              "path": "insert_options",
+              "required": false,
+              "nullable": true,
+              "default": "disable",
+              "presets": [
+                {
+                  "key": "preset",
+                  "values": {
+                    "disable_all": "disable",
+                    "full": "enable",
+                    "only_governance": "enable",
+                    "only_utxo": "disable"
+                  }
+                }
+              ],
+              "selections": {"insert_options.preset": null}
+            }
+          ]
+        }
+      }
+    },
     "docs/guides/schema-management.md": {
       "tables:schema_version": "sha256:2eaae3e1fba5448a8a4ca1c3d663b9f0a56b72044697c856ec06e24844dfce20",
       "columns:schema_version.stage_three": [
@@ -2091,6 +3011,7 @@
       "13.7.2.1",
       "current"
     ],
+    "docs/guides/runtime-option-migration.md": ["13.7.2.0", "13.7.2.1", "current"],
     "docs/guides/schema-management.md": [
       "13.6.0.1",
       "13.6.0.2",
@@ -2701,6 +3622,11 @@
       "13.7.2.0": ["address", "core"],
       "13.7.2.1": ["address", "core"],
       "current": ["address", "core"]
+    },
+    "docs/guides/runtime-option-migration.md": {
+      "13.7.2.0": ["address"],
+      "13.7.2.1": ["address"],
+      "current": ["address"]
     },
     "docs/guides/schema-management.md": {
       "13.6.0.1": ["core"],

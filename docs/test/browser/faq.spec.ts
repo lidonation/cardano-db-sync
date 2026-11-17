@@ -2,7 +2,7 @@ import AxeBuilder from '@axe-core/playwright';
 import {expect, test, type Page} from '@playwright/test';
 
 import {SITE_URL} from '../../playwright.config';
-import {faqSections} from '../../src/faq/questions';
+import {faqSections, guideUrl} from '../../src/faq/questions';
 
 import {smallTargets} from './audits';
 
@@ -62,9 +62,7 @@ test.describe('content', () => {
         continue;
       }
       await expect(links).toHaveCount(1);
-      expect(await links.getAttribute('href')).toMatch(
-        new RegExp(`/blob/master/doc/${item.guide.replace('.', '\\.')}$`),
-      );
+      expect(await links.getAttribute('href')).toMatch(new RegExp(`${guideUrl(item.guide)}/?$`));
     }
   });
 

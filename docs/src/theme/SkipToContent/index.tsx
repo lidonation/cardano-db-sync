@@ -1,8 +1,7 @@
-import React, {useRef} from 'react';
+import React, {useEffect, useRef} from 'react';
 
 import {translate} from '@docusaurus/Translate';
-import {useHistory} from '@docusaurus/router';
-import {useLocationChange} from '@docusaurus/theme-common/internal';
+import {useHistory, useLocation} from '@docusaurus/router';
 
 import {MAIN_CONTENT_ID} from '../../lib/accessibility';
 
@@ -12,17 +11,20 @@ import {MAIN_CONTENT_ID} from '../../lib/accessibility';
  */
 export default function SkipToContent(): React.JSX.Element {
   const container = useRef<HTMLDivElement>(null);
-  const {action} = useHistory();
+  const history = useHistory();
+  const location = useLocation();
   const label = translate({
     id: 'theme.common.skipToMainContent',
     message: 'Skip to main content',
     description: 'First keyboard stop, bypasses the site and documentation navigation',
   });
-  useLocationChange(({location}) => {
-    if (action === 'PUSH' && !location.hash) {
+  // Layout can remount between a normal page and the docs tree. A mount after PUSH
+  // needs the same reset as a persistent layout; useLocationChange skips that mount.
+  useEffect(() => {
+    if (history.action === 'PUSH' && !location.hash) {
       container.current?.focus();
     }
-  });
+  }, [history, location]);
   return (
     <div ref={container} tabIndex={-1} role="region" aria-label={label}>
       <a

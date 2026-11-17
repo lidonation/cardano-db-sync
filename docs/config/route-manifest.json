@@ -52,6 +52,9 @@
     "/docs/guides/running": {
       "status": "live"
     },
+    "/docs/guides/runtime-option-migration": {
+      "status": "live"
+    },
     "/docs/guides/schema-management": {
       "status": "live"
     },
