@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useContext} from 'react';
 import routes from '@generated/routes';
 import {routePaths, routeExists} from '../data/surfaces';
 import {contentType} from './identity';
@@ -13,6 +13,7 @@ import {serializeJsonLd} from '../faq/jsonld';
 import type {ClientBuildProfile} from '../../config/profiles';
 import {breadcrumbJsonLd, contentJsonLd, socialImage} from './model';
 import {METADATA_PLUGIN, type MetadataData, type ContentMetadata} from './types';
+import {MetadataFeed} from './MetadataFeed';
 
 /** Static route tree: walk it once per bundle, like Navbar and Footer, not on every render. */
 const PATHS = routePaths(routes);
@@ -33,6 +34,7 @@ export default function Metadata({
   const {pathname} = useLocation();
   const data = usePluginData(METADATA_PLUGIN) as MetadataData;
   const i18n = usePluginData(PLUGIN_NAME) as I18nGlobalData;
+  const feed = useContext(MetadataFeed);
   const route = localePath(pathname, baseUrl);
   if (!doc && !routeExists(PATHS, baseUrl, route)) return null;
   const segments = route.split('/').filter(Boolean);
@@ -53,6 +55,7 @@ export default function Metadata({
       });
   const content = {
     ...record,
+    ...(record.type === 'DataFeed' && feed ? {feed} : {}),
     title: title ?? record.title,
     description: description ?? record.description,
   };

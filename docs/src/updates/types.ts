@@ -1,4 +1,7 @@
-/** B22's build-produced feed. Dates are UTC YYYY-MM-DD; links are absolute HTTPS URLs. */
+/** B22's shared page/RSS/Atom dataset. Dates are UTC YYYY-MM-DD; links are HTTPS.
+ * IDs are source identities (`release:<tag>` or `<kind>:<commit SHA>`), not list positions.
+ * asOf is the latest source date, never the build clock, so identical history regenerates exactly.
+ */
 export interface UpdateEntry {
   readonly id: string;
   readonly date: string;

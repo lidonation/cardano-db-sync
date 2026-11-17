@@ -45,6 +45,7 @@ async function run(args, profile = 'dev') {
         env: {
           ...process.env,
           DOCS_PROFILE: profile,
+          UPDATES_CHECKOUT: path.resolve(root, '..'),
           ROUTE_MANIFEST: 'write',
           DOCUSAURUS_NO_PERSISTENT_CACHE: '1',
         },

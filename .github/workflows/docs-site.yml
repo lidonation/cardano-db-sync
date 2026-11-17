@@ -201,7 +201,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # META-6: committed source lastmod, never checkout/build time
+          fetch-depth: 0 # B22 tags and Updates history; META-6: committed source lastmod, never checkout/build time
       - uses: ./.github/actions/docs-setup
       # A failed upstream checkout must not prevent a cached or unavailable build.
       - name: Check out upstream full history
@@ -374,7 +374,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # META-6: full committed source history
+          fetch-depth: 0 # B22 tags and Updates history; META-6: full committed source history
       # A failed upstream checkout must not prevent a cached or unavailable build.
       - name: Check out upstream full history
         uses: actions/checkout@v4
@@ -434,7 +434,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 0 # META-6: full committed source history
+          fetch-depth: 0 # B22 tags and Updates history; META-6: full committed source history
       # A failed upstream checkout must not prevent a cached or unavailable build.
       - name: Check out upstream full history
         uses: actions/checkout@v4

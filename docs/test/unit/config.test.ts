@@ -173,6 +173,7 @@ describe('build hygiene', () => {
     const {default: roadmapPlugin} = await import('../../plugins/roadmap');
     const {default: surveyResultsPlugin} = await import('../../plugins/survey-results');
     const {default: repositoryActivity} = await import('../../plugins/repository-activity');
+    const {default: updatesPlugin} = await import('../../plugins/updates');
     const {default: sharedCodePlugin} = await import('../../plugins/shared-code');
     const {default: metadataPlugin} = await import('../../plugins/metadata');
     expect(config.plugins).toEqual([
@@ -182,6 +183,7 @@ describe('build hygiene', () => {
       roadmapPlugin,
       surveyResultsPlugin,
       repositoryActivity,
+      updatesPlugin,
       cnamePlugin,
       routeManifestPlugin,
       environmentPlugin,

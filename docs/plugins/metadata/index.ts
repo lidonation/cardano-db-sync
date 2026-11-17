@@ -12,7 +12,6 @@ import type {LoadedContent as DocsContent} from '@docusaurus/plugin-content-docs
 import type {LoadedContent as PagesContent} from '@docusaurus/plugin-content-pages';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 import {localePath} from '../../src/i18n/pages';
-import {updatesFeed} from '../../src/updates/feed';
 import {findTable} from '../../src/data/schema';
 import {contentType} from '../../src/metadata/model';
 import {
@@ -85,7 +84,6 @@ export function buildMetadata(
     const area = route.split('/').filter(Boolean)[0];
     records[route] = {
       type: contentType(route, false),
-      ...(route === '/updates' && updatesFeed ? {feed: updatesFeed} : {}),
       ...(contentType(route, false) === 'Dataset'
         ? {variables: findTable(route.split('/').at(-1)!)?.columns.map((column) => column.name)}
         : {}),
@@ -138,7 +136,9 @@ export default function metadataPlugin(context: LoadContext): Plugin {
       actions.setGlobalData({
         pages: Object.fromEntries(
           Object.entries(data.pages)
-            .filter(([, page]) => !page.version && (page.variables || page.feed))
+            // The Updates feed reaches its DataFeed through MetadataFeed on that page only;
+            // global data ships in every page's initial bundle.
+            .filter(([, page]) => !page.version && page.variables)
             .map(([route, page]) => [route, {...page, lastmod: undefined}]),
         ),
       });
