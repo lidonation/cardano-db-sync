@@ -1,5 +1,20 @@
+import {numbersState} from './snapshot.mjs';
 import type {CardanoNetwork, NumbersState} from './types';
-export {numbersState} from './snapshot.mjs';
+export {numbersState};
+
+/**
+ * Ages the validated build state in the browser. A client clock behind the build host must not
+ * turn good build data into `invalid`; it can only move the snapshot forward to `stale`.
+ */
+export function ageCommittedState(state: NumbersState, now: string): NumbersState {
+  if (state.status === 'unavailable') return state;
+  const {snapshot} = state;
+  return numbersState(
+    snapshot,
+    snapshot.network,
+    now > snapshot.updatedAt ? now : snapshot.updatedAt,
+  );
+}
 
 /** Stable across build hosts, browser locales and hydration. UI strings use page translations. */
 export const formatNumber = (value: number): string =>

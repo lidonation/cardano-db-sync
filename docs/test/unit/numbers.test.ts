@@ -1,6 +1,6 @@
 import {describe, expect, it} from 'vitest';
 
-import {formatNumber, formatUtc, numbersState} from '../../src/numbers/data';
+import {ageCommittedState, formatNumber, formatUtc, numbersState} from '../../src/numbers/data';
 import type {NumbersSnapshot} from '../../src/numbers/types';
 
 const snapshot: NumbersSnapshot = {
@@ -225,6 +225,23 @@ describe('Numbers snapshot boundary (NUM-1…NUM-5)', () => {
 
 import {growthPoints} from '../../src/numbers/plot';
 import {numbersForNetwork} from '../../src/numbers/data';
+
+describe('Client ageing of the committed build state', () => {
+  const built = numbersState(snapshot, 'preview', asOf);
+
+  it('keeps validated build data when the browser clock is behind the snapshot', () => {
+    expect(ageCommittedState(built, '2026-10-11T23:59:00.000Z')).toEqual(built);
+  });
+
+  it('marks the snapshot stale once the browser passes the next boundary', () => {
+    expect(ageCommittedState(built, snapshot.nextBoundary)).toEqual({status: 'stale', snapshot});
+  });
+
+  it('passes unavailable states through untouched', () => {
+    const missing = {status: 'unavailable', reason: 'missing'} as const;
+    expect(ageCommittedState(missing, asOf)).toBe(missing);
+  });
+});
 
 describe('Numbers view boundaries', () => {
   it('rejects mismatched ready and stale props without leaking figures', () => {

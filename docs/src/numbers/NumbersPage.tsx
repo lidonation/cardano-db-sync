@@ -1,4 +1,3 @@
-import useCommittedNumbersState from './useCommittedNumbersState';
 import React from 'react';
 import Metric from '../components/Metric';
 import Chart, {ChartGraphic} from '../components/Chart';
@@ -11,6 +10,7 @@ import {formatNumber, formatUtc, numbersForNetwork} from './data';
 import type {CardanoNetwork, NumbersState} from './types';
 import {NUMBERS_IDS} from './ids';
 import {messages} from './messages';
+import useCommittedNumbersState from './useCommittedNumbersState';
 import useNumbersTranslate from './useNumbersTranslate';
 import styles from './styles.module.css';
 import {growthPoints} from './plot';
