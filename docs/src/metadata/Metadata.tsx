@@ -1,4 +1,7 @@
 import React from 'react';
+import routes from '@generated/routes';
+import {routePaths, routeExists} from '../data/surfaces';
+import {contentType} from './identity';
 import {applyTrailingSlash} from '@docusaurus/utils-common';
 import Head from '@docusaurus/Head';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
@@ -21,15 +24,31 @@ export default function Metadata({
   doc?: ContentMetadata;
 }): React.JSX.Element | null {
   const {
-    siteConfig: {url, baseUrl, customFields, trailingSlash},
+    siteConfig: {url, baseUrl, customFields, trailingSlash, title: siteTitle},
     i18n: {locales, currentLocale},
   } = useDocusaurusContext();
   const {pathname} = useLocation();
   const data = usePluginData(METADATA_PLUGIN) as MetadataData;
   const i18n = usePluginData(PLUGIN_NAME) as I18nGlobalData;
   const route = localePath(pathname, baseUrl);
-  const record = doc ? {...doc, breadcrumbs: []} : data.pages[route];
-  if (!record) return null; // 404 and development-only fixture routes are not published content.
+  const paths = routePaths(routes);
+  if (!doc && !routeExists(paths, baseUrl, route)) return null;
+  const segments = route.split('/').filter(Boolean);
+  const breadcrumbsFromRoutes = [
+    {name: siteTitle, path: baseUrl},
+    ...segments
+      .map((_, i) => `/${segments.slice(0, i + 1).join('/')}`)
+      .filter((path) => routeExists(paths, baseUrl, path))
+      .map((path) => ({name: path.split('/')[1], path: baseUrl + path.slice(1)})),
+  ];
+  const record = doc
+    ? {...doc, breadcrumbs: []}
+    : (data.pages[route] ?? {
+        type: contentType(route, false),
+        title: '',
+        description: '',
+        breadcrumbs: breadcrumbsFromRoutes,
+      });
   const content = {
     ...record,
     title: title ?? record.title,
@@ -53,6 +72,8 @@ export default function Metadata({
     <>
       <PageMetadata image={image} />
       <Head>
+        <meta name="twitter:title" content={content.title} />
+        <meta name="twitter:description" content={content.description} />
         <meta
           property="og:type"
           content={

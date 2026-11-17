@@ -63,7 +63,7 @@ export async function parseMetadataFrontMatter(params) {
       sidebar_label: result.frontMatter.sidebar_label ?? result.frontMatter.title,
       title,
       description,
-      metadata_steps: steps.map((step) => ({...step, text: step.text.slice(0, 240)})),
+      metadata_steps: steps.map((step) => ({...step, text: step.text.slice(0, 120)})),
     },
   };
 }

@@ -8,6 +8,12 @@ metadata does not rename navigation items. New guides need neither duplicated fi
 The parser source hash participates in webpack cache identity, so changing the remark transformer
 also invalidates cached compiled frontmatter without requiring cache deletion.
 
+The client metadata reconciler is lazy, but React streaming SSR resolves it before the page is
+written. App breadcrumbs reuse the existing route registry instead of shipping a duplicate map.
+Only artifact-backed app payloads and compact HowTo excerpts are added to client data. The full
+lead description is never truncated. Safe extra Terser passes preserve the existing ECMA-5 and
+Safari compatibility settings while keeping the original payload limits.
+
 The metadata plugin consumes loaded routes and content. The theme emits the same metadata on SSR
 and client navigation. Schema/config routes are not created here: a schema producer supplies
 `Dataset` columns from its extraction artifact, and the config producer uses `WebApplication`.

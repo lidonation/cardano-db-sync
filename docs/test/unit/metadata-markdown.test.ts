@@ -66,3 +66,18 @@ it('preserves existing navigation labels while deriving the page title from its 
     sidebar_label: 'Introduction',
   });
 });
+
+it('keeps complete lead descriptions while compacting only HowTo section excerpts', async () => {
+  const lead = 'A complete lead. '.repeat(30).trim();
+  const content = `# Guide\n\n${lead}\n\n## Step\n\n${'Instruction. '.repeat(40)}`.replaceAll(
+    '\\n',
+    '\n',
+  );
+  const result = await parseMetadataFrontMatter({
+    filePath: 'guide.md',
+    fileContent: content,
+    defaultParseFrontMatter: async () => ({content, frontMatter: {}}),
+  });
+  expect(result.frontMatter.description).toBe(lead);
+  expect(result.frontMatter.metadata_steps[0].text).toHaveLength(120);
+});

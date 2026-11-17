@@ -139,7 +139,7 @@ export default function metadataPlugin(context: LoadContext): Plugin {
       actions.setGlobalData({
         pages: Object.fromEntries(
           Object.entries(data.pages)
-            .filter(([, page]) => !page.version)
+            .filter(([, page]) => !page.version && (page.variables || page.feed))
             .map(([route, page]) => [route, {...page, lastmod: undefined}]),
         ),
       });

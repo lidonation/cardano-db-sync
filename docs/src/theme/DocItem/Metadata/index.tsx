@@ -1,8 +1,8 @@
 import React from 'react';
 import {PageMetadata} from '@docusaurus/theme-common';
 import {useDoc} from '@docusaurus/plugin-content-docs/client';
-import Metadata from '../../../metadata/Metadata';
-import {contentType} from '../../../metadata/model';
+import Metadata from '../../../metadata/LazyMetadata';
+import {contentType} from '../../../metadata/identity';
 import type {ContentMetadata} from '../../../metadata/types';
 
 /** Doc payload stays lazy with its document, not in the site's global chrome bundle. */
