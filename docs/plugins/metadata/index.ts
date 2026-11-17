@@ -15,9 +15,12 @@ import {localePath} from '../../src/i18n/pages';
 import {updatesFeed} from '../../src/updates/feed';
 import {findTable} from '../../src/data/schema';
 import {contentType} from '../../src/metadata/model';
-import {METADATA_PLUGIN, type MetadataData, type RouteMetadata} from '../../src/metadata/types';
-import {FRONTMATTER} from '../../scripts/lib/frontmatter.mjs';
-import {deriveMetadata} from './markdown.mjs';
+import {
+  METADATA_PLUGIN,
+  type ContentMetadata,
+  type MetadataData,
+  type RouteMetadata,
+} from '../../src/metadata/types';
 import {emitSocialImages} from './images';
 
 type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
@@ -65,16 +68,16 @@ export function buildMetadata(
       const file = doc.source.startsWith('@site/')
         ? path.join(context.siteDir, doc.source.slice(6))
         : doc.source;
-      const derived = deriveMetadata(
-        readFileSync(file, 'utf8').replace(FRONTMATTER, ''),
-        doc.title,
-      );
+      // The parseFrontMatter hook already derived the steps; never re-read or re-parse the source.
+      const {metadata_steps: steps} = doc.frontMatter as {
+        metadata_steps?: ContentMetadata['steps'];
+      };
       records[route] = {
         type: contentType(route, true, doc.id),
         title: doc.title,
         description: doc.description,
         version: version.versionName,
-        ...(doc.id.startsWith('guides/') ? {steps: derived.steps} : {}),
+        ...(doc.id.startsWith('guides/') && steps ? {steps} : {}),
         breadcrumbs: [],
       };
       sources[route] = [path.relative(context.siteDir, file), 'sidebars.ts', ...dependencies];

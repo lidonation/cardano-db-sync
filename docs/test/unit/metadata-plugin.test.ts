@@ -32,17 +32,14 @@ describe('metadata producer and CI gate', () => {
   it('derives breadcrumbs/version/columns from loaded sources without shipping doc metadata globally', async () => {
     vi.stubEnv('DOCS_PROFILE', 'prod');
     const dir = temp();
-    mkdirSync(path.join(dir, 'docs/guides'), {recursive: true});
-    writeFileSync(
-      path.join(dir, 'docs/guides/install.md'),
-      '# Install\n\nA complete lead.\n\n## Prepare\n\nSelect a release.',
-    );
+    // Steps come from the parse hook's frontmatter; the producer never re-reads doc sources.
     const doc = {
       id: 'guides/install',
       title: 'Install',
       description: 'A complete lead.',
       permalink: '/docs/v1/guides/install',
       source: '@site/docs/guides/install.md',
+      frontMatter: {metadata_steps: [{name: 'Prepare', text: 'Select a release.'}]},
     };
     const docs = {
       loadedVersions: [{versionName: 'v1', contentPath: path.join(dir, 'docs'), docs: [doc]}],
