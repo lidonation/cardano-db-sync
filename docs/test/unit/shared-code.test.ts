@@ -26,3 +26,20 @@ it('deduplicates site modules reused by two async routes, without changing serve
   expect((group.test as RegExp).test('/project/docs/node_modules/react/index.js')).toBe(false);
   expect((group.test as RegExp).test('/project/docs/src/numbers/styles.module.css')).toBe(true);
 });
+
+it('uses safe extra compression passes while preserving the stock JavaScript compatibility settings', () => {
+  const compress = {ecma: 5, passes: 1};
+  const css = {options: {minimizer: {options: [{preset: 'default'}]}}};
+  const disabled = {options: {minimizer: {options: {compress: false}}}};
+  const js = {options: {minimizer: {options: {compress, mangle: {safari10: true}}}}};
+  const config = {optimization: {minimizer: [js, css, disabled]}};
+  const configure = sharedCode().configureWebpack as (
+    config: Configuration,
+    isServer: boolean,
+  ) => Configuration;
+  configure(config as unknown as Configuration, false);
+  expect(compress).toEqual({ecma: 5, passes: 3});
+  expect(js.options.minimizer.options.mangle).toEqual({safari10: true});
+  expect(css.options.minimizer.options).toEqual([{preset: 'default'}]);
+  expect(disabled.options.minimizer.options.compress).toBe(false);
+});

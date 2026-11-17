@@ -2,7 +2,9 @@
 /** Build the real site with a second docs release in a disposable directory.
  * No version, route-manifest or generated cache can leak into the normal build. */
 import {spawn} from 'node:child_process';
-import {cp, mkdtemp, rm, symlink, readFile, writeFile} from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import {load} from 'cheerio';
+import {cp, mkdir, mkdtemp, rm, symlink, readFile, writeFile} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 
@@ -30,7 +32,7 @@ for (const signal of ['SIGTERM', 'SIGINT']) {
     child?.kill(signal);
   });
 }
-async function run(args) {
+async function run(args, profile = 'dev') {
   if (interrupted) throw new Error('Version fixture interrupted.');
   await new Promise((resolve, reject) => {
     child = spawn(
@@ -42,7 +44,7 @@ async function run(args) {
         // This disposable build must not read or write that persistent cache.
         env: {
           ...process.env,
-          DOCS_PROFILE: 'dev',
+          DOCS_PROFILE: profile,
           ROUTE_MANIFEST: 'write',
           DOCUSAURUS_NO_PERSISTENT_CACHE: '1',
         },
@@ -70,7 +72,57 @@ try {
   // B04's first build, not invented manifest entries; the second build must emit real stubs.
   await run(['docs:version', '13.3.0.0']);
   await run(['docs:version', '13.6.0.5']);
-  await run(['build', '--locale', 'en', '--out-dir', 'build/dev']);
+  // Only the current line is translated. Both retained historical lines stay English.
+  for (const locale of ['ja', 'es', 'de', 'vi']) {
+    const target = path.join(site, 'i18n', locale, 'docusaurus-plugin-content-docs/current');
+    await mkdir(target, {recursive: true});
+    await writeFile(
+      path.join(target, 'intro.md'),
+      `---\nsidebar_position: 1\n---\n\n# Fixture ${locale}\n\nA real translated-fixture lead for ${locale}.\n`,
+    );
+  }
+  await run(['build', '--out-dir', 'build/prod'], 'prod');
+  // META-4/5: test actual static output, not synthetic URL helpers. This also checks
+  // both release versions before the older release is retired by the next build.
+  const origin = load(await readFile(path.join(site, 'build/prod/index.html'), 'utf8'))(
+    'link[rel="canonical"]',
+  )
+    .attr('href')
+    .replace(/\/$/, '');
+  const languages = ['en', 'ja', 'es', 'de', 'vi'];
+  const alternates = languages
+    .map((locale) => origin + (locale === 'en' ? '/' : `/${locale}/`) + 'docs/next/intro')
+    .sort();
+  for (const locale of languages) {
+    const prefix = locale === 'en' ? '' : `${locale}/`;
+    const read = async (route) =>
+      load(await readFile(path.join(site, 'build/prod', prefix, route, 'index.html'), 'utf8'));
+    const current = await read('docs/next/intro');
+    const expected = origin + '/' + prefix + 'docs/next/intro';
+    assert.equal(current('link[rel="canonical"]').attr('href'), expected);
+    assert.deepEqual(
+      current('link[hreflang]:not([hreflang="x-default"])')
+        .map((_, node) => current(node).attr('href'))
+        .get()
+        .sort(),
+      alternates,
+    );
+    const entity = current('script[type="application/ld+json"]')
+      .map((_, node) => JSON.parse(current(node).text()))
+      .get()
+      .find((item) => item['@type'] === 'TechArticle');
+    assert.equal(entity.url, expected);
+    const xml = await readFile(path.join(site, 'build/prod', prefix, 'sitemap.xml'), 'utf8');
+    assert.ok(xml.includes(`<loc>${expected}</loc>`));
+    for (const route of ['docs/intro', 'docs/13.3.0.0/intro']) {
+      const released = await read(route);
+      assert.equal(released('link[rel="canonical"]').attr('href'), `${origin}/${route}`);
+      if (prefix) assert.ok(!xml.includes(`<loc>${origin}/${prefix}${route}</loc>`));
+    }
+  }
+  console.log(
+    'META fixture: both retained releases self-canonical; current translation cluster reciprocal in all five locales.',
+  );
   const versionsFile = path.join(site, 'versions.json');
   const versions = JSON.parse(await readFile(versionsFile, 'utf8'));
   await writeFile(versionsFile, JSON.stringify(versions.filter((name) => name !== '13.3.0.0')));

@@ -1,5 +1,5 @@
 import {execFile} from 'node:child_process';
-import {cp, mkdir, mkdtemp, readFile, rm, writeFile} from 'node:fs/promises';
+import {cp, mkdir, mkdtemp, readFile, rm, writeFile, symlink} from 'node:fs/promises';
 import {tmpdir} from 'node:os';
 import path from 'node:path';
 import {promisify} from 'node:util';
@@ -22,6 +22,11 @@ test('the disposable version build cannot write the normal persistent cache', as
   const log = path.join(root, 'calls.jsonl');
   await mkdir(path.dirname(cli), {recursive: true});
   await mkdir(path.join(docs, 'scripts'), {recursive: true});
+  await symlink(
+    path.resolve(import.meta.dirname, '../../node_modules/cheerio'),
+    path.join(docs, 'node_modules/cheerio'),
+    'dir',
+  );
   await mkdir(path.join(root, 'cardano-db-sync'), {recursive: true});
   await writeFile(path.join(root, 'cardano-db-sync/CHANGELOG.md'), '# Release history');
   await cp(
@@ -40,6 +45,23 @@ if (args[0] === 'docs:version') {
   writeFileSync('versioned_sidebars/version-' + args[1] + '-sidebars.json', '{}');
 }
 
+if (args[0] === 'build' && process.env.DOCS_PROFILE === 'prod') {
+  const origin = 'https://fixture.test';
+  const locales = ['en','ja','es','de','vi'];
+  mkdirSync('build/prod', {recursive:true});
+  writeFileSync('build/prod/index.html', '<link rel="canonical" href="' + origin + '/">');
+  const alternates = locales.map(locale => '<link hreflang="' + locale + '" href="' + origin + '/' + (locale === 'en' ? '' : locale + '/') + 'docs/next/intro">').join('');
+  for (const locale of locales) {
+    const prefix = locale === 'en' ? '' : locale + '/';
+    for (const route of ['docs/next/intro','docs/intro','docs/13.3.0.0/intro']) {
+      const canonical = origin + '/' + (route.includes('/next/') ? prefix : '') + route;
+      const dir = 'build/prod/' + prefix + route;
+      mkdirSync(dir, {recursive:true});
+      writeFileSync(dir + '/index.html', '<head><link rel="canonical" href="' + canonical + '">' + alternates + '<script type="application/ld+json">' + JSON.stringify({'@type':'TechArticle',url:canonical}) + '</script></head>');
+    }
+    writeFileSync('build/prod/' + prefix + 'sitemap.xml', '<loc>' + origin + '/' + prefix + 'docs/next/intro</loc>');
+  }
+}
 appendFileSync(${JSON.stringify(log)}, JSON.stringify({
   args: process.argv.slice(2),
   cwd: process.cwd(),
@@ -62,8 +84,8 @@ appendFileSync(${JSON.stringify(log)}, JSON.stringify({
     'build',
     'serve',
   ]);
+  expect(calls.map((call) => call.profile)).toEqual(['dev', 'dev', 'prod', 'dev', 'dev']);
   for (const call of calls) {
-    expect(call.profile).toBe('dev');
     expect(call.manifest).toBe('write');
     expect(call.noCache).toBe('1');
     expect(call.cwd).not.toBe(docs);

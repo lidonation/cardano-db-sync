@@ -171,3 +171,25 @@ describe('check:links gaps closed in review', () => {
     expect((await findBrokenLinks(root)).map((v) => v.line)).toEqual([4, 5]);
   });
 });
+
+it('checks sitemap-free preview links using its own home canonical, never skipping broken links', async () => {
+  await site('/preview/', {
+    'index.html': `<html><head><link href='${ORIGIN}/preview/' rel='canonical'></head><body><a href='/preview/docs/intro#ok'>ok</a><a href='/preview/missing'>bad</a></body></html>`,
+    'docs/intro/index.html': page('<h2 id="ok">Intro</h2>'),
+  });
+  await fs.rm(path.join(root, 'sitemap.xml'));
+  expect(await siteRoot(root)).toEqual({origin: ORIGIN, base: '/preview/'});
+  expect((await findBrokenLinks(root)).map((item) => item.url)).toEqual(['/preview/missing']);
+});
+
+it('still fails closed without exactly one absolute HTTP home canonical when no sitemap exists', async () => {
+  for (const head of [
+    '',
+    '<link rel="canonical" href="/relative/">',
+    '<link rel="canonical" href="data:text/html,x">',
+    `<link rel="canonical" href="${ORIGIN}/a/"><link rel="canonical" href="${ORIGIN}/b/">`,
+  ]) {
+    await fs.writeFile(path.join(root, 'index.html'), `<html><head>${head}</head></html>`);
+    await expect(siteRoot(root)).rejects.toThrow();
+  }
+});
