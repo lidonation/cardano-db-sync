@@ -130,6 +130,13 @@ it('supports SSH origins, rejects credential-bearing origins, and distinguishes 
   commit('Initial source');
   git('remote', 'set-url', 'origin', 'git@github.com:example/repository.git');
   expect(readUpdates(dir).entries).toEqual([]);
+  for (const origin of [
+    'ssh://git@github.com/example/repository.git',
+    'https://github.com/example/repository/',
+  ]) {
+    git('remote', 'set-url', 'origin', origin);
+    expect(readUpdates(dir).entries).toEqual([]);
+  }
   expect(() => readUpdates(dir, 0)).toThrow(/retention/);
   git('remote', 'set-url', 'origin', 'https://secret@github.com/example/repository');
   expect(() => readUpdates(dir)).toThrow(/without credentials/);
@@ -181,4 +188,15 @@ it('retains the latest bounded subscription window independently for all three k
     expect(feed.entries.filter((e) => e.kind === kind)).toHaveLength(ENTRIES_PER_KIND);
   expect(feed.entries.some((e) => e.id.endsWith(first) || e.id === 'release:1.0.0.0')).toBe(false);
   expect(() => readUpdates(dir, ENTRIES_PER_KIND + 1)).toThrow(/retention/);
+});
+
+it('titles an empty-subject change by its commit instead of failing the whole build', () => {
+  const {dir, git, file} = fixture();
+  file('docs/docs/intro.md', 'Untitled change');
+  git('add', '.');
+  execFileSync('git', ['commit', '-q', '--allow-empty-message', '-m', ''], {cwd: dir});
+  const sha = git('rev-parse', 'HEAD');
+  expect(readUpdates(dir).entries).toEqual([
+    expect.objectContaining({id: `docs:${sha}`, title: `Commit ${sha.slice(0, 12)}`}),
+  ]);
 });
