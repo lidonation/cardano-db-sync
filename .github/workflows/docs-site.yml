@@ -251,9 +251,7 @@ jobs:
         env:
           REPOSITORY_ACTIVITY_CACHE: test/fixtures/repository-activity
       - name: Manifest crawl and path-aware 404 on both profiles (CON-7, VER-4, VER-6/7)
-        run: |
-          DBS_BUILT_SKIP_BUILD=1 DBS_BUILT_PROFILE=dev npx playwright test --config playwright.built.config.ts test/built-browser/retirement.spec.ts
-          DBS_BUILT_SKIP_BUILD=1 DBS_BUILT_PROFILE=prod npx playwright test --config playwright.built.config.ts test/built-browser/retirement.spec.ts
+        run: npm run test:retirement:profiles
       - name: Pagefind on both shipped profiles and all locales (SRCH-10, SEC-2)
         run: npm run test:pagefind:profiles
       - name: Landing on shipped assets (B44-a, PERF-1, A11Y-18)
