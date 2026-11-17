@@ -1,5 +1,6 @@
 import {describe, expect, it} from 'vitest';
 import {
+  archiveTag,
   archiveUrl,
   retiredVersion,
   retirementTarget,
@@ -46,6 +47,12 @@ describe('VER-5/6 retirement policy', () => {
     expect(archiveUrl(repo, 'v1', ['13.3.0.0'])).toBe(`${repo}/tags`);
     expect(archiveUrl(repo, undefined, [])).toBe(`${repo}/tags`);
     expect(archiveUrl(repo, '../../secret', [])).toBe(`${repo}/tags`);
+  });
+  it('labels an archive only when a released tag backs it', () => {
+    expect(archiveTag('v13.3.0.0', ['13.3.0.0'])).toBe('13.3.0.0');
+    expect(archiveTag('13.3.0.0', ['v13.3.0.0'])).toBe('v13.3.0.0');
+    expect(archiveTag('v1', ['13.3.0.0'])).toBeUndefined();
+    expect(archiveTag(undefined, ['13.3.0.0'])).toBeUndefined();
   });
 });
 

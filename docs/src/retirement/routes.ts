@@ -57,16 +57,22 @@ export function retirementTarget(
   return nearestLiveAncestor(route, live);
 }
 
-/** Never guess a git tag from URL input: a tag link must come from the extracted release list. */
+/** Never guess a git tag from URL input: a tag must come from the extracted release list. */
+export function archiveTag(
+  version: string | undefined,
+  tags: readonly string[],
+): string | undefined {
+  if (version === undefined) return undefined;
+  const name = version.replace(/^v/, '');
+  return tags.find((candidate) => candidate === version || candidate.replace(/^v/, '') === name);
+}
+
 export function archiveUrl(
   repoUrl: string,
   version: string | undefined,
   tags: readonly string[],
 ): string {
-  const name = version?.replace(/^v/, '');
-  const tag = tags.find(
-    (candidate) => candidate === version || candidate.replace(/^v/, '') === name,
-  );
+  const tag = archiveTag(version, tags);
   return tag ? `${repoUrl}/tree/${encodeURIComponent(tag)}/doc` : `${repoUrl}/tags`;
 }
 

@@ -12,6 +12,7 @@ import Heading from '@theme/Heading';
 import {MAIN_CONTENT_ID} from '../../../lib/accessibility';
 import useBuildEnvironment from '../../../lib/useBuildEnvironment';
 import {
+  archiveTag,
   archiveUrl,
   recoveryContext,
   retiredVersion,
@@ -33,6 +34,7 @@ export default function NotFoundContent({className}: Props): ReactNode {
   const {route} = request;
   const href = (path: string) => `${request.baseUrl}${path.slice(1)}`;
   const version = retiredVersion(route, data.lines);
+  const archived = version && archiveTag(version.name, data.tags) ? version.name : null;
   const target = retirementTarget(route, new Set(data.routes), data);
   const latest = data.routes.includes(`${data.latest.path}/intro`)
     ? `${data.latest.path}/intro`
@@ -79,10 +81,7 @@ export default function NotFoundContent({className}: Props): ReactNode {
             </li>
             <li>
               <a href={archiveUrl(profile.repoUrl, version?.name, data.tags)}>
-                {version &&
-                data.tags.some((tag) => tag.replace(/^v/, '') === version.name.replace(/^v/, ''))
-                  ? `Read the ${version.name} archive`
-                  : 'Browse archived releases'}
+                {archived ? `Read the ${archived} archive` : 'Browse archived releases'}
               </a>
             </li>
             <li>
