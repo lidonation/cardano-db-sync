@@ -1,9 +1,9 @@
-import {mkdtemp, rm, writeFile} from 'node:fs/promises';
+import {mkdir, mkdtemp, rm, writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import type {LoadContext} from '@docusaurus/types';
-import {afterEach, expect, it} from 'vitest';
-import {readCommittedNumbers} from '../../plugins/chain-data';
+import {afterEach, expect, it, vi} from 'vitest';
+import chainData, {readCommittedNumbers} from '../../plugins/chain-data';
 const dirs: string[] = [];
 afterEach(async () => {
   for (const dir of dirs.splice(0)) await rm(dir, {recursive: true, force: true});
@@ -16,7 +16,6 @@ it('builds a named unavailable state with absent or malformed artifacts and no p
     status: 'unavailable',
     reason: 'missing',
   });
-  const {mkdir} = await import('node:fs/promises');
   await mkdir(path.join(root, 'generated'));
   await writeFile(path.join(root, 'generated/chain-preview.json'), '{bad');
   expect(await readCommittedNumbers(context, 'preview', '2026-11-17T00:00:00.000Z')).toEqual({
@@ -31,9 +30,6 @@ it('builds a named unavailable state with absent or malformed artifacts and no p
 });
 
 it('binds committed data to network/time and gives every locale one immutable build state', async () => {
-  const {default: chainData} = await import('../../plugins/chain-data');
-  const {vi} = await import('vitest');
-  const {mkdir} = await import('node:fs/promises');
   const root = await mkdtemp(path.join(os.tmpdir(), 'chain-plugin-valid-'));
   dirs.push(root);
   await mkdir(path.join(root, 'generated'));
