@@ -122,7 +122,7 @@ export function reconcile(
       (data && retiredVersion(route, data.lines) && best !== entry.redirect)
     ) {
       retargeted.push(route);
-      routes[route] = {status: 'retired', redirect: retirementTarget(route, live, data)};
+      routes[route] = {status: 'retired', redirect: best};
       continue;
     }
     routes[route] = entry;
