@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import type {LoadContext} from '@docusaurus/types';
 import {afterEach, describe, expect, it, vi} from 'vitest';
-import {PROFILES} from '../../config/profiles';
+import {resolveProfile} from '../../config/profiles';
 import updatesPlugin from '../../plugins/updates';
 import {readUpdates} from '../../plugins/updates/history';
 import {atomFeed, rssFeed} from '../../plugins/updates/xml';
@@ -32,6 +32,7 @@ describe('Updates build wiring (R2, R3)', () => {
         i18n: {currentLocale, defaultLocale: 'en'},
       }) as LoadContext;
     try {
+      // Compare with the profile the plugin resolves, including an optional docs/.env origin.
       const plugin = updatesPlugin(context('en'));
       const createData = vi.fn();
       await plugin.contentLoaded!({actions: {createData}} as never);
@@ -46,10 +47,10 @@ describe('Updates build wiring (R2, R3)', () => {
       await expect(readFile(path.join(root, 'ja/updates/rss.xml'))).rejects.toThrow();
       await plugin.postBuild!({outDir: root} as never);
       expect(await readFile(path.join(root, 'updates/rss.xml'), 'utf8')).toBe(
-        rssFeed(feed, PROFILES.dev),
+        rssFeed(feed, resolveProfile()),
       );
       expect(await readFile(path.join(root, 'updates/atom.xml'), 'utf8')).toBe(
-        atomFeed(feed, PROFILES.dev),
+        atomFeed(feed, resolveProfile()),
       );
     } finally {
       await rm(root, {recursive: true, force: true});
