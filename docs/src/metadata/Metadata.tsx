@@ -46,7 +46,7 @@ export default function Metadata({
       .map((path) => ({name: path.split('/')[1], path: baseUrl + path.slice(1)})),
   ];
   const record = doc
-    ? {...doc, breadcrumbs: []}
+    ? {...doc, breadcrumbs: breadcrumbsFromRoutes}
     : (data.pages[route] ?? {
         type: contentType(route, false),
         title: '',
@@ -95,7 +95,7 @@ export default function Metadata({
             {serializeJsonLd(json)}
           </script>
         )}
-        {!doc && (
+        {(!doc || !doc.version) && (
           <script type="application/ld+json" key="breadcrumb-jsonld">
             {serializeJsonLd(breadcrumbJsonLd(breadcrumbs, url))}
           </script>

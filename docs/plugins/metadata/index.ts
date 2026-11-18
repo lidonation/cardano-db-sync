@@ -21,6 +21,7 @@ import {
   type RouteMetadata,
 } from '../../src/metadata/types';
 import {emitSocialImages} from './images';
+import type {ExplorerDocument} from '../../src/schema/types';
 
 type Configuration = Parameters<NonNullable<Plugin['configureWebpack']>>[0];
 
@@ -51,6 +52,7 @@ export function buildMetadata(
   context: Pick<LoadContext, 'siteDir' | 'baseUrl' | 'siteConfig' | 'i18n'>,
   docs: DocsContent | undefined,
   pages: PagesContent = [],
+  schemaDocuments: Record<string, ExplorerDocument> = {},
 ): MetadataData {
   const records: Record<string, RouteMetadata> = {};
   const sources: Record<string, string[]> = {};
@@ -98,6 +100,16 @@ export function buildMetadata(
       appCopy,
     ];
   }
+  for (const [route, document] of Object.entries(schemaDocuments)) {
+    records[route] = {...document.metadata, breadcrumbs: []};
+    sources[route] = [
+      'generated/schema.json',
+      'generated/schema-explorer.json',
+      'generated/schema-renames.json',
+      'generated/versions.json',
+      'generated/guide-locks.json',
+    ];
+  }
   for (const [route, record] of Object.entries(records)) {
     const segments = route.split('/').filter(Boolean);
     const ancestors = segments
@@ -128,17 +140,28 @@ export default function metadataPlugin(context: LoadContext): Plugin {
     allContentLoaded({allContent, actions}) {
       const docs = allContent['docusaurus-plugin-content-docs']?.default as DocsContent | undefined;
       translations = docs ? docLocales(docs, context) : {};
+      const schemaDocuments = allContent['schema-explorer']?.default as
+        Record<string, ExplorerDocument> | undefined;
+      Object.assign(
+        translations,
+        Object.fromEntries(
+          Object.keys(schemaDocuments ?? {}).map((route) => [route, [context.i18n.defaultLocale]]),
+        ),
+      );
       data = buildMetadata(
         context,
         allContent['docusaurus-plugin-content-docs']?.default as DocsContent | undefined,
         allContent['docusaurus-plugin-content-pages']?.default as PagesContent | undefined,
+        allContent['schema-explorer']?.default as Record<string, ExplorerDocument> | undefined,
       );
       actions.setGlobalData({
         pages: Object.fromEntries(
           Object.entries(data.pages)
             // The Updates feed reaches its DataFeed through MetadataFeed on that page only;
             // global data ships in every page's initial bundle.
-            .filter(([, page]) => !page.version && page.variables)
+            .filter(
+              ([route, page]) => !route.startsWith('/schema/') && !page.version && page.variables,
+            )
             .map(([route, page]) => [route, {...page, lastmod: undefined}]),
         ),
       });

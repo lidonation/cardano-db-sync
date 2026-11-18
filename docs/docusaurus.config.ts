@@ -1,3 +1,5 @@
+import schemaReferences from './plugins/schema-explorer/references.mjs';
+import schemaExplorer from './plugins/schema-explorer';
 import chainData from './plugins/chain-data';
 import metadataPlugin from './plugins/metadata';
 import {parseMetadataFrontMatter} from './plugins/metadata/markdown.mjs';
@@ -88,7 +90,7 @@ const config: Config = {
       {
         docs: {
           sidebarPath: './sidebars.ts',
-          remarkPlugins: [guideMarkdown],
+          remarkPlugins: [guideMarkdown, schemaReferences],
           routeBasePath: 'docs',
           versions: {current: {label: 'Unreleased'}},
           editUrl: `${profile.repoUrl}/tree/master/docs/`,
@@ -121,6 +123,7 @@ const config: Config = {
   plugins: [
     chainData,
     metadataPlugin,
+    schemaExplorer,
     pagefindProse,
     staticGuidePlugin,
     roadmapPlugin,

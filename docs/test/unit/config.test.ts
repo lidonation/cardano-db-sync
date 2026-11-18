@@ -177,9 +177,11 @@ describe('build hygiene', () => {
     const {default: updatesPlugin} = await import('../../plugins/updates');
     const {default: sharedCodePlugin} = await import('../../plugins/shared-code');
     const {default: metadataPlugin} = await import('../../plugins/metadata');
+    const {default: schemaExplorer} = await import('../../plugins/schema-explorer');
     expect(config.plugins).toEqual([
       chainData,
       metadataPlugin,
+      schemaExplorer,
       pagefindProse,
       staticGuidePlugin,
       roadmapPlugin,

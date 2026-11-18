@@ -10,6 +10,8 @@ export const PLUGIN_NAME = 'dbsync-i18n';
 export interface I18nGlobalData {
   /** False on a noindex build: no hreflang at all (META-8). */
   readonly alternates: boolean;
+  /** Generated schema prose is English until a schema translation producer exists. */
+  readonly englishSchema?: boolean;
   /** Every doc page, with the locales it is translated into (the default locale always). */
   readonly docs: Readonly<Record<string, readonly string[]>>;
 }
@@ -26,6 +28,8 @@ export function pageLocales(
   data: I18nGlobalData,
   locales: readonly string[],
 ): readonly string[] {
+  if (data.englishSchema && (pathname === '/schema' || pathname.startsWith('/schema/')))
+    return ['en'];
   return data.docs[pathname] ?? locales;
 }
 

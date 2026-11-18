@@ -1,0 +1,60 @@
+import React, {useEffect} from 'react';
+import Layout from '@theme/Layout';
+import useBrokenLinks from '@docusaurus/useBrokenLinks';
+import {PageMetadata} from '@docusaurus/theme-common';
+import {useLocation} from '@docusaurus/router';
+import documents from '@schema-documents';
+import Metadata from '../metadata/LazyMetadata';
+import {MAIN_CONTENT_ID} from '../lib/accessibility';
+import type {ExplorerDocument} from './types';
+import './schema.css';
+
+/** Read only the named, build-generated document; retain only its own SSR article. */
+function readDocument(root: ParentNode, permalink: string): ExplorerDocument | undefined {
+  const content = root.querySelector<HTMLElement>('[data-schema-document]');
+  if (content?.dataset.schemaDocument !== permalink || !content.dataset.schemaMetadata) return;
+  return {html: content.innerHTML, metadata: JSON.parse(content.dataset.schemaMetadata)};
+}
+export default function SchemaPage(): React.JSX.Element {
+  const {pathname} = useLocation();
+  const permalink = pathname.replace(/\/+$/, '');
+  const value =
+    typeof document === 'undefined' ? documents[permalink] : readDocument(document, permalink);
+  useEffect(() => {
+    // These are static documents, not a second client-side data layer. A router entry
+    // from another surface opens the generated page with ordinary browser navigation.
+    if (!value) location.replace(permalink);
+  }, [permalink, Boolean(value)]);
+  const brokenLinks = useBrokenLinks();
+  if (value)
+    for (const match of value.html.matchAll(/\bid="([^"]+)"/g)) brokenLinks.collectAnchor(match[1]);
+  return (
+    <Layout>
+      {value && (
+        <>
+          <PageMetadata title={value.metadata.title} description={value.metadata.description} />
+          <Metadata doc={value.metadata} />
+        </>
+      )}
+      <main
+        id={MAIN_CONTENT_ID}
+        tabIndex={-1}
+        className="container margin-vert--lg schema-content"
+        lang="en"
+      >
+        {value ? (
+          <article
+            className="markdown"
+            data-schema-document={permalink}
+            data-schema-metadata={JSON.stringify(value.metadata)}
+            dangerouslySetInnerHTML={{__html: value.html}}
+          />
+        ) : (
+          <p role="status">
+            Opening schema. <a href={permalink}>Open page</a>.
+          </p>
+        )}
+      </main>
+    </Layout>
+  );
+}

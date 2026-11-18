@@ -104,7 +104,7 @@ jobs:
       - name: Rename map is consumable (CON-1, GDE-9)
         run: npm run check:renames
       - name: Schema artifact is sound (SCH-1, GDE-6)
-        run: npm run check:schema
+        run: npm run check:schema && npm run check:explorer
       - name: Guide locks and body references (GDE-3, GDE-7)
         run: npm run check:guide-locks
       - name: Tokens regenerate byte-identically (THM-2, DF-1, DF-11)

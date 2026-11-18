@@ -1,0 +1,47 @@
+/* Generated prose uses the existing typography; this is not explorer UI chrome. */
+.schema-content {
+  min-width: 0;
+}
+.schema-content [data-schema-scroll] {
+  max-width: 100%;
+  overflow-x: auto;
+}
+.schema-content table {
+  display: table;
+}
+.schema-content th,
+.schema-content td {
+  vertical-align: top;
+}
+.schema-content th code {
+  white-space: nowrap;
+}
+.schema-content td p:last-child {
+  margin-bottom: 0;
+}
+.schema-content code {
+  overflow-wrap: anywhere;
+}
+.schema-content svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin-block: var(--dbs-space-24);
+}
+.schema-content svg rect {
+  fill: var(--dbs-surface-base);
+  stroke: var(--dbs-border-interactive);
+}
+.schema-content svg path {
+  fill: none;
+  stroke: var(--dbs-border-interactive);
+  stroke-width: 1;
+}
+.schema-content svg text {
+  fill: var(--dbs-text-primary);
+}
+/* Identifier links are text on the table surface, not text on Infima's code tint. */
+.schema-content a code {
+  color: var(--dbs-accent-primary-text);
+  background: transparent;
+}
