@@ -2,7 +2,7 @@
 import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import {fileURLToPath} from 'node:url';
-import {canonicalName} from '../../scripts/lib/schema-explorer.mjs';
+import {canonicalName, tablePath} from '../../scripts/lib/schema-explorer.mjs';
 const docs = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 const read = (name) => JSON.parse(readFileSync(path.join(docs, 'generated', name), 'utf8'));
 const schema = read('schema.json'),
@@ -24,7 +24,7 @@ export function references(guide, data = {schema, locks, renames}) {
       );
       if (!entry || (column && !entry.columns.some((c) => c.name === column))) continue;
       // Forward navigation is table-level (GDE-5); column anchors remain in the shared index.
-      const url = `/schema/${entry.variant === 'address' ? 'address/' : ''}${table}`;
+      const url = tablePath(table, entry.variant);
       links.set(url, {url, label: `${table}${entry.variant !== 'all' ? ` (${variant})` : ''}`});
     }
   }

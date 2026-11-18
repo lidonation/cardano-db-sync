@@ -1,4 +1,13 @@
 /** Build-side B18 history, reusing B08's exact resolved column fingerprints. */
+
+/**
+ * The one table route rule, shared by the generated pages and the guides' forward links.
+ * @param {string} name
+ * @param {string} [variant]
+ * @returns {string}
+ */
+export const tablePath = (name, variant = 'core') =>
+  `/schema/${variant === 'address' ? 'address/' : ''}${name}`;
 export function canonicalName(renames, kind, name, table) {
   return (
     renames.entities.find(

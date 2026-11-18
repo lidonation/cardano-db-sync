@@ -9,9 +9,9 @@ import type {
   ExplorerInput,
   Relationship,
 } from '../../src/schema/types';
+import {tablePath} from '../../scripts/lib/schema-explorer.mjs';
 
-export const tablePath = (name: string, variant: string = 'core'): string =>
-  `/schema/${variant === 'address' ? 'address/' : ''}${name}`;
+export {tablePath};
 export const columnAnchor = (name: string): string => `column-${name}`;
 const esc = (value: unknown): string =>
   String(value)
@@ -154,7 +154,6 @@ export function buildDocuments(
   for (const table of input.schema.tables) {
     const variant = table.variant === 'all' ? 'core' : table.variant;
     const route = tablePath(table.name, table.variant);
-    const names = aliases(input, 'table', table.name);
     const guides = guidesForTable(locks, table.name).filter(
       (guide) =>
         versionsForGuide(locks, guide).includes('current') &&
@@ -175,7 +174,7 @@ export function buildDocuments(
       ([key, events]) =>
         key.startsWith(`${variant}:${table.name}.`) && events.at(-1)?.after === null,
     );
-    const renames =
+    const formerTables =
       input.renames.entities.find((e) => e.kind === 'table' && e.name === table.name)
         ?.formerNames ?? [];
     const description = `Columns, resolved types, change history and guide references for ${table.name}, ${table.variant === 'all' ? 'core and address' : table.variant} variant, schema (stage_two, stage_four) = ${version}.`;
@@ -186,7 +185,7 @@ export function buildDocuments(
         description,
         variables: table.columns.map((c) => c.name),
       },
-      html: `<h1><code translate="no">${esc(table.name)}</code></h1><p>${esc(description)}</p><p>${link(base, '/schema', 'All schema tables')} · ${esc(table.kind)} · variant: ${table.variant === 'all' ? 'core and address' : table.variant}</p>${names.length ? `<h2>Former names</h2><ul>${renames.map((f) => `<li><code>${esc(f.name)}</code> renamed to <code>${esc(table.name)}</code> by <code>${esc(f.until.file)}</code></li>`).join('')}</ul>` : ''}<h2>Columns</h2><div data-schema-scroll="" tabindex="0" role="region" aria-label="Schema data table"><table class="dbs-type-mono"><caption>${esc(table.name)} columns — schema ${version}</caption><thead><tr><th scope="col">Column</th><th scope="col">Resolved type and checks</th><th scope="col">Nullable</th><th scope="col">Default</th><th scope="col">Change history</th></tr></thead><tbody>${rows}</tbody></table></div>${removed.length ? `<h2>Dropped columns</h2>${removed.map(([key, events]) => `<h3><code>${esc(key.split('.')[1])}</code></h3>${historyList(events)}`).join('')}` : ''}<h2>Guides that use this table</h2>${guides.length ? `<ul>${guides.map((guide) => `<li>${link(base, '/' + guide.replace(/\.md$/, ''), guide.split('/').at(-1)!.replace(/\.md$/, ''))}</li>`).join('')}</ul>` : '<p>No current guide declares this table for this variant.</p>'}<p>${link(base, '/schema#release-boundaries', 'Tag-derived release boundaries')} give the independent release context. History records observed stage-two/four migration boundaries. Stage-one domains are replayed in full, as in the schema extractor; their earlier definitions are not reconstructed. Runtime address-table conversion is labeled separately.</p>`,
+      html: `<h1><code translate="no">${esc(table.name)}</code></h1><p>${esc(description)}</p><p>${link(base, '/schema', 'All schema tables')} · ${esc(table.kind)} · variant: ${table.variant === 'all' ? 'core and address' : table.variant}</p>${formerTables.length ? `<h2>Former names</h2><ul>${formerTables.map((f) => `<li><code>${esc(f.name)}</code> renamed to <code>${esc(table.name)}</code> by <code>${esc(f.until.file)}</code></li>`).join('')}</ul>` : ''}<h2>Columns</h2><div data-schema-scroll="" tabindex="0" role="region" aria-label="Schema data table"><table class="dbs-type-mono"><caption>${esc(table.name)} columns — schema ${version}</caption><thead><tr><th scope="col">Column</th><th scope="col">Resolved type and checks</th><th scope="col">Nullable</th><th scope="col">Default</th><th scope="col">Change history</th></tr></thead><tbody>${rows}</tbody></table></div>${removed.length ? `<h2>Dropped columns</h2>${removed.map(([key, events]) => `<h3><code>${esc(key.split('.')[1])}</code></h3>${historyList(events)}`).join('')}` : ''}<h2>Guides that use this table</h2>${guides.length ? `<ul>${guides.map((guide) => `<li>${link(base, '/' + guide.replace(/\.md$/, ''), guide.split('/').at(-1)!.replace(/\.md$/, ''))}</li>`).join('')}</ul>` : '<p>No current guide declares this table for this variant.</p>'}<p>${link(base, '/schema#release-boundaries', 'Tag-derived release boundaries')} give the independent release context. History records observed stage-two/four migration boundaries. Stage-one domains are replayed in full, as in the schema extractor; their earlier definitions are not reconstructed. Runtime address-table conversion is labeled separately.</p>`,
     };
   }
   const releaseGroups = new Map<string, string[]>();
