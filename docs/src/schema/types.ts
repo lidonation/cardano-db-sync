@@ -14,6 +14,7 @@ export interface ColumnChange {
   after: SchemaColumn | null;
 }
 export interface Relationship {
+  kind: 'foreign-key' | 'typed-key';
   table: string;
   columns: string[];
   target: string;
