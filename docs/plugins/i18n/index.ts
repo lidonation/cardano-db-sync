@@ -1,3 +1,4 @@
+import type {ExplorerDocument} from '../../src/schema/types';
 import {existsSync} from 'node:fs';
 import path from 'node:path';
 
@@ -86,9 +87,12 @@ export default function i18nPlugin(context: LoadContext): Plugin {
     name: PLUGIN_NAME,
     async allContentLoaded({allContent, actions}) {
       const docs = allContent['docusaurus-plugin-content-docs']?.default as DocsContent | undefined;
+      const generated = allContent['schema-explorer']?.default as
+        Record<string, ExplorerDocument> | undefined;
       const data: I18nGlobalData = {
         alternates: profile.indexable,
         docs: docs ? docLocales(docs, context) : {},
+        ...(generated ? {englishSchema: true} : {}),
       };
       actions.setGlobalData(data);
     },

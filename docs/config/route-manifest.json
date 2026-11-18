@@ -91,6 +91,255 @@
     "/numbers": {
       "status": "live"
     },
+    "/schema": {
+      "status": "live"
+    },
+    "/schema/ada_pots": {
+      "status": "live"
+    },
+    "/schema/address/address": {
+      "status": "live"
+    },
+    "/schema/address/collateral_tx_out": {
+      "status": "live"
+    },
+    "/schema/address/ma_tx_out": {
+      "status": "live"
+    },
+    "/schema/address/tx_out": {
+      "status": "live"
+    },
+    "/schema/block": {
+      "status": "live"
+    },
+    "/schema/collateral_tx_in": {
+      "status": "live"
+    },
+    "/schema/collateral_tx_out": {
+      "status": "live"
+    },
+    "/schema/committee": {
+      "status": "live"
+    },
+    "/schema/committee_de_registration": {
+      "status": "live"
+    },
+    "/schema/committee_hash": {
+      "status": "live"
+    },
+    "/schema/committee_member": {
+      "status": "live"
+    },
+    "/schema/committee_registration": {
+      "status": "live"
+    },
+    "/schema/constitution": {
+      "status": "live"
+    },
+    "/schema/cost_model": {
+      "status": "live"
+    },
+    "/schema/datum": {
+      "status": "live"
+    },
+    "/schema/delegation": {
+      "status": "live"
+    },
+    "/schema/delegation_vote": {
+      "status": "live"
+    },
+    "/schema/delisted_pool": {
+      "status": "live"
+    },
+    "/schema/drep_distr": {
+      "status": "live"
+    },
+    "/schema/drep_hash": {
+      "status": "live"
+    },
+    "/schema/drep_registration": {
+      "status": "live"
+    },
+    "/schema/epoch": {
+      "status": "live"
+    },
+    "/schema/epoch_finalized": {
+      "status": "live"
+    },
+    "/schema/epoch_param": {
+      "status": "live"
+    },
+    "/schema/epoch_stake": {
+      "status": "live"
+    },
+    "/schema/epoch_stake_progress": {
+      "status": "live"
+    },
+    "/schema/epoch_state": {
+      "status": "live"
+    },
+    "/schema/epoch_sync_enabled": {
+      "status": "live"
+    },
+    "/schema/epoch_sync_time": {
+      "status": "live"
+    },
+    "/schema/event_info": {
+      "status": "live"
+    },
+    "/schema/extra_key_witness": {
+      "status": "live"
+    },
+    "/schema/extra_migrations": {
+      "status": "live"
+    },
+    "/schema/gov_action_proposal": {
+      "status": "live"
+    },
+    "/schema/ma_tx_mint": {
+      "status": "live"
+    },
+    "/schema/ma_tx_out": {
+      "status": "live"
+    },
+    "/schema/meta": {
+      "status": "live"
+    },
+    "/schema/multi_asset": {
+      "status": "live"
+    },
+    "/schema/new_committee": {
+      "status": "live"
+    },
+    "/schema/off_chain_pool_data": {
+      "status": "live"
+    },
+    "/schema/off_chain_pool_fetch_error": {
+      "status": "live"
+    },
+    "/schema/off_chain_vote_author": {
+      "status": "live"
+    },
+    "/schema/off_chain_vote_data": {
+      "status": "live"
+    },
+    "/schema/off_chain_vote_drep_data": {
+      "status": "live"
+    },
+    "/schema/off_chain_vote_external_update": {
+      "status": "live"
+    },
+    "/schema/off_chain_vote_fetch_error": {
+      "status": "live"
+    },
+    "/schema/off_chain_vote_gov_action_data": {
+      "status": "live"
+    },
+    "/schema/off_chain_vote_reference": {
+      "status": "live"
+    },
+    "/schema/param_proposal": {
+      "status": "live"
+    },
+    "/schema/pool_hash": {
+      "status": "live"
+    },
+    "/schema/pool_metadata_ref": {
+      "status": "live"
+    },
+    "/schema/pool_owner": {
+      "status": "live"
+    },
+    "/schema/pool_relay": {
+      "status": "live"
+    },
+    "/schema/pool_retire": {
+      "status": "live"
+    },
+    "/schema/pool_stat": {
+      "status": "live"
+    },
+    "/schema/pool_update": {
+      "status": "live"
+    },
+    "/schema/pot_transfer": {
+      "status": "live"
+    },
+    "/schema/redeemer": {
+      "status": "live"
+    },
+    "/schema/redeemer_data": {
+      "status": "live"
+    },
+    "/schema/reference_tx_in": {
+      "status": "live"
+    },
+    "/schema/reserve": {
+      "status": "live"
+    },
+    "/schema/reserved_pool_ticker": {
+      "status": "live"
+    },
+    "/schema/reverse_index": {
+      "status": "live"
+    },
+    "/schema/reward": {
+      "status": "live"
+    },
+    "/schema/reward_rest": {
+      "status": "live"
+    },
+    "/schema/schema_version": {
+      "status": "live"
+    },
+    "/schema/script": {
+      "status": "live"
+    },
+    "/schema/slot_leader": {
+      "status": "live"
+    },
+    "/schema/stake_address": {
+      "status": "live"
+    },
+    "/schema/stake_deregistration": {
+      "status": "live"
+    },
+    "/schema/stake_registration": {
+      "status": "live"
+    },
+    "/schema/sync_filter_config": {
+      "status": "live"
+    },
+    "/schema/treasury": {
+      "status": "live"
+    },
+    "/schema/treasury_withdrawal": {
+      "status": "live"
+    },
+    "/schema/tx": {
+      "status": "live"
+    },
+    "/schema/tx_cbor": {
+      "status": "live"
+    },
+    "/schema/tx_in": {
+      "status": "live"
+    },
+    "/schema/tx_metadata": {
+      "status": "live"
+    },
+    "/schema/tx_out": {
+      "status": "live"
+    },
+    "/schema/voting_anchor": {
+      "status": "live"
+    },
+    "/schema/voting_procedure": {
+      "status": "live"
+    },
+    "/schema/withdrawal": {
+      "status": "live"
+    },
     "/survey/results": {
       "status": "live"
     },

@@ -3,7 +3,7 @@ import {expect, test, type Page} from '@playwright/test';
 
 import {SITE_URL} from '../../playwright.config';
 
-import {smallTargets} from './audits';
+import {openPalette, smallTargets} from './audits';
 
 /**
  * B44-f — the survey results dashboard in a browser: reflow at every tier, 44px targets,
@@ -12,18 +12,13 @@ import {smallTargets} from './audits';
 const base = () => test.info().project.use.baseURL ?? SITE_URL;
 
 async function open(page: Page, width: number, palette = 'light') {
-  await page.setViewportSize({width, height: 900});
-  await page.goto(new URL('survey/results', base()).toString());
-  await page.locator('#results-title').waitFor();
-  await page.evaluate((name) => {
-    document.documentElement.setAttribute('data-dbs-palette', name);
-    document.documentElement.setAttribute(
-      'data-theme',
-      name === 'dark' || name === 'navy' ? 'dark' : 'light',
-    );
-  }, palette);
-  await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
-  await page.evaluate(() => document.fonts.ready);
+  await openPalette(
+    page,
+    new URL('survey/results', base()).toString(),
+    '#results-title',
+    width,
+    palette,
+  );
 }
 
 test.describe('margins, reflow and targets (DF-7, NAV-3, NAV-4)', () => {

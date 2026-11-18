@@ -25,6 +25,10 @@ on:
       - "docs/test/db/**"
       - "docs/src/data/sample-queries.ts"
       - "docs/generated/schema.json"
+      - "docs/generated/schema-explorer.json"
+      - "docs/generated/schema-renames.json"
+      - "docs/scripts/extract-schema-explorer.mjs"
+      - "docs/scripts/lib/guide-history.mjs"
       # The artifact is serialised with the repo's prettier config and pinned prettier version.
       - "docs/.prettierrc"
       - "docs/package-lock.json"
@@ -42,6 +46,10 @@ on:
       - "docs/test/db/**"
       - "docs/src/data/sample-queries.ts"
       - "docs/generated/schema.json"
+      - "docs/generated/schema-explorer.json"
+      - "docs/generated/schema-renames.json"
+      - "docs/scripts/extract-schema-explorer.mjs"
+      - "docs/scripts/lib/guide-history.mjs"
       # The artifact is serialised with the repo's prettier config and pinned prettier version.
       - "docs/.prettierrc"
       - "docs/package-lock.json"
@@ -97,3 +105,6 @@ jobs:
         # `shell: bash` runs with `-o pipefail`, so the extractor's exit code survives `tee`.
         shell: bash
         run: npm run --silent extract:schema -- --check 2>&1 | tee -a "$GITHUB_STEP_SUMMARY"
+
+      - name: Explorer boundary history and relationship drift (B18)
+        run: npm run extract:explorer -- --check
