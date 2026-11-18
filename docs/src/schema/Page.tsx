@@ -28,7 +28,9 @@ export default function SchemaPage(): React.JSX.Element {
       if (value) sessionStorage.removeItem(key);
       else if (sessionStorage.getItem(key) !== permalink) {
         sessionStorage.setItem(key, permalink);
-        location.replace(permalink);
+        // A reload refetches the same document and keeps the query and column fragment;
+        // replacing with an identical URL plus a fragment would only scroll, never refetch.
+        location.reload();
       }
     } catch {
       // Blocked/full storage leaves the native recovery link available.

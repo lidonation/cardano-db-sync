@@ -78,8 +78,10 @@ test('a missing static schema article bounds recovery to one native retry', asyn
     requests++;
     await route.fulfill({status: 404, contentType: 'text/html', body: html});
   });
-  await page.goto(`${base}schema/ada_pots`, {waitUntil: 'networkidle'});
+  await page.goto(`${base}schema/ada_pots#column-treasury`, {waitUntil: 'networkidle'});
   await expect(page.getByRole('status')).toContainText('Schema content unavailable');
+  // The retry is the same document request: a column deep link keeps its fragment.
+  expect(new URL(page.url()).hash).toBe('#column-treasury');
   await expect(page.getByRole('link', {name: 'Open page', exact: true})).toHaveAttribute(
     'href',
     `${base}schema/ada_pots`,
