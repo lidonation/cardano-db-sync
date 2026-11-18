@@ -4,6 +4,7 @@ import schema from '../../generated/schema.json';
 import renames from '../../generated/schema-renames.json';
 import history from '../../generated/schema-explorer.json';
 import locks from '../../generated/guide-locks.json';
+import {references} from '../../plugins/schema-explorer/references.mjs';
 import {buildDocuments, entityIndex, tablePath} from '../../plugins/schema-explorer/model';
 import type {ExplorerHistory} from '../../src/schema/types';
 import type {SchemaArtifact} from '../../src/data/schema';
@@ -74,6 +75,12 @@ describe('B18 generated surfaces', () => {
     );
     expect(pages['/schema/tx_out'].html).not.toContain('/docs/guides/database-encode-decode');
     expect(pages['/schema/address/tx_out'].html).toContain('/docs/guides/database-encode-decode');
+    expect(pages['/schema/event_info'].html).toContain('/docs/guides/database-encode-decode');
+    for (const guide of Object.keys(locks.guides))
+      for (const reference of references(guide))
+        expect(pages[reference.url].html, reference.url).toContain(
+          '/' + guide.replace(/\.md$/, ''),
+        );
     const parsed = Object.fromEntries(
       Object.entries(pages).map(([route, page]) => [route, load(page.html)]),
     );

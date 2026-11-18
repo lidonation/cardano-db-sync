@@ -158,7 +158,9 @@ export function buildDocuments(
     const guides = guidesForTable(locks, table.name).filter(
       (guide) =>
         versionsForGuide(locks, guide).includes('current') &&
-        variantsForGuide(locks, guide).current?.includes(variant),
+        variantsForGuide(locks, guide).current?.some(
+          (supported) => table.variant === 'all' || supported === variant,
+        ),
     );
     const rows = table.columns
       .map((column) => {
