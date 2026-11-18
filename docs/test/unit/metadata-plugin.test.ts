@@ -239,3 +239,35 @@ it('lastmod tracks page content, not site-wide build code shared by every route'
   expect(data.pages['/docs/intro'].lastmod).toBe('2020-01-02T00:00:00+00:00');
   expect(data.pages['/faq'].lastmod).toBe('2020-01-02T00:00:00+00:00');
 });
+
+it('schema explorer lastmod follows only the artifacts each generated page renders', () => {
+  const dir = temp();
+  mkdirSync(path.join(dir, 'generated'), {recursive: true});
+  const commit = (file: string, day: string) => {
+    writeFileSync(path.join(dir, 'generated', file), '{}');
+    const env = {
+      ...process.env,
+      GIT_AUTHOR_DATE: `2020-01-${day}T00:00:00Z`,
+      GIT_COMMITTER_DATE: `2020-01-${day}T00:00:00Z`,
+    };
+    execFileSync('git', ['add', '.'], {cwd: dir, env});
+    execFileSync('git', ['commit', '-qm', file], {cwd: dir, env});
+  };
+  execFileSync('git', ['init', '-q'], {cwd: dir});
+  execFileSync('git', ['config', 'user.name', 'Fixture'], {cwd: dir});
+  execFileSync('git', ['config', 'user.email', 'fixture@example.test'], {cwd: dir});
+  commit('schema.json', '02');
+  commit('guide-locks.json', '03');
+  commit('versions.json', '04');
+  const document = (type: 'Dataset' | 'WebPage') => ({
+    html: '',
+    metadata: {type, title: 't', description: 'd'},
+  });
+  const data = buildMetadata(context(dir), undefined, [], {
+    '/schema': document('WebPage'),
+    '/schema/block': document('Dataset'),
+  });
+  // A release tag changes only the index's boundary table; guide locks change only table pages.
+  expect(data.pages['/schema/block'].lastmod).toBe('2020-01-03T00:00:00+00:00');
+  expect(data.pages['/schema'].lastmod).toBe('2020-01-04T00:00:00+00:00');
+});

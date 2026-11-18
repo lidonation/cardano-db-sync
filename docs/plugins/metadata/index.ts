@@ -102,12 +102,12 @@ export function buildMetadata(
   }
   for (const [route, document] of Object.entries(schemaDocuments)) {
     records[route] = {...document.metadata, breadcrumbs: []};
+    // The index renders release boundaries; table pages render guide links. Neither renders both.
     sources[route] = [
       'generated/schema.json',
       'generated/schema-explorer.json',
       'generated/schema-renames.json',
-      'generated/versions.json',
-      'generated/guide-locks.json',
+      route === '/schema' ? 'generated/versions.json' : 'generated/guide-locks.json',
     ];
   }
   for (const [route, record] of Object.entries(records)) {
@@ -152,7 +152,7 @@ export default function metadataPlugin(context: LoadContext): Plugin {
         context,
         allContent['docusaurus-plugin-content-docs']?.default as DocsContent | undefined,
         allContent['docusaurus-plugin-content-pages']?.default as PagesContent | undefined,
-        allContent['schema-explorer']?.default as Record<string, ExplorerDocument> | undefined,
+        schemaDocuments,
       );
       actions.setGlobalData({
         pages: Object.fromEntries(
