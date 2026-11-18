@@ -1,4 +1,4 @@
-import type {Page} from '@playwright/test';
+import {expect, type Page} from '@playwright/test';
 
 /**
  * Every interactive element outside running prose, at least 44×44 CSS px (NAV-4, DF-6). Inline
@@ -37,4 +37,28 @@ export async function smallTargets(page: Page): Promise<string[]> {
     }
     return small;
   });
+}
+
+/** Audit the persisted palette after hydration, not an SSR-only DOM override racing startup. */
+export async function openPalette(
+  page: Page,
+  url: string,
+  title: string,
+  width: number,
+  palette = 'light',
+): Promise<void> {
+  await page.setViewportSize({width, height: 900});
+  await page.addInitScript((name) => {
+    localStorage.setItem('dbs-palette', name);
+    localStorage.setItem('theme', name === 'dark' || name === 'navy' ? 'dark' : 'light');
+  }, palette);
+  await page.goto(url);
+  await page.locator(title).waitFor();
+  await expect(page.locator('html')).toHaveAttribute('data-has-hydrated', 'true');
+  await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
+  await expect(page.locator('html')).toHaveAttribute(
+    'data-theme',
+    palette === 'dark' || palette === 'navy' ? 'dark' : 'light',
+  );
+  await page.evaluate(() => document.fonts.ready);
 }

@@ -4,7 +4,7 @@ import {expect, test, type Page} from '@playwright/test';
 import {SITE_URL} from '../../playwright.config';
 import {CORE_TEAM, teams, tools} from '../../src/ecosystem/entries';
 
-import {smallTargets} from './audits';
+import {openPalette, smallTargets} from './audits';
 import {contrast, paintedBackground} from './contrast';
 
 /**
@@ -22,18 +22,13 @@ function requireRepositoryFixture() {
 }
 
 async function open(page: Page, width: number, palette = 'light') {
-  await page.setViewportSize({width, height: 900});
-  await page.goto(new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString());
-  await page.locator('#ecosystem-title').waitFor();
-  await page.evaluate((name) => {
-    document.documentElement.setAttribute('data-dbs-palette', name);
-    document.documentElement.setAttribute(
-      'data-theme',
-      name === 'dark' || name === 'navy' ? 'dark' : 'light',
-    );
-  }, palette);
-  await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
-  await page.evaluate(() => document.fonts.ready);
+  await openPalette(
+    page,
+    new URL('ecosystem', test.info().project.use.baseURL ?? SITE_URL).toString(),
+    '#ecosystem-title',
+    width,
+    palette,
+  );
 }
 
 test.describe('margins, reflow and targets (DF-7, NAV-3, NAV-4)', () => {

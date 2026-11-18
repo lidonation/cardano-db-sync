@@ -1,18 +1,11 @@
 import {expect, test} from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import {openPalette} from '../browser/audits';
 for (const palette of ['light', 'dark', 'cream', 'navy']) {
   test(`schema diagrams and semantic tables in ${palette}`, async ({page, baseURL}) => {
-    await page.addInitScript((p) => {
-      localStorage.setItem('dbs-palette', p);
-    }, palette);
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
-    await page.goto(`${new URL(baseURL!).pathname}schema`);
-    // Use the actual persisted palette key through the supported palette switch attributes.
-    await page.evaluate((p) => {
-      document.documentElement.dataset.dbsPalette = p;
-      document.documentElement.dataset.theme = ['dark', 'navy'].includes(p) ? 'dark' : 'light';
-    }, palette);
+    await openPalette(page, `${new URL(baseURL!).pathname}schema`, 'main h1', 1440, palette);
     await expect(page.getByRole('heading', {name: 'Schema', exact: true})).toBeVisible();
     await expect(page.getByRole('img', {name: 'core schema relationships'})).toBeVisible();
     expect(
@@ -61,7 +54,8 @@ test('localized fallback is marked English and canonicalizes to the actual Engli
   baseURL,
 }) => {
   const base = new URL(baseURL!).pathname;
-  await page.goto(`${base}ja/schema/tx_out`);
+  const response = await page.goto(`${base}ja/schema/tx_out`);
+  expect(response?.status()).toBe(200);
   await expect(page.locator('main[lang="en"]')).toBeVisible();
   await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
     'href',

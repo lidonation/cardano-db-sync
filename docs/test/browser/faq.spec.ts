@@ -4,7 +4,7 @@ import {expect, test, type Page} from '@playwright/test';
 import {SITE_URL} from '../../playwright.config';
 import {faqSections, guideUrl} from '../../src/faq/questions';
 
-import {smallTargets} from './audits';
+import {openPalette, smallTargets} from './audits';
 
 /**
  * B44-c — the FAQ page in a browser: reflow at every tier, 44px targets, WCAG 2.2 AA in four
@@ -15,18 +15,7 @@ const entries = faqSections(({message}) => message).flatMap((section) => section
 const base = () => test.info().project.use.baseURL ?? SITE_URL;
 
 async function open(page: Page, width: number, palette = 'light', hash = '') {
-  await page.setViewportSize({width, height: 900});
-  await page.goto(new URL(`faq${hash}`, base()).toString());
-  await page.locator('#faq-title').waitFor();
-  await page.evaluate((name) => {
-    document.documentElement.setAttribute('data-dbs-palette', name);
-    document.documentElement.setAttribute(
-      'data-theme',
-      name === 'dark' || name === 'navy' ? 'dark' : 'light',
-    );
-  }, palette);
-  await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
-  await page.evaluate(() => document.fonts.ready);
+  await openPalette(page, new URL(`faq${hash}`, base()).toString(), '#faq-title', width, palette);
 }
 
 const openAll = (page: Page) =>

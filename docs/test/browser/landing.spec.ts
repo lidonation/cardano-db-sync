@@ -7,25 +7,20 @@ import {SAMPLE_QUERIES} from '../../src/data/sample-queries';
 import {releaseFacts} from '../../src/data/release-facts';
 import {SURFACES} from '../../src/data/surfaces';
 
-import {smallTargets} from './audits';
+import {openPalette, smallTargets} from './audits';
 
 /**
  * B44-a — the landing page in a browser: every tier (DF-7, NAV-3), WCAG 2.2 AA in four palettes,
  * 44px targets (NAV-4, DF-6), the build facts, and links that only point at pages that exist.
  */
 async function open(page: Page, width: number, palette = 'light') {
-  await page.setViewportSize({width, height: 900});
-  await page.goto(test.info().project.use.baseURL ?? SITE_URL);
-  await page.locator('#landing-title').waitFor();
-  await page.evaluate((name) => {
-    document.documentElement.setAttribute('data-dbs-palette', name);
-    document.documentElement.setAttribute(
-      'data-theme',
-      name === 'dark' || name === 'navy' ? 'dark' : 'light',
-    );
-  }, palette);
-  await expect(page.locator('html')).toHaveAttribute('data-dbs-palette', palette);
-  await page.evaluate(() => document.fonts.ready);
+  await openPalette(
+    page,
+    test.info().project.use.baseURL ?? SITE_URL,
+    '#landing-title',
+    width,
+    palette,
+  );
 }
 
 test.describe('tiers (DF-7, NAV-3)', () => {
