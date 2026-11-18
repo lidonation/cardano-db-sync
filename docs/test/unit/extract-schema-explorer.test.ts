@@ -47,7 +47,8 @@ describe('B18 extraction', () => {
     const artifact = extractExplorer() as import('../../src/schema/types').ExplorerHistory;
     expect(artifact.current).toEqual({stageTwo: 52, stageFour: 9});
     expect(artifact.changes['core:ada_pots.deposits_stake']).toHaveLength(2);
-    expect(artifact.changes['address:ada_pots.deposits_stake']).toHaveLength(2);
+    // Shared definitions render from core history: no duplicate address copy.
+    expect(artifact.changes['address:ada_pots.deposits_stake']).toBeUndefined();
     expect(db.createDatabase).toHaveBeenCalledTimes(2);
     expect(db.dropDatabase).toHaveBeenCalledTimes(2);
     expect(db.applySql).toHaveBeenCalled();
@@ -56,6 +57,21 @@ describe('B18 extraction', () => {
         .at(-1)?.[2]
         .some((f: {stage: number; version: number}) => f.stage === 4 && f.version === 1),
     ).toBe(false);
+  });
+  it('gives a definition the address conversion changes its core events plus the runtime event', () => {
+    const catalog = db.readCatalog.getMockImplementation()!;
+    let addressReads = 0;
+    db.readCatalog.mockImplementation((name: string) => {
+      const result = catalog(name);
+      // The second address-database read is the catalog after runtime conversion.
+      if (name.endsWith('_address') && ++addressReads === 2)
+        for (const column of result.tables.get('ada_pots')) column.format = 'numeric';
+      return result;
+    });
+    const artifact = extractExplorer() as import('../../src/schema/types').ExplorerHistory;
+    const events = artifact.changes['address:ada_pots.deposits_stake'];
+    expect(events.slice(0, -1)).toEqual(artifact.changes['core:ada_pots.deposits_stake']);
+    expect(events.at(-1)?.migration).toBe('runtime:tx_out.use_address_table');
   });
   it('rejects other Postgres majors before creating a database and drops its own DB on replay failure', () => {
     db.serverMajor.mockReturnValue(18);

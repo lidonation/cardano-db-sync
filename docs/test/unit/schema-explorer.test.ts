@@ -56,6 +56,14 @@ describe('B18 generated surfaces', () => {
         );
       }
   });
+  it('keeps address history only for definitions the address variant actually changes', () => {
+    const addressTables = new Set(
+      schema.tables.filter((table) => table.variant === 'address').map((table) => table.name),
+    );
+    const addressKeys = Object.keys(history.changes).filter((key) => key.startsWith('address:'));
+    expect(addressKeys.length).toBeGreaterThan(0);
+    for (const key of addressKeys) expect(addressTables, key).toContain(key.slice(8).split('.')[0]);
+  });
   it('gives every diagram a name, description, dimensions and equivalent relationship table', () => {
     const $ = load(docs()['/schema'].html);
     expect($('svg[role="img"]')).toHaveLength(2);

@@ -24,7 +24,8 @@ stage-one domains in full, then observe every stage-two, stage-three and stage-f
 Column changes use B08's resolved fingerprints, not SQL-text matching. Names are normalized by the
 rename map before diffing. Stage-one historical definitions are not reconstructed; pages disclose
 that evidence boundary. Address-table conversion runs in B08's order and is labeled as runtime,
-not assigned a fictitious migration number. SQL-enforced foreign keys and logical Haskell typed
+not assigned a fictitious migration number. Shared definitions keep one core history; only
+address-only definitions carry an `address:` history (core events plus the runtime conversion). SQL-enforced foreign keys and logical Haskell typed
 keys are distinct evidence classes. A typed `TxId` joins to `tx`, even in `tx_in.tx_out_id`.
 No relationships are guessed from `_id` spelling.
 

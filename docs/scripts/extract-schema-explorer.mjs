@@ -139,13 +139,19 @@ export function extractExplorer() {
       files.filter((f) => f.stage === 4 && f.version !== 1),
     );
     const after = catalogToTables(readCatalog(addressDb), 'address');
+    const conversion = columnChanges(before, after, renames);
+    // Shared definitions render from core history. Only B08's address-only definitions get an
+    // address history; columns the conversion leaves alone inherit the core events.
+    const addressOnly = new Set(
+      JSON.parse(readFileSync(path.join(docs, 'generated/schema.json'), 'utf8'))
+        .tables.filter((table) => table.variant === 'address')
+        .map((table) => table.name),
+    );
+    for (const {table} of conversion) addressOnly.add(table);
     for (const [key, changes] of Object.entries(result.changes))
-      result.changes[key.replace(/^core:/, 'address:')] = changes;
-    for (const {table, column, before: old, after: value} of columnChanges(
-      before,
-      after,
-      renames,
-    )) {
+      if (addressOnly.has(key.slice('core:'.length).split('.')[0]))
+        result.changes[key.replace(/^core:/, 'address:')] = changes;
+    for (const {table, column, before: old, after: value} of conversion) {
       const key = `address:${table}.${column}`;
       result.changes[key] = [
         ...(result.changes[key] ?? []),
