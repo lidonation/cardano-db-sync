@@ -21,9 +21,18 @@ export default function SchemaPage(): React.JSX.Element {
   const value =
     typeof document === 'undefined' ? documents[permalink] : readDocument(document, permalink);
   useEffect(() => {
-    // These are static documents, not a second client-side data layer. A router entry
-    // from another surface opens the generated page with ordinary browser navigation.
-    if (!value) location.replace(permalink);
+    // Retry a missing SSR article once, including SPA history navigation. Persist the
+    // marker before leaving so a partial deployment cannot create a reload loop.
+    try {
+      const key = 'dbsync-schema-retry';
+      if (value) sessionStorage.removeItem(key);
+      else if (sessionStorage.getItem(key) !== permalink) {
+        sessionStorage.setItem(key, permalink);
+        location.replace(permalink);
+      }
+    } catch {
+      // Blocked/full storage leaves the native recovery link available.
+    }
   }, [permalink, Boolean(value)]);
   const brokenLinks = useBrokenLinks();
   if (value)
@@ -51,7 +60,7 @@ export default function SchemaPage(): React.JSX.Element {
           />
         ) : (
           <p role="status">
-            Opening schema. <a href={permalink}>Open page</a>.
+            Schema content unavailable. <a href={permalink}>Open page</a>.
           </p>
         )}
       </main>

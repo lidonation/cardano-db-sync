@@ -63,3 +63,26 @@ test('localized fallback is marked English and canonicalizes to the actual Engli
   );
   await expect(page.locator('#column-value')).toBeVisible();
 });
+
+// A partial deployment can serve the 404 shell for a URL the client knows. Recover without a loop.
+test('a missing static schema article bounds recovery to one native retry', async ({
+  page,
+  baseURL,
+}) => {
+  const base = new URL(baseURL!).pathname;
+  const missing = await page.request.get(`${base}__missing_schema_artifact__/`);
+  expect(missing.status()).toBe(404);
+  const html = await missing.text();
+  let requests = 0;
+  await page.route(`**${base}schema/ada_pots`, async (route) => {
+    requests++;
+    await route.fulfill({status: 404, contentType: 'text/html', body: html});
+  });
+  await page.goto(`${base}schema/ada_pots`, {waitUntil: 'networkidle'});
+  await expect(page.getByRole('status')).toContainText('Schema content unavailable');
+  await expect(page.getByRole('link', {name: 'Open page', exact: true})).toHaveAttribute(
+    'href',
+    `${base}schema/ada_pots`,
+  );
+  expect(requests).toBe(2);
+});

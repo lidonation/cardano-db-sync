@@ -40,7 +40,9 @@ the client alias is empty. The client retains the named SSR article during hydra
 from another surface uses ordinary browser navigation to the generated static document, not a
 second fetch/parser/state layer. Full history, schema JSON and entity JSON never enter browser
 bundles. Raw markup is generated from escaped artifact values; there is no remote/user HTML input.
-A normal-navigation link remains available while opening the static page.
+A normal-navigation link remains available if the static article is unavailable. A transient
+session marker bounds an unavailable article to one native retry; blocked storage leaves the
+manual recovery link available. There is no reload loop on a partial deployment.
 
 The diagrams use semantic theme tokens, intrinsic SVG dimensions, an accessible name and a longer
 description, plus a linked relationship table. Generated prose is English until a translation
