@@ -133,8 +133,9 @@ test.describe('content', () => {
       expect(response.status(), href).toBe(200);
     }
     await expect(page.locator(`main a[href$="${SURFACES.numbers}"]`)).toHaveCount(1);
-    // the surfaces not built yet are not linked at all
-    for (const surface of [SURFACES.schema, SURFACES.survey, SURFACES.config]) {
+    // Schema is now a shipped surface; future surfaces remain unlinked.
+    await expect(page.locator(`main a[href$="${SURFACES.schema}"]`)).not.toHaveCount(0);
+    for (const surface of [SURFACES.survey, SURFACES.config]) {
       await expect(page.locator(`main a[href$="${surface}"]`)).toHaveCount(0);
     }
   });

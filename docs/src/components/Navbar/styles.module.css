@@ -30,6 +30,8 @@
 
 .links {
   display: flex;
+  /* Newly live sections still reflow when page zoom leaves less layout width. */
+  flex-wrap: wrap;
   gap: var(--dbs-space-8);
   margin: 0;
   padding: 0;
