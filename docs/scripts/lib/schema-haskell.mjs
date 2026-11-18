@@ -163,7 +163,7 @@ export function readAddressVariantDdl(repoRoot) {
 const FIELD_LINE = /^\s+[{,]\s*([a-z][A-Za-z0-9_']*)\s*::\s*(.+?)\s*(?:--\s*(.*))?$/;
 
 /** Records in one module: `data X = X { f :: T -- hint, … }` (or `newtype`), keyed by type name. */
-export function readRecords(source, file) {
+export function readRecords(source, file, {includeTypes = false} = {}) {
   const records = new Map();
   const lines = source.split('\n');
   for (let i = 0; i < lines.length; i++) {
@@ -184,6 +184,7 @@ export function readRecords(source, file) {
       const sqltype = /\bsqltype=([A-Za-z0-9_]+)/.exec(comment ?? '');
       fields.push({
         field: name,
+        ...(includeTypes ? {haskellType: type} : {}),
         nullable: /^!?\(?\s*Maybe\b/.test(type),
         ...(sqltype ? {sqltype: sqltype[1]} : {}),
       });
