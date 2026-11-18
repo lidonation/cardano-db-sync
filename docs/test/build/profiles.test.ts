@@ -483,7 +483,9 @@ describe('homepage Prism payload (B51)', () => {
       const {pages} = await measure(root, await localeSites(root));
       const homepage = pages.find((page) => page.page === 'index.html');
       expect(homepage).toBeDefined();
-      expect(homepage!.bytes).toBeLessThanOrEqual(150 * 1024);
+      // Darlington approved 160 KiB on 2026-11-18 for B18 schema routes (PR #146).
+      // Measured maximum before this revision: 155,737 bytes; broader budgets stay unchanged.
+      expect(homepage!.bytes).toBeLessThanOrEqual(160 * 1024);
       for (const script of scripts) {
         const url = $(script).attr('src')!;
         const relative = url.slice(url.indexOf('/assets/') + 1);
