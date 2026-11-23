@@ -7,7 +7,7 @@
     "esModuleInterop": true,
     "resolveJsonModule": true,
     "skipLibCheck": true,
-    "outDir": ".cache/survey-tally",
+    "outDir": "node_modules/.cache/survey-tally",
     "rootDir": ".",
     "types": ["node"]
   },

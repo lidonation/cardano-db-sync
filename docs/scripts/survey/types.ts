@@ -51,7 +51,9 @@ export interface MethodTally extends QuestionTally {
   /** Points totals, or rating sums, by option. Counts remain respondent counts. */
   totals?: string[];
 }
-export interface SurveyTally extends Aggregate {
+export interface SurveyTally extends Omit<Aggregate, 'interim' | 'tallyBasis'> {
+  interim: boolean;
+  tallyBasis: 'response-time-only' | 'end-epoch';
   network: Network;
   state: 'interim' | 'final' | 'cancelled';
   /** Keyholders have no mutable registration/expiry; see README. */
