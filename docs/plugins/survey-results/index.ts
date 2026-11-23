@@ -2,7 +2,10 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 import {resolveAggregate} from '../../src/survey-results/resolve';
-import type {Aggregate, SurveyManifest} from '../../src/survey-results/types';
+import type {Aggregate} from '../../src/survey-results/types';
+import {resolveProfile} from '../../config/profiles';
+import {readRegistry} from '../../src/survey/manifest/lifecycle';
+import {publicationManifest} from '../../src/survey/manifest/publication';
 
 /** SUR-7: webpack only receives reviewed text. Raw artifacts never enter a client import. */
 export default function surveyResultsPlugin(context: LoadContext): Plugin {
@@ -32,9 +35,12 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
       const aggregate = JSON.parse(
         readFileSync(path.join(root, 'aggregate.json'), 'utf8'),
       ) as Aggregate;
-      const manifest = JSON.parse(
-        readFileSync(path.join(root, 'manifest.json'), 'utf8'),
-      ) as SurveyManifest;
+      const registry = readRegistry(
+        JSON.parse(
+          readFileSync(path.join(context.siteDir, 'src/survey/manifest/registry.json'), 'utf8'),
+        ),
+      );
+      const manifest = publicationManifest(registry, aggregate, resolveProfile().network);
       const resolved = resolveAggregate(manifest, aggregate);
       await createData('resolved.json', JSON.stringify(resolved));
       const empty =
@@ -45,7 +51,10 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
       await createData('view.js', 'export {default} from ' + JSON.stringify(view) + ';');
     },
     getPathsToWatch() {
-      return [path.join(context.siteDir, 'src/survey-results/*.json')];
+      return [
+        path.join(context.siteDir, 'src/survey-results/*.json'),
+        path.join(context.siteDir, 'src/survey/manifest/*.json'),
+      ];
     },
   };
 }
