@@ -64,7 +64,8 @@
     "check:metadata": "node scripts/check-metadata.mjs",
     "extract:explorer": "node scripts/extract-schema-explorer.mjs",
     "check:explorer": "node scripts/check-schema-explorer.mjs",
-    "test:wallet:built": "cross-env DBS_BUILT_PROFILE=dev DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/wallet.spec.ts && cross-env DBS_BUILT_PROFILE=prod DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/wallet.spec.ts"
+    "test:wallet:built": "cross-env DBS_BUILT_PROFILE=dev DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/wallet.spec.ts && cross-env DBS_BUILT_PROFILE=prod DBS_BUILT_SKIP_BUILD=1 playwright test --config playwright.built.config.ts test/built-browser/wallet.spec.ts",
+    "survey:tally": "tsc --project tsconfig.tally.json && node node_modules/.cache/survey-tally/scripts/survey/run.js"
   },
   "dependencies": {
     "@docusaurus/core": "3.10.2",

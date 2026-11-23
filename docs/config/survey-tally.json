@@ -1,0 +1,5 @@
+{
+  "$comment": "No canonical survey has been published/piloted yet. B27 adds reviewed txid#index and matching endEpoch here per network. Moderation approvals are exact network:txid:responseIndex:questionIndex:blake2b256(text) IDs. Empty is deliberately inactive, never sample data.",
+  "preview": {"surveys": [], "approvedText": []},
+  "mainnet": {"surveys": [], "approvedText": []}
+}
