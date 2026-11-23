@@ -1,12 +1,11 @@
 import React from 'react';
-import {Prism} from 'prism-react-renderer';
-import includeLanguages from '@theme/prism-include-languages';
 import OriginalCodeBlock from '@theme-original/CodeBlock';
 import type {Props} from '@theme/CodeBlock';
 
-// Preserve the classic theme's language registration, but only on routes using code blocks.
-includeLanguages(Prism);
-
+// The classic theme's `prism-include-languages` is not called here: `prism.additionalLanguages` is
+// empty, and its template-literal `require` would still bundle prismjs' component index and
+// metadata (~8.7 KiB gzip) for nothing. If additional languages are ever configured, import each
+// `prismjs/components/prism-<lang>` explicitly onto prism-react-renderer's Prism here instead.
 export default function LoadedCodeBlock(props: Props) {
   return <OriginalCodeBlock {...props} />;
 }
