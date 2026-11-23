@@ -31,3 +31,6 @@
 
 # Read-only CI parity report, retained as an artifact for B17
 /doc-parity-report.md
+
+# Compiled scheduled tally (no raw chain or pending text persisted)
+/.cache/survey-tally
