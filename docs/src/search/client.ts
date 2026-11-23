@@ -64,6 +64,8 @@ export function createEntitySearch(baseUrl: string, locale: string, fetcher: Fet
         })
         .catch((error) => {
           indexes.delete(file);
+          // A deployment may replace the manifest before a formerly listed bundle is fetched.
+          manifest = undefined;
           throw error;
         });
       indexes.set(file, index);

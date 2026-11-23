@@ -59,6 +59,22 @@ describe('entity client (SRCH-4)', () => {
       signal: expect.any(AbortSignal),
     });
   });
+  it('revalidates the manifest after a missing bundle so later deployments can recover', async () => {
+    const {fetcher} = fixture();
+    const first = fetcher.getMockImplementation()!;
+    let failed = false;
+    fetcher.mockImplementation(async (url, init) => {
+      if (!url.endsWith('manifest.json') && !failed) {
+        failed = true;
+        return {ok: false, json: async () => ({})};
+      }
+      return first(url, init);
+    });
+    const client = createEntitySearch('/base/', 'ja', fetcher);
+    await expect(client.search('current', 'tx')).rejects.toThrow(/fetch/);
+    expect((await client.search('current', 'tx'))[0].total).toBe(1);
+    expect(fetcher.mock.calls.filter(([url]) => url.endsWith('manifest.json'))).toHaveLength(2);
+  });
   it('handles empty queries without fetching and refuses unknown lines instead of falling back', async () => {
     const {fetcher} = fixture();
     const client = createEntitySearch('/base/', 'ja', fetcher);

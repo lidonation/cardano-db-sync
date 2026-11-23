@@ -41,7 +41,11 @@ export function createEntityIndex(records: readonly SearchEntity[]): MiniSearch<
 export function loadEntityIndex(json: string): MiniSearch<SearchEntity> {
   return MiniSearch.loadJSON<SearchEntity>(json, options);
 }
-const compare = (a: string, b: string): number => (a < b ? -1 : a > b ? 1 : 0);
+function compare(a: string, b: string): number {
+  if (a < b) return -1;
+  if (a > b) return 1;
+  return 0;
+}
 
 /** Explicit lexical tiers dominate MiniSearch's within-tier relevance score. */
 export function searchEntities(
