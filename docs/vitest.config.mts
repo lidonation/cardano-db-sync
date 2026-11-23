@@ -20,6 +20,9 @@ export default defineConfig({
         'src/i18n/pages.ts',
         'src/i18n/identifier.ts',
         'src/survey/labelIds.ts',
+        'src/survey/metadata.ts',
+        'src/survey/payload.ts',
+        'src/survey/batch.ts',
         // The config schema validator shared by check:config and the config wizard (B10).
         'src/data/**/*.mjs',
         // B29: the component manifest and the browser-free component logic. The components
