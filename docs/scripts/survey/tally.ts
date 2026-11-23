@@ -147,12 +147,9 @@ function summarize(
   p?: Presentation,
 ): MethodTally {
   const values = responses.flatMap((r) => r.answers.filter((a) => a[1] === index).map((a) => a[2]));
-  const options =
-    'options' in q
-      ? Array.from({length: q.options}, (_, i) => i)
-      : q.tag === 4
-        ? [...new Set(values as number[])].sort((a, b) => a - b)
-        : [];
+  let options: number[] = [];
+  if ('options' in q) options = Array.from({length: q.options}, (_, i) => i);
+  else if (q.tag === 4) options = [...new Set(values as number[])].sort((a, b) => a - b);
   const count = (option: number) =>
     values.filter((v) => {
       if (q.tag === 1 || q.tag === 4) return v === option;
@@ -166,8 +163,8 @@ function summarize(
     label: p?.questions[index].prompt ?? `Question ${index}`,
     method: q.tag,
     abstain: responses.length - values.length,
-    options: options.map((option) => ({
-      option,
+    options: options.map((option, position) => ({
+      option: q.tag === 4 ? position : option,
       label:
         q.tag === 4
           ? String(option)
@@ -404,10 +401,11 @@ export function tally(input: ChainInput, config: TallyConfig): TallyArtifact {
             ),
           ),
         ].sort((a, b) => a - b);
-        q.options = numbers.map(
-          (option) =>
-            q.options.find((o) => o.option === option) ?? {option, label: String(option), count: 0},
-        );
+        q.options = numbers.map((value, option) => ({
+          option,
+          label: String(value),
+          count: q.options.find((o) => o.label === String(value))?.count ?? 0,
+        }));
       }
     });
     for (const [epoch, rows] of [...byEpoch].sort(([a], [b]) => a - b)) {
@@ -426,7 +424,10 @@ export function tally(input: ChainInput, config: TallyConfig): TallyArtifact {
         q.history.push({
           epoch,
           counts: q.options.map(
-            (o) => historic.options.find((h) => h.option === o.option)?.count ?? 0,
+            (o) =>
+              historic.options.find((h) =>
+                q.method === 4 ? h.label === o.label : h.option === o.option,
+              )?.count ?? 0,
           ),
         });
       });
@@ -440,14 +441,16 @@ export function tally(input: ChainInput, config: TallyConfig): TallyArtifact {
       }),
     );
     // Step 12: unweighted per-role participation and per-question abstains.
+    let state: SurveyTally['state'] = input.epoch > endEpoch ? 'final' : 'interim';
+    if (record.cancelled) state = 'cancelled';
     return {
       network: input.network,
       surveyRef: ref,
       endEpoch,
-      interim: input.epoch < endEpoch,
-      tallyBasis: input.epoch >= endEpoch ? 'end-epoch' : 'response-time-only',
-      snapshotBasis: input.epoch >= endEpoch ? 'end-epoch' : 'response-time-only',
-      state: record.cancelled ? 'cancelled' : input.epoch >= endEpoch ? 'final' : 'interim',
+      interim: input.epoch <= endEpoch,
+      tallyBasis: input.epoch > endEpoch ? 'end-epoch' : 'response-time-only',
+      snapshotBasis: input.epoch > endEpoch ? 'end-epoch' : 'response-time-only',
+      state,
       participation: [{role: 4, count: responses.length}],
       questions: qs,
       freeText,

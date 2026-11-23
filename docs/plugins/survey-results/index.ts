@@ -29,12 +29,41 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
     },
     async contentLoaded({actions: {createData}}) {
       const root = path.join(context.siteDir, 'src/survey-results');
-      const aggregate = JSON.parse(
-        readFileSync(path.join(root, 'aggregate.json'), 'utf8'),
-      ) as Aggregate;
       const manifest = JSON.parse(
         readFileSync(path.join(root, 'manifest.json'), 'utf8'),
       ) as SurveyManifest;
+      const network = (context.siteConfig?.customFields?.profile as {network?: string} | undefined)
+        ?.network;
+      if (network !== 'preview' && network !== 'mainnet')
+        throw new Error('Survey build requires an explicit profile network');
+      const file = path.join(context.siteDir, `generated/survey-${network}/aggregate.json`);
+      const artifact = JSON.parse(readFileSync(file, 'utf8')) as {
+        network: string;
+        surveys: (Aggregate & {network: string})[];
+      };
+      if (
+        artifact.network !== network ||
+        !Array.isArray(artifact.surveys) ||
+        artifact.surveys.some((s) => s.network !== network)
+      )
+        throw new Error('Survey artifact network mismatch');
+      let aggregate: Aggregate;
+      if (artifact.surveys.length) {
+        const selected = artifact.surveys.filter((s) => s.surveyRef === manifest.surveyRef);
+        if (selected.length !== 1)
+          throw new Error('Reviewed render manifest must identify exactly one tallied survey');
+        aggregate = selected[0];
+        // The standing-survey dashboard only renders interim figures. Final snapshots stay
+        // available in the audit artifact, never mislabeled as response-time-only figures.
+        if (aggregate.interim !== true || aggregate.tallyBasis !== 'response-time-only')
+          throw new Error('Final survey snapshot requires a final-results renderer');
+      } else {
+        aggregate = JSON.parse(
+          readFileSync(path.join(root, 'aggregate.json'), 'utf8'),
+        ) as Aggregate;
+        if (aggregate.questions.length || aggregate.freeText.length)
+          throw new Error('Unscoped legacy survey data cannot render');
+      }
       const resolved = resolveAggregate(manifest, aggregate);
       await createData('resolved.json', JSON.stringify(resolved));
       const empty =
@@ -45,7 +74,10 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
       await createData('view.js', 'export {default} from ' + JSON.stringify(view) + ';');
     },
     getPathsToWatch() {
-      return [path.join(context.siteDir, 'src/survey-results/*.json')];
+      return [
+        path.join(context.siteDir, 'src/survey-results/*.json'),
+        path.join(context.siteDir, 'generated/survey-*/aggregate.json'),
+      ];
     },
   };
 }

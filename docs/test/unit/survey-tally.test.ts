@@ -7,7 +7,7 @@ import {
   freeTextQuestion,
 } from '../../src/survey/payload';
 import {encodeMetadata, utf8} from '../../src/survey/metadata';
-import {tally, textApprovalId} from '../../scripts/survey/tally';
+import {proves, tally, textApprovalId} from '../../scripts/survey/tally';
 import type {ChainInput, TallyConfig, Transaction} from '../../scripts/survey/types';
 import type {Anchor, Answer, Metadatum, Question} from '../../src/survey/types';
 const bytes = (n: number, length = 28) => new Uint8Array(length).fill(n);
@@ -101,9 +101,12 @@ function fixture(): {input: ChainInput; config: TallyConfig} {
   };
 }
 describe('B26 CIP-179 Keyholder tally', () => {
-  it('golden: all methods, role participation, omitted abstains, audited proof and moderation', () => {
+  it('golden: all methods, role participation, omitted abstains, audited proof and moderation', async () => {
     const {input, config} = fixture();
     const artifact = tally(input, config);
+    await expect(JSON.stringify(artifact, null, 2) + '\n').toMatchFileSnapshot(
+      '../fixtures/survey/tally-golden.json',
+    );
     const s = artifact.surveys[0];
     expect(s.participation).toEqual([{role: 4, count: 1}]);
     expect(s.questions.map((q) => q.options.map((o) => o.count))).toEqual([
@@ -256,3 +259,168 @@ describe('B26 CIP-179 Keyholder tally', () => {
     expect(() => tally(input, config)).toThrow('definition');
   });
 });
+
+it('keeps historical numeric values and signed ranges in positional render columns', () => {
+  const {input, config} = fixture();
+  const definition = structuredClone(built.definition);
+  const wires = definition.get(7) as Metadatum[][];
+  wires[3][2] = [-10, 10];
+  input.transactions[0].metadata = encodeMetadata(new Map([[17, [0, [definition]]]]));
+  const first = response();
+  const oldAnswers = structuredClone(answers);
+  oldAnswers[3][2] = -1;
+  first.set(4, oldAnswers);
+  input.transactions[1].metadata = encodeMetadata(new Map([[17, [1, [first]]]]));
+  input.transactions.push(
+    tx(
+      3,
+      1,
+      [
+        response([
+          [1, 0, 1],
+          [4, 3, 4],
+        ]),
+      ],
+      3,
+    ),
+  );
+  const q = tally(input, config).surveys[0].questions[3];
+  expect(q.options).toEqual([
+    {option: 0, label: '-1', count: 0},
+    {option: 1, label: '4', count: 1},
+  ]);
+  expect(q.history).toEqual([
+    {epoch: 2, counts: [1, 0]},
+    {epoch: 3, counts: [0, 1]},
+  ]);
+  expect(q.distributions).toEqual([{value: 4, count: 1}]);
+});
+it('remains interim throughout the inclusive end epoch', () => {
+  const {input, config} = fixture();
+  input.epoch = 2000;
+  expect(tally(input, config).surveys[0]).toMatchObject({
+    interim: true,
+    state: 'interim',
+    snapshotBasis: 'response-time-only',
+  });
+});
+
+it('seeded replay matches an independent latest-wins model and never deduplicates across surveys', () => {
+  const {input, config} = fixture();
+  input.transactions = input.transactions.slice(0, 1);
+  const model = new Map<number, {option: number; numeric: boolean}>();
+  let seed = 179;
+  const random = () => {
+    seed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
+    return seed;
+  };
+  for (let n = 2; n < 82; n++) {
+    const person = 2 + (random() % 5);
+    const option = random() % 2;
+    const numeric = random() % 3 === 0;
+    const value: Answer[] = [[1, 0, option], ...(numeric ? [[4, 3, n] as Answer] : [])];
+    const t = tx(n, 1, [response(value, bytes(person))]);
+    t.requiredSigners = [hex(bytes(person))];
+    t.paymentKeys = [hex(bytes(person))];
+    input.transactions.push(t);
+    model.set(person, {option, numeric});
+  }
+  input.transactions.reverse();
+  const actual = tally(input, config).surveys[0];
+  expect(actual.participation[0].count).toBe(model.size);
+  expect(actual.questions[0].options.map((o) => o.count)).toEqual(
+    [0, 1].map((option) => [...model.values()].filter((v) => v.option === option).length),
+  );
+  expect(actual.questions[3].abstain).toBe([...model.values()].filter((v) => !v.numeric).length);
+  const second = tx(90, 0, [built.definition], 1);
+  second.slot = 101;
+  second.requiredSigners = [hex(owner)];
+  input.transactions.push(second);
+  const other = response([[1, 0, 1]]);
+  other.set(1, [bytes(90, 32), 0]);
+  input.transactions.push(tx(91, 1, [other]));
+  config.surveys.push({surveyRef: `${txid(90)}#0`, endEpoch: 2000});
+  const combined = tally(input, config);
+  expect(combined.surveys.map((s) => s.participation[0].count)).toEqual([model.size, 1]);
+  expect(
+    combined.audit
+      .filter((a) => a.status === 'counted' && a.credential === `0:${hex(payment)}`)
+      .map((a) => a.surveyRef),
+  ).toHaveLength(2);
+});
+
+it.each([
+  [
+    [
+      1,
+      [
+        [0, owner],
+        [0, payment],
+      ],
+    ],
+    false,
+  ],
+  [
+    [
+      2,
+      [
+        [0, owner],
+        [0, payment],
+      ],
+    ],
+    true,
+  ],
+  [
+    [
+      1,
+      [
+        [0, owner],
+        [4, 10],
+        [5, 20],
+      ],
+    ],
+    true,
+  ],
+  [
+    [
+      1,
+      [
+        [0, owner],
+        [4, 11],
+      ],
+    ],
+    false,
+  ],
+  [
+    [
+      1,
+      [
+        [0, owner],
+        [5, 19],
+      ],
+    ],
+    false,
+  ],
+] as [Metadatum, boolean][])(
+  'requires actual native-script satisfaction for %j',
+  (wire, expected) => {
+    const script = encodeMetadata(wire);
+    const hash = blake2b(new Uint8Array([0, ...script]), {dkLen: 28});
+    const transaction = tx(1, 2, []);
+    transaction.requiredSigners = [hex(owner)];
+    transaction.invalidBefore = 10;
+    transaction.invalidHereafter = 20;
+    transaction.scripts = {[hex(hash)]: script};
+    expect(proves([1, hash], transaction)).toBe(expected);
+    transaction.invalidBefore = null;
+    transaction.invalidHereafter = null;
+    if (
+      Array.isArray(wire) &&
+      wire[0] === 1 &&
+      (wire[1] as Metadatum[]).some(
+        (child) => Array.isArray(child) && (child[0] === 4 || child[0] === 5),
+      )
+    )
+      expect(proves([1, hash], transaction)).toBe(false);
+  },
+);
