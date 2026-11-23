@@ -2,7 +2,9 @@ import {readFileSync} from 'node:fs';
 import path from 'node:path';
 import type {LoadContext, Plugin} from '@docusaurus/types';
 import {resolveAggregate} from '../../src/survey-results/resolve';
-import type {Aggregate, SurveyManifest} from '../../src/survey-results/types';
+import type {Aggregate} from '../../src/survey-results/types';
+import {readRegistry} from '../../src/survey/manifest/lifecycle';
+import {publicationManifest} from '../../src/survey/manifest/publication';
 
 /** SUR-7: webpack only receives reviewed text. Raw artifacts never enter a client import. */
 export default function surveyResultsPlugin(context: LoadContext): Plugin {
@@ -29,9 +31,6 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
     },
     async contentLoaded({actions: {createData}}) {
       const root = path.join(context.siteDir, 'src/survey-results');
-      const manifest = JSON.parse(
-        readFileSync(path.join(root, 'manifest.json'), 'utf8'),
-      ) as SurveyManifest;
       const network = (context.siteConfig?.customFields?.profile as {network?: string} | undefined)
         ?.network;
       if (network !== 'preview' && network !== 'mainnet')
@@ -47,9 +46,14 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
         artifact.surveys.some((s) => s.network !== network)
       )
         throw new Error('Survey artifact network mismatch');
+      const registry = readRegistry(
+        JSON.parse(
+          readFileSync(path.join(context.siteDir, 'src/survey/manifest/registry.json'), 'utf8'),
+        ),
+      );
       let aggregate: Aggregate;
       if (artifact.surveys.length) {
-        const selected = artifact.surveys.filter((s) => s.surveyRef === manifest.surveyRef);
+        const selected = artifact.surveys.filter((s) => s.surveyRef === registry.current[network]);
         if (selected.length !== 1)
           throw new Error('Reviewed render manifest must identify exactly one tallied survey');
         aggregate = selected[0];
@@ -64,6 +68,7 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
         if (aggregate.questions.length || aggregate.freeText.length)
           throw new Error('Unscoped legacy survey data cannot render');
       }
+      const manifest = publicationManifest(registry, aggregate, network);
       const resolved = resolveAggregate(manifest, aggregate);
       await createData('resolved.json', JSON.stringify(resolved));
       const empty =
@@ -77,6 +82,7 @@ export default function surveyResultsPlugin(context: LoadContext): Plugin {
       return [
         path.join(context.siteDir, 'src/survey-results/*.json'),
         path.join(context.siteDir, 'generated/survey-*/aggregate.json'),
+        path.join(context.siteDir, 'src/survey/manifest/*.json'),
       ];
     },
   };

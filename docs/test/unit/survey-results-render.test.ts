@@ -9,7 +9,7 @@ import aggregateJson from '../../src/survey-results/aggregate.json';
 import fixtureJson from '../../src/survey-results/__fixtures__/sample-aggregate.json';
 import DashboardView, {widthBucket} from '../../src/survey-results/Dashboard';
 import {DASHBOARD_IDS} from '../../src/survey-results/ids';
-import manifestJson from '../../src/survey-results/manifest.json';
+import manifestJson from '../../src/survey-results/__fixtures__/sample-manifest.json';
 import {resolveAggregate} from '../../src/survey-results/resolve';
 import type {Aggregate, SurveyManifest} from '../../src/survey-results/types';
 

@@ -1,5 +1,5 @@
 {
-  "$comment": "B27 render-half sample: the reviewed survey_ref manifest the dashboard reads (SUR-3). Authoritative for the build; endEpoch is locked at 2000 (SUR-15). The full lifecycle manifest lands with B27 — this file carries only what B44-f renders.",
+  "$comment": "B44-f rendering fixture ONLY. Not lifecycle authority or on-chain references. Canonical B27 registry: src/survey/manifest/registry.json.",
   "surveyRef": "core-1",
   "endEpoch": 2000,
   "subsumptions": [

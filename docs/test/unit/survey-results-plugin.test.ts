@@ -5,14 +5,40 @@ import type {LoadContext} from '@docusaurus/types';
 import {describe, expect, it} from 'vitest';
 import plugin from '../../plugins/survey-results';
 import aggregate from '../../src/survey-results/aggregate.json';
-import manifest from '../../src/survey-results/manifest.json';
+import registry from '../../src/survey/manifest/registry.json';
+const ref = '01'.repeat(32) + '#0';
+function writeRegistry(root: string, active = true) {
+  const file = path.join(root, 'src/survey/manifest/registry.json');
+  mkdirSync(path.dirname(file), {recursive: true});
+  writeFileSync(
+    file,
+    JSON.stringify(
+      active
+        ? {
+            ...registry,
+            current: {preview: ref, mainnet: ref},
+            surveys: ['preview', 'mainnet'].map((network) => ({
+              surveyRef: ref,
+              network,
+              kind: 'core',
+              owner: {type: 'script', hash: 'ab'.repeat(28)},
+              definedEpoch: 100,
+              endEpoch: 2000,
+              questions: [{}],
+              subsumes: [],
+            })),
+          }
+        : registry,
+    ),
+  );
+}
 
 describe('SUR-7 generation boundary', () => {
   it('never emits pending text into webpack data', async () => {
     const root = mkdtempSync(path.join(os.tmpdir(), 'survey-review-'));
     try {
       mkdirSync(path.join(root, 'src/survey-results'), {recursive: true});
-      writeFileSync(path.join(root, 'src/survey-results/manifest.json'), JSON.stringify(manifest));
+      writeRegistry(root);
       mkdirSync(path.join(root, 'generated/survey-preview'), {recursive: true});
       writeFileSync(
         path.join(root, 'generated/survey-preview/aggregate.json'),
@@ -21,6 +47,7 @@ describe('SUR-7 generation boundary', () => {
           surveys: [
             {
               ...aggregate,
+              surveyRef: ref,
               network: 'preview',
               freeText: [
                 {id: 'a', text: 'Approved', moderated: true},
@@ -81,12 +108,15 @@ it('builds only its profile network and rejects swapped/legacy public data', asy
   try {
     mkdirSync(path.dirname(manifestFile), {recursive: true});
     mkdirSync(path.dirname(artifactFile), {recursive: true});
-    writeFileSync(manifestFile, JSON.stringify(manifest));
+    writeRegistry(root);
     writeFileSync(artifactFile, JSON.stringify({network: 'preview', surveys: []}));
     await expect(load()).rejects.toThrow('network mismatch');
     writeFileSync(
       artifactFile,
-      JSON.stringify({network: 'mainnet', surveys: [{...aggregate, network: 'preview'}]}),
+      JSON.stringify({
+        network: 'mainnet',
+        surveys: [{...aggregate, surveyRef: ref, network: 'preview'}],
+      }),
     );
     await expect(load()).rejects.toThrow('network mismatch');
     writeFileSync(
@@ -101,14 +131,26 @@ it('builds only its profile network and rejects swapped/legacy public data', asy
       artifactFile,
       JSON.stringify({
         network: 'mainnet',
-        surveys: [{...aggregate, network: 'mainnet', interim: false, tallyBasis: 'end-epoch'}],
+        surveys: [
+          {
+            ...aggregate,
+            surveyRef: ref,
+            network: 'mainnet',
+            interim: false,
+            tallyBasis: 'end-epoch',
+          },
+        ],
       }),
     );
     await expect(load()).rejects.toThrow('Final survey snapshot');
     writeFileSync(artifactFile, JSON.stringify({network: 'mainnet', surveys: []}));
     writeFileSync(
       path.join(root, 'src/survey-results/aggregate.json'),
-      JSON.stringify({...aggregate, freeText: [{id: 'x', text: 'legacy', moderated: true}]}),
+      JSON.stringify({
+        ...aggregate,
+        surveyRef: ref,
+        freeText: [{id: 'x', text: 'legacy', moderated: true}],
+      }),
     );
     await expect(load()).rejects.toThrow('Unscoped legacy');
   } finally {
@@ -121,7 +163,7 @@ it('emits the named empty view for an inactive network, without guessing a missi
   try {
     mkdirSync(path.join(root, 'src/survey-results'), {recursive: true});
     mkdirSync(path.join(root, 'generated/survey-mainnet'), {recursive: true});
-    writeFileSync(path.join(root, 'src/survey-results/manifest.json'), JSON.stringify(manifest));
+    writeRegistry(root, false);
     writeFileSync(path.join(root, 'src/survey-results/aggregate.json'), JSON.stringify(aggregate));
     writeFileSync(
       path.join(root, 'generated/survey-mainnet/aggregate.json'),
