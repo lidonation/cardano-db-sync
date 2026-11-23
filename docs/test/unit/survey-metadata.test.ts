@@ -42,6 +42,7 @@ describe('Cardano metadatum CBOR (CIP-179 v5)', () => {
       'a'.repeat(65),
       '🙂é中'.repeat(100),
       'e\u0301'.repeat(90),
+      '\ufeff' + 'z'.repeat(65),
     ]) {
       const chunks = chunkText(text);
       expect(typeof chunks === 'string' ? chunks : chunks.join('')).toBe(text);

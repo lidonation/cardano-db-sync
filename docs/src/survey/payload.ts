@@ -17,7 +17,11 @@ import type {
 export const SPEC_VERSION = 5;
 export const METADATA_LABEL = 17;
 /** Must equal the published file byte-for-byte; tested against the static asset. */
-export const FREE_TEXT_SCHEMA_BYTES = utf8(JSON.stringify(freeTextSchema) + '\n');
+const FREE_TEXT_SCHEMA_BYTES = utf8(JSON.stringify(freeTextSchema) + '\n');
+/** Detached copy: callers cannot mutate the schema used for subsequent anchors. */
+export function freeTextSchemaBytes(): Uint8Array {
+  return FREE_TEXT_SCHEMA_BYTES.slice();
+}
 const hash = (bytes: Uint8Array) => blake2b(bytes, {dkLen: 32});
 function requireThat(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(`CIP-179: ${message}`);
@@ -340,6 +344,10 @@ export function buildResponse(input: ResponseInput): Response {
     [3, input.credential],
     [4, input.answers],
   ]);
+  if (input.rationale !== undefined) {
+    anchor(input.rationale);
+    response.set(5, input.rationale);
+  }
   encodeMetadata(response);
   return structuredClone(response);
 }

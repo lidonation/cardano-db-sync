@@ -1,0 +1,244 @@
+; Source: cardano-foundation/CIPs, CIP-0179, d21ffeb3d7a9bdfcf42a9bf3522d95f5540f2cac
+; Authors: Thomas Lindseth, Ryan Wiley, Matthieu Pizenberg. License CC-BY-4.0.
+; Only addition: metadata root wrapper (17 => cip_179_payload). Upstream CDDL below unchanged.
+metadata = {17 => cip_179_payload}
+
+; CIP-179 On-chain Surveys and Polls (version 5)
+
+; ---------- Primitives ----------
+
+pos_uint = uint .gt 0
+tx_id = bytes .size 32
+blake2b_256 = bytes .size 32
+drand_chain_hash = bytes .size 32     ; Drand chain hash for tlock
+bounded_text = text .size (0..64)     ; Cardano metadata text limit
+chunked_text = bounded_text / [+ bounded_text]  ; single string or chunked array
+survey_ref = [tx_id, uint .size 2]    ; (TxId, index in definitions array)
+
+; Boolean flag encoded as a uint: 1 = true, 0 = false. Cardano's
+; transaction_metadatum subset has no boolean type (see below), so flags use a
+; uint. As an OPTIONAL trailing field, the value is omitted entirely when false;
+; an explicit 0 MUST also be accepted and treated as false.
+flag = uint .le 1
+
+; A reference to off-chain content, tamper-evident via its hash. Used for:
+; external survey presentation text, custom-method schemas, and voter rationales.
+content_anchor = [
+  chunked_text,   ; URI (e.g. ipfs://..., https://...)
+  blake2b_256     ; blake2b-256 of the raw bytes at that URI
+]
+
+; Standard Cardano transaction metadatum.
+transaction_metadatum =
+    { * transaction_metadatum => transaction_metadatum }
+  / [ * transaction_metadatum ]
+  / int
+  / bytes .size (0..64)
+  / bounded_text
+
+; ---------- Types reused from Conway ledger CDDL ----------
+; Included for reference; authoritative definitions are in the ledger spec.
+
+hash28 = bytes .size 28
+addr_keyhash = hash28
+script_hash = hash28
+
+; A Cardano credential: key-based (tag 0) or script-based (tag 1).
+credential = [0, addr_keyhash // 1, script_hash]
+
+; ---------- Top-level payload under metadata label 17 ----------
+
+cip_179_payload = [0, [+ survey_definition]]
+                / [1, [+ survey_response]]
+                / [2, [+ survey_cancellation]]
+
+; ---------- Survey definition ----------
+
+; Integer-keyed deterministic map; unknown keys reserved for future versions
+; (see Encoding Conventions).
+survey_definition = {
+  0 => uint,                   ; spec_version (this document = 5)
+  1 => credential,             ; owner (for cancellation authorization)
+  2 => chunked_text,           ; title (MAY be empty in external-content mode)
+  3 => chunked_text,           ; description (MAY be empty in external-content mode)
+  4 => eligible_roles,         ; roles permitted to respond
+  5 => uint,                   ; end_epoch (inclusive cutoff)
+  6 => submission_mode,        ; how responses are submitted
+  7 => [+ survey_question],    ; questions (at least one)
+  ? 8 => content_anchor        ; OPTIONAL external presentation document
+}
+
+; ---------- Eligible roles ----------
+
+; A role declares eligibility (which credential type may respond) and hints to
+; UIs which key to present. It is NOT a weighting directive (see "Weighting and
+; Aggregation (out of scope)").
+;   0 = DRep
+;   1 = SPO
+;   2 = CC
+;   3 = Stakeholder
+;   4 = Keyholder      (control of a payment/spending credential)
+role = 0 / 1 / 2 / 3 / 4
+
+; Roles permitted to respond. Non-empty; entries SHOULD be unique.
+eligible_roles = [+ role]
+
+; ---------- Submission mode (tagged sum type) ----------
+
+submission_mode = public_submission_mode / sealed_submission_mode
+
+; Tag 0: Public. Responses carry plaintext answer items.
+public_submission_mode = [0]
+
+; Tag 1: Sealed. Responses carry a timelock-encrypted (Drand `tlock`) ciphertext
+;   instead of plaintext answers. Answers are encrypted at submission and become
+;   decryptable by anyone once `round` publishes on the pinned Drand chain. No
+;   one, not even the survey owner, can open them earlier. This is delayed reveal,
+;   not permanent secrecy. `padding_size` is the minimum plaintext byte length
+;   each response is padded to before encryption.
+sealed_submission_mode = [1, drand_chain_hash, pos_uint, pos_uint]
+                      ;   chain_hash        round     padding_size
+
+; ---------- Question types (tagged sum type) ----------
+
+survey_question = custom_question
+                / single_choice_question
+                / multi_select_question
+                / ranking_question
+                / numeric_range_question
+                / points_allocation_question
+                / rating_question
+
+; Tag 0 is reserved for the custom (extension) type, so new built-in types are
+; appended at higher tags without ever disturbing it.
+;
+; Every question ends with an OPTIONAL `required` flag (a uint `flag`, default
+; false): when 1, a response MUST NOT omit the question. Omission of a
+; non-required question means abstain (see "Abstain semantics").
+
+; Tag 0: Custom method. Answer format defined by the schema at the anchor.
+custom_question = [0, chunked_text, content_anchor, ? flag]
+
+; Tag 1: Single-choice. Exactly one option selected.
+single_choice_question = [1, chunked_text, options_or_count, ? flag]
+
+; Tag 2: Multi-select. Between min_selections and max_selections options.
+;   0 <= min_selections <= max_selections <= number_of_options.
+;   min_selections may be 0: a present, empty selection is a valid answer
+;   ("none selected"), distinct from omitting the question (abstain).
+multi_select_question = [2, chunked_text, options_or_count, uint, pos_uint, ? flag]
+                     ;   tag  prompt        opts/count       min_sel  max_sel
+
+; Tag 3: Ranking. Between min_ranked and max_ranked options, preference order.
+;   1 <= min_ranked <= max_ranked <= number_of_options.
+ranking_question = [3, chunked_text, options_or_count, pos_uint, pos_uint, ? flag]
+                ;   tag  prompt        opts/count      min_ranked max_ranked
+
+; Tag 4: Numeric-range. Answer is an integer satisfying the constraints.
+numeric_range_question = [4, chunked_text, numeric_constraints, ? flag]
+
+; Tag 5: Points-allocation. Distribute exactly `budget` points across options.
+points_allocation_question = [5, chunked_text, options_or_count, pos_uint, ? flag]
+                          ;   tag  prompt        opts/count       budget
+
+; Tag 6: Rating. Rate options on the scale given by rating_scale.
+;   require_all (mandatory flag): 1 = a present answer MUST rate every option;
+;   0 = a subset is allowed. Fixed so the optional `required` stays decodable.
+rating_question = [6, chunked_text, options_or_count, rating_scale, flag, ? flag]
+                ;   tag  prompt        opts/count      rating_scale  require_all  required
+
+; ---------- Rating scale ----------
+
+; Numeric grid (array of ints), ordered worst-to-best label list (array of
+; text), or, in external-content mode, a level count (bare uint >= 2); the
+; three CBOR shapes are distinct. See "Rating (tag 6)".
+rating_scale = numeric_constraints / options_or_count
+
+; ---------- Numeric constraints ----------
+
+numeric_constraints = [
+  int,              ; min_value
+  int,              ; max_value (>= min_value)
+  ? pos_uint        ; step (optional, must be > 0)
+]
+
+; ---------- Options ----------
+
+; Inline labels (>= 2) or, in external-content mode (survey_definition carries
+; a content_anchor), an option count (>= 2). The CBOR shapes are distinct.
+options          = [2* bounded_text]
+option_count     = uint .ge 2
+options_or_count = options / option_count
+
+; ---------- Survey response ----------
+
+; Integer-keyed deterministic map, like survey_definition; future optional
+; fields (e.g. the deferred CIP-8 proof's signature material) get new keys.
+; spec_version lets a response be decoded (answer encoding, public-vs-sealed
+; shape) without first resolving the survey.
+survey_response = {
+  0 => uint,                   ; spec_version (this document = 5)
+  1 => survey_ref,             ; reference to the survey definition
+  2 => role,                   ; claimed responder role
+  3 => credential,             ; responder's credential
+  4 => response_answers,       ; answers (an omitted question = abstain)
+  ? 5 => content_anchor        ; OPTIONAL voter rationale
+}
+
+; Response answers depend on the referenced survey's submission_mode:
+;   - Public: an array of plaintext answer items.
+;   - Sealed: a raw, de-armored tlock ciphertext (chunked bytes; NOT AGE/PEM
+;     "armored" text), opaque until the survey's round publishes. Its plaintext is
+;     the canonical CBOR of [+ answer_item], right-padded to padding_size.
+;     Distinguished from the public form by shape (bytes vs. array). See "Sealed
+;     responses".
+response_answers = [+ answer_item] / chunked_bytes
+
+; Chunked byte blob: payloads exceeding the 64-byte metadata limit are split
+; into an array of <=64-byte byte strings, concatenated to reconstruct.
+chunked_bytes = (bytes .size (0..64)) / [+ bytes .size (0..64)]
+
+; ---------- Answer types (tag matches question type) ----------
+
+answer_item = custom_answer
+            / single_choice_answer
+            / multi_select_answer
+            / ranking_answer
+            / numeric_answer
+            / points_allocation_answer
+            / rating_answer
+
+; In all answer variants, the second element is the question index
+; (position in the survey_definition's questions array).
+
+; Tag 0: Custom answer.
+custom_answer = [0, uint, transaction_metadatum]
+
+; Tag 1: Single-choice answer. Exactly 1 selected option index.
+single_choice_answer = [1, uint, uint]
+
+; Tag 2: Multi-select answer. min_selections..max_selections unique, valid
+;   option indices. MAY be empty when min_selections is 0 ("none selected").
+multi_select_answer = [2, uint, [* uint]]
+
+; Tag 3: Ranking answer. min_ranked..max_ranked unique, valid option indices,
+;   most preferred first.
+ranking_answer = [3, uint, [+ uint]]
+
+; Tag 4: Numeric-range answer.
+numeric_answer = [4, uint, int]
+
+; Tag 5: Points-allocation answer. (option_index, points) pairs.
+;   points >= 0; option indices unique; unlisted options receive 0;
+;   sum of points MUST equal `budget`.
+points_allocation_answer = [5, uint, [+ [uint, uint]]]
+
+; Tag 6: Rating answer. (option_index, rating) pairs.
+;   rating MUST satisfy the rating scale; option indices unique.
+rating_answer = [6, uint, [+ [uint, int]]]
+
+; ---------- Survey cancellation ----------
+
+; Cancels a previously published survey. The cancellation transaction MUST
+; prove ownership of the survey definition's owner credential.
+survey_cancellation = survey_ref

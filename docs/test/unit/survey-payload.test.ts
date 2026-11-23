@@ -8,7 +8,7 @@ import {
   schemaVersionQuestions,
   verifyAnchor,
   freeTextQuestion,
-  FREE_TEXT_SCHEMA_BYTES,
+  freeTextSchemaBytes,
 } from '../../src/survey/payload';
 import {decodeMetadata, encodeMetadata} from '../../src/survey/metadata';
 import type {DefinitionInput, Question} from '../../src/survey/types';
@@ -52,7 +52,7 @@ const credential: [0, Uint8Array] = [0, new Uint8Array(28).fill(1)];
 
 describe('CIP-179 public external-content payload', () => {
   it('hashes exactly the static custom-method bytes served by both profiles', () => {
-    expect(FREE_TEXT_SCHEMA_BYTES).toEqual(
+    expect(freeTextSchemaBytes()).toEqual(
       new Uint8Array(readFileSync('static/survey/free-text-v1.json')),
     );
   });
@@ -78,6 +78,9 @@ describe('CIP-179 public external-content payload', () => {
     ]);
     expect(verifyAnchor(presentationBytes, definition.get(8) as never)).toBe(true);
     expect(verifyAnchor(new Uint8Array([0]), definition.get(8) as never)).toBe(false);
+    const detached = freeTextSchemaBytes();
+    detached[0] = 0;
+    expect(freeTextSchemaBytes()[0]).not.toBe(0);
     expect(decodeMetadata(encodeMetadata(definition))).toEqual(definition);
     expect(JSON.parse(new TextDecoder().decode(presentationBytes))).toEqual(input().presentation);
   });
@@ -111,6 +114,26 @@ describe('CIP-179 public external-content payload', () => {
     expect(response.get(4)).toEqual(answers);
     expect(decodeMetadata(encodeMetadata(response))).toEqual(response);
     expect(response.get(1)).toEqual([hash, 2]);
+    const rationale: [string, Uint8Array] = ['https://example.org/rationale.json', hash];
+    const withRationale = buildResponse({
+      definition,
+      currentEpoch: 101,
+      surveyRef: [hash, 2],
+      credential,
+      answers,
+      rationale,
+    });
+    expect(withRationale.get(5)).toEqual(rationale);
+    expect(() =>
+      buildResponse({
+        definition,
+        currentEpoch: 101,
+        surveyRef: [hash, 2],
+        credential,
+        answers,
+        rationale: ['javascript:alert(1)', hash],
+      }),
+    ).toThrow();
   });
   it('rejects invalid presentation, constraints, expiry, hashes and unbound option counts', () => {
     const cases: ((v: DefinitionInput) => void)[] = [
