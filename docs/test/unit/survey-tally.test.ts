@@ -488,3 +488,19 @@ it('excludes pre-definition and wrong-version responses with explicit audit reas
     'unsupported-version',
   ]);
 });
+
+it('fails closed for malformed canonical definitions instead of accepting partial definition batches', () => {
+  const {input, config} = fixture();
+  input.transactions[0].metadata = encodeMetadata(new Map([[17, [0, ['not a definition']]]]));
+  expect(() => tally(input, config)).toThrow('Invalid canonical definition');
+  input.transactions[0].metadata = encodeMetadata(new Map([[17, [0, [built.definition]]]]));
+  const malformed = new Map<Metadatum, Metadatum>([
+    [0, 5],
+    [1, [bytes(1, 32), -1]],
+  ]);
+  input.transactions[1].metadata = encodeMetadata(new Map([[17, [1, [malformed]]]]));
+  expect(tally(input, config).audit[0]).toMatchObject({
+    reason: 'unreviewed-survey',
+    surveyRef: null,
+  });
+});

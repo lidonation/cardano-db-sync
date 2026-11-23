@@ -183,7 +183,9 @@ export async function acquire(
       const tx = object(await get(`/txs/${id}`));
       if (hash(tx.hash) !== id) throw new Error('Provider transaction mismatch');
       if (number(tx.block_height) > height) continue;
-      if (tx.valid_contract !== true) continue; // Phase-2-invalid txs have no effective survey metadata.
+      if (typeof tx.valid_contract !== 'boolean')
+        throw new Error('Missing ledger validity evidence');
+      if (!tx.valid_contract) continue; // Phase-2-invalid txs have no effective survey metadata.
       const blockId = hash(tx.block);
       let containing = blockCache.get(blockId);
       if (!containing) {
@@ -220,7 +222,7 @@ export async function acquire(
       const scripts: Record<string, Uint8Array> = {};
       for (const [definitionIndex, entry] of entries.entries()) {
         if (op !== 0 || !reviewed.has(`${id}#${definitionIndex}`)) continue;
-        const c = op === 0 && entry instanceof Map ? entry.get(1) : undefined;
+        const c = entry instanceof Map ? entry.get(1) : undefined;
         if (Array.isArray(c) && c[0] === 1 && c[1] instanceof Uint8Array && c[1].length === 28) {
           const scriptHash = hex(c[1]);
           const info = object(await get(`/scripts/${scriptHash}`));
@@ -233,7 +235,7 @@ export async function acquire(
             scripts[scriptHash] = script;
           }
         }
-        if (op === 0 && entry instanceof Map) {
+        if (entry instanceof Map) {
           const a = entry.get(8);
           if (
             Array.isArray(a) &&

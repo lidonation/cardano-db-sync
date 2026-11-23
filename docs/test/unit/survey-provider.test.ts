@@ -318,6 +318,7 @@ it.each([
   ['UTxO identity', `/txs/${h(1)}/utxos`, 'hash', h(99), 'UTxO mismatch'],
   ['validity bound', `/txs/${h(1)}`, 'invalid_before', 'not-a-slot', 'validity bound'],
   ['missing integer', '/blocks/latest', 'height', null, 'provider integer'],
+  ['missing ledger validity', `/txs/${h(1)}`, 'valid_contract', null, 'ledger validity evidence'],
 ] as const)(
   'rejects inconsistent %s evidence instead of publishing partial results',
   async (_name, route, field, value, error) => {
@@ -350,3 +351,44 @@ it('rejects malformed provider schemas and duplicate signers; excludes collatera
     [],
   );
 });
+
+it('handles chunked anchor URIs and rejects malformed payment address shapes', async () => {
+  const http = vi.fn(async () => new Response('approved bytes'));
+  expect(
+    await fetchPresentation(
+      [['https://lidonation.github.io/', 'p'], new Uint8Array(32)],
+      ['https://lidonation.github.io'],
+      http,
+    ),
+  ).toEqual(utf8('approved bytes'));
+  for (const [prefix, raw] of [
+    ['addr', new Uint8Array([0x60, ...key])],
+    ['addr_test', new Uint8Array([0, ...key])],
+    ['addr_test', new Uint8Array([0x60, ...key, 0])],
+  ] as const) {
+    const bad = bech32.encode(prefix, bech32.toWords(raw));
+    expect(() => paymentKey(bad, 'preview')).toThrow();
+  }
+  expect(() => paymentKey(null, 'preview')).toThrow();
+  expect(() => epochAtSlot('preview', -1)).toThrow();
+});
+it('stops at the discovery page cap instead of publishing truncated history', async () => {
+  const {http} = provider();
+  const original = http.getMockImplementation()!;
+  const irrelevant = Buffer.from(encodeMetadata([9, []])).toString('hex');
+  http.mockImplementation(async (url, init) => {
+    if (!String(url).includes('/metadata/')) return original(url, init);
+    const page = Number(new URL(String(url)).searchParams.get('page'));
+    return new Response(
+      JSON.stringify(
+        Array.from({length: 100}, (_, i) => ({
+          tx_hash: h(1000 + page * 100 + i),
+          metadata: irrelevant,
+        })),
+      ),
+    );
+  });
+  await expect(acquire(config, 'secret-marker', [], http)).rejects.toThrow(
+    'Incomplete metadata pagination',
+  );
+}, 10000);
