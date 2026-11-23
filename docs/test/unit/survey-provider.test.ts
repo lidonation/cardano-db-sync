@@ -2,8 +2,9 @@ import {mkdtemp, mkdir, readFile, rm, writeFile} from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import {bech32} from 'bech32';
+import {blake2b} from '@noble/hashes/blake2b';
 import {describe, expect, it, vi} from 'vitest';
-import {acquire, fetchPresentation, paymentKey} from '../../scripts/survey/provider';
+import {acquire, epochAtSlot, fetchPresentation, paymentKey} from '../../scripts/survey/provider';
 import {configuration, main, runNetwork} from '../../scripts/survey/run';
 import {buildDefinition, buildResponse} from '../../src/survey/payload';
 import {encodeMetadata, utf8} from '../../src/survey/metadata';
@@ -276,4 +277,35 @@ it('does not let an unrelated sibling definition force script fetches or alter t
   ).toString('hex');
   expect((await acquire(config, 'secret-marker', [], http)).transactions).toHaveLength(2);
   expect(http.mock.calls.some(([url]) => String(url).includes('/scripts/'))).toBe(false);
+});
+
+it('acquires native-owner scripts for both definition and later cancellations', async () => {
+  const {data, http} = provider();
+  const script = encodeMetadata([0, key]);
+  const scriptHash = blake2b(new Uint8Array([0, ...script]), {dkLen: 28});
+  const native = structuredClone(built.definition);
+  native.set(1, [1, scriptHash]);
+  const rows = data['/metadata/txs/labels/17/cbor?count=100&page=1&order=asc'] as {
+    metadata: string;
+  }[];
+  rows[0].metadata = Buffer.from(encodeMetadata(new Map([[17, [0, [native]]]]))).toString('hex');
+  const id = Buffer.from(scriptHash).toString('hex');
+  data[`/scripts/${id}`] = {type: 'timelock'};
+  data[`/scripts/${id}/cbor`] = {cbor: Buffer.from(script).toString('hex')};
+  (data[`/txs/${h(1)}`] as {invalid_before: string | null}).invalid_before = '100';
+  (data[`/txs/${h(1)}`] as {invalid_hereafter: string | null}).invalid_hereafter = '100000';
+  const result = await acquire(config, 'secret-marker', [], http);
+  expect(result.transactions[0].scripts[id]).toEqual(Buffer.from(script));
+  expect(result.transactions[1].scripts[id]).toEqual(Buffer.from(script));
+  expect(result.transactions[0]).toMatchObject({invalidBefore: 100, invalidHereafter: 100000});
+});
+it.each([
+  ['preview', 0, 0],
+  ['preview', 86399, 0],
+  ['preview', 86400, 1],
+  ['mainnet', 4492799, 207],
+  ['mainnet', 4492800, 208],
+  ['mainnet', 4924800, 209],
+] as const)('derives %s slot %i as epoch %i', (network, slot, epoch) => {
+  expect(epochAtSlot(network, slot)).toBe(epoch);
 });

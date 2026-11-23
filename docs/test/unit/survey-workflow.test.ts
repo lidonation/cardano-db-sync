@@ -35,5 +35,10 @@ describe('B26 trusted scheduled workflow', () => {
     );
     expect(commit).not.toContain('git add .');
     expect(w.jobs.alert.uses).toBe('./.github/workflows/docs-ops-alert.yml');
+    const site = workflow('docs-site.yml');
+    for (const event of ['push', 'pull_request'])
+      expect((site.on[event] as {paths: string[]}).paths).toContain(
+        '.github/workflows/docs-survey-tally.yml',
+      );
   });
 });
