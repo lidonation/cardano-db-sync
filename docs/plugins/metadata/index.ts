@@ -42,7 +42,8 @@ export function gitLastmod(siteDir: string, sources: readonly string[]): string 
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
     }).trim();
-    return /^\d{4}-\d\d-\d\dT/.test(value) ? value : undefined;
+    // Newer git prints UTC as `Z` under %cI, older git as `+00:00`; emit one form either way.
+    return /^\d{4}-\d\d-\d\dT/.test(value) ? value.replace(/Z$/, '+00:00') : undefined;
   } catch {
     return undefined;
   }
