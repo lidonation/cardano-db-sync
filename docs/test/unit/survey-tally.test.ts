@@ -424,3 +424,67 @@ it.each([
       expect(proves([1, hash], transaction)).toBe(false);
   },
 );
+
+it('tallies distributions across credentials without conflating rating levels or numeric values', () => {
+  const {input, config} = fixture();
+  const second = tx(3, 1, [
+    response(
+      [
+        [1, 0, 1],
+        [4, 3, 4],
+        [
+          6,
+          5,
+          [
+            [0, 0],
+            [1, 1],
+          ],
+        ],
+      ],
+      bytes(3),
+    ),
+  ]);
+  second.requiredSigners = [hex(bytes(3))];
+  second.paymentKeys = [hex(bytes(3))];
+  input.transactions.push(second);
+  const s = tally(input, config).surveys[0];
+  expect(s.questions[3].options).toEqual([
+    {option: 0, label: '0', count: 1},
+    {option: 1, label: '4', count: 1},
+  ]);
+  expect(s.questions[5].distributions).toEqual([
+    {option: 0, value: 0, count: 1},
+    {option: 1, value: 1, count: 1},
+    {option: 1, value: 2, count: 1},
+  ]);
+  expect(s.questions[5].totals).toEqual(['0', '3']);
+});
+it.each([
+  'not json',
+  JSON.stringify({specVersion: 4}),
+  JSON.stringify({specVersion: 5, kind: 'cardano-survey-presentation', questions: []}),
+])('uses positional labels for invalid but hash-matching presentation: %s', (raw) => {
+  const {input, config} = fixture();
+  const bytes = utf8(raw);
+  const hash = blake2b(bytes, {dkLen: 32});
+  const definition = structuredClone(built.definition);
+  definition.set(8, ['https://example.org/p', hash]);
+  input.transactions[0].metadata = encodeMetadata(new Map([[17, [0, [definition]]]]));
+  input.presentations = {[hex(hash)]: bytes};
+  const s = tally(input, config).surveys[0];
+  expect(s.questions[0].label).toBe('Question 0');
+  expect(s.participation[0].count).toBe(1);
+});
+it('excludes pre-definition and wrong-version responses with explicit audit reasons', () => {
+  const {input, config} = fixture();
+  const early = tx(3, 1, [response()]);
+  early.slot = 50;
+  const wrong = response();
+  wrong.set(0, 99);
+  input.transactions.push(early, tx(4, 1, [wrong]));
+  expect(tally(input, config).audit.map((a) => a.reason)).toEqual([
+    'before-definition',
+    'valid',
+    'unsupported-version',
+  ]);
+});

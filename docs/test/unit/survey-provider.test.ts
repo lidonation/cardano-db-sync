@@ -309,3 +309,44 @@ it.each([
 ] as const)('derives %s slot %i as epoch %i', (network, slot, epoch) => {
   expect(epochAtSlot(network, slot)).toBe(epoch);
 });
+
+it.each([
+  ['tip height', '/blocks/20', 'height', 21, 'height mismatch'],
+  ['tip epoch', '/blocks/20', 'epoch', 3, 'epoch/slot mismatch'],
+  ['block slot', `/blocks/${h(11)}`, 'slot', 99, 'block/transaction mismatch'],
+  ['response epoch', `/blocks/${h(11)}`, 'epoch', 3, 'response epoch/slot mismatch'],
+  ['UTxO identity', `/txs/${h(1)}/utxos`, 'hash', h(99), 'UTxO mismatch'],
+  ['validity bound', `/txs/${h(1)}`, 'invalid_before', 'not-a-slot', 'validity bound'],
+  ['missing integer', '/blocks/latest', 'height', null, 'provider integer'],
+] as const)(
+  'rejects inconsistent %s evidence instead of publishing partial results',
+  async (_name, route, field, value, error) => {
+    const {data, http} = provider();
+    (data[route] as Record<string, unknown>)[field] = value;
+    await expect(acquire(config, 'secret-marker', [], http)).rejects.toThrow(error);
+  },
+);
+it('rejects malformed provider schemas and duplicate signers; excludes collateral/reference role evidence', async () => {
+  for (const value of [
+    null,
+    {},
+    [{witness_hash: 'invalid'}],
+    [{witness_hash: keyHex}, {witness_hash: keyHex}],
+  ]) {
+    const {data, http} = provider();
+    data[`/txs/${h(1)}/required_signers`] = value;
+    await expect(acquire(config, 'secret-marker', [], http)).rejects.toThrow();
+  }
+  const {data, http} = provider();
+  data[`/txs/${h(2)}/utxos`] = {
+    hash: h(2),
+    inputs: [
+      {address: address(), collateral: true},
+      {address: address(), reference: true},
+    ],
+    outputs: [],
+  };
+  expect((await acquire(config, 'secret-marker', [], http)).transactions[1].paymentKeys).toEqual(
+    [],
+  );
+});
