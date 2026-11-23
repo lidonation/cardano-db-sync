@@ -36,15 +36,17 @@ function providerAt(registry: unknown, id: string): Provider | undefined {
   // An unavailable extension getter must not hide other installed wallets.
   try {
     const provider = registry[id];
+    if (!record(provider)) return;
+    // Snapshot extension getters once, inside the boundary, including the method receiver.
+    const {apiVersion, name, enable} = provider;
     if (
-      record(provider) &&
-      typeof provider.apiVersion === 'string' &&
-      ['1', '1.0.0', '0.1.0'].includes(provider.apiVersion) &&
-      typeof provider.name === 'string' &&
-      provider.name.trim() !== '' &&
-      typeof provider.enable === 'function'
+      typeof apiVersion === 'string' &&
+      ['1', '1.0.0', '0.1.0'].includes(apiVersion) &&
+      typeof name === 'string' &&
+      name.trim() !== '' &&
+      typeof enable === 'function'
     ) {
-      return provider as unknown as Provider;
+      return {apiVersion, name, enable: (enable as Provider['enable']).bind(provider)};
     }
   } catch {
     return;
@@ -70,7 +72,12 @@ const API_METHODS = [
 ] as const;
 
 function surveyApi(value: unknown): value is Cip30SurveyApi {
-  return record(value) && API_METHODS.every((method) => typeof value[method] === 'function');
+  try {
+    return record(value) && API_METHODS.every((method) => typeof value[method] === 'function');
+  } catch {
+    // Extension bridges can expose throwing accessors, not just rejected method calls.
+    return false;
+  }
 }
 
 /** CIP-30 is an external boundary: hex is necessary, CBOR semantics belong to the builder. */
@@ -79,7 +86,8 @@ function hex(value: unknown): value is string {
 }
 
 function hexList(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every(hex);
+  // Array#every skips holes; the builder snapshot must contain only validated strings.
+  return Array.isArray(value) && Array.from(value).every(hex);
 }
 
 /** Normalize untrusted wallet errors; never render their info/HTML or log private wallet data. */

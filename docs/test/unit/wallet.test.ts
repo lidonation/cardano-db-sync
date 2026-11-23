@@ -90,6 +90,35 @@ describe('CIP-30 discovery and connection (R1)', () => {
     expect(discoverWallets(registry)).toEqual([{id: 'example', name: 'Example wallet'}]);
   });
 
+  it('keeps a validated provider snapshot when extension properties change', async () => {
+    const f = fixture();
+    let reads = 0;
+    Object.defineProperty(f.provider, 'name', {
+      get: () => {
+        if (++reads > 1) throw new Error('private extension details');
+        return 'Example wallet';
+      },
+    });
+    expect(discoverWallets(f.registry)).toEqual([{id: 'example', name: 'Example wallet'}]);
+    reads = 0;
+    expect((await connectWallet('example', 'preview', f.registry)).wallet.name).toBe(
+      'Example wallet',
+    );
+  });
+
+  it('normalizes exceptions while validating the enabled API', async () => {
+    const f = fixture();
+    Object.defineProperty(f.api, 'getUtxos', {
+      get: () => {
+        throw new Error('private extension details');
+      },
+    });
+    await expect(connectWallet('example', 'preview', f.registry)).rejects.toMatchObject({
+      code: 'WALLET_UNSUPPORTED',
+    });
+    expect(f.api.getNetworkId).not.toHaveBeenCalled();
+  });
+
   it('preserves method receivers for injection bridges', async () => {
     const f = fixture();
     f.provider.enable.mockImplementation(async function (this: typeof f.provider) {
@@ -320,6 +349,19 @@ describe('session lifecycle and failures (R3)', () => {
       if (stage !== 'hash') expect(f.api.submitTx).not.toHaveBeenCalled();
     },
   );
+
+  it.each(['utxos', 'rewards'] as const)('rejects sparse %s before construction', async (field) => {
+    const f = fixture();
+    const sparse = new Array<string>(1);
+    if (field === 'utxos') f.api.getUtxos.mockResolvedValue(sparse);
+    else f.api.getRewardAddresses.mockResolvedValue(sparse);
+    const session = await connectWallet('example', 'preview', f.registry);
+    await expect(session.signAndSubmit(f.transaction)).rejects.toMatchObject({
+      code: 'WALLET_INVALID_DATA',
+    });
+    expect(f.transaction.build).not.toHaveBeenCalled();
+    expect(f.api.signTx).not.toHaveBeenCalled();
+  });
 
   it('handles a null UTxO set without calling the builder or signer', async () => {
     const f = fixture();
