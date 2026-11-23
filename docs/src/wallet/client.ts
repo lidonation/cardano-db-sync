@@ -169,12 +169,14 @@ export async function connectWallet(
       busy = true;
       try {
         await guard();
+        assertActive();
         const [utxos, changeAddress, rewardAddresses] = await call(
           'WALLET_READ_FAILED',
           'Wallet data could not be read. Unlock your wallet and connect again.',
           () => Promise.all([api.getUtxos(), api.getChangeAddress(), api.getRewardAddresses()]),
         );
         await guard();
+        assertActive();
         if (utxos === null || (Array.isArray(utxos) && utxos.length === 0)) {
           throw new WalletError(
             'WALLET_NO_UTXOS',
@@ -206,6 +208,7 @@ export async function connectWallet(
             'The survey builder returned an invalid transaction. Nothing will be signed.',
           );
         await guard();
+        assertActive();
         const witnesses = await call(
           'WALLET_SIGNING_FAILED',
           'Your wallet did not sign the survey transaction. Connect again if you want to retry.',
@@ -217,6 +220,7 @@ export async function connectWallet(
             'Your wallet returned invalid witnesses. The transaction will not be submitted.',
           );
         await guard();
+        assertActive();
         const signed = await call(
           'WALLET_ASSEMBLY_FAILED',
           'The signed transaction could not be assembled. Nothing was submitted. Connect again to retry.',
@@ -228,6 +232,7 @@ export async function connectWallet(
             'The survey builder returned an invalid signed transaction. Nothing was submitted.',
           );
         await guard();
+        assertActive();
         const hash = await call(
           'WALLET_SUBMISSION_FAILED',
           'Your wallet could not confirm submission. Check its transaction history before trying again.',

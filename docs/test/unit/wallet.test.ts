@@ -238,6 +238,36 @@ describe('session lifecycle and failures (R3)', () => {
     },
   );
 
+  it.each(['read', 'build', 'sign', 'assemble', 'submit'] as const)(
+    'disconnect queued just after the guard still prevents %s',
+    async (stage) => {
+      const f = fixture();
+      const session = await connectWallet('example', 'preview', f.registry);
+      const boundary = {read: 2, build: 3, sign: 4, assemble: 5, submit: 6}[stage];
+      f.api.getNetworkId.mockImplementation(async () => {
+        if (f.api.getNetworkId.mock.calls.length === boundary) {
+          // Let the nested network-check promises settle, then disconnect before the caller's
+          // continuation. Cancellation must be checked in that continuation, not only the guard.
+          queueMicrotask(() =>
+            queueMicrotask(() => queueMicrotask(() => queueMicrotask(() => session.disconnect()))),
+          );
+        }
+        return 0;
+      });
+      await expect(session.signAndSubmit(f.transaction)).rejects.toMatchObject({
+        code: 'WALLET_DISCONNECTED',
+      });
+      const next = {
+        read: f.api.getUtxos,
+        build: f.transaction.build,
+        sign: f.api.signTx,
+        assemble: f.transaction.assemble,
+        submit: f.api.submitTx,
+      }[stage];
+      expect(next).not.toHaveBeenCalled();
+    },
+  );
+
   it('rejects overlap without invalidating the running transaction', async () => {
     const f = fixture();
     const session = await connectWallet('example', 'preview', f.registry);
