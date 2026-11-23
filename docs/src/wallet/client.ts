@@ -12,9 +12,11 @@ export class WalletError extends Error {
   }
 }
 
+// CIP-30 specifies `1`; deployed bridges also use semver strings. In particular the
+// Cardano JS SDK Cip30Wallet reports `0.1.0`. Methods are still validated after enable.
 interface Provider {
   name: string;
-  apiVersion: '1';
+  apiVersion: string;
   enable(): Promise<unknown>;
 }
 
@@ -36,7 +38,8 @@ function providerAt(registry: unknown, id: string): Provider | undefined {
     const provider = registry[id];
     if (
       record(provider) &&
-      provider.apiVersion === '1' &&
+      typeof provider.apiVersion === 'string' &&
+      ['1', '1.0.0', '0.1.0'].includes(provider.apiVersion) &&
       typeof provider.name === 'string' &&
       provider.name.trim() !== '' &&
       typeof provider.enable === 'function'

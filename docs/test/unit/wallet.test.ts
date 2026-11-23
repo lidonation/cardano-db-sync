@@ -44,6 +44,16 @@ describe('CIP-30 discovery and connection (R1)', () => {
     expect(discoverWallets(null)).toEqual([]);
   });
 
+  it.each(['1', '1.0.0', '0.1.0'])(
+    'discovers and enables a CIP-30 bridge reporting %s',
+    async (apiVersion) => {
+      const f = fixture();
+      const registry = {example: {...f.provider, apiVersion}};
+      expect(discoverWallets(registry)).toEqual([{id: 'example', name: 'Example wallet'}]);
+      expect((await connectWallet('example', 'preview', registry)).network).toBe('preview');
+    },
+  );
+
   it('uses browser injection at call time, not at import', async () => {
     const f = fixture();
     vi.stubGlobal('window', {cardano: f.registry});
