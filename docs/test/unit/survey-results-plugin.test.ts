@@ -115,3 +115,38 @@ it('builds only its profile network and rejects swapped/legacy public data', asy
     rmSync(root, {recursive: true, force: true});
   }
 });
+
+it('emits the named empty view for an inactive network, without guessing a missing profile', async () => {
+  const root = mkdtempSync(path.join(os.tmpdir(), 'survey-inactive-'));
+  try {
+    mkdirSync(path.join(root, 'src/survey-results'), {recursive: true});
+    mkdirSync(path.join(root, 'generated/survey-mainnet'), {recursive: true});
+    writeFileSync(path.join(root, 'src/survey-results/manifest.json'), JSON.stringify(manifest));
+    writeFileSync(path.join(root, 'src/survey-results/aggregate.json'), JSON.stringify(aggregate));
+    writeFileSync(
+      path.join(root, 'generated/survey-mainnet/aggregate.json'),
+      JSON.stringify({network: 'mainnet', surveys: []}),
+    );
+    const output: Record<string, string> = {};
+    const args = {
+      content: undefined,
+      actions: {
+        createData: async (name: string, value: string) => {
+          output[name] = value;
+          return '';
+        },
+      } as never,
+    };
+    await plugin({
+      siteDir: root,
+      siteConfig: {customFields: {profile: {network: 'mainnet'}}},
+    } as unknown as LoadContext).contentLoaded!(args);
+    expect(output['view.js']).toContain('Empty.tsx');
+    expect(JSON.parse(output['resolved.json']).freeText).toEqual([]);
+    await expect(plugin({siteDir: root} as LoadContext).contentLoaded!(args)).rejects.toThrow(
+      'explicit profile network',
+    );
+  } finally {
+    rmSync(root, {recursive: true, force: true});
+  }
+});
