@@ -17,14 +17,32 @@ export function tokenize(text: string): string[] {
   const whole = text.normalize('NFKC').match(/[\p{L}\p{N}_]+/gu) ?? [];
   return [...new Set(whole.flatMap((word) => [normalize(word), ...parts(word)]))];
 }
-function rank(record: SearchEntity, query: string, terms: string[]): number {
+function rank(record: SearchEntity, query: string, terms: string[], relevance: number) {
   const names = [record.identifier, ...record.aliases].filter(Boolean);
-  if (names.some((name) => normalize(name) === query)) return 0;
-  const matches = (name: string) =>
-    terms.every((term) => tokenize(name).some((token) => token.startsWith(term)));
-  if (names.some(matches)) return 1;
-  if (matches(record.title)) return 2;
-  return 3;
+  // Boundary-equivalent CamelCase/snake_case names are exact, not noisy prefix hits.
+  const splitNames = names.map(parts);
+  if (
+    names.some((name) => normalize(name) === query) ||
+    splitNames.some((tokens) => tokens.join(' ') === terms.join(' '))
+  ) {
+    return {tier: 0, score: relevance};
+  }
+  const gaps = splitNames
+    .filter(
+      (tokens) =>
+        terms.length <= tokens.length && terms.every((term, i) => tokens[i].startsWith(term)),
+    )
+    .map((tokens) => tokens.join('').length - terms.join('').length);
+  if (gaps.length) {
+    // For identifier prefixes, shortest completion wins. Repeated qualified aliases must not
+    // boost tx_out_index above the tx_out head; full-text frequency is not a prefix metric.
+    return {tier: 1, score: 1 / (1 + Math.min(...gaps))};
+  }
+  const titleMatch = terms.every((term) =>
+    tokenize(record.title).some((token) => token.startsWith(term)),
+  );
+  if (titleMatch) return {tier: 2, score: relevance};
+  return {tier: 3, score: relevance};
 }
 const options = {
   fields: ['identifier', 'aliases', 'title', 'body'],
@@ -47,7 +65,7 @@ function compare(a: string, b: string): number {
   return 0;
 }
 
-/** Explicit lexical tiers dominate MiniSearch's within-tier relevance score. */
+/** Lexical tiers dominate relevance; identifier-prefix scores measure completion distance. */
 export function searchEntities(
   index: MiniSearch<SearchEntity>,
   line: string,
@@ -68,7 +86,7 @@ export function searchEntities(
         })
         .map((result) => {
           const record = result as unknown as SearchEntity;
-          const tier = rank(record, normalized, terms);
+          const ranking = rank(record, normalized, terms, result.score);
           return {
             ...structuredClone({
               id: String(result.id),
@@ -81,8 +99,7 @@ export function searchEntities(
               facets: record.facets,
             }),
             line,
-            score: result.score,
-            tier,
+            ...ranking,
           };
         })
         .sort(

@@ -70,6 +70,16 @@ describe('entity search (SRCH-1, SRCH-2, SRCH-5)', () => {
     expect(search('pool_offline_data')[0].hits[0].id).toBe('off_chain_pool_data');
     expect(search('tx_out missing').flatMap((g) => g.hits)).toEqual([]);
   });
+  it('ranks the canonical head above longer columns with qualified aliases in the real corpus pattern', () => {
+    const index = createEntityIndex([
+      entity('tx_out'),
+      entity('tx_out_index', {kind: 'column', aliases: ['tx_in.tx_out_index']}),
+      entity('tx_out_id', {kind: 'column', aliases: ['ma_tx_out.tx_out_id']}),
+    ]);
+    for (const query of ['tx_out', 'txOut', 'tx_o']) {
+      expect(searchEntities(index, 'current', query)[0].hits[0].id, query).toBe('tx_out');
+    }
+  });
   it('caps each group explicitly and supports show-all; rejects invalid caps', () => {
     expect(search('tx', 1)[0]).toMatchObject({total: 3, hasMore: true, hits: [expect.anything()]});
     expect(search('tx', Infinity)[0]).toMatchObject({total: 3, hasMore: false});

@@ -22,8 +22,10 @@ states, labels, focus and rendering; this change does not add a modal or alter P
 MiniSearch 7.2.0 indexes whole identifiers and underscore/CamelCase parts without stemming.
 Queries split at identifier boundaries so `txOut`, `tx_out`, `tx out` and partial prefixes can
 reach the same entity. Exact identifiers/aliases, identifier prefixes, titles, then descriptions
-are separate ranking tiers; MiniSearch scores only order within a tier. Equal scores are resolved
-by kind, core variant, then stable ID. Widening preserves active-line precedence on equal ranks.
+are separate ranking tiers. Boundary-equivalent snake_case/CamelCase names count as exact.
+Prefix scores prefer the shortest ordered identifier completion, so repeated qualified column aliases
+cannot lift a longer column above its table head. Other tiers use MiniSearch relevance. Equal scores
+are resolved by kind, core variant, then stable ID. Widening preserves active-line precedence on equal ranks.
 Full guide bodies remain Pagefind's responsibility: Tier 1 carries descriptions, not duplicate prose.
 
 ## Evidence boundaries
