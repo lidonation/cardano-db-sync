@@ -1,7 +1,7 @@
 import type {Metadatum} from './types';
 
 const UTF8 = new TextEncoder();
-const UTF8_DECODER = new TextDecoder('utf-8', {fatal: true});
+const UTF8_DECODER = new TextDecoder('utf-8', {fatal: true, ignoreBOM: true});
 const MAX_BYTES = 1_048_576;
 const MAX_UINT = (1n << 64n) - 1n;
 
@@ -48,7 +48,10 @@ export function encodeMetadata(value: Metadatum): Uint8Array {
   const header = (major: number, n: bigint) => {
     if (n < 0n || n > MAX_UINT) throw new Error('Integer outside ledger range');
     if (n < 24n) return push((major << 5) | Number(n));
-    const size = n <= 255n ? 1 : n <= 65535n ? 2 : n <= 4294967295n ? 4 : 8;
+    let size: 1 | 2 | 4 | 8 = 8;
+    if (n <= 255n) size = 1;
+    else if (n <= 65535n) size = 2;
+    else if (n <= 4294967295n) size = 4;
     push((major << 5) | ({1: 24, 2: 25, 4: 26, 8: 27} as const)[size]);
     for (let i = size - 1; i >= 0; i--) push(Number((n >> BigInt(i * 8)) & 255n));
   };
