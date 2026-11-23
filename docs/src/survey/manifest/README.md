@@ -61,12 +61,12 @@ these modules are browser-free and not imported into the wallet/transaction path
   intermediate stops traversal conservatively; it does not manufacture a merge through it.
 - `validateEvolution(before, after)` rejects removal, reordering and amendments. Unit CI compares
   against `SURVEY_MANIFEST_BASE_REF` (exact PR base / replaced push commit). Locally run
-  `SURVEY_MANIFEST_BASE_REF=origin/release/community-site npm test -- --maxWorkers=6`.
+  `SURVEY_MANIFEST_BASE_REF=origin/release/community-site npm test -- --maxWorkers=2`.
 
 The site build validates this registry before emitting dashboard data. The older B44-f option-level
 manifest is now **only** `survey-results/__fixtures__/sample-manifest.json`, used for component
-regressions, never as production authority. The current dashboard artifact is single-survey;
-`publicationManifest` accepts canonical same-network standalone results, or the empty unpublished
+regressions, never as production authority. The current dashboard artifact is single-core;
+`publicationManifest` accepts canonical same-network standalone core results, or the empty unpublished
 sentinel. It fails closed on cross-survey subsumption data until B26 supplies a registry-resolved,
 credential-deduplicated artifact and its renderer consumes these helpers. Wallet/composer UI (B32),
 multi-survey tally/renderer integration (B26/B44), actual pilot publication (B28) and key custody
@@ -74,3 +74,9 @@ multi-survey tally/renderer integration (B26/B44), actual pilot publication (B28
 
 Tests: `survey-registry*.test.ts`, `survey-publication.test.ts`, and `survey-results-plugin.test.ts`.
 The JSON schema is draft-07; semantic validation adds graph/reference/index/lifetime checks.
+
+Run Docusaurus builds, fixture builds and dev-server browser suites **sequentially** within a
+checkout: they share `.docusaurus`, even when output directories differ. Concurrent runs can
+contaminate profile/base-path output. On a busy shared computer, run the full unit suite with two
+workers; keep existing timeouts and coverage gates unchanged. Browser configurations retain their
+existing worker bounds (the component suite may use six).
