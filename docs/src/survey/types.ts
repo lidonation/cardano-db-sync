@@ -43,6 +43,7 @@ export interface ResponseInput {
   definition: Definition;
   currentEpoch: number;
   answers: Answer[];
+  rationale?: Anchor;
 }
 export type Response = Map<Metadatum, Metadatum>;
 /** Full transaction-metadata map, not auxiliary data or a signed transaction. */
