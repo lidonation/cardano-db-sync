@@ -1,7 +1,7 @@
 import type {CardanoNetwork} from '../../config/profiles';
 
 /**
- * ENV-2 — wallet network mismatch is a hard block (stub; B25 wires it into the wallet flow).
+ * ENV-2 — wallet network mismatch is a hard block (used by the guarded CIP-30 session).
  *
  * CIP-30 `getNetworkId()` returns 1 for mainnet and 0 for every testnet, so a wallet on preprod
  * passes a preview build here. That is as far as CIP-30 can see; it still stops the case that
@@ -44,7 +44,7 @@ export class WalletNetworkMismatchError extends Error {
     super(
       `Your wallet is connected to ${describeNetworkId(actualId)}, but this site uses the ` +
         `Cardano ${expected} network. Switch your wallet to ${expected} and connect again. ` +
-        'Nothing was signed or submitted.',
+        'Transaction processing is blocked.',
     );
     this.name = 'WalletNetworkMismatchError';
   }

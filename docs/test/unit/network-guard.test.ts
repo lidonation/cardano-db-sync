@@ -31,7 +31,7 @@ describe('ENV-2: wallet network guard', () => {
     });
     expect((error as Error).message).toBe(
       'Your wallet is connected to Cardano mainnet, but this site uses the Cardano preview ' +
-        'network. Switch your wallet to preview and connect again. Nothing was signed or submitted.',
+        'network. Switch your wallet to preview and connect again. Transaction processing is blocked.',
     );
   });
 
