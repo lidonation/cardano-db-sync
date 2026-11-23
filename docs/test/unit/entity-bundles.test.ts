@@ -127,6 +127,10 @@ it('rejects nonexistent config declarations and indexes only explicitly document
     (r) => r.kind === 'cli',
   );
   expect(found.map((r) => r.identifier)).toEqual(['--config']);
+  cliDocs[0].docs[0].sourceText = '--config-file only';
+  expect(buildRecords(cliDocs, input, locks, '/base/').current.some((r) => r.kind === 'cli')).toBe(
+    false,
+  );
 });
 
 it('runs the real build hook without leaking the entity model to global browser data', async () => {
