@@ -65,6 +65,7 @@ describe('entity search (SRCH-1, SRCH-2, SRCH-5)', () => {
   it('finds identifier heads, aliases, multiword and CamelCase queries', () => {
     expect(search('tx_o')[0].hits[0].id).toBe('tx_out');
     expect(search('tx out')[0].hits[0].id).toBe('tx_out');
+    expect(search('txOut')[0].hits[0].id).toBe('tx_out');
     expect(search('network n')[2].hits[0].id).toBe('NetworkName');
     expect(search('pool_offline_data')[0].hits[0].id).toBe('off_chain_pool_data');
     expect(search('tx_out missing').flatMap((g) => g.hits)).toEqual([]);

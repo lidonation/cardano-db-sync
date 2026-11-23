@@ -1,3 +1,4 @@
+import entitySearch from './plugins/entity-search';
 import schemaReferences from './plugins/schema-explorer/references.mjs';
 import schemaExplorer from './plugins/schema-explorer';
 import chainData from './plugins/chain-data';
@@ -121,6 +122,7 @@ const config: Config = {
   // THM-1 (B30): the palette bootstrap restoring data-dbs-palette before paint.
   // PERF-1: the stylesheet keeps only rules the build can match.
   plugins: [
+    entitySearch,
     chainData,
     metadataPlugin,
     schemaExplorer,

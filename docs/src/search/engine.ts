@@ -2,23 +2,29 @@ import MiniSearch from 'minisearch';
 import type {EntityHit, EntityResults, SearchEntity} from './entities';
 
 const normalize = (text: string): string => text.normalize('NFKC').toLowerCase().trim();
-/** Whole identifiers plus underscore/CamelCase parts. No locale-dependent case folding/stemmer. */
-export function tokenize(text: string | string[]): string[] {
-  if (Array.isArray(text)) text = text.join(' ');
+/** Split only at identifier boundaries, never stem prune/pruned or translate names. */
+function parts(text: string): string[] {
+  return text
+    .normalize('NFKC')
+    .replace(/(\p{Lu})(\p{Lu}\p{Ll})/gu, '$1 $2')
+    .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, '$1 $2')
+    .split(/[^\p{L}\p{N}]+/u)
+    .filter(Boolean)
+    .map(normalize);
+}
+/** Index both whole and split forms; query parts also bridge txOut and tx_out. */
+export function tokenize(text: string): string[] {
   const whole = text.normalize('NFKC').match(/[\p{L}\p{N}_]+/gu) ?? [];
-  return [
-    ...new Set(
-      whole.flatMap((word) => [
-        normalize(word),
-        ...word
-          .replace(/(\p{Lu})(\p{Lu}\p{Ll})/gu, '$1 $2')
-          .replace(/([\p{Ll}\p{N}])(\p{Lu})/gu, '$1 $2')
-          .split(/[_\s]+/u)
-          .filter(Boolean)
-          .map(normalize),
-      ]),
-    ),
-  ];
+  return [...new Set(whole.flatMap((word) => [normalize(word), ...parts(word)]))];
+}
+function rank(record: SearchEntity, query: string, terms: string[]): number {
+  const names = [record.identifier, ...record.aliases].filter(Boolean);
+  if (names.some((name) => normalize(name) === query)) return 0;
+  const matches = (name: string) =>
+    terms.every((term) => tokenize(name).some((token) => token.startsWith(term)));
+  if (names.some(matches)) return 1;
+  if (matches(record.title)) return 2;
+  return 3;
 }
 const options = {
   fields: ['identifier', 'aliases', 'title', 'body'],
@@ -46,10 +52,11 @@ export function searchEntities(
 ): EntityResults[] {
   if (cap !== Infinity && (!Number.isInteger(cap) || cap < 1)) throw new Error('Invalid group cap');
   const normalized = normalize(query),
-    terms = tokenize(query);
+    terms = parts(query);
   const hits: EntityHit[] = terms.length
     ? index
         .search(query, {
+          tokenize: parts,
           prefix: true,
           fuzzy: false,
           combineWith: 'AND',
@@ -57,18 +64,7 @@ export function searchEntities(
         })
         .map((result) => {
           const record = result as unknown as SearchEntity;
-          const identifiers = [record.identifier, ...record.aliases].filter(Boolean);
-          const tier = identifiers.some((name) => normalize(name) === normalized)
-            ? 0
-            : identifiers.some((name) =>
-                  terms.every((term) => tokenize(name).some((token) => token.startsWith(term))),
-                )
-              ? 1
-              : terms.every((term) =>
-                    tokenize(record.title).some((token) => token.startsWith(term)),
-                  )
-                ? 2
-                : 3;
+          const tier = rank(record, normalized, terms);
           return {
             ...structuredClone({
               id: String(result.id),
@@ -85,10 +81,24 @@ export function searchEntities(
             tier,
           };
         })
-        .sort((a, b) => a.tier - b.tier || b.score - a.score || compare(a.id, b.id))
+        .sort(
+          (a, b) =>
+            a.tier - b.tier ||
+            b.score - a.score ||
+            Number(b.kind === 'table') - Number(a.kind === 'table') ||
+            Number(b.facets.variants?.includes('core') ?? false) -
+              Number(a.facets.variants?.includes('core') ?? false) ||
+            compare(a.id, b.id),
+        )
     : [];
+  return groupEntityHits(hits, cap);
+}
+/** Stable sort retains active-line precedence on equal ranks when widening. */
+export function groupEntityHits(hits: EntityHit[], cap = 5): EntityResults[] {
+  if (cap !== Infinity && (!Number.isInteger(cap) || cap < 1)) throw new Error('Invalid group cap');
+  const sorted = hits.slice().sort((a, b) => a.tier - b.tier || b.score - a.score);
   return (['tables', 'guides', 'docs'] as const).map((group) => {
-    const matches = hits.filter((hit) => hit.group === group);
+    const matches = sorted.filter((hit) => hit.group === group);
     return {
       group,
       hits: matches.slice(0, cap),

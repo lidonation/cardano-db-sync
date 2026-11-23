@@ -579,3 +579,42 @@ describe('generated metadata on every shipped page (B21)', () => {
     }
   });
 });
+
+describe('entity bundles are published per profile, locale and line (SRCH-1..5)', () => {
+  for (const profile of ['dev', 'prod'] as const) {
+    for (const locale of LOCALES) {
+      it(`resolves the real hashed entity payload and destinations for ${profile} ${locale}`, async () => {
+        const {createHash} = await import('node:crypto');
+        const {gzipSync} = await import('node:zlib');
+        const {loadEntityIndex, searchEntities} = await import('../../src/search/engine');
+        const prefix = locale === DEFAULT_LOCALE ? '' : `${locale}/`;
+        const directory = path.join(OUT[profile], prefix);
+        const base = PROFILES[profile].baseUrl + prefix;
+        const manifest = JSON.parse(await fs.readFile(path.join(directory, 'entities/manifest.json'), 'utf8'));
+        expect(manifest).toMatchObject({schemaVersion: 1, locale});
+        expect(Object.keys(manifest.bundles)).toEqual(['current']);
+        const file = manifest.bundles.current;
+        const bytes = await fs.readFile(path.join(directory, file));
+        const digest = createHash('sha256').update(bytes).digest('hex');
+        expect(file).toBe(`entities/current.${digest}.json`);
+        const bundle = JSON.parse(bytes.toString());
+        expect(bundle).toMatchObject({schemaVersion: 1, locale, line: 'current'});
+        const engine = loadEntityIndex(JSON.stringify(bundle.index));
+        for (const query of ['tx_out', 'txOut', 'tx_o']) {
+          expect(searchEntities(engine, 'current', query)[0].hits[0].url).toBe(`${base}schema/tx_out`);
+        }
+        expect(searchEntities(engine, 'current', 'pool_offline_data')[0].hits[0].identifier).toBe('off_chain_pool_data');
+        // Every stored record targets an actual static page/anchor in its own locale/profile.
+        const pages = new Map<string, string>();
+        for (const record of Object.values(bundle.index.storedFields) as Array<{url: string}>) {
+          expect(record.url.startsWith(base)).toBe(true);
+          const [route, anchor] = record.url.slice(base.length).split('#');
+          if (!pages.has(route)) pages.set(route, await fs.readFile(path.join(directory, route, 'index.html'), 'utf8'));
+          if (anchor) expect(pages.get(route)).toContain(`id="${anchor}"`);
+        }
+        // Measurement only: the spec's 25–40 KiB figure is an estimate, not a new gate.
+        console.info(`entity payload ${profile}/${locale}: ${engine.documentCount} records, ${gzipSync(bytes).length} gzip bytes`);
+      });
+    }
+  }
+});
