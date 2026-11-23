@@ -264,6 +264,8 @@ jobs:
         run: npm run test:landing:built
         env:
           DBS_LANDING_BUILT_BUILD_ROOT: .cache/browser-fixtures
+      - name: Wallet adapter under built CSP, simulated bridge (ENV-2, not SEC-7)
+        run: npm run test:wallet:built
       - name: Global accessibility chrome (A11Y-2..5, A11Y-12, A11Y-14/15/17/21, FLOOR-4/7)
         run: npm run test:chrome
       - if: always()
