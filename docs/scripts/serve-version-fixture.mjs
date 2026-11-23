@@ -98,31 +98,6 @@ try {
     const prefix = locale === 'en' ? '' : `${locale}/`;
     const read = async (route) =>
       load(await readFile(path.join(site, 'build/prod', prefix, route, 'index.html'), 'utf8'));
-    // B19: use the actual loaded-version set, not every historical tag from schema metadata.
-    const entitiesDir = path.join(site, 'build/prod', prefix);
-    const entityManifest = JSON.parse(
-      await readFile(path.join(entitiesDir, 'entities/manifest.json'), 'utf8'),
-    );
-    assert.deepEqual(Object.keys(entityManifest.bundles).sort(), [
-      '13.3.0.0',
-      '13.6.0.5',
-      'current',
-    ]);
-    for (const [line, file] of Object.entries(entityManifest.bundles)) {
-      const payload = JSON.parse(await readFile(path.join(entitiesDir, file), 'utf8'));
-      assert.equal(payload.line, line);
-      assert.equal(payload.locale, locale);
-      const records = Object.values(payload.index.storedFields);
-      if (line !== 'current')
-        assert.ok(records.every((record) => ['guide', 'doc'].includes(record.kind)));
-      assert.ok(
-        records.some((record) =>
-          record.url.endsWith(
-            `docs/${line === 'current' ? 'next/' : line === '13.6.0.5' ? '' : `${line}/`}intro`,
-          ),
-        ),
-      );
-    }
     const current = await read('docs/next/intro');
     const expected = origin + '/' + prefix + 'docs/next/intro';
     assert.equal(current('link[rel="canonical"]').attr('href'), expected);

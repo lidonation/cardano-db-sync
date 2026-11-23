@@ -146,3 +146,23 @@ test('retained release and unreleased docs remain self-canonical during navigati
     entity.map((text) => JSON.parse(text)).find((value) => value['@type'] === 'TechArticle')?.url,
   ).toBe(released);
 });
+
+test('entity bundles follow the loaded versions and omit retired lines/current schema from releases', async ({
+  request,
+}) => {
+  const response = await request.get(`${VERSION_HOME}entities/manifest.json`);
+  expect(response.ok()).toBe(true);
+  const manifest = await response.json();
+  expect(Object.keys(manifest.bundles).sort()).toEqual(['13.6.0.5', 'current']);
+  for (const [line, file] of Object.entries(manifest.bundles)) {
+    const response = await request.get(`${VERSION_HOME}${file}`);
+    expect(response.ok()).toBe(true);
+    const payload = await response.json();
+    expect(payload).toMatchObject({schemaVersion: 1, line, locale: 'en'});
+    const records = Object.values(payload.index.storedFields) as Array<{kind: string; url: string}>;
+    if (line !== 'current')
+      expect(records.every((record) => ['guide', 'doc'].includes(record.kind))).toBe(true);
+    const introPath = line === 'current' ? 'docs/next/intro' : 'docs/intro';
+    expect(records.some((record) => record.url.endsWith(introPath))).toBe(true);
+  }
+});
