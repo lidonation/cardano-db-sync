@@ -82,3 +82,9 @@ Ryan Wiley and Matthieu Pizenberg. The fixture records the exact source commit.
 and lists it in `config/review-gated-dependencies.json`. No CBOR, wallet or transaction SDK is added.
 **SEC-6 requires a human source/dependency review before merge**, including this handwritten CBOR
 codec. Automated tests are not that review. This change does not grant approval or merge itself.
+
+## Lifecycle registry (B27)
+
+Canonical references and question-level evolution live in [the reviewed registry](manifest/README.md).
+The payload examples are not registered definitions. Registration never changes previously anchored
+bytes, extends the core's epoch-2000 horizon, or transfers an old definition's ownership.

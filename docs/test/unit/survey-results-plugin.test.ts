@@ -2,21 +2,42 @@ import {mkdtempSync, mkdirSync, writeFileSync, rmSync} from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import type {LoadContext} from '@docusaurus/types';
-import {describe, expect, it} from 'vitest';
+import {afterEach, describe, expect, it, vi} from 'vitest';
+afterEach(() => vi.unstubAllEnvs());
 import plugin from '../../plugins/survey-results';
 import aggregate from '../../src/survey-results/aggregate.json';
-import manifest from '../../src/survey-results/manifest.json';
+import registry from '../../src/survey/manifest/registry.json';
 
 describe('SUR-7 generation boundary', () => {
   it('never emits pending text into webpack data', async () => {
+    vi.stubEnv('DOCS_PROFILE', 'dev');
     const root = mkdtempSync(path.join(os.tmpdir(), 'survey-review-'));
     try {
       mkdirSync(path.join(root, 'src/survey-results'), {recursive: true});
-      writeFileSync(path.join(root, 'src/survey-results/manifest.json'), JSON.stringify(manifest));
+      const ref = '01'.repeat(32) + '#0';
+      mkdirSync(path.join(root, 'src/survey/manifest'), {recursive: true});
+      writeFileSync(
+        path.join(root, 'src/survey/manifest/registry.json'),
+        JSON.stringify({
+          ...registry,
+          current: {preview: ref, mainnet: ref},
+          surveys: ['preview', 'mainnet'].map((network) => ({
+            surveyRef: ref,
+            network,
+            kind: 'core',
+            owner: {type: 'script', hash: 'ab'.repeat(28)},
+            definedEpoch: 100,
+            endEpoch: 2000,
+            questions: [{}],
+            subsumes: [],
+          })),
+        }),
+      );
       writeFileSync(
         path.join(root, 'src/survey-results/aggregate.json'),
         JSON.stringify({
           ...aggregate,
+          surveyRef: ref,
           freeText: [
             {id: 'a', text: 'Approved', moderated: true},
             {id: 'b', text: 'Pending-secret-marker', moderated: false},

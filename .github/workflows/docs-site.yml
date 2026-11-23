@@ -172,6 +172,8 @@ jobs:
         run: npm run check:versions
       - name: Unit tests with coverage thresholds
         run: npm test
+        env:
+          SURVEY_MANIFEST_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before || github.sha }}
       # B29: the component inventory in a browser — served by the development server only, audited
       # with axe in four palettes at three widths, every manifest state rendered, keyboard behaviour.
       # The Chromium build is the one @playwright/test pins, not the runner's browser.

@@ -287,3 +287,40 @@ describe('forward-only declarations and derived historical resolution (R4)', () 
     ).toThrow();
   });
 });
+
+it('does not absorb historical answers into a cancelled survey (CIP cancellation)', () => {
+  const value = evolved();
+  const cancelled = readRegistry(
+    registry([value.surveys[0], {...value.surveys[1], cancelledEpoch: 105}]),
+  );
+  expect(resolveHistoricalOption(cancelled, 'preview', {surveyRef: a, question: 0}, 0)).toEqual({
+    target: {surveyRef: a, question: 0},
+    option: 0,
+    editorialMerge: false,
+    closed: false,
+  });
+});
+it('resolves bounded generated chains and equivalent non-option questions', () => {
+  for (let length = 2; length <= 32; length += 3) {
+    const surveys = [record()];
+    for (let n = 2; n <= length; n++)
+      surveys.push(
+        record(ref(n), {
+          definedEpoch: 100 + n,
+          evolvesFrom: ref(n - 1),
+          subsumes: [{question: 1, older: {surveyRef: ref(n - 1), question: 1}, kind: 'replaces'}],
+        }),
+      );
+    expect(
+      resolveHistoricalOption(readRegistry(registry(surveys)), 'preview', {
+        surveyRef: a,
+        question: 1,
+      }),
+    ).toEqual({
+      target: {surveyRef: ref(length), question: 1},
+      option: null,
+      editorialMerge: true,
+      closed: false,
+    });
+  }
+});

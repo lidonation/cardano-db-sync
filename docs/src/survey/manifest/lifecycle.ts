@@ -182,8 +182,14 @@ export function resolveHistoricalOption(
   let target = ref,
     resolvedOption = option ?? null,
     editorialMerge = false;
+  const cancelled = new Set(
+    registry.surveys
+      .filter((s) => s.network === network && s.cancelledEpoch !== undefined)
+      .map((s) => s.surveyRef),
+  );
   // readRegistry establishes a DAG with one successor per older question.
   for (let edge = index.get(questionKey(target)); edge; edge = index.get(questionKey(target))) {
+    if (cancelled.has(edge.newer.surveyRef)) break; // Cancelled surveys must never supply tally answers.
     target = edge.newer;
     if (edge.kind === 'supersedes')
       return {target, option: null, editorialMerge: false, closed: true};

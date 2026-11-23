@@ -5,7 +5,7 @@ import {describe, expect, it} from 'vitest';
 
 import aggregateJson from '../../src/survey-results/aggregate.json';
 import fixtureJson from '../../src/survey-results/__fixtures__/sample-aggregate.json';
-import manifestJson from '../../src/survey-results/manifest.json';
+import manifestJson from '../../src/survey-results/__fixtures__/sample-manifest.json';
 import {
   isPreTally,
   moderatedFreeText,
