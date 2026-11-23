@@ -62,8 +62,8 @@ must publish their own returned bytes and pass B28's preview pilot before mainne
 `surveyLabelId(questionIndex, optionIndex?)` is the translation interlingua; changing locale never
 changes question or option order or sends translated strings on chain.
 
-The free-text schema source is `free-text-schema.json`. After editing it, run
-`node scripts/survey-schema.mjs` from `docs/`. This writes canonical `JSON.stringify(source)` plus a
+The sources are `free-text-schema.json` and `example-presentation.json`. After editing either, run
+`node scripts/survey-schema.mjs` from `docs/`. This writes both static files as canonical `JSON.stringify(source)` plus a
 newline; tests require byte identity with the published file. Never change an existing method's
 semantics after a real definition anchors it; create a new method version instead.
 

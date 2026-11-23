@@ -12,7 +12,7 @@ import {surveyLabelId} from '../../src/survey/labelIds';
 import presentation from '../../static/survey/example-presentation.json';
 import type {Presentation} from '../../src/survey/types';
 
-/** Explicit opt-in fixture refresh, independently validated by test/fixtures/survey/validate.rb. */
+/** Explicit opt-in fixture refresh, independently validated by scripts/check-survey-cddl.mjs. */
 describe('v5 conformance vectors and index interlingua', () => {
   it('matches pinned CDDL-validated definition / response bytes and the hosted English profile', () => {
     const input = {
@@ -32,6 +32,9 @@ describe('v5 conformance vectors and index interlingua', () => {
       ],
     };
     const {definition, presentationBytes} = buildDefinition(input);
+    expect(presentationBytes).toEqual(
+      new Uint8Array(readFileSync('static/survey/example-presentation.json')),
+    );
     const definitionBatch = batchDefinitions([definition], {
       maxTxBytes: 16384,
       reservedTxBytes: 2048,
