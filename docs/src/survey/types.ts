@@ -3,7 +3,7 @@ export type Metadatum =
   number | bigint | string | Uint8Array | Metadatum[] | Map<Metadatum, Metadatum>;
 export type Credential = [0 | 1, Uint8Array];
 export type Anchor = [string | string[], Uint8Array];
-export type NumericConstraints = [number, number, number?];
+export type NumericConstraints = [number, number] | [number, number, number];
 
 /** Index is the position in the definition array; options and levels are also positional. */
 export type Question =
