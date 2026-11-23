@@ -1,0 +1,7 @@
+{
+  "$schema": "./schema.json",
+  "$comment": "Reviewed canonical references only. No definition has been registered yet; example and pilot refs must not be invented here.",
+  "schemaVersion": 1,
+  "current": {"preview": null, "mainnet": null},
+  "surveys": []
+}
