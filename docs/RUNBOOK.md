@@ -309,3 +309,11 @@ A development server pins the snapshot at startup; restart after committing or f
 
 The snapshot date is the latest source date (HEAD or a retained event), not the wall clock.
 Repeating a build against unchanged history/tags/origin produces byte-identical feed data and XML.
+
+## Survey tally
+
+The read-only [B26 tally runbook](scripts/survey/README.md) covers per-network canonical reference
+activation, exact-answer moderation, artifact semantics, provider bounds and recovery. The
+**Survey tally** workflow is default-branch only, like chain refresh. Do not schedule feature
+branch code with provider credentials. Empty configuration deliberately emits inactive aggregates;
+B27/B28 must supply reviewed references and complete the preview pilot before activation.

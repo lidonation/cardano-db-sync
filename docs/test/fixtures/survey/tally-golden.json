@@ -1,0 +1,261 @@
+{
+  "network": "preview",
+  "generatedAt": "2026-11-23T00:00:00Z",
+  "tip": {
+    "epoch": 5,
+    "slot": 10000,
+    "block": "5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a"
+  },
+  "surveys": [
+    {
+      "network": "preview",
+      "surveyRef": "0101010101010101010101010101010101010101010101010101010101010101#0",
+      "endEpoch": 2000,
+      "interim": true,
+      "tallyBasis": "response-time-only",
+      "snapshotBasis": "response-time-only",
+      "state": "interim",
+      "participation": [
+        {
+          "role": 4,
+          "count": 1
+        }
+      ],
+      "questions": [
+        {
+          "question": 0,
+          "label": "Question 0",
+          "method": 1,
+          "abstain": 0,
+          "options": [
+            {
+              "option": 0,
+              "label": "Option 0",
+              "count": 1
+            },
+            {
+              "option": 1,
+              "label": "Option 1",
+              "count": 0
+            }
+          ],
+          "history": [
+            {
+              "epoch": 2,
+              "counts": [
+                1,
+                0
+              ]
+            }
+          ]
+        },
+        {
+          "question": 1,
+          "label": "Question 1",
+          "method": 2,
+          "abstain": 0,
+          "options": [
+            {
+              "option": 0,
+              "label": "Option 0",
+              "count": 1
+            },
+            {
+              "option": 1,
+              "label": "Option 1",
+              "count": 0
+            },
+            {
+              "option": 2,
+              "label": "Option 2",
+              "count": 1
+            }
+          ],
+          "history": [
+            {
+              "epoch": 2,
+              "counts": [
+                1,
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "question": 2,
+          "label": "Question 2",
+          "method": 3,
+          "abstain": 0,
+          "options": [
+            {
+              "option": 0,
+              "label": "Option 0",
+              "count": 0
+            },
+            {
+              "option": 1,
+              "label": "Option 1",
+              "count": 0
+            },
+            {
+              "option": 2,
+              "label": "Option 2",
+              "count": 1
+            }
+          ],
+          "pairwise": [
+            [
+              0,
+              1,
+              0
+            ],
+            [
+              0,
+              0,
+              0
+            ],
+            [
+              1,
+              1,
+              0
+            ]
+          ],
+          "history": [
+            {
+              "epoch": 2,
+              "counts": [
+                0,
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "question": 3,
+          "label": "Question 3",
+          "method": 4,
+          "abstain": 0,
+          "options": [
+            {
+              "option": 0,
+              "label": "0",
+              "count": 1
+            }
+          ],
+          "distributions": [
+            {
+              "value": 0,
+              "count": 1
+            }
+          ],
+          "history": [
+            {
+              "epoch": 2,
+              "counts": [
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "question": 4,
+          "label": "Question 4",
+          "method": 5,
+          "abstain": 0,
+          "options": [
+            {
+              "option": 0,
+              "label": "Option 0",
+              "count": 1
+            },
+            {
+              "option": 1,
+              "label": "Option 1",
+              "count": 1
+            }
+          ],
+          "totals": [
+            "3",
+            "7"
+          ],
+          "history": [
+            {
+              "epoch": 2,
+              "counts": [
+                1,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "question": 5,
+          "label": "Question 5",
+          "method": 6,
+          "abstain": 0,
+          "options": [
+            {
+              "option": 0,
+              "label": "Option 0",
+              "count": 0
+            },
+            {
+              "option": 1,
+              "label": "Option 1",
+              "count": 1
+            }
+          ],
+          "distributions": [
+            {
+              "option": 1,
+              "value": 2,
+              "count": 1
+            }
+          ],
+          "totals": [
+            "0",
+            "2"
+          ],
+          "history": [
+            {
+              "epoch": 2,
+              "counts": [
+                0,
+                1
+              ]
+            }
+          ]
+        },
+        {
+          "question": 6,
+          "label": "Question 6",
+          "method": 0,
+          "abstain": 0,
+          "options": [],
+          "history": [
+            {
+              "epoch": 2,
+              "counts": []
+            }
+          ]
+        }
+      ],
+      "freeText": [],
+      "generatedAt": "2026-11-23T00:00:00Z"
+    }
+  ],
+  "audit": [
+    {
+      "transaction": "0202020202020202020202020202020202020202020202020202020202020202",
+      "responseIndex": 0,
+      "surveyRef": "0101010101010101010101010101010101010101010101010101010101010101#0",
+      "role": 4,
+      "credential": "0:02020202020202020202020202020202020202020202020202020202",
+      "epoch": 2,
+      "status": "counted",
+      "reason": "valid"
+    }
+  ]
+}

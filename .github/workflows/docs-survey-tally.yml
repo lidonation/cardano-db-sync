@@ -1,0 +1,71 @@
+name: Survey tally
+
+on:
+  schedule:
+    - cron: "37 * * * *"
+  workflow_dispatch:
+    inputs:
+      network:
+        description: Read-only recovery network
+        type: choice
+        options: [preview, mainnet]
+        required: true
+        default: preview
+
+permissions:
+  contents: read
+
+concurrency:
+  # Share the chain-refresh lock: both workflows commit generated data to the same branch.
+  group: chain-refresh
+  cancel-in-progress: false
+
+jobs:
+  tally:
+    if: github.ref_name == github.event.repository.default_branch
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    permissions:
+      contents: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.repository.default_branch }}
+      - uses: ./.github/actions/docs-setup
+      - name: Tally configured networks
+        working-directory: docs
+        env:
+          SELECTED_NETWORK: ${{ github.event.inputs.network }}
+          BLOCKFROST_PREVIEW_PROJECT_ID: ${{ secrets.BLOCKFROST_PREVIEW_PROJECT_ID }}
+          BLOCKFROST_MAINNET_PROJECT_ID: ${{ secrets.BLOCKFROST_MAINNET_PROJECT_ID }}
+        run: npm run survey:tally -- "$SELECTED_NETWORK"
+      - name: Commit complete public aggregates only
+        id: commit
+        if: ${{ !cancelled() }}
+        env:
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: |
+          git add -- docs/generated/survey-preview/aggregate.json docs/generated/survey-mainnet/aggregate.json
+          if git diff --cached --quiet; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'chore(docs): refresh survey aggregates'
+          git push origin "HEAD:refs/heads/$DEFAULT_BRANCH"
+          echo 'changed=true' >> "$GITHUB_OUTPUT"
+      - name: Rebuild site from committed aggregates
+        if: ${{ !cancelled() && steps.commit.outputs.changed == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
+        run: gh api --method POST "repos/$GITHUB_REPOSITORY/actions/workflows/docs-site.yml/dispatches" -f "ref=$DEFAULT_BRANCH"
+
+  alert:
+    needs: [tally]
+    if: always() && needs.tally.result != 'skipped'
+    uses: ./.github/workflows/docs-ops-alert.yml
+    with:
+      result: ${{ needs.tally.result }}
+    permissions:
+      contents: read
+      issues: write

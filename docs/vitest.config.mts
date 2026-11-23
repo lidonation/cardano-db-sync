@@ -11,6 +11,7 @@ export default defineConfig({
         'config/**/*.ts',
         'plugins/**/*.ts',
         'scripts/**/*.mjs',
+        'scripts/survey/**/*.ts',
         'src/lib/palette.ts',
         'src/wallet/**/*.ts',
         'src/search/**/*.ts',
