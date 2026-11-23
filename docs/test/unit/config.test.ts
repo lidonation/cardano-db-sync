@@ -178,7 +178,9 @@ describe('build hygiene', () => {
     const {default: sharedCodePlugin} = await import('../../plugins/shared-code');
     const {default: metadataPlugin} = await import('../../plugins/metadata');
     const {default: schemaExplorer} = await import('../../plugins/schema-explorer');
+    const {default: entitySearch} = await import('../../plugins/entity-search');
     expect(config.plugins).toEqual([
+      entitySearch,
       chainData,
       metadataPlugin,
       schemaExplorer,
